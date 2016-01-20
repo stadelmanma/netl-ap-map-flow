@@ -72,13 +72,13 @@ C     ARRAY ALLOCATIONS
 C
 C     INITIALIZING ARRAYS AND ITERATORS/COUNTERS
       POINT_MAP(:,:,:) = -1
-      VERTICIES(:,:) = -2
-      BLOCKS(:,:) = -3
-      INLET(:,:) = -4
-      OUTLET(:,:) = -5
-      SIDES(:,:) = -6
-      FRONTBACK(:,:) = -7
-      INTERNAL_MESH(:) = 1 !THIS WILL BE AN INPUT EVENTUALLY
+      VERTICIES(:,:) = -1
+      BLOCKS(:,:) = -1
+      INLET(:,:) = -1
+      OUTLET(:,:) = -1
+      SIDES(:,:) = -1
+      FRONTBACK(:,:) = -1
+      INTERNAL_MESH(:) = 5 !THIS WILL BE AN INPUT EVENTUALLY
       IV  = 0
       IB  = 0
       IN  = 0
@@ -429,7 +429,7 @@ C
 C
  1050 FORMAT(8X,'type',1X,A,';')
 C
- 1100 FORMAT(4X,'(',F8.4,1X,F8.4,1X,F8.4,')') !VERTICE POINT FORMAT
+ 1100 FORMAT(4X,'(',F12.4,1X,F12.4,1X,F12.4,')') !VERTICES POINT FORMAT
 C
  1110 FORMAT(4X,'hex',1X,'(',I0,7(1X,I0),')',1X,'(',I0,2(1X,I0),')',
      &       1X,'simpleGrading',1X,'(1 1 1)') !BLOCK FORMAT
