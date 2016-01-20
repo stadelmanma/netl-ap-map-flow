@@ -36,7 +36,7 @@ C     READING APERTURE MAP
       IF (.NOT. BOK) GOTO 1000
 C
 C     STEPPING THROUGH APERTURE MAP AND MAKING THE RESPECTIVE FIELDS
-      CALL GENERATE_2DMESH(BOK)
+      CALL GENERATE_2DMESH
       IF (.NOT. BOK) GOTO 1000
 C
       RETURN
@@ -51,20 +51,20 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE GENERATE_2DMESH(BOK)
+      SUBROUTINE GENERATE_2DMESH
 C     
       USE TWOD_MODULE
       IMPLICIT NONE
       REAL(8),ALLOCATABLE :: REAL_ARRAY(:,:) !TEMP ARRAY FOR RESIZE
       INTEGER,ALLOCATABLE :: INT_ARRAY(:,:)  !TEMP ARRAY FOR RESIZE
       INTEGER,ALLOCATABLE :: POINT_MAP(:,:,:)
-      INTEGER :: I,IX,IY,IZ,S
+      INTEGER :: I,IX,IZ
       INTEGER :: IV,IB,IN,IO,IS,IFB ! SPECIFIC ITERATORS/COUNTERS
-      LOGICAL :: BOK,TOP,BOT,LFT,RHT
+      LOGICAL :: TOP,BOT,LFT,RHT
 C
 C     ARRAY ALLOCATIONS
       ALLOCATE(REAL_ARRAY(0:NX*NZ*8-1,4),INT_ARRAY(0:NX*NZ*8-1,4))
-      ALLOCATE(POINT_MAP(NZ,NX,4))
+      ALLOCATE(POINT_MAP(NZ+1,NX+1,4))
       ALLOCATE(VERTICIES(0:NX*NZ*8-1,3)) 
       ALLOCATE(BLOCKS(0:NX*NZ-1,8)) 
       ALLOCATE(INLET(0:NX*NZ*8-1,4),OUTLET(0:NX*NZ*8-1,4)) 
@@ -78,7 +78,7 @@ C     INITIALIZING ARRAYS AND ITERATORS/COUNTERS
       OUTLET(:,:) = -5
       SIDES(:,:) = -6
       FRONTBACK(:,:) = -7
-      INTERNAL_MESH(:) = 5 !THIS WILL BE AN INPUT EVENTUALLY
+      INTERNAL_MESH(:) = 1 !THIS WILL BE AN INPUT EVENTUALLY
       IV  = 0
       IB  = 0
       IN  = 0
@@ -98,70 +98,70 @@ C
       IF (INDEX(OUTFLOW,'LEFT')   > 0) LFT = .TRUE.
       IF (INDEX(OUTFLOW,'RIGHT')  > 0) RHT = .TRUE.
 C
-C     CREATING THE POINT MAP
-      VERTICIES(IV,:) = /0.0, 0.0, -AP_MAP(1,1,1)/2.0 /
+C     CREATING THE POINT MAP AND VERTICIES
+      VERTICIES(IV,:) = (/ 0.0D0, -AP_MAP(1,1,1)/2.0, 0.0D0 /)
       POINT_MAP(1,1,1) = IV !POINT MAP WILL STORE THE LOWER SURFACE KNOWING THE UPPER IS IV+1
       IV = IV + 1
-      VERTICIES(IV,:) = /0.0, 0.0, AP_MAP(1,1,1)/2.0 /
+      VERTICIES(IV,:) = (/ 0.0D0, AP_MAP(1,1,1)/2.0, 0.0D0 /)
       IV = IV + 1   
       !
       DO IZ = 1,NZ
         DO IX = 1,NX
           IF (IX == 1) THEN
-            IF (POINT_MAP(IX,IZ,IZ) < 0) THEN
-              POINT_MAP(0,IY,IZ) = IV
-              IV = IV + 1
-            END IF
+            VERTICIES(IV,1) =  0.0D0 * AVG_FACT
+            VERTICIES(IV,2) = -AP_MAP(IZ,IX,4)/2.0
+            VERTICIES(IV,3) =  DBLE(IZ) * AVG_FACT
+            POINT_MAP(IZ,IX,4)   = IV
+            POINT_MAP(IZ+1,IX,1) = IV
+            IV = IV + 1
+            VERTICIES(IV,1) =  0.0D0 * AVG_FACT
+            VERTICIES(IV,2) =  AP_MAP(IZ,IX,4)/2.0
+            VERTICIES(IV,3) =  DBLE(IZ) * AVG_FACT
+            IV = IV + 1
           END IF
           !
           IF (IZ == 1) THEN
-            IF (POINT_MAP(IX,IY,0) < 0) THEN
-              POINT_MAP(IX,IY,0) = IV
-              IV = IV + 1
-            END IF
-          END IF
-          !
-          IF (POINT_MAP(IX,IY,IZ) < 0) THEN 
-            POINT_MAP(IX,IY,IZ) = IV
+            VERTICIES(IV,1) =  DBLE(IX) * AVG_FACT
+            VERTICIES(IV,2) = -AP_MAP(IZ,IX,2)/2.0
+            VERTICIES(IV,3) =  0.0D0 * AVG_FACT
+            POINT_MAP(IZ,IX,2)   = IV
+            POINT_MAP(IZ,IX+1,1) = IV
+            IV = IV + 1
+            VERTICIES(IV,1) =  DBLE(IX) * AVG_FACT
+            VERTICIES(IV,2) =  AP_MAP(IZ,IX,2)/2.0
+            VERTICIES(IV,3) =  0.0D0 * AVG_FACT
             IV = IV + 1
           END IF
+          !
+          VERTICIES(IV,1) =  DBLE(IX) * AVG_FACT
+          VERTICIES(IV,2) = -AP_MAP(IZ,IX,3)/2.0
+          VERTICIES(IV,3) =  DBLE(IZ) * AVG_FACT
+          POINT_MAP(IZ,IX,3)   = IV 
+          POINT_MAP(IZ+1,IX,2) = IV
+          POINT_MAP(IZ,IX+1,4) = IV
+          POINT_MAP(IZ+1,IX+1,1) = IV
+          IV = IV + 1
+          VERTICIES(IV,1) =  DBLE(IX) * AVG_FACT
+          VERTICIES(IV,2) =  AP_MAP(IZ,IX,3)/2.0
+          VERTICIES(IV,3) =  DBLE(IZ) * AVG_FACT
+          IV = IV + 1
         END DO !END NX
       END DO !END NZ
 C
 C     POPULATING BLOCK ARRAY
       DO IZ = 1,NZ
         DO IX = 1,NX
-          IY = -NINT(AP_MAP(IZ,IX,1)/2.0)
-          BLOCKS(IB,1) = POINT_MAP(IX-1,IY,IZ-1)!BACK BOTTOM LEFT 
-          IY = -NINT(AP_MAP(IZ,IX,2)/2.0)
-          BLOCKS(IB,2) = POINT_MAP(IX,IY,IZ-1)  !BACK BOTTOM RIGHT 
-          IY =  NINT(AP_MAP(IZ,IX,2)/2.0)
-          BLOCKS(IB,3) = POINT_MAP(IX,IY,IZ-1)   !FRONT BOTTOM RIGHT
-          IY =  NINT(AP_MAP(IZ,IX,1)/2.0)  
-          BLOCKS(IB,4) = POINT_MAP(IX-1,IY,IZ-1) !FRONT BOTTOM LEFT
-          IY = -NINT(AP_MAP(IZ,IX,1)/2.0)
-          BLOCKS(IB,5) = POINT_MAP(IX-1,IY,IZ)!BACK TOP LEFT 
-          IY = -NINT(AP_MAP(IZ,IX,2)/2.0)
-          BLOCKS(IB,6) = POINT_MAP(IX,IY,IZ)  !BACK TOP RIGHT 
-          IY =  NINT(AP_MAP(IZ,IX,2)/2.0)
-          BLOCKS(IB,7) = POINT_MAP(IX,IY,IZ)   !FRONT TOP RIGHT
-          IY =  NINT(AP_MAP(IZ,IX,1)/2.0)  
-          BLOCKS(IB,8) = POINT_MAP(IX-1,IY,IZ) !FRONT TOP LEFT
+          BLOCKS(IB,1) = POINT_MAP(IZ,IX,1)     !BACK BOTTOM LEFT 
+          BLOCKS(IB,2) = POINT_MAP(IZ,IX,2)     !BACK BOTTOM RIGHT 
+          BLOCKS(IB,3) = POINT_MAP(IZ,IX,2) + 1 !FRONT BOTTOM RIGHT
+          BLOCKS(IB,4) = POINT_MAP(IZ,IX,1) + 1 !FRONT BOTTOM LEFT
+          BLOCKS(IB,5) = POINT_MAP(IZ,IX,4)     !BACK TOP LEFT 
+          BLOCKS(IB,6) = POINT_MAP(IZ,IX,3)     !BACK TOP RIGHT 
+          BLOCKS(IB,7) = POINT_MAP(IZ,IX,3) + 1 !FRONT TOP RIGHT
+          BLOCKS(IB,8) = POINT_MAP(IZ,IX,4) + 1 !FRONT TOP LEFT
           IB = IB + 1
         END DO !END NX
       END DO !END NZ
-C
-C     CREATING VERTICE ARRAY FROM POINT MAP
-      DO IX = 0,NX
-        DO IY = FLOOR(-MAX_APER),CEILING(MAX_APER)
-          DO IZ = 0,NZ
-            IF (POINT_MAP(IX,IY,IZ) < 0) CYCLE
-            VERTICIES(POINT_MAP(IX,IY,IZ),1) = IX*AVG_FACT
-            VERTICIES(POINT_MAP(IX,IY,IZ),2) = IY
-            VERTICIES(POINT_MAP(IX,IY,IZ),3) = IZ*AVG_FACT
-          END DO
-        END DO
-      END DO
 C
 C     CREATING INLET, OUTLET, SIDES AND FRONTBACK ARRAYS
       IB = 0 
