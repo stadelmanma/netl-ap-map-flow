@@ -64,14 +64,14 @@ C
 C
 C     ARRAY ALLOCATIONS
       ALLOCATE(REAL_ARRAY(0:NX*NZ*8-1,4),INT_ARRAY(0:NX*NZ*8-1,4))
-      ALLOCATE(POINT_MAP(0:NX,FLOOR(-MAX_APER):CEILING(MAX_APER),0:NZ))
+      ALLOCATE(POINT_MAP(NZ,NX,4))
       ALLOCATE(VERTICIES(0:NX*NZ*8-1,3)) 
       ALLOCATE(BLOCKS(0:NX*NZ-1,8)) 
       ALLOCATE(INLET(0:NX*NZ*8-1,4),OUTLET(0:NX*NZ*8-1,4)) 
       ALLOCATE(FRONTBACK(0:NX*NZ*8-1,4),SIDES(0:NX*NZ*8-1,4)) 
 C
 C     INITIALIZING ARRAYS AND ITERATORS/COUNTERS
-      POINT_MAP(:,:,:) = -69
+      POINT_MAP(:,:,:) = -1
       VERTICIES(:,:) = -2
       BLOCKS(:,:) = -3
       INLET(:,:) = -4
@@ -87,7 +87,7 @@ C     INITIALIZING ARRAYS AND ITERATORS/COUNTERS
       IFB = 0
 C
 C     CONVERTING AP_MAP BACK TO VOXELS TO SIMPLIFY OUTPUT
-      AP_MAP(1:NZ,1:NX,:) =AP_MAP(1:NZ,1:NX,:)/VOX_MET
+      AP_MAP(1:NZ,1:NX,:) = AP_MAP(1:NZ,1:NX,:)/VOX_MET
 C
       TOP = .FALSE.
       BOT = .FALSE.
@@ -99,38 +99,32 @@ C
       IF (INDEX(OUTFLOW,'RIGHT')  > 0) RHT = .TRUE.
 C
 C     CREATING THE POINT MAP
-      IY = -NINT(AP_MAP(1,1,1)/2.0)
-      POINT_MAP(0,IY,0) = IV
+      VERTICIES(IV,:) = /0.0, 0.0, -AP_MAP(1,1,1)/2.0 /
+      POINT_MAP(1,1,1) = IV !POINT MAP WILL STORE THE LOWER SURFACE KNOWING THE UPPER IS IV+1
       IV = IV + 1
-      IY = NINT(AP_MAP(1,1,1)/2.0)
-      POINT_MAP(0,IY,0) = IV
-      IV = IV + 1
+      VERTICIES(IV,:) = /0.0, 0.0, AP_MAP(1,1,1)/2.0 /
+      IV = IV + 1   
       !
       DO IZ = 1,NZ
         DO IX = 1,NX
-          DO S = -1,1,2       
-            IF (IX == 1) THEN
-              IY = S*NINT(AP_MAP(IZ,IX,4)/2.0)
-              IF (POINT_MAP(0,IY,IZ) < 0) THEN
-                POINT_MAP(0,IY,IZ) = IV
-                IV = IV + 1
-              END IF
-            END IF
-            !
-            IF (IZ == 1) THEN
-              IY = S*NINT(AP_MAP(IZ,IX,2)/2.0)
-              IF (POINT_MAP(IX,IY,0) < 0) THEN
-                POINT_MAP(IX,IY,0) = IV
-                IV = IV + 1
-              END IF
-            END IF
-            !
-            IY = S*NINT(AP_MAP(IZ,IX,2)/2.0)
-            IF (POINT_MAP(IX,IY,IZ) < 0) THEN 
-              POINT_MAP(IX,IY,IZ) = IV
+          IF (IX == 1) THEN
+            IF (POINT_MAP(IX,IZ,IZ) < 0) THEN
+              POINT_MAP(0,IY,IZ) = IV
               IV = IV + 1
             END IF
-          END DO !END SIGN LOOP
+          END IF
+          !
+          IF (IZ == 1) THEN
+            IF (POINT_MAP(IX,IY,0) < 0) THEN
+              POINT_MAP(IX,IY,0) = IV
+              IV = IV + 1
+            END IF
+          END IF
+          !
+          IF (POINT_MAP(IX,IY,IZ) < 0) THEN 
+            POINT_MAP(IX,IY,IZ) = IV
+            IV = IV + 1
+          END IF
         END DO !END NX
       END DO !END NZ
 C
