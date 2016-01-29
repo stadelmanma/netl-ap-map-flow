@@ -12,23 +12,25 @@ C
       IMPLICIT NONE
       REAL(8),ALLOCATABLE :: UPPER(:),ROW(:),B(:)
       REAL(8) :: AD(*), AW(*), AC(*), AE(*), AU(*), RHS(*), X(*)
-      REAL(8) :: TEMP
+      REAL(8) :: TEMP,ST,EN
       INTEGER :: NX, NZ
       INTEGER(8) :: NXZ, IB, J, I, IA, IL, IB_UP, IU, JA
       INTEGER(8) :: IBAND
 C
       NXZ = NX*NZ
       ALLOCATE (ROW(-NX:NX), UPPER(NXZ*NX),B(NXZ))
+      !
+      CALL CPU_TIME(ST)
+      !
       IB = 0
       DO J = 1,NZ
         DO I = 1,NX
+          !
           IB = IB + 1
 C
 C    BUILD ROW OF MATRIX
 C
-          DO IA = -NX, NX
-            ROW(IA) = 0.0
-          ENDDO
+          ROW(:) = 0.0
           ROW(0) = AC(IB)
           IL = 0
           IF(I /= 1) THEN
@@ -47,7 +49,7 @@ C
           DO IA = IL,-1
             TEMP = ROW(IA)
             IB_UP = IB + IA            
-            IU = NX*(IB_UP - 1)
+            IU = NX*(IB_UP - 1) !WORKS BECAUSE OFF DIAGIONALS ARE NX AWAY
             DO JA = IA+1,IA+NX
               IU = IU + 1
               ROW(JA) = ROW(JA) - TEMP*UPPER(IU)
@@ -61,10 +63,20 @@ C
           DO IA = 1,NX
             IU = IU + 1
             UPPER(IU) = ROW(IA)/ROW(0)
+            WRITE(*,"(I3,1X,I3,1X,I3,1X,E10.4)")IB,IA,IU,UPPER(IU)
           ENDDO
           RHS(IB) = RHS(IB)/ROW(0)
+          PRINT *, " "
+          !
         ENDDO
       ENDDO
+      !
+      CALL CPU_TIME(EN)
+      WRITE(*,"(1X,'REQUIRED TIME FOR ELIMINATION:',F11.6)")(EN-ST)
+      !
+      PRINT *, ""
+      PRINT *, ""
+
 C
 C     BACK SUBSTITUTION
 C
@@ -79,10 +91,217 @@ C
         ENDDO
         X(IB) = TEMP
       ENDDO
+      !
       DEALLOCATE (ROW, UPPER)
 C
       RETURN
-      END
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE D4_GAUSS(AW,AD,AC,AU,AE,RHS,NX,NZ,X)
+C
+C     GAUSSIAN D4 ORDERED SOLVER
+C     TRANSFORMS THE SUPPLIED REGULAR ORDERED DIAGIONALS INTO THE 
+C     D4 ORDERING SCHEME AND THEN PERFORMS REGULAR GUASSIAN ELIMINATION
+C     AND BACK SUBSTITUTION ON LINEAR SYSTEM. LOOSELY BASED ON 
+C     USGS MODFLOW D4 SOLVER :
+C     http://water.usgs.gov/software/code/ground_water/modflow/doc/ofr95288.pdf
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C     DATE WRITTEN: 01/29/2016
+C
+      IMPLICIT NONE
+      REAL(8), ALLOCATABLE :: ROW_VALS(:,:)
+      REAL(8) :: AD(*), AW(*), AC(*), AE(*), AU(*), RHS(*), X(*)
+      INTEGER, ALLOCATABLE :: ROW_COLS(:,:)
+      INTEGER :: I,IB,IX,IZ,ROW,COL
+      INTEGER :: NX, NZ
+C
+      ALLOCATE(ROW_COLS(NX*NZ,0:4),ROW_VALS(NX*NZ,0:4))
+      ROW_COLS(:,:) = 0
+      ROW_VALS(:,:) = 0
+C
+C     MAPPING THE DIAGONALS INTO THE D4 ORDERING SCHEME
+      CALL D4_MAPPER(AW,AD,AC,AU,AE,NX,NZ,ROW_COLS,ROW_VALS)
+C
+C     PERFORMING GAUSSIAN ELIMINATION ON THE MATRIX
+      PRINT *, "WIP"
+C
+      RETURN
+C
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE D4_MAPPER(AW,AD,AC,AU,AE,NX,NZ,ROW_COLS,ROW_VALS)
+C
+C     DESCRIPTION: TRANSFORMS THE SUPPLIED REGULAR ORDERED DIAGIONALS  
+C     INTO THE D4 ORDERING SCHEME STORING THE  NON-ZERO 
+C     INDICIES AND VALS IN TWO COMPRESSED ROW ARRAYS
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C     DATE WRITTEN: 01/29/2016
+C
+      IMPLICIT NONE
+      REAL(8) :: AD(*), AW(*), AC(*), AE(*), AU(*)
+      INTEGER, ALLOCATABLE :: D4_MAP(:)
+      INTEGER :: I,IB,IX,IZ,ROW,COL
+      INTEGER :: NX, NZ
+      !
+      REAL(8) :: ROW_VALS(NX*NZ,0:4)
+      INTEGER :: ROW_COLS(NX*NZ,0:4)
+C
+      ALLOCATE(D4_MAP(NZ*NX))
+      D4_MAP(:)   = 0
+      ROW_COLS(:,:) = 0
+      ROW_VALS(:,:) = 0
+C
+C     CREATING D4 MAP TO REORDER EQUATIONS 
+C     SETTING FIRST SET OF DIAGONALS
+      ROW = 1
+      COL = 1
+      IX  = 1
+      IZ  = 1
+      IB  = 1
+  100 DO WHILE (IB <= NX*NZ)
+        I = NX*(IZ-1) + IX
+        IF (I > NX*NZ) EXIT
+        !
+        D4_MAP(I) = IB
+        IZ = IZ - 1
+        IX = IX + 1
+        IB = IB + 1
+        !
+        IF ((IZ < 1) .OR. (IX > NX)) THEN
+          IF (ROW + 2 <= NZ) THEN
+            ROW  = ROW + 2
+          ELSE IF (ROW + 1 == NZ) THEN
+            ROW = NZ
+            COL = COL + 1
+          ELSE
+            COL = COL + 2
+          END IF
+          !
+          IZ = ROW
+          IX = COL
+        END IF
+      END DO
+C     RESETTING INPUTS TO FILL ALTERNATE SET OF DIAGIONALS
+      ROW = 2
+      COL = 1
+      IZ  = 2
+      IX  = 1
+      IF (IB < NX*NZ) GOTO 100
+C
+      PRINT *, ""
+      DO IZ = NZ,1,-1
+        I = NX*(IZ-1) 
+        WRITE(*,"(*(I3,' ',:))")D4_MAP(I+1:I+NX)
+      END DO
+C
+C     MAPPING DIAGONAL VALUES TO ROW ARRAYS
+      IB = 1
+      ! MAPPING BLC BLOCK
+      ROW_COLS(IB,0) = D4_MAP(IB)
+      ROW_COLS(IB,1) = D4_MAP(IB+NX)
+      ROW_COLS(IB,2) = D4_MAP(IB+1)
+      ROW_VALS(IB,0) = AC(IB)
+      ROW_VALS(IB,1) = AU(IB)
+      ROW_VALS(IB,2) = AE(IB)       
+      ! MAPPING BOTTOM ROW OF BLOCKS
+      DO IX = 2,NX-1
+        IB = IX
+        ROW_COLS(IB,0) = D4_MAP(IB)
+        ROW_COLS(IB,1) = D4_MAP(IB-1)
+        ROW_COLS(IB,2) = D4_MAP(IB+NX)
+        ROW_COLS(IB,3) = D4_MAP(IB+1)
+        ROW_VALS(IB,0) = AC(IB)
+        ROW_VALS(IB,1) = AW(IB)
+        ROW_VALS(IB,2) = AU(IB)
+        ROW_VALS(IB,3) = AE(IB)         
+      END DO
+      ! MAPPING BRC BLOCK
+      IB = NX
+      ROW_COLS(IB,0) = D4_MAP(IB)
+      ROW_COLS(IB,1) = D4_MAP(IB-1)
+      ROW_COLS(IB,2) = D4_MAP(IB+NX)
+      ROW_VALS(IB,0) = AC(IB)
+      ROW_VALS(IB,1) = AW(IB)
+      ROW_VALS(IB,2) = AU(IB)
+      !
+      DO IZ = 1,NZ-2
+        ! MAPPING LEFT COLUMN BLOCKS
+        IB = NX*IZ + 1
+        ROW_COLS(IB,0) = D4_MAP(IB)
+        ROW_COLS(IB,1) = D4_MAP(IB-NX)
+        ROW_COLS(IB,2) = D4_MAP(IB+NX)
+        ROW_COLS(IB,3) = D4_MAP(IB+1)
+        ROW_VALS(IB,0) = AC(IB)
+        ROW_VALS(IB,1) = AD(IB)
+        ROW_VALS(IB,2) = AU(IB)
+        ROW_VALS(IB,3) = AE(IB) 
+        DO IX = 2,NX-1
+          ! MAPPING INTERNAL BLOCKS
+          IB = NX*IZ + IX
+          ROW_COLS(IB,0) = D4_MAP(IB)
+          ROW_COLS(IB,1) = D4_MAP(IB-1)
+          ROW_COLS(IB,2) = D4_MAP(IB-NX)
+          ROW_COLS(IB,3) = D4_MAP(IB+NX)
+          ROW_COLS(IB,4) = D4_MAP(IB+1)
+          ROW_VALS(IB,0) = AC(IB)
+          ROW_VALS(IB,1) = AW(IB) 
+          ROW_VALS(IB,2) = AD(IB)
+          ROW_VALS(IB,3) = AU(IB)
+          ROW_VALS(IB,4) = AE(IB)        
+        END DO
+        ! MAPPING RIGHT COLUMN BLOCKS
+        IB = NX*IZ + NX 
+        ROW_COLS(IB,0) = D4_MAP(IB)
+        ROW_COLS(IB,1) = D4_MAP(IB-1)
+        ROW_COLS(IB,2) = D4_MAP(IB-NX)
+        ROW_COLS(IB,3) = D4_MAP(IB+NX)
+        ROW_VALS(IB,0) = AC(IB)
+        ROW_VALS(IB,1) = AW(IB) 
+        ROW_VALS(IB,2) = AD(IB)
+        ROW_VALS(IB,3) = AU(IB)
+      END DO
+      ! MAPPING TLC BLOCK
+      IB = NX*(NZ - 1) + 1
+      ROW_COLS(IB,0) = D4_MAP(IB)
+      ROW_COLS(IB,1) = D4_MAP(IB-NX)
+      ROW_COLS(IB,2) = D4_MAP(IB+1)
+      ROW_VALS(IB,0) = AC(IB)
+      ROW_VALS(IB,1) = AD(IB)
+      ROW_VALS(IB,2) = AE(IB)   
+      DO IX = 2,NX-1
+        ! MAPPING TOP ROW BLOCKS
+        IB = NX*(NZ - 1) + IX
+        ROW_COLS(IB,0) = D4_MAP(IB)
+        ROW_COLS(IB,1) = D4_MAP(IB-1)
+        ROW_COLS(IB,2) = D4_MAP(IB-NX)
+        ROW_COLS(IB,3) = D4_MAP(IB+1)
+        ROW_VALS(IB,0) = AC(IB)
+        ROW_VALS(IB,1) = AW(IB)
+        ROW_VALS(IB,2) = AD(IB)
+        ROW_VALS(IB,3) = AE(IB) 
+      END DO
+      ! MAPPING TRC BLOCK
+      IB = NX*(NZ - 1) + NX
+      ROW_COLS(IB,0) = D4_MAP(IB)
+      ROW_COLS(IB,1) = D4_MAP(IB-1)
+      ROW_COLS(IB,2) = D4_MAP(IB-NX)
+      ROW_VALS(IB,0) = AC(IB)
+      ROW_VALS(IB,1) = AW(IB)
+      ROW_VALS(IB,2) = AD(IB)
+C
+      RETURN
+C
+      END SUBROUTINE
 C
 C ----------------------------------------------------------------------
 C ######################################################################
