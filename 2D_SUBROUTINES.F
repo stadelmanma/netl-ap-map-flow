@@ -60,7 +60,6 @@ C
 C     INITIALIZING OUTPUT FILES
       CALL INIT_OUTPUT(BOK)
       IF (.NOT. BOK) GOTO 1000
-      DEALLOCATE(AP_MAP)
 C
       RETURN
 C
@@ -1715,8 +1714,8 @@ C
       DPS = 0.0;
 C
       CALL MESSAGE('     USING D4 SOLVER')
-      !CALL GAUSS(AD,AW,AC,AE,AU,RES,NX,NZ,DPS) 
-      CALL D4_GAUSS(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)      
+      CALL GAUSS(AD,AW,AC,AE,AU,RES,NX,NZ,DPS) 
+      !CALL D4_GAUSS(AD,AW,AC,AE,AU,RES,NX,NZ,DPS) !fails miserably,bloats memeory completely full for some reason   
       !CALL JACOBI(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)
       !CALL CG(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)
 C     
@@ -1808,8 +1807,8 @@ C
 C     OUTPUTS RUN INFO AND INITAL CONDITIONS TO OUTPUT FILES
       USE TWOD_MODULE
       IMPLICIT NONE
-      REAL(8) :: CONV(7),X,Y,Z
-      INTEGER :: I,N,IX,IZ
+      REAL(8) :: CONV(7)
+      INTEGER :: I
       LOGICAL :: BOK  
       CHARACTER(120) :: C120
 C
@@ -1872,45 +1871,6 @@ C
 C
 C     SETTING HEADERS FOR STATISTICS OUTPUT FILE
       CALL SET_HEADER(ISTAT)
-C
-C     CREATING THE VTK HEADERS 
-      CALL BLANK
-      CALL MESSAGE("     CREATING THE VTK FILE...")
-      WRITE(IVTK,"('# vtk DataFile Version 3.0')")
-      WRITE(IVTK,"('vtk output')")
-      WRITE(IVTK,"('ASCII')")
-      WRITE(IVTK,"('DATASET STRUCTURED_GRID')")
-      WRITE(IVTK,"('DIMENSIONS ',I0,1X,I0,1X,I0)")NX+1,NZ+1,2
-      WRITE(IVTK,"('POINTS ',I0,' float')")(NX+1)*(NZ+1)*2
-C
-C     OUPUTTING SURFACE POINTS FOR THE GRID
-      AP_MAP = AP_MAP*DIM_CONV
-      DO N = -1,1,2
-        Z = 0.0
-        DO IZ = 1,NZ
-          X = 0.0
-          Y = N*AP_MAP(IZ,1,1)/2.0
-          WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
-          DO IX = 1,NX
-            I = (IZ - 1)*NX + IX
-            X = X + DX(I)
-            Y = N*AP_MAP(IZ,IX,2)/2.0
-            WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
-          END DO
-          Z = Z + DZ(I)
-        END DO
-        !
-        X = 0.0
-        Y = N*AP_MAP(NZ,1,4)/2.0
-        WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
-        DO IX = 1,NX
-          I = (NZ - 1)*NX + IX
-          X = X + DX(I)
-          Y = N*AP_MAP(NZ,IX,3)/2.0
-          WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
-        END DO
-      END DO
-      CALL MESSAGE("         VTK POINTS OUTPUT TO FILE")  
 C   
       RETURN 
 C

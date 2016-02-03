@@ -30,7 +30,7 @@ C
       REAL(8), ALLOCATABLE :: PQX_OUT(:),PQZ_OUT(:),PQM_OUT(:)
       REAL(8), ALLOCATABLE :: REN(:),RES(:)
       REAL(8) :: FLOW,NFQ,AVG_CORR,BULK_REN,HOM_TRANS
-      REAL(8) :: FLOW_CF
+      REAL(8) :: FLOW_CF,X,Y,Z
       INTEGER :: I,J,N,IX,IZ,IC,LB  
       LOGICAL :: BOK
       CHARACTER(120) :: C120
@@ -169,6 +169,7 @@ C
       CALL MESSAGE(C120)    
 C
 C     CONVERTING VALUES TO OUTPUT UNITS
+      AP_MAP = AP_MAP*DIM_CONV
       FRAC_PR = FRAC_PR*PRES_CONV
       FPB = FPB*PRES_CONV
       OUTPB = OUTPB*PRES_CONV
@@ -344,6 +345,44 @@ C     OUTPUTTING THE FRAC_PRESSURE
         WRITE(IPRES,"(100000(G15.8,',',:))") FRAC_PR(IZ,1:NX)
       END DO
       CALL MESSAGE("     PRESSURE FILE COMPLETED")
+C
+C     CREATING THE VTK HEADERS 
+      CALL BLANK
+      CALL MESSAGE("     CREATING THE VTK FILE...")
+      WRITE(IVTK,"('# vtk DataFile Version 3.0')")
+      WRITE(IVTK,"('vtk output')")
+      WRITE(IVTK,"('ASCII')")
+      WRITE(IVTK,"('DATASET STRUCTURED_GRID')")
+      WRITE(IVTK,"('DIMENSIONS ',I0,1X,I0,1X,I0)")NX+1,NZ+1,2
+      WRITE(IVTK,"('POINTS ',I0,' float')")(NX+1)*(NZ+1)*2
+C
+C     OUPUTTING SURFACE POINTS FOR THE GRID
+      DO N = -1,1,2
+        Z = 0.0
+        DO IZ = 1,NZ
+          X = 0.0
+          Y = N*AP_MAP(IZ,1,1)/2.0
+          WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+          DO IX = 1,NX
+            I = (IZ - 1)*NX + IX
+            X = X + DX(I)
+            Y = N*AP_MAP(IZ,IX,2)/2.0
+            WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+          END DO
+          Z = Z + DZ(I)
+        END DO
+        !
+        X = 0.0
+        Y = N*AP_MAP(NZ,1,4)/2.0
+        WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+        DO IX = 1,NX
+          I = (NZ - 1)*NX + IX
+          X = X + DX(I)
+          Y = N*AP_MAP(NZ,IX,3)/2.0
+          WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+        END DO
+      END DO
+      CALL MESSAGE("         VTK POINTS OUTPUT TO FILE")  
 C
 C     OUTPUTTING DATA INTO THE VTK FILE FOR PARAVIEW 
       CALL BLANK
