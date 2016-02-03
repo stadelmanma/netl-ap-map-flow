@@ -18,6 +18,7 @@ C     DEFAULT VALUES
       RHO = 0.0
       VOX_MET = 0.0
       AVG_FACT = 1.0
+      MAXDIM = 2000
       HIGH_MASK = 10000.0
       LOW_MASK = 1E-9
       R_FACT = 0.0
@@ -59,7 +60,7 @@ C
 C     INITIALIZING OUTPUT FILES
       CALL INIT_OUTPUT(BOK)
       IF (.NOT. BOK) GOTO 1000
-
+      DEALLOCATE(AP_MAP)
 C
       RETURN
 C
@@ -396,6 +397,12 @@ C     READING IN MASTER INPUT DATA
           IFLD = 2
           IF (NFLD < 2) GOTO 905        
           READ(CFLD(IFLD),*,ERR = 910) LOW_MASK
+        ELSEIF (INDEX(CFLD(1),'MAXIMUM') > 0) THEN
+          IFLD = 4
+          IF (NFLD < IFLD) GOTO 905        
+          READ(CFLD(IFLD),"(I4)",ERR = 910) MAXDIM
+        ELSEIF (INDEX(CFLD(1),'SOLVER') > 0) THEN
+          SOLVER_TYPE = TRIM(CFLD(2))
         ELSEIF (INDEX(CFLD(1),'OUTPUT-UNITS') > 0) THEN
           IF (NFLD < 6) GOTO 905
           IFLD = 2
@@ -1147,11 +1154,11 @@ C
       CALL MESSAGE("LINE - "//DATA_LINE(1:120)//"...")
       GOTO 1000
 C
-  930 CVAR = " ERROR - MAXIMUM NUMBER OF HORIZONTAL CELLS IS 10000"
+  930 WRITE(CVAR,2050)'HORIZONTAL',MAXDIM
       CALL MESSAGE(CVAR)
       GOTO 1000
 C
-  931 CVAR = " ERROR - MAXIMUM NUMBER OF VERTICAL DIVISIONS IS 10000"
+  931 WRITE(CVAR,2050)'VERTICAL',MAXDIM
       CALL MESSAGE(CVAR)
       GOTO 1000
 C 
@@ -1160,6 +1167,8 @@ C
 C                      
  2000 FORMAT(1X,A17,1X,A19,9X,'NX',8X,'NZ')
  2005 FORMAT(3X,F15.6,5X,F15.6,5X,I6.5,4X,I6.5)
+C
+ 2050 FORMAT(1X,'ERROR - MAXIMUM NUMBER OF ',A,' CELLS IS ',I0)
 C
  2100 FORMAT(9X,'NUMBER OF CELLS THAT WERE MASKED: ',I0)
 C
@@ -1705,10 +1714,11 @@ C
       ALLOCATE(DPS(NX*NZ))
       DPS = 0.0;
 C
-      !CALL JACOBI(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)
+      CALL MESSAGE('     USING D4 SOLVER')
       !CALL GAUSS(AD,AW,AC,AE,AU,RES,NX,NZ,DPS) 
-      CALL D4_GAUSS(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)
-      !CALL CG(AW,AD,AC,AU,AE,RES,NX,NZ,DPS)
+      CALL D4_GAUSS(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)      
+      !CALL JACOBI(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)
+      !CALL CG(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)
 C     
 C     UPDATING THE FRACTURE PRESSURE
       DO IZ = 1,NZ
@@ -1798,8 +1808,8 @@ C
 C     OUTPUTS RUN INFO AND INITAL CONDITIONS TO OUTPUT FILES
       USE TWOD_MODULE
       IMPLICIT NONE
-      REAL(8) :: CONV(7)
-      INTEGER :: I
+      REAL(8) :: CONV(7),X,Y,Z
+      INTEGER :: I,N,IX,IZ
       LOGICAL :: BOK  
       CHARACTER(120) :: C120
 C
@@ -1862,6 +1872,45 @@ C
 C
 C     SETTING HEADERS FOR STATISTICS OUTPUT FILE
       CALL SET_HEADER(ISTAT)
+C
+C     CREATING THE VTK HEADERS 
+      CALL BLANK
+      CALL MESSAGE("     CREATING THE VTK FILE...")
+      WRITE(IVTK,"('# vtk DataFile Version 3.0')")
+      WRITE(IVTK,"('vtk output')")
+      WRITE(IVTK,"('ASCII')")
+      WRITE(IVTK,"('DATASET STRUCTURED_GRID')")
+      WRITE(IVTK,"('DIMENSIONS ',I0,1X,I0,1X,I0)")NX+1,NZ+1,2
+      WRITE(IVTK,"('POINTS ',I0,' float')")(NX+1)*(NZ+1)*2
+C
+C     OUPUTTING SURFACE POINTS FOR THE GRID
+      AP_MAP = AP_MAP*DIM_CONV
+      DO N = -1,1,2
+        Z = 0.0
+        DO IZ = 1,NZ
+          X = 0.0
+          Y = N*AP_MAP(IZ,1,1)/2.0
+          WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+          DO IX = 1,NX
+            I = (IZ - 1)*NX + IX
+            X = X + DX(I)
+            Y = N*AP_MAP(IZ,IX,2)/2.0
+            WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+          END DO
+          Z = Z + DZ(I)
+        END DO
+        !
+        X = 0.0
+        Y = N*AP_MAP(NZ,1,4)/2.0
+        WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+        DO IX = 1,NX
+          I = (NZ - 1)*NX + IX
+          X = X + DX(I)
+          Y = N*AP_MAP(NZ,IX,3)/2.0
+          WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+        END DO
+      END DO
+      CALL MESSAGE("         VTK POINTS OUTPUT TO FILE")  
 C   
       RETURN 
 C

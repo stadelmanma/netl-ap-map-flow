@@ -38,7 +38,7 @@ C     ALLOCATING VECTORS
       ALLOCATE(AD(LB),AW(LB),AC(LB),AE(LB),AU(LB),RES(LB))
 C
 C     INITALIZING ITERATION VARIABLES
-      AU(:)=0; AD(:)=0; AE(:)=0; AW(:)=0; AC(:)=0; RES(:) = 0    
+      AU(:)=0.0; AW(:)=0.0; AC(:)=0.0; AE(:)=0.0; AD(:)=0.0; RES(:)=0.0    
 C     
 C     SWEEPING GRID
       I = 0

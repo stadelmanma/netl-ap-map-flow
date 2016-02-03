@@ -29,7 +29,7 @@ C
       REAL(8), ALLOCATABLE :: Q(:,:)
       REAL(8), ALLOCATABLE :: PQX_OUT(:),PQZ_OUT(:),PQM_OUT(:)
       REAL(8), ALLOCATABLE :: REN(:),RES(:)
-      REAL(8) :: FLOW,NFQ,AVG_CORR,BULK_REN,HOM_TRANS,X,Y,Z
+      REAL(8) :: FLOW,NFQ,AVG_CORR,BULK_REN,HOM_TRANS
       REAL(8) :: FLOW_CF
       INTEGER :: I,J,N,IX,IZ,IC,LB  
       LOGICAL :: BOK
@@ -183,7 +183,6 @@ C     CONVERTING VALUES TO OUTPUT UNITS
       Z_CORR = Z_CORR*DIM_CONV
       X_CORR = X_CORR*DIM_CONV
       AVG_CORR = (2*X_CORR*Z_CORR)/(X_CORR+Z_CORR)
-      AP_MAP = AP_MAP*DIM_CONV
       FLOW = FLOW*RATE_CONV
       NFQ = NFQ*RATE_CONV
       ! NORMALIZING RESIDUAL ARRAY
@@ -318,7 +317,7 @@ C     OUTPUTTING THE WIDTH VECTOR USED
         J = IZ*NX+NX
         WRITE(IMAP,"(100000(G15.8,',',:))") WIDTH(I:J)
       END DO
-      CALL MESSAGE("    ADJUSTED APERTURE FILE COMPLETED")
+      CALL MESSAGE("     ADJUSTED APERTURE FILE COMPLETED")
 C
 C     OUTPUTTING QX, QZ AND MAG VALUES 
       DO IZ = 0,NZ-1
@@ -346,45 +345,9 @@ C     OUTPUTTING THE FRAC_PRESSURE
       END DO
       CALL MESSAGE("     PRESSURE FILE COMPLETED")
 C
-C     CREATING VTK FILE FOR PARAVIEW
-C
-C     CREATING THE STRUCTURED GRID 
+C     OUTPUTTING DATA INTO THE VTK FILE FOR PARAVIEW 
       CALL BLANK
-      CALL MESSAGE("     CREATING THE VTK FILE...")
-      WRITE(IVTK,"('# vtk DataFile Version 3.0')")
-      WRITE(IVTK,"('vtk output')")
-      WRITE(IVTK,"('ASCII')")
-      WRITE(IVTK,"('DATASET STRUCTURED_GRID')")
-      WRITE(IVTK,"('DIMENSIONS ',I0,1X,I0,1X,I0)")NX+1,NZ+1,2
-      WRITE(IVTK,"('POINTS ',I0,' float')")(NX+1)*(NZ+1)*2
-C
-C     OUPUTTING SURFACE POINTS
-      DO N = -1,1,2
-        Z = 0.0
-        DO IZ = 1,NZ
-          X = 0.0
-          Y = N*AP_MAP(IZ,1,1)/2.0
-          WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
-          DO IX = 1,NX
-            I = (IZ - 1)*NX + IX
-            X = X + DX(I)
-            Y = N*AP_MAP(IZ,IX,2)/2.0
-            WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
-          END DO
-          Z = Z + DZ(I)
-        END DO
-        !
-        X = 0.0
-        Y = N*AP_MAP(NZ,1,4)/2.0
-        WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
-        DO IX = 1,NX
-          I = (NZ - 1)*NX + IX
-          X = X + DX(I)
-          Y = N*AP_MAP(NZ,IX,3)/2.0
-          WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
-        END DO
-      END DO
-      CALL MESSAGE("         VTK POINTS OUTPUT TO FILE")   
+      CALL MESSAGE("     OUTPUTTING DATA TO THE VTK FILE...")
 C
 C     CREATING THE DATA TABLES
       WRITE(IVTK,"(' ')")
