@@ -1713,7 +1713,7 @@ C
       ALLOCATE(DPS(NX*NZ))
       DPS = 0.0;
 C
-      CALL MESSAGE('     USING D4 SOLVER')
+      CALL MESSAGE('     USING GAUSS SOLVER')
       CALL GAUSS(AD,AW,AC,AE,AU,RES,NX,NZ,DPS) 
       !CALL D4_GAUSS(AD,AW,AC,AE,AU,RES,NX,NZ,DPS) !fails miserably,bloats memeory completely full for some reason   
       !CALL JACOBI(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)
