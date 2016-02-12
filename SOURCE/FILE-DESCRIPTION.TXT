@@ -1,0 +1,19 @@
+For manual compilation with gfortran it is recommended you use the debug flags located in: GFORTRAN-DEBUG-FLAGS.TXT.
+The program has not be compiled with any other compilers than GNU gfortran but it is built with no known compiler dependencies. 
+inputFile.xml is a user defined language you can import into Notepad++ to provide mild syntax highlighting on the model's *.INP files.
+
+The model and openFOAM export are compiled seperatly but share key files.
+
+Files compiled for Aperture Map Model:
+	-2D_MODULE.F
+	-2D_SUBROUTINES.F
+	-2D_SOLVER.F
+	-2DF_FLOW.F
+	-2DF_OUTPUT.F
+	
+Files compiled for openFOAM Export:
+	-2D_MODULE.F 
+	-2D_SUBROUTINES.F 
+	-2D_SOLVER.F  ;This is unused but is referenced in 2D_SUBROUTINES.F requiring it to be present.
+	-OPENFOAM_EXPORT_SUBROUTINES.F 
+	-OPENFOAM_EXPORT.F	
