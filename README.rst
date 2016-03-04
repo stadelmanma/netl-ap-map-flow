@@ -27,7 +27,7 @@ Running the Model::
 Pitfalls:
     * Default file paths are in Windows format 
     * If compiled using 32-bit compiler running too large of a map will cause an integer overflow error
-    * Other solver subroutines exist in APM_SOLVER.F, howeveronly GAUSS is the only correctly working solver at this time
+    * Other solver subroutines exist in APM_SOLVER.F, however only GAUSS is the only correctly working solver at this time
 
 Basic Usage of ApertureMapModelTools
 ------------------------
