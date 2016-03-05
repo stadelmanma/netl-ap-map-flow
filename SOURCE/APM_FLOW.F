@@ -1,4 +1,4 @@
-      SUBROUTINE FRAC_FLOW(Q,N,BOK)
+      SUBROUTINE FRAC_FLOW(BOK)
 C 
 C     WRITTEN BY: MATTHEW STADELMAN
 C
@@ -27,10 +27,8 @@ C
       REAL(8), ALLOCATABLE :: RES(:) 
       REAL(8), ALLOCATABLE :: AD(:),AW(:),AC(:),AE(:),AU(:)
       REAL(8) :: QRIGHT,QLEFT,QTOP,QBOT
-      INTEGER :: I,N,IX,IZ,LB
+      INTEGER :: I,IX,IZ,LB
       LOGICAL :: BOK
-      !
-      REAL(8) ::  Q(N,*)
 C      
 C     DEFINING VARIABLES 
       LB = NX*NZ
@@ -77,7 +75,7 @@ C     UPDATING FRACTURE PRESSURE GRID WITH NEW PRESSURES
       IF (.NOT. BOK) GOTO 1000
 C
 C     CALCULATING THE FINAL FLOWS FOR CELLS IN THE FRACTURE
-      Q(1:N,1:LB) = 0.0
+      Q(:,:) = 0.0
       DO IZ = 1,NZ
         DO IX = 1,NX
           I = (IZ-1)*NX+IX
@@ -87,7 +85,7 @@ C     CALCULATING THE FINAL FLOWS FOR CELLS IN THE FRACTURE
           Q(4,I) = -TRZ(IZ,IX)*(FRAC_PS(IZ+1,IX) - FRAC_PS(IZ,IX))!TOP
           Q(5,I) = ((Q(1,I)-Q(2,I))+(Q(3,I)-Q(4,I))) !NET RES
         END DO 
-      END DO      
+      END DO 
 C 
       RETURN
 C
