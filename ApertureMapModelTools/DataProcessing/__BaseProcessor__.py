@@ -143,7 +143,7 @@ class BaseProcessor:
             return
         #
         print(self.outfile_content)
-        print("")
+        print('')
     #
     def write_data(self):
         r"""

@@ -125,7 +125,6 @@ def load_infile_list(infile_list,delim='auto'):
         #
         # constructing object
         field = DataField(infile)
-        parse_data_file(field,delim)
         print('Finished reading file: '+field.infile)
         #
         field_list.append(field)

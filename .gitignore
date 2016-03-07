@@ -13,5 +13,6 @@
 # Except the following files
 !.gitignore
 !APM_BULK_RUN.PY 
+!APM_PROCESS_DATA_MAP.PY
 !FRACTURE_INITIALIZATION.INP
 !README.rst
