@@ -1,10 +1,10 @@
 """
-Calculates a simple histogram from a data map. This also serves as the 
-super class for varients of a simple histogram.
+Calculates a simple histogram for a data map. This also serves as the 
+super class for variants of a simple histogram.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/29
-Last Modifed: 2016/02/29
+Last Modifed: 2016/03/07
 #
 """
 #
@@ -39,30 +39,29 @@ class Histogram(BaseProcessor):
         self.define_bins()
         #
         # populating bins
-        i = 0
-        b = 0
         num_vals = 0
-        bin = self.bins[0]
-        while (True):
-            val = self.data_map[i]
-            if ((val >= bin[0]) and (val < bin[1])):
-                num_vals += 1
-                i += 1
-            else:
-                self.processed_data.append((bin[0],bin[1],num_vals))
-                num_vals = 0
-                b += 1
-                if (b == len(self.bins)):
-                    break
+        data = self.data_map.__iter__()
+        bins = self.bins.__iter__()
+        try:
+            val = data.__next__()
+            bin = bins.__next__()
+            b = 0
+            while True:
+                if (val < bin[0]):
+                    val = data.__next__()
+                elif ((val >= bin[0]) and (val < bin[1])):
+                    num_vals += 1
+                    val = data.__next__()
+                else:
+                    self.processed_data.append((bin[0],bin[1],num_vals))
+                    num_vals = 0
+                    bin = bins.__next__()
+                    b += 1
+        except StopIteration:   
+            for b in range(b,len(self.bins)):
                 bin = self.bins[b]
-            #        
-            if (i == len(self.data_map)):
-               for b in range(b,len(self.bins)):
-                   bin = self.bins[b]
-                   self.processed_data.append((bin[0],bin[1],num_vals))
-                   num_vals = 0 #setting to 0 for all subsequent bins
-               break
-        
+                self.processed_data.append((bin[0],bin[1],num_vals))
+                num_vals = 0 #setting to 0 for all subsequent bins      
     #
     def define_bins(self,**kwargs):
         r"""
@@ -77,7 +76,7 @@ class Histogram(BaseProcessor):
             perc += 0.050
         print('Upper limit of first bin adjusted to percentile: '+str(perc))
         max_val = calc_percentile(99.0,self.data_map)
-        step = (max_val - min_val)/(num_bins-1.0)
+        step = (max_val - min_val)/(num_bins-2.0)
         #
         self.bins = [(self.data_map[0],min_val)]
         low = min_val

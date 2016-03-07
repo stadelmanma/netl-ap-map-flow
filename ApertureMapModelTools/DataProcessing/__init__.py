@@ -11,6 +11,7 @@ from .__BaseProcessor__ import BaseProcessor
 from .__Percentiles__ import Percentiles
 from .__EvalChannels__ import EvalChannels
 from .__Histogram__ import Histogram
-
+from .__HistogramRange__ import HistogramRange
+from .__HistogramLogscale__ import HistogramLogscale
+from .__Profile__ import Profile
 #
-print('Testing')
