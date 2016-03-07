@@ -4,7 +4,7 @@
 # the creation of the inital input list for the requirements of thier bulk run.
 #
 import re
-from ApertureMapModelTools.BulkRun.__base__ import process_input_tuples,bulk_run
+from ApertureMapModelTools.BulkRun.__core__ import process_input_tuples,bulk_run
 #
 #
 # Parameters

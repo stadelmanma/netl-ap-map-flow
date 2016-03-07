@@ -12,6 +12,7 @@ import re
 from subprocess import Popen
 from time import sleep
 from ApertureMapModelTools.__core__ import DataField
+#
 ########################################################################
 #
 # Class Definitions 

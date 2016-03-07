@@ -7,6 +7,4 @@ Last Modifed: 2016/02/26
 #
 """
 #
-from .__base__ import *
-#
-print('Testing')
+from .__core__ import *
