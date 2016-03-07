@@ -18,7 +18,7 @@ Basic Usage of APM Model
 ------------------------
 Compiling the model, the flags shown below are apply to the GNU gfortran compiler::
 
-    >> gfortran -o APM-MODEL.EXE APM_MODULE.F APM_SUBROUTINES.F APM_SOLVER.F APM_FLOW.F APM_OUTPUT.F -O2 -fimplicit-none -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace
+    >> gfortran -o APM-MODEL.EXE APM_MODULE.F APERTURE_MAP_FLOW.F APM_SUBROUTINES.F APM_SOLVER.F APM_FLOW.F APM_OUTPUT.F -O2 -fimplicit-none -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace
 
 Running the Model::
 
