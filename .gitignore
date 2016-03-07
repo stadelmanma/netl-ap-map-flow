@@ -1,4 +1,17 @@
-*.*~
-*.EXE
+# Ignore all
+*.*
 *.INP
-*.pyc
+#
+# Except the following directories 
+!ApertureMapModelTools
+!AVERAGED-FRACTURES
+!FULL-FRACTURES
+!OUTFILES
+!PVT
+!SOURCE
+!TEST-FRACTURES
+#
+# Except the following files
+!.gitignore
+!APM_BULK_RUN.PY 
+!README.rst
