@@ -16,18 +16,20 @@ ApertureMapModelTools contains two sub modules DataProcessing and BulkRun. The D
 
 Basic Usage of APM Model
 ------------------------
-Compiling the model, the flags shown below are apply to the GNU gfortran compiler::
+Compiling the model and openFOAM export, the flags shown below are apply to the GNU gfortran compiler::
 
-    >> gfortran -o APM-MODEL.EXE APM_MODULE.F APERTURE_MAP_FLOW.F APM_SUBROUTINES.F APM_SOLVER.F APM_FLOW.F APM_OUTPUT.F -O2 -fimplicit-none -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace
+    >> gfortran -o APM-MODEL.EXE APM_MODULE.F UNIT_CONVERSION_MODULE.F APERTURE_MAP_FLOW.F APM_SUBROUTINES.F APM_SOLVER.F APM_FLOW.F APM_OUTPUT.F -O2 -fimplicit-none -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace
+    
+    >> gfortran64 -o OPENFOAM-EXPORT.EXE APM_MODULE.F UNIT_CONVERSION_MODULE.F OPENFOAM_EXPORT.F OPENFOAM_EXPORT_SUBROUTINES.F APM_SUBROUTINES.F APM_SOLVER.F -O2 -fimplicit-none -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace
 
 Running the Model::
 
     >> .\APM-MODEL.EXE  model_initialization_file
 
 Pitfalls:
-    * Default file paths are in Windows format 
     * If compiled using 32-bit compiler running too large of a map will cause an integer overflow error
     * Other solver subroutines exist in APM_SOLVER.F, however only GAUSS is the only correctly working solver at this time
+    * openFOAM export is functional however not extremely friendly and may be rewritten into a Python routine at a later date
 
 Basic Usage of ApertureMapModelTools
 ------------------------

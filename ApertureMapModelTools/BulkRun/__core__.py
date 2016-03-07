@@ -319,7 +319,7 @@ def start_run(processes,input_file_list,num_CPUs,avail_RAM,RAM_in_use,start_dela
     #
     return   
 #
-def process_input_tuples(input_tuples,global_params = {}):
+def process_input_tuples(input_tuples,global_params = {},global_name_format = {}):
     r"""
     This program takes the tuples containing a list of aperture maps, run params and
     file formats and turns it into a standard format for teh bulk simulator.
@@ -330,12 +330,16 @@ def process_input_tuples(input_tuples,global_params = {}):
         for apm in tup[0]:
             args = dict()
             args['aperture_map'] = apm
-            # setting global params first and then map specific params
+            #
+            # setting global run params first and then map specific params
             args['run_params'] = {k : list(global_params[k]) for k in global_params}
             for key in tup[1].keys():
                 args['run_params'][key] = tup[1][key]
             #
-            args['filename_formats'] = tup[2]
+            # setting global name format first and then map specific formats
+            args['filename_formats'] = {k : global_name_format[k] for k in global_name_format}
+            for key in tup[2].keys():
+                args['filename_formats'][key] = tup[2][key]
             sim_inputs.append(dict(args))
     #
     return(sim_inputs)

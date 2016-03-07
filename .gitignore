@@ -1,6 +1,5 @@
 # Ignore all
 *.*
-*.INP
 #
 # Except the following directories 
 !ApertureMapModelTools
@@ -14,4 +13,5 @@
 # Except the following files
 !.gitignore
 !APM_BULK_RUN.PY 
+!FRACTURE_INITIALIZATION.INP
 !README.rst
