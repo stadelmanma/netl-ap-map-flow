@@ -22,6 +22,7 @@ C
 C ---------------------------------------------------------------------
 C   
       USE TWOD_MODULE
+      USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
       LOGICAL :: BOK
@@ -384,6 +385,7 @@ C
 C ---------------------------------------------------------------------
 C
       USE TWOD_MODULE
+      USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
       INTEGER :: IFLD,NFLD
@@ -400,8 +402,7 @@ C     READING IN MASTER INPUT FILE
           READ(CFLD(IFLD),"(F100.0)",ERR = 910) FPB
           IFLD = 3
           READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(1)
-          CALL UNIT_CONV(1,UNIT_IN(1),UNIT(1),PRES_CONV,BOK)
-          FPB = FPB*PRES_CONV
+          CALL CONVERT_VALUE('PRES',UNIT_IN(1),UNIT(1),FPB,BOK)
         ! READING OUTLET PRESSURE
         ELSEIF (INDEX(CFLD(1),'OUTLET-PRES') > 0) THEN
           IF (NFLD < 3) GOTO 905  
@@ -411,8 +412,7 @@ C     READING IN MASTER INPUT FILE
           READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(1)
           PRESC = .TRUE.
           CALL MESSAGE("     FRACTURE FLOW IS PRESSURE CONTROLLED")
-          CALL UNIT_CONV(1,UNIT_IN(1),UNIT(1),PRES_CONV,BOK)
-          OUTPB = OUTPB*PRES_CONV
+          CALL CONVERT_VALUE('PRES',UNIT_IN(1),UNIT(1),OUTPB,BOK)
         ! READING OUTLET FLOW RATE
         ELSEIF (INDEX(CFLD(1),'OUTLET-RATE') > 0) THEN
           IF (NFLD < 3) GOTO 905
@@ -422,8 +422,7 @@ C     READING IN MASTER INPUT FILE
           READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(5)
           RATEC = .TRUE.
           CALL MESSAGE("     FRACTURE FLOW IS RATE CONTROLLED")
-          CALL UNIT_CONV(5,UNIT_IN(5),UNIT(5),RATE_CONV,BOK)
-          OUTRATE = OUTRATE*RATE_CONV
+          CALL CONVERT_VALUE('RATE',UNIT_IN(5),UNIT(5),OUTRATE,BOK)
         ! READING FLUID TYPE
         ELSEIF (INDEX(CFLD(1),'FLUID-TYPE') > 0) THEN
           IFLD = 2
@@ -446,8 +445,7 @@ C     READING IN MASTER INPUT FILE
           READ(CFLD(IFLD),"(F100.0)",ERR = 910) RHO
           IFLD = 3
           READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(7)
-          CALL UNIT_CONV(7,UNIT_IN(7),UNIT(7),RHO_CONV,BOK)
-          RHO = RHO*RHO_CONV
+          CALL CONVERT_VALUE('DENS',UNIT_IN(7),UNIT(7),RHO,BOK)
         ! READING STANDARD PRESSURE
         ELSEIF (INDEX(CFLD(1),'STD-TEMP') > 0) THEN
           IFLD = 2
@@ -455,6 +453,7 @@ C     READING IN MASTER INPUT FILE
           READ(CFLD(IFLD),"(F100.0)",ERR = 910) STD_TEMP
           IFLD = 3
           READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(3)
+          CALL CONVERT_VALUE('TEMP',UNIT_IN(3),UNIT(3),STD_TEMP,BOK)
         ! READING STANDARD TEMPERATURE
         ELSEIF (INDEX(CFLD(1),'STD-PRESS') > 0) THEN
           IF (NFLD < 3) GOTO 905 
@@ -462,8 +461,7 @@ C     READING IN MASTER INPUT FILE
           READ(CFLD(IFLD),"(F100.0)",ERR = 910) STD_PRES
           IFLD = 3
           READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(1) 
-          CALL UNIT_CONV(1,UNIT_IN(1),UNIT(1),PRES_CONV,BOK)
-          STD_PRES = STD_PRES*PRES_CONV
+          CALL CONVERT_VALUE('PRES',UNIT_IN(1),UNIT(1),STD_PRES,BOK)
         ! READING OUTFLOW SIDE
         ELSEIF (INDEX(CFLD(1),'OUTFLOW-SIDE') > 0) THEN
           IFLD = 2
@@ -480,8 +478,7 @@ C     READING IN MASTER INPUT FILE
           IF (NFLD < 4) GOTO 905        
           READ(CFLD(IFLD),"(F10.0)",ERR = 910) VOX_MET
           CFLD(5) = 'SI'
-          CALL UNIT_CONV(2,CFLD(4),CFLD(5),DIM_CONV,BOK)
-          VOX_MET = VOX_MET*DIM_CONV
+          CALL CONVERT_VALUE('DIST',CFLD(4),UNIT(2),VOX_MET,BOK)
         ! READING ROUGHNESS COEFFICIENT TO APPLY
         ELSEIF (INDEX(CFLD(1),'ROUGH') > 0) THEN
           IFLD  = 3
@@ -549,10 +546,10 @@ C     SETTING CONVERSION VALUES
       UNIT(:) = 'SI'
       UNIT(3) = 'F'
       UNIT(7) = 'KG/M^3'
-      CALL UNIT_CONV(1,UNIT_IN(1),UNIT(1),PRES_CONV,BOK)
-      CALL UNIT_CONV(2,UNIT_IN(2),UNIT(2),DIM_CONV,BOK)
-      CALL UNIT_CONV(4,UNIT_IN(4),UNIT(4),TIME_CONV,BOK)
-      CALL UNIT_CONV(5,UNIT_IN(5),UNIT(5),RATE_CONV,BOK)
+      CALL CALC_CONV_FACT('PRES',UNIT_IN(1),UNIT(1),PRES_CONV,BOK)
+      CALL CALC_CONV_FACT('DIST',UNIT_IN(2),UNIT(2),DIM_CONV,BOK)
+      CALL CALC_CONV_FACT('TIME',UNIT_IN(4),UNIT(4),TIME_CONV,BOK)
+      CALL CALC_CONV_FACT('RATE',UNIT_IN(5),UNIT(5),RATE_CONV,BOK)
       IF (.NOT. BOK) GOTO 1000
 C
       RETURN
@@ -572,315 +569,6 @@ C
      &          ' DEVELOPED THERE COULD BE NUMERICAL ERRORS OR BUGS **')
 C     
       
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE UNIT_CONV(TYPE,UNITIN,UNITOUT,CONV_FACT,BOK)
-C 
-C     WRITTEN BY: MATTHEW STADELMAN
-C
-C     PROGRAM DESCRIPTION: HANDLES CONVERSION OF UNITS
-C
-C     LAST MODIFIED: 2016/02/08 
-C
-C     SUBROUTINE CALLS: NONE
-C
-C ---------------------------------------------------------------------
-C     VARIABLE DESCRIPTION: 
-C       CONV_FACT - CONVERSION FACTOR TO OUTPUT
-C       TMP - TEMPORARY VALUE TO USE WHEN CONVERTING BETWEEN TWO NON-SI UNITS
-C       RATE_DIM,RATE_TIME - DISTANCE AND TIME COMPONENTS OF FLOW RATE UNITS
-C       RHO_DIM,RHO_MASS - DISTANCE AND MASS COMPONENTS OF DENSITY UNITS
-C       TYPE,ERR_TYPE - TYPE OF UNIT CONVERSION TO PERFORM AND RESPECTIVE ERROR MESSAGE
-C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
-C       SI - TELLS PROGRAM TO CONVERT TO SI UNITS 
-C       LOOP - USED WHEN CONVERTING BETWEEH TWO NON-SI UNITS
-C       UNITIN,UNITOUT - UNIT NAME OF INPUT, UNIT NAME OF CONVERSION
-C       TYPES - STORES THE UNIT TYPE NAMES
-C       C80,R_UNIT - STRINGS STORING A TEMPORARY UNIT NAME
-C   
-C ---------------------------------------------------------------------
-C
-      USE TWOD_MODULE
-C
-      IMPLICIT NONE
-      REAL(8) :: CONV_FACT,TMP,RATE_DIM,RATE_TIME,RHO_DIM,RHO_MASS
-      INTEGER :: TYPE,ERR_TYPE
-      LOGICAL :: BOK,SI,LOOP
-      CHARACTER(*) :: UNITIN,UNITOUT
-      CHARACTER(80) :: TYPES(11),C80,R_UNIT
-C
-C @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-C
-C     UNIT CONVERSION TYPES
-C       1 - PRESSURE
-C       2 - DISTANCE
-C       3 - TEMPERATURE
-C       4 - TIME
-C       5 - FLOW RATE
-C       6 - VISCOSITY 
-C       7 - DENSITY
-C     
-C     USE UNITOUT = 'SI' FOR THE STANDARD UNIT OF ANY TYPE
-C
-C     TEMPERATURE CONVERSIONS ARE NOT FUNCTIONAL IN THIS VERSION
-C
-C @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-C
-C     SETTING DEFAULTS
-      CONV_FACT = 1
-      TMP = 1
-      C80 = UNITIN
-      ERR_TYPE = TYPE
-      SI = .FALSE.
-      LOOP = .TRUE.
-      IF (TRIM(UNITOUT) == 'SI') SI = .TRUE.
-C
-      TYPES(1) = "PRESSURE"
-      TYPES(2) = "DISTANCE"
-      TYPES(3) = "TEMPERATURE"
-      TYPES(4) = "TIME"
-      TYPES(5) = "FLOW RATE"
-      TYPES(6) = "VISCOSITY"
-      TYPES(7) = "DENSITY" 
-      TYPES(8) = "FLOW RATE(VOLUME)"
-      TYPES(9) = "FLOW RATE(TIME)"
-      TYPES(10) = "DENSITY(MASS)"
-      TYPES(11) = "DENSITY(VOLUME)"
-C
-C     PRESSURE
-      IF (TYPE == 1) THEN
- 100    IF (INDEX(C80,'PSI') > 0) THEN 
-          CONV_FACT = PSI_PA
-        ELSEIF(INDEX(C80,'BAR') > 0) THEN
-          CONV_FACT = BAR_PA
-        ELSEIF(INDEX(C80,'ATM') > 0) THEN
-          CONV_FACT = ATM_PA
-        ELSEIF(INDEX(C80,'KPA') > 0) THEN
-          CONV_FACT = KPA_PA
-        ELSEIF(INDEX(TRIM(C80),'PA') > 0) THEN
-          CONV_FACT = 1
-        ELSE
-          GOTO 800
-        END IF
-C  
-        IF (SI) THEN
-          UNITOUT = 'PA'
-        ELSEIF (LOOP) THEN !GETTING SI CONVERSION FOR UNITOUT
-          C80 = UNITOUT
-          TMP = CONV_FACT
-          LOOP = .FALSE.
-          GOTO 100
-        ELSE
-          CONV_FACT = TMP/CONV_FACT 
-        END IF !CALCULATING IN -> OUT CONVERSION FACTOR
-C
-C     DISTANCE
-      ELSEIF (TYPE == 2) THEN
- 200    IF (INDEX(C80,'MICR') > 0) THEN
-          CONV_FACT = MIC_MET
-        ELSEIF (INDEX(C80,'MM') > 0) THEN
-          CONV_FACT = MM_MET
-        ELSEIF (INDEX(C80,'CM') > 0) THEN
-          CONV_FACT = CM_MET
-        ELSEIF (INDEX(C80,'IN') > 0) THEN
-          CONV_FACT = IN_MET
-        ELSEIF (INDEX(C80,'FT')+INDEX(C80,'FEET')> 0) THEN
-          CONV_FACT = FT_MET
-        ELSEIF (INDEX(C80,'VOX') > 0) THEN
-          CONV_FACT = VOX_MET
-        ELSEIF (INDEX(TRIM(C80),'M') > 0) THEN
-          CONV_FACT = 1
-        ELSE
-          GOTO 800
-        END IF
-C 
-        IF (SI) THEN
-          UNITOUT = 'M'
-        ELSEIF (LOOP) THEN !GETTING SI CONVERSION FOR UNITOUT
-          C80 = UNITOUT
-          TMP = CONV_FACT
-          LOOP = .FALSE.
-          GOTO 200
-        ELSE
-          CONV_FACT = TMP/CONV_FACT 
-        END IF !CALCULATING IN -> OUT CONVERSION FACTOR
-C
-C     TEMPERATURE
-      ELSEIF (TYPE == 3) THEN
-        !!! THIS IS NOT FUNCTIONAL
-        !!! FAHR CONV
-        !!! CELC CONV
-        !!! RANK CONV
-        !!! KELV CONV 
-C
-C     TIME
-      ELSEIF (TYPE == 4) THEN
- 400    IF (INDEX(C80,'DAY') > 0) THEN
-          CONV_FACT = DAY_SEC
-        ELSEIF (INDEX(C80,'HOUR') > 0) THEN
-          CONV_FACT = HR_SEC
-        ELSEIF (INDEX(C80,'MIN') > 0) THEN
-          CONV_FACT = MIN_SEC
-        ELSEIF (INDEX(C80,'SEC') > 0) THEN
-          CONV_FACT = 1
-        ELSE
-          GOTO 800
-        END IF
-C 
-        IF (SI) THEN
-          UNITOUT = 'SEC'
-        ELSEIF (LOOP) THEN !GETTING SI CONVERSION FOR UNITOUT
-          C80 = UNITOUT
-          TMP = CONV_FACT
-          LOOP = .FALSE.
-          GOTO 400
-        ELSE
-          CONV_FACT = TMP/CONV_FACT 
-        END IF !CALCULATING IN -> OUT CONVERSION FACTOR
-C
-C     RATE
-      ELSEIF (TYPE == 5) THEN
-        R_UNIT = UNITIN
-C
-C       SPLITTING RATE INTO DIST AND TIME UNITS
-  500   C80 = R_UNIT(1:(INDEX(R_UNIT,'/')-1))
-        ERR_TYPE = 8
-        IF (INDEX(C80,'MICR') > 0) THEN
-          RATE_DIM = MIC_MET
-        ELSEIF (INDEX(C80,'MM') > 0) THEN
-          RATE_DIM = MM_MET
-        ELSEIF (INDEX(C80,'CM') > 0) THEN
-          RATE_DIM = CM_MET
-        ELSEIF (INDEX(C80,'IN') > 0) THEN
-          RATE_DIM = IN_MET
-        ELSEIF (INDEX(C80,'FT')+INDEX(C80,'FEET')> 0) THEN
-          RATE_DIM = FT_MET
-        ELSEIF (INDEX(C80,'VOX') > 0) THEN
-          RATE_DIM = VOX_MET
-        ELSEIF (INDEX(C80,'ML') > 0) THEN
-          RATE_DIM = CM_MET
-        ELSEIF (INDEX(TRIM(C80),'M^3')+INDEX(TRIM(C80),'MET') > 0) THEN
-          RATE_DIM = 1
-        ELSE
-          GOTO 800
-        END IF
-C
-        C80 = R_UNIT((INDEX(R_UNIT,'/')+1):LEN(R_UNIT))
-        ERR_TYPE = 9
-        IF (INDEX(C80,'DAY') > 0) THEN
-          RATE_TIME = DAY_SEC
-        ELSEIF (INDEX(C80,'HOUR') > 0) THEN
-          RATE_TIME = HR_SEC
-        ELSEIF (INDEX(C80,'MIN') > 0) THEN
-          RATE_TIME = MIN_SEC
-        ELSEIF (INDEX(C80,'SEC') > 0) THEN
-          RATE_TIME = 1
-        ELSE
-          GOTO 800
-        END IF
-        CONV_FACT = RATE_DIM**3/RATE_TIME
-C 
-        IF (SI) THEN
-          UNITOUT = 'M^3/SEC'
-        ELSEIF (LOOP) THEN !GETTING SI CONVERSION FOR UNITOUT
-          R_UNIT = UNITOUT
-          TMP = CONV_FACT
-          LOOP = .FALSE.
-          GOTO 500
-        ELSE
-          CONV_FACT = TMP/CONV_FACT 
-        END IF !CALCULATING IN -> OUT CONVERSION FACTOR
-C
-C     VISCOSITY
-      ELSEIF (TYPE == 6) THEN
- 600    IF (INDEX(C80,'CP')+INDEX(C80,'CENT') > 0) THEN
-          CONV_FACT = CP_PASEC
-        ELSEIF (INDEX(C80,'PA') + INDEX(C80,'SEC') > 0) THEN
-          CONV_FACT = 1
-        END IF
-C 
-        IF (SI) THEN
-          UNITOUT = 'PA-SEC'
-        ELSEIF (LOOP) THEN !GETTING SI CONVERSION FOR UNITOUT
-          C80 = UNITOUT
-          TMP = CONV_FACT
-          LOOP = .FALSE.
-          GOTO 600
-        ELSE
-          CONV_FACT = TMP/CONV_FACT 
-        END IF !CALCULATING IN -> OUT CONVERSION FACTOR
-C
-C     DENSITY
-      ELSEIF (TYPE == 7) THEN
-        R_UNIT = UNITIN
-C
-C       SPLITTING DENSITY INTO MASS AND DISTANCE UNITS
- 700    C80 = R_UNIT(1:(INDEX(R_UNIT,'/')-1))
-        ERR_TYPE = 10
-        IF (INDEX(C80,'SLUG') > 0) THEN
-          RHO_MASS = SLG_KG
-        ELSEIF (INDEX(C80,'LB') > 0) THEN
-          RHO_MASS = LBS_KG
-        ELSEIF (INDEX(C80,'KG') > 0) THEN
-          RHO_MASS = 1.0
-        ELSEIF (INDEX(C80,'G')+INDEX(C80,'GRAM') > 0) THEN
-          RHO_MASS = GM_KG
-        ELSE
-          GOTO 800
-        END IF
-C
-        C80 = R_UNIT((INDEX(R_UNIT,'/')+1):LEN(R_UNIT))
-        ERR_TYPE = 11
-        IF (INDEX(C80,'MICR') > 0) THEN
-          RHO_DIM = MIC_MET
-        ELSEIF (INDEX(C80,'MM') > 0) THEN
-          RHO_DIM = MM_MET
-        ELSEIF (INDEX(C80,'CM') > 0) THEN
-          RHO_DIM = CM_MET
-        ELSEIF (INDEX(C80,'IN') > 0) THEN
-          RHO_DIM = IN_MET
-        ELSEIF (INDEX(C80,'FT')+INDEX(C80,'FEET')> 0) THEN
-          RHO_DIM = FT_MET
-        ELSEIF (INDEX(C80,'VOX') > 0) THEN
-          RHO_DIM = VOX_MET
-        ELSEIF (INDEX(C80,'ML') > 0) THEN
-          RHO_DIM = CM_MET
-        ELSEIF (INDEX(TRIM(C80),'M^3')+INDEX(TRIM(C80),'MET') > 0) THEN
-          RHO_DIM = 1.0
-        ELSE
-          GOTO 800
-        END IF
-        CONV_FACT = RHO_MASS/RHO_DIM**3
-C 
-        IF (SI) THEN
-          UNITOUT = 'KG/M^3'
-        ELSEIF (LOOP) THEN !GETTING SI CONVERSION FOR UNITOUT
-          R_UNIT = UNITOUT
-          TMP = CONV_FACT
-          LOOP = .FALSE.
-          GOTO 700
-        ELSE
-          CONV_FACT = TMP/CONV_FACT 
-        END IF !CALCULATING IN -> OUT CONVERSION FACTOR
-      END IF
-C     
-      RETURN
-C
-  800 UNITOUT = C80
-      WRITE(CVAR,2000)TRIM(TYPES(ERR_TYPE)),TRIM(UNITOUT)
-      CALL MESSAGE(CVAR)
-      GOTO 1000
-C
- 1000 BOK = .FALSE.
-      RETURN
-C
- 2000 FORMAT(1X,' *** ERROR: NO ',A,' CONVERSION FOUND FOR UNIT: ',
-     &       A,' ***')
 C
       END SUBROUTINE
 C
@@ -910,6 +598,7 @@ C
 C ---------------------------------------------------------------------
 C
       USE TWOD_MODULE
+      USE UNIT_CONVERSION_MODULE
       IMPLICIT NONE 
 C
       REAL(8) :: PH,PL,PR_CONV
@@ -944,12 +633,12 @@ C     AND THE NEXT FIELD IN LINE BEHIND THE VALUE
         IF (INDEX(CFLD(IFLD),'PRESSURE') > 0) THEN
           IF (NFLD < IFLD + 1) GOTO 905
           PR_UNIT = 'SI'
-          CALL UNIT_CONV(1,CFLD(IFLD+1),PR_UNIT,PR_CONV,BOK)
+          CALL CALC_CONV_FACT('PRES',CFLD(IFLD+1),PR_UNIT,PR_CONV,BOK)
         ELSEIF (INDEX(CFLD(IFLD),'VISC') > 0) THEN
           IF (NFLD < IFLD + 1) GOTO 905
           UNIT(6) = 'SI'
           UNIT_IN(6) = TRIM(CFLD(IFLD+1))
-          CALL UNIT_CONV(6,UNIT_IN(6),UNIT(6),VISC_CONV,BOK)
+          CALL CALC_CONV_FACT('VISC',UNIT_IN(6),UNIT(6),VISC_CONV,BOK)
         END IF
       END DO      
 C
@@ -1083,6 +772,7 @@ C
 C ---------------------------------------------------------------------
 C
       USE TWOD_MODULE
+      USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
       REAL(8), ALLOCATABLE :: WIDTH_SORT(:)
@@ -1410,6 +1100,7 @@ C
 C ----------------------------------------------------------------------
 C
       USE TWOD_MODULE
+      USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
       REAL(8),ALLOCATABLE :: VARG(:,:)
@@ -2117,7 +1808,7 @@ C     LAST MODIFIED: 2016/02/10
 C
 C     PROGRAM DESCRIPTION: PREPARES OUTPUT FILES
 C
-C     SUBROUTINE CALLS: UNIT_CONV, SET_HEADER
+C     SUBROUTINE CALLS: CALC_CONV_FACT, SET_HEADER
 C     
 C ----------------------------------------------------------------------
 C     VARIABLE DESCRIPTION: 
@@ -2127,6 +1818,7 @@ C
 C ---------------------------------------------------------------------- 
 C
       USE TWOD_MODULE
+      USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
       REAL(8) :: CONV(7)
@@ -2145,12 +1837,12 @@ C
       CALL BLANK
       CALL MESSAGE(" INITIALIZING OUTPUT FILES") 
       CALL MESSAGE("     INPUT CONVERSIONS APPLIED")
-      CALL UNIT_CONV(1,UNIT(1),UNIT_OUT(1),PRES_CONV,BOK)
-      CALL UNIT_CONV(2,UNIT(2),UNIT_OUT(2),DIM_CONV,BOK)
-      CALL UNIT_CONV(4,UNIT(4),UNIT_OUT(4),TIME_CONV,BOK)
-      CALL UNIT_CONV(5,UNIT(5),UNIT_OUT(5),RATE_CONV,BOK)
-      CALL UNIT_CONV(6,UNIT(6),UNIT_OUT(6),VISC_CONV,BOK)
-      CALL UNIT_CONV(7,UNIT(7),UNIT_OUT(7),RHO_CONV,BOK)
+      CALL CALC_CONV_FACT('PRES',UNIT(1),UNIT_OUT(1),PRES_CONV,BOK)
+      CALL CALC_CONV_FACT('DIST',UNIT(2),UNIT_OUT(2),DIM_CONV,BOK)
+      CALL CALC_CONV_FACT('TIME',UNIT(4),UNIT_OUT(4),TIME_CONV,BOK)
+      CALL CALC_CONV_FACT('RATE',UNIT(5),UNIT_OUT(5),RATE_CONV,BOK)
+      CALL CALC_CONV_FACT('VISC',UNIT(6),UNIT_OUT(6),VISC_CONV,BOK)
+      CALL CALC_CONV_FACT('DENS',UNIT(7),UNIT_OUT(7),RHO_CONV,BOK)
       IF (.NOT. BOK) GOTO 1000
 C
       WRITE(CVAR,1990)

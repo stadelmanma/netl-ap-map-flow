@@ -1,0 +1,392 @@
+      MODULE UNIT_CONVERSION_MODULE
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C     FILE DESCRIPTION: GENERIC MODULE TO HANDLE UNIT CONVERSIONS BY
+C         EITHER RETURNING A CONVERSION FACTOR OR CONVERTED VALUE. THE 
+C         LOWEST LEVEL ROUTINES CAN BE CALLED DIRECTLY IF THE ONLY THING
+C         REQUIRED IS A CONVERSION FACTOR FROM NON-SI TO SI
+C
+C     DATE WRITTEN:  2016/02/17
+C     LAST MODIFIED: 2016/02/24
+C ----------------------------------------------------------------------
+C               ---- VARIABLE DESCRIPTIONS ----
+      PRIVATE
+C
+C     STATICALLY DEFINED UNIT TO SI CONVERSIONS
+      !
+      !DISTANCE TO METERS  
+      REAL(8) :: MIC_MET,MM_MET,CM_MET,IN_MET,FT_MET,VOX_MET
+      PARAMETER (MIC_MET = 1E-6, MM_MET = 1E-3, CM_MET = 0.01)
+      PARAMETER (IN_MET = 0.0254, FT_MET = 0.3048)
+      !
+      !MASS TO KILOGRAMS
+      REAL(8) :: GM_KG,LBS_KG,SLG_KG
+      PARAMETER (GM_KG = 0.001, LBS_KG = 0.4535924, SLG_KG = 14.59390)
+      !
+      !TIME TO SECONDS 
+      REAL(8) :: DAY_SEC, HR_SEC, MIN_SEC
+      PARAMETER (DAY_SEC = 86400.0, HR_SEC = 3600.0, MIN_SEC = 60.0)
+      !
+      !FORCE TO NEWTONS
+      REAL(8) :: LB_NWT,DYN_NWT,KN_N
+      PARAMETER (LB_NWT = 4.448221617, DYN_NWT = 1E-5, KN_N = 1000.0)
+      !
+      !PRESSURE TO PASCALS               
+      REAL(8) :: ATM_PA, BAR_PA, KPA_PA, PSI_PA
+      PARAMETER (ATM_PA = 101325.0, BAR_PA = 100000.0)
+      PARAMETER (KPA_PA = 1000.0, PSI_PA = 6894.757293178)
+      !
+      !VISCOSITY TO PA*S
+      REAL(8) :: CP_PASEC
+      PARAMETER (CP_PASEC = 0.001)
+      !
+      ! LISTING OF SI UNITS
+      CHARACTER(80),SAVE :: SI_UNITS(100)
+      !
+      ! PUBLIC SUBROUTINES AND VARIABLES
+      PUBLIC :: VOX_MET !VOX_MET IS USER DEFINED BY VOXEL SIZE:
+      PUBLIC :: CONVERT_VALUE,CALC_CONV_FACT
+      PUBLIC :: CONV_DIST,CONV_MASS,CONV_TIME,CONV_TEMP
+      PUBLIC :: CONV_DENS,CONV_RATE,CONV_PRES,CONV_VISC
+C
+C
+      CONTAINS 
+C
+C     PRIMARY SUBROUTINE TO DIRECTLY CONVERT A VALUE TO DIFFERENT UNITS
+      SUBROUTINE CONVERT_VALUE(TYPE,UNIT_IN,UNIT_OUT,VALUE,BOK)
+        !
+        REAL(8) :: VALUE,CONV_FACT
+        LOGICAL :: BOK
+        CHARACTER(*) :: TYPE,UNIT_IN,UNIT_OUT
+        !
+        IF (INDEX(TYPE,'TEMP') > 0) THEN
+          CALL CONV_TEMP(UNIT_IN,UNIT_OUT,VALUE,BOK)
+          IF (.NOT. BOK) GOTO 1000
+        ELSE
+          CALL CALC_CONV_FACT(TYPE,UNIT_IN,UNIT_OUT,CONV_FACT,BOK)
+          IF (.NOT. BOK) GOTO 1000
+          VALUE = VALUE * CONV_FACT
+        END IF
+        !
+        RETURN
+        !
+ 1000   BOK = .FALSE.
+        RETURN
+        !
+      END SUBROUTINE
+C
+C     SECONDARY SUBROUTINE TO GENERATE CONVERSION FACTORS
+      SUBROUTINE CALC_CONV_FACT(TYPE,UNIT_IN,UNIT_OUT,CONV_FACT,BOK)
+        !
+        REAL(8) :: CONV_FACT,TMP
+        INTEGER :: TYPE_ID
+        LOGICAL :: BOK
+        CHARACTER(*) :: TYPE,UNIT_IN,UNIT_OUT
+        !
+        CALL SET_TYPE_ID(TYPE,TYPE_ID)
+        IF (TYPE_ID < 1) GOTO 900
+        !
+        ! GETTING CONVERSION FACTOR
+        IF (TRIM(UNIT_OUT) == 'SI') THEN
+          CALL GET_CONV_FACT(TYPE_ID,UNIT_IN,CONV_FACT)
+          IF (CONV_FACT < 0) GOTO 920
+          UNIT_OUT = SI_UNITS(TYPE_ID)
+        ELSE
+          CALL GET_CONV_FACT(TYPE_ID,UNIT_IN,TMP)
+          IF (TMP < 0) GOTO 920
+          CALL GET_CONV_FACT(TYPE_ID,UNIT_OUT,CONV_FACT)
+          IF (CONV_FACT < 0) GOTO 920
+          CONV_FACT = TMP/CONV_FACT
+        END IF
+        !
+        RETURN
+        !
+  900   WRITE(*,*) " NO CONVERTER FOUND FOR UNIT TYPE: "//TRIM(TYPE)
+        GOTO 1000
+        !
+  920   WRITE(*,2000)TRIM(TYPE),TRIM(UNIT_IN),TRIM(UNIT_OUT)
+        GOTO 1000
+        !
+ 1000   BOK = .FALSE.
+        RETURN
+        !
+ 2000   FORMAT(1X,'NO ',A,' CONVERSION FOUND FOR ',A,' TO ',A)
+        !
+      END SUBROUTINE
+C
+C     GETS THE TYPE ID OF THE UNIT
+      SUBROUTINE SET_TYPE_ID(TYPE,TYPE_ID)
+        !
+        INTEGER :: TYPE_ID
+        CHARACTER(*) :: TYPE
+        !
+        IF (INDEX(TYPE,'DIST') > 0) THEN
+          TYPE_ID = 10
+          SI_UNITS(TYPE_ID) = 'M'
+        ELSE IF (INDEX(TYPE,'MASS') > 0) THEN
+          TYPE_ID = 20
+          SI_UNITS(TYPE_ID) = 'KG'
+        ELSE IF (INDEX(TYPE,'TEMP') > 0) THEN
+          TYPE_ID = 30
+          SI_UNITS(TYPE_ID) = 'K'
+        ELSE IF (INDEX(TYPE,'TIME') > 0) THEN
+          TYPE_ID = 40
+          SI_UNITS(TYPE_ID) = 'SEC'
+        ELSE IF (INDEX(TYPE,'DENS') > 0) THEN
+          TYPE_ID = 50
+          SI_UNITS(TYPE_ID) = 'KG/M^3'
+        ELSE IF (INDEX(TYPE,'FLOW')+INDEX(TYPE,'RATE') > 0) THEN
+          TYPE_ID = 60
+          SI_UNITS(TYPE_ID) = 'M^3/SEC'
+        ELSE IF (INDEX(TYPE,'PRES') > 0) THEN
+          TYPE_ID = 70
+          SI_UNITS(TYPE_ID) = 'PA'
+        ELSE IF (INDEX(TYPE,'VISC') > 0) THEN
+          TYPE_ID = 80
+          SI_UNITS(TYPE_ID) = 'PA*SEC'
+        ELSE
+          TYPE_ID = -1
+        END IF
+        !
+        RETURN
+      END SUBROUTINE
+C
+C     USES THE TYPE TO CALL THE PROPER UNIT CONVERTER
+      SUBROUTINE GET_CONV_FACT(TYPE_ID,UNIT_IN,CONV_FACT)
+        !
+        REAL(8) :: CONV_FACT
+        INTEGER :: TYPE_ID
+        CHARACTER(*) :: UNIT_IN
+        !
+        CONV_FACT = 1.0
+        !
+        IF      (TYPE_ID == 10) THEN
+          CALL CONV_DIST(UNIT_IN,CONV_FACT)
+        ELSE IF (TYPE_ID == 20) THEN
+          CALL CONV_MASS(UNIT_IN,CONV_FACT)
+        ELSE IF (TYPE_ID == 30) THEN
+          WRITE(*,*) " NO MULTIPLICATIVE CONVERSIONS FOR TEMPERATURE."
+        ELSE IF (TYPE_ID == 40) THEN
+          CALL CONV_TIME(UNIT_IN,CONV_FACT)
+        ELSE IF (TYPE_ID == 50) THEN
+          CALL CONV_DENS(UNIT_IN,CONV_FACT)
+        ELSE IF (TYPE_ID == 60) THEN
+          CALL CONV_RATE(UNIT_IN,CONV_FACT)
+        ELSE IF (TYPE_ID == 70) THEN
+          CALL CONV_PRES(UNIT_IN,CONV_FACT)
+        ELSE IF (TYPE_ID == 80) THEN
+          CALL CONV_VISC(UNIT_IN,CONV_FACT)
+        ELSE
+          WRITE(*,*) " NO CONVERTER FOUND FOR TYPE ID: ",TYPE_ID
+        END IF
+        !
+      END SUBROUTINE
+C
+C     CONVERTS DISTANCE UNITS TO SI
+      SUBROUTINE CONV_DIST(UNIT_IN,CONV_FACT)
+        !
+        REAL(8) :: CONV_FACT
+        CHARACTER(*) :: UNIT_IN
+        !
+        IF (INDEX(UNIT_IN,'MICR') > 0) THEN
+          CONV_FACT = MIC_MET
+        ELSEIF (INDEX(UNIT_IN,'MM') > 0) THEN
+          CONV_FACT = MM_MET
+        ELSEIF (INDEX(UNIT_IN,'CM') > 0) THEN
+          CONV_FACT = CM_MET
+        ELSEIF (INDEX(UNIT_IN,'IN') > 0) THEN
+          CONV_FACT = IN_MET
+        ELSEIF (INDEX(UNIT_IN,'FT')+INDEX(UNIT_IN,'FEET')> 0) THEN
+          CONV_FACT = FT_MET
+        ELSEIF (INDEX(UNIT_IN,'ML') > 0) THEN !USED IN RATE CONVERSION
+          CONV_FACT = CM_MET
+        ELSEIF (INDEX(UNIT_IN,'VOX') > 0) THEN
+          CONV_FACT = VOX_MET
+        ELSEIF (INDEX(TRIM(UNIT_IN),'M') > 0) THEN
+          CONV_FACT = 1.0
+        ELSE
+          CONV_FACT = -1.0
+        END IF
+        !
+        RETURN
+      END SUBROUTINE
+C
+C     CONVERTS MASS UNITS TO SI
+      SUBROUTINE CONV_MASS(UNIT_IN,CONV_FACT)
+        !
+        REAL(8) :: CONV_FACT
+        CHARACTER(*) :: UNIT_IN
+        !
+        IF (INDEX(UNIT_IN,'SLUG') > 0) THEN
+          CONV_FACT = SLG_KG
+        ELSEIF (INDEX(UNIT_IN,'LB') > 0) THEN
+          CONV_FACT = LBS_KG
+        ELSEIF (INDEX(UNIT_IN,'KG') > 0) THEN
+          CONV_FACT = 1.0
+        ELSEIF (INDEX(UNIT_IN,'G')+INDEX(UNIT_IN,'GRAM')> 0) THEN
+          CONV_FACT = GM_KG
+        ELSE
+          CONV_FACT = -1.0
+        END IF
+        !
+        RETURN
+      END SUBROUTINE
+C
+C     CONVERTS TEMPERATURE VALUE TO ANOTHER UNIT
+      SUBROUTINE CONV_TEMP(UNIT_IN,UNIT_OUT,VALUE,BOK)
+        !
+        REAL(8) :: VALUE
+        LOGICAL :: BOK
+        CHARACTER(*) :: UNIT_IN,UNIT_OUT
+        !
+        UNIT_IN  = TRIM(UNIT_IN)
+        UNIT_OUT = TRIM(UNIT_OUT)
+        IF (TRIM(UNIT_OUT) == 'SI') UNIT_OUT = 'K'
+        !
+        ! CONVERTING VALUE FROM UNIT_IN TO SI
+        IF     (UNIT_IN(1:1) == 'F') THEN
+          VALUE = (VALUE + 459.67)*(5.0/9.0)
+        ELSEIF (UNIT_IN(1:1) == 'R') THEN
+          VALUE = VALUE * (5.0/9.0)
+        ELSEIF (UNIT_IN(1:1) == 'C') THEN
+          VALUE = VALUE + 273.15
+        ELSEIF (UNIT_IN(1:1) == 'K') THEN
+          VALUE = VALUE
+        ELSE
+          GOTO 900
+        END IF
+        !
+        ! CONVERTING VALUE FROM SI TO UNIT_OUT
+        IF     (UNIT_OUT(1:1) == 'F') THEN
+          VALUE = VALUE*(9.0/5.0) - 459.67
+        ELSEIF (UNIT_OUT(1:1) == 'R') THEN
+          VALUE = VALUE * (9.0/5.0)
+        ELSEIF (UNIT_OUT(1:1) == 'C') THEN
+          VALUE = VALUE - 273.15
+        ELSEIF (UNIT_OUT(1:1) == 'K') THEN
+          VALUE = VALUE
+        ELSE
+          GOTO 900
+        END IF
+        !
+        RETURN
+        !
+  900   WRITE(*,2000)TRIM(UNIT_IN)
+        GOTO 1000
+        !
+ 1000   BOK = .FALSE.
+        RETURN
+        !
+ 2000   FORMAT(1X,'ERROR: NO TEMPERATURE CONVERSION FOUND FOR UNIT: ',A)
+        !
+      END SUBROUTINE
+C
+C     CONVERTS TIME UNITS TO SI
+      SUBROUTINE CONV_TIME(UNIT_IN,CONV_FACT)
+        !
+        REAL(8) :: CONV_FACT
+        CHARACTER(*) :: UNIT_IN
+        !
+        IF (INDEX(UNIT_IN,'DAY') > 0) THEN
+          CONV_FACT = DAY_SEC
+        ELSEIF (INDEX(UNIT_IN,'HOUR')+INDEX(UNIT_IN,'HR') > 0) THEN
+          CONV_FACT = HR_SEC
+        ELSEIF (INDEX(UNIT_IN,'MIN') > 0) THEN
+          CONV_FACT = MIN_SEC
+        ELSEIF (INDEX(UNIT_IN,'SEC') > 0) THEN
+          CONV_FACT = 1.0
+        ELSE
+          CONV_FACT = -1.0
+        END IF
+        !
+        RETURN
+      END SUBROUTINE
+C
+C     CONVERTS DENSITY UNITS TO SI
+      SUBROUTINE CONV_DENS(UNIT_IN,CONV_FACT)
+        !
+        REAL(8) :: CONV_FACT,DIST_CONV,MASS_CONV
+        CHARACTER(*)  :: UNIT_IN
+        CHARACTER(80) :: DIST_UNIT,MASS_UNIT
+        !
+        MASS_UNIT = UNIT_IN(1:(INDEX(UNIT_IN,'/')-1))
+        DIST_UNIT = UNIT_IN((INDEX(UNIT_IN,'/')+1):LEN(UNIT_IN))
+        !
+        CALL CONV_MASS(MASS_UNIT,MASS_CONV)
+        IF (MASS_CONV < 0) WRITE(*,2000) TRIM(MASS_UNIT)
+        CALL CONV_DIST(DIST_UNIT,DIST_CONV)
+        IF (DIST_CONV < 0) WRITE(*,2010) TRIM(DIST_UNIT)
+        CONV_FACT = MASS_CONV/DIST_CONV**3
+        !
+        RETURN
+        !
+ 2000   FORMAT(" NO DENSITY, MASS CONVERSION FOUND FOR UNIT: ",A)
+ 2010   FORMAT(" NO DENSITY, DISTANCE CONVERSION FOUND FOR UNIT: ",A)
+        !
+      END SUBROUTINE
+C
+C     CONVERTS FLOW RATE UNITS TO SI
+      SUBROUTINE CONV_RATE(UNIT_IN,CONV_FACT)
+        !
+        REAL(8) :: CONV_FACT,DIST_CONV,TIME_CONV
+        CHARACTER(*)  :: UNIT_IN
+        CHARACTER(80) :: DIST_UNIT,TIME_UNIT
+        !
+        DIST_UNIT = UNIT_IN(1:(INDEX(UNIT_IN,'/')-1))
+        TIME_UNIT = UNIT_IN((INDEX(UNIT_IN,'/')+1):LEN(UNIT_IN))
+        !
+        CALL CONV_DIST(DIST_UNIT,DIST_CONV)
+        IF (DIST_CONV < 0) WRITE(*,2000) TRIM(DIST_UNIT)
+        CALL CONV_TIME(TIME_UNIT,TIME_CONV)
+        IF (TIME_CONV < 0) WRITE(*,2010) TRIM(TIME_UNIT)
+        CONV_FACT = DIST_CONV**3/TIME_CONV
+        !
+        RETURN
+        !
+ 2000   FORMAT(" NO RATE, DISTANCE CONVERSION FOUND FOR UNIT: ",A)
+ 2010   FORMAT(" NO RATE, TIME CONVERSION FOUND FOR UNIT: ",A)
+        !
+      END SUBROUTINE
+C
+C     CONVERTS PRESSURE UNITS TO SI
+      SUBROUTINE CONV_PRES(UNIT_IN,CONV_FACT)
+        !
+        REAL(8) :: CONV_FACT
+        CHARACTER(*) :: UNIT_IN
+        !
+        IF (INDEX(UNIT_IN,'PSI') > 0) THEN 
+          CONV_FACT = PSI_PA
+        ELSEIF(INDEX(UNIT_IN,'BAR') > 0) THEN
+          CONV_FACT = BAR_PA
+        ELSEIF(INDEX(UNIT_IN,'ATM') > 0) THEN
+          CONV_FACT = ATM_PA
+        ELSEIF(INDEX(UNIT_IN,'KPA') > 0) THEN
+          CONV_FACT = KPA_PA
+        ELSEIF(INDEX(TRIM(UNIT_IN),'PA') > 0) THEN
+          CONV_FACT = 1.0
+        ELSE
+          CONV_FACT = -1.0
+        END IF
+        !
+        RETURN
+      END SUBROUTINE
+C
+C     CONVERTS VISCOSITY UNITS TO SI
+      SUBROUTINE CONV_VISC(UNIT_IN,CONV_FACT)
+        !
+        REAL(8) :: CONV_FACT
+        CHARACTER(*)  :: UNIT_IN
+        !
+        IF (INDEX(UNIT_IN,'CP')+INDEX(UNIT_IN,'CENT') > 0) THEN
+          CONV_FACT = CP_PASEC
+        ELSEIF (INDEX(UNIT_IN,'PA') + INDEX(UNIT_IN,'SEC') > 0) THEN
+          CONV_FACT = 1.0
+        ELSE
+          CONV_FACT = -1.0
+        END IF
+        !
+        RETURN
+      END SUBROUTINE
+C
+C
+      END MODULE     

@@ -28,17 +28,17 @@ class Percentiles(BaseProcessor):
     #
     def process_data(self,**kwargs):
         r"""
-        Takes a list of percentiles specified in **kwargs and generates 
+        Takes a list of percentiles specified in self.args and generates 
         the corresponding set of values.
         """
         perc_list = self.args["perc"]
         perc_list.sort()
         #
-        # getting requested percentiles for each flow component
+        # getting percentiles from data map
         self.data_map.sort()
         self.processed_data = dict()
         for perc in perc_list:
-            self.processed_data[perc] = calc_percentile(perc,self.data_map) 
+            self.processed_data[perc] = calc_percentile(perc,self.data_map,sort=False) 
     #
     def output_data(self,filename=None,delim = ',',**kwargs):
         r"""
