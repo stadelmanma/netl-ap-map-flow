@@ -25,23 +25,36 @@ class ArgInput:
         r"""
         Parses the line for the input key string and value
         """
-        line_arr = list(filter(None,re.split(r'\s',line)))
+        # inital values
         self.line = line
-        self.line_arr = line_arr
+        self.line_arr = []
         self.keyword = ''
         self.value = line
         self.value_index = -1
+        self.commented_out = False
+        #
+        # testing if line was commented out
+        m = re.match(r'^;(.*)',line)
+        if m:
+            self.commented_out = True  
+            self.line = m.group(1)
+            self.value = m.group(1)
+        #
+        line_arr = list(filter(None,re.split(r'\s',self.line)))
+        if (len(line_arr) == 0):
+            line_arr = ['']
+        self.line_arr = line_arr
         #
         try:
             m = re.match(r'[; ]*([a-zA-z,-]*)',line_arr[0])
             self.keyword = m.group(1)
         except IndexError:
             print("Error - Bad line input provided - line: '",line,"'")
-            raise IndexError
+            exit()
         #
         # if line has a colon the field after it will be used as the value
         # otherwise the whole line is considered the value
-        if (re.search(r':\s',line)):
+        if (re.search(r':\s',self.line)):
             for ifld in range(len(line_arr)):
                 if (re.search(r':$',line_arr[ifld])):
                     try:
@@ -51,16 +64,29 @@ class ArgInput:
                         self.value = "NONE"
                         self.value_index = ifld+1    
     #
-    def update_value(self,new_value):
+    def update_value(self,new_value,uncomment=True):
         r"""
-        Updates the line with the new value
+        Updates the line with the new value and uncomments the line by default
         """
+        #
+        if (uncomment):
+            self.commented_out = False
+        #
         if (self.value_index > 0):
             self.line_arr[self.value_index] = new_value
         else:
             self.line_arr = list(filter(None,re.split('\s',new_value)))       
         self.line = ' '.join(self.line_arr)
         self.value = new_value
+    #
+    def output_line(self):
+        r"""
+        Returns and input line repsentation of the object
+        """
+        #
+        cmt = (';' if self.commented_out else '')
+        line = cmt + self.line
+        return(line)
 #
 class InputFile:
     r"""
@@ -77,14 +103,21 @@ class InputFile:
             self.filename_formats['input_file'] = self.outfile_name   
     #
     def __repr__(self):
-        string_rep = ''
-        keys = list(self.arg_dict.keys())
-        keys.sort()
-        for key in keys:
-            string_rep += 'Key: '+key+' Value: '+self.arg_dict[key].value+'\n'
+        r"""
+        Writes an input file to the screen 
+        """
         #
-        string_rep += '\n\n'
-        return(string_rep)
+        # updating filenames to match current args
+        self.construct_file_names()
+        #
+        # builidng content from ArgInput class line attribute
+        content = ''
+        for key in self.arg_order:
+            content += self.arg_dict[key].output_line()+'\n'
+        #
+        print('Input file would be saved as: '+self.outfile_name)
+        #
+        return(content)
     #
     def clone(self,file_formats = None):
         r"""
@@ -95,7 +128,7 @@ class InputFile:
             file_formats = self.filename_formats
         #
         input_file = InputFile(file_formats)
-        input_file.arg_dict = {k : ArgInput(self.arg_dict[k].line) for k in self.arg_dict.keys()}
+        input_file.arg_dict = {k : ArgInput(self.arg_dict[k].output_line()) for k in self.arg_dict.keys()}
         input_file.arg_order = [arg for arg in self.arg_order] 
         #
         return input_file
@@ -108,7 +141,7 @@ class InputFile:
             try:
                 self.arg_dict[key].update_value(args[key])
             except KeyError:
-                self.filename_format_args[key] = args[key]
+                self.filename_format_args[key] = args[key] 
     #
     def construct_file_names(self):
         r"""
@@ -160,7 +193,7 @@ class InputFile:
         # builidng content from ArgInput class line attribute
         content = ''
         for key in self.arg_order:
-            content += self.arg_dict[key].line+'\n'
+            content += self.arg_dict[key].output_line()+'\n'
         #
         with open(self.outfile_name,'w') as f:
             f.write(content)
@@ -200,15 +233,9 @@ def parse_input_file(infile):
     for l in range(len(content_arr)):
         line = content_arr[l]
         line = re.sub(r'^(;+)\s+',r'\1',line)
-        line_arr = list(filter(None,re.split('\s',line)))
-        #
-        if (line_arr):
-            m = re.match(r'[; ]*([a-zA-z,-]*)',line_arr[0]) #only keeping text for use as key
-            key = m.group(1)
-            if (key == ''):
-                line = ';'
-            input_file.arg_order.append(key)
-            input_file.arg_dict[key] = ArgInput(line)
+        arg = ArgInput(line)
+        input_file.arg_order.append(arg.keyword)
+        input_file.arg_dict[arg.keyword] = ArgInput(line)
     #
     try:
         print('Using executable defined in inital file header: ',input_file.arg_dict['EXE-FILE'].value)
