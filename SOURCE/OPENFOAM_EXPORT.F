@@ -20,8 +20,7 @@ C     INITIALIZING THE MODEL
       IF (.NOT. BOK) GOTO 1000
 C
 C     OUTPUT BLOCK MESH FILE
-      CALL OUTPUT_BlockMeshDict(BOK)
-      IF (.NOT. BOK) GOTO 1000
+      CALL OUTPUT_BlockMeshDict
 C
       STOP
 C

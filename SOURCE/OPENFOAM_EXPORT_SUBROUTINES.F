@@ -6,6 +6,7 @@ C
       SUBROUTINE INITIALIZE_EXPORT(BOK)
 C     
       USE TWOD_MODULE
+      USE UNIT_CONVERSION_MODULE
       IMPLICIT NONE
       LOGICAL :: BOK
 C
@@ -54,6 +55,8 @@ C
       SUBROUTINE GENERATE_2DMESH
 C     
       USE TWOD_MODULE
+      USE UNIT_CONVERSION_MODULE
+C
       IMPLICIT NONE
       REAL(8),ALLOCATABLE :: REAL_ARRAY(:,:) !TEMP ARRAY FOR RESIZE
       INTEGER,ALLOCATABLE :: INT_ARRAY(:,:)  !TEMP ARRAY FOR RESIZE
@@ -316,12 +319,12 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE OUTPUT_BlockMeshDict(BOK)
+      SUBROUTINE OUTPUT_BlockMeshDict
 C
       USE TWOD_MODULE
+      USE UNIT_CONVERSION_MODULE
       IMPLICIT NONE
       INTEGER :: I
-      LOGICAL :: BOK
       CHARACTER(1) :: NL,BL
       BL = ' ';
       NL = NEW_LINE(NL)
