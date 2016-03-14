@@ -34,8 +34,10 @@ C
 C     CONDITIONAL COMPILATION TO DETERMINE OS
       !DEC$ IF DEFINED(_WIN32)
         SYS_OS = "WINDOWS"
+      !DEC$ ELIF DEFINED(_WIN64)
+        SYS_OS = "WINDOWS"
       !DEC$ ELSE
-        SYS_OS = "POISX"
+        SYS_OS = "UNIX"
       !DEC$ ENDIF
 C
 C     INITIALIZING THE MODEL 
@@ -150,5 +152,6 @@ C
 C
  1000 WRITE(*,"(1X)")
       WRITE(*,"('     **** EXITING PROGRAM ****')")
+      STOP(1)
 C
       END PROGRAM

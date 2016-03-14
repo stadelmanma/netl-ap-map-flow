@@ -1378,13 +1378,13 @@ C     OF THE RIGHT AND TOP INTERFACE OF A GRID BLOCK
           THETA = ATAN(ABS(WIDTH(I)-B)/DBP) 
           W3 = (2 * WIDTH(I)**2 * B**2)/(WIDTH(I) + B)
           BP3 = W3 * 3*(TAN(THETA) - THETA)/(TAN(THETA)**3)
-          IF (INT(1E9*THETA) == 0) BP3 = W3
+          IF (INT(1E9*(TAN(THETA) - THETA)) == 0) BP3 = W3
           !
           DBF = DX(I+1)/2  !(DX(I+1)/2 = DISTANCE FROM CENTER CELL TO INTERFACE IF PLANAR
           THETA = ATAN(ABS(B-WIDTH(I+1))/DBF) 
           W3 = (2 * B**2 * WIDTH(I+1)**2)/(B + WIDTH(I+1))
           BF3 = W3 * 3*(TAN(THETA) - THETA)/(TAN(THETA)**3)
-          IF (INT(1E9*THETA) == 0) BF3 = W3
+          IF (INT(1E9*(TAN(THETA) - THETA)) == 0) BF3 = W3
           !
           TRX(IZ,IX) = (DBP/BP3 + DBP/BF3)**(-1) * (DZ(I)/12)
         END DO
@@ -1400,13 +1400,13 @@ C
           THETA = ATAN(ABS(WIDTH(I)-B)/DBP) 
           W3 = (2 * WIDTH(I)**2 * B**2)/(WIDTH(I) + B)
           BP3 = W3 * 3*(TAN(THETA) - THETA)/(TAN(THETA)**3)
-          IF (INT(1E9*THETA) == 0) BP3 = W3
+          IF (INT(1E9*(TAN(THETA) - THETA)) == 0) BP3 = W3
           !
           DBF = DZ(I+NX)/2  !(DZ(I+NX)/2 = DISTANCE FROM CENTER CELL TO INTERFACE IF PLANAR
           THETA = ATAN(ABS(B-WIDTH(I+NX))/DBF) 
           W3 = (2 * B**2 * WIDTH(I+NX)**2)/(B + WIDTH(I+NX))
           BF3 = W3 * 3*(TAN(THETA) - THETA)/(TAN(THETA)**3)
-          IF (INT(1E9*THETA) == 0) BF3 = W3
+          IF (INT(1E9*(TAN(THETA) - THETA)) == 0) BF3 = W3
           !
           TRZ(IZ,IX) = (DBP/BP3 + DBP/BF3)**(-1) * (DX(I)/12)
         END DO
@@ -1420,7 +1420,7 @@ C
         THETA = ATAN(ABS(WIDTH(I)-B)/DBP) 
         W3 = (2 * WIDTH(I)**2 * B**2)/(WIDTH(I) + B)
         BP3 = W3 * 3*(TAN(THETA) - THETA)/(TAN(THETA)**3)
-        IF (INT(1E9*THETA) == 0) BP3 = W3
+        IF (INT(1E9*(TAN(THETA) - THETA)) == 0) BP3 = W3
         !
         TRX(IZ,NX) = (DZ(I)*BP3)/(12.0*DX(I))
       END DO
@@ -1433,7 +1433,7 @@ C
         THETA = ATAN(ABS(WIDTH(I)-B)/DBP) 
         W3 = (2 * WIDTH(I)**2 * B**2)/(WIDTH(I) + B)
         BP3 = W3 * 3*(TAN(THETA) - THETA)/(TAN(THETA)**3)
-        IF (INT(1E9*THETA) == 0) BP3 = W3
+        IF (INT(1E9*(TAN(THETA) - THETA)) == 0) BP3 = W3
         !
         TRZ(NZ,IX) = (DZ(I)*BP3)/(12.0*DX(I))
       END DO
@@ -1956,7 +1956,10 @@ C     PURPOSE: THIS SUBROUTINE BREAKS A RECORD INTO IT'S SUBFIELDS.
 C              THE SUBFIELDS ARE SEPARATED BY A COMMA OR ONE OR MORE 
 C              BLANKS. EACH EQUAL SIGN IS TREATED AS A SEPARATE SUBFIELD.
 C              ALL INFORMATION AFTER A ; IS TREATED AS A COMMENT AND IS 
-C              IGNORED A RETURN WITH NFLD EQUAL ZERO INDICATES AN EOF.
+C              IGNORED A RETURN WITH NFLD EQUAL ZERO INDICATES AN EOF. 
+C              IF A DOUBLE QUOTE (") IS ENCOUNTED ALL DATA BETWEEN THE 
+C              QUOTES IS TREATED AS IS WITH NO DELIMITERS UNTIL A SECOND
+C              DOUBLE QUOTE. 
 C
 C
 C     SUBROUTINE CALLS :  NONE
@@ -1970,12 +1973,14 @@ C       CFLD   - CHARACTER ARRAY CONTAINING SUBFIELDS
 C       LFLD   - INTEGER ARRAY CONTAINING LENGTHS OF SUBFIELDS
 C       NFLD   - NUMBER OF SUBFIELDS
 C
-C     WRITTEN BY: W. NEAL SAMS
-C     LAST MODIFIED: 09/26/2013
+C     WRITTEN BY:  W. NEAL SAMS
+C     MODIFIED BY: MATTHEW A. STADELMAN
+C     LAST MODIFIED: 03/14/2016
 C
       IMPLICIT NONE
       INTEGER :: IN,MAXFLD,MAXLEN,NFLD,LENG,I,J
       INTEGER :: LFLD(*)
+      LOGICAL :: QUOTED = .FALSE.
       CHARACTER(*) :: CFLD(*),CVAR
       CHARACTER(1) :: C1
 C
@@ -1984,9 +1989,31 @@ C
       LENG = 0
       DO I = 1,LEN(TRIM(CVAR))+1
         C1 = CVAR(I:I)
-        IF(C1 == ';') THEN
+        !
+        IF (QUOTED) THEN
+          IF (C1 == '"') THEN
+            QUOTED = .FALSE.
+          ELSE
+            J = IACHAR(C1)
+            IF(J >= 97 .AND. J <= 122) J = J - 32
+            C1 = ACHAR(J)
+            !
+            IF(LENG <= 0) THEN
+              IF(NFLD == MAXFLD) GOTO 950
+              NFLD = NFLD + 1
+              LENG = 1
+              CFLD(NFLD) = C1
+            ELSEIF(LENG < MAXLEN) THEN
+              LENG = LENG + 1
+              CFLD(NFLD)(LENG:LENG) = C1
+            ENDIF
+          END IF
+        !
+        ELSEIF(C1 == ';') THEN
           IF(LENG > 0) LFLD(NFLD) = LENG
           GOTO 900
+        ELSEIF(C1 == '"') THEN
+            QUOTED = .TRUE.
         ELSEIF(C1 == ' ') THEN
           IF(LENG > 0) THEN
             LFLD(NFLD) = LENG
@@ -2036,12 +2063,15 @@ C
           ELSEIF(LENG < MAXLEN) THEN
             LENG = LENG + 1
             CFLD(NFLD)(LENG:LENG) = C1
-          ENDIF
-        ENDIF
-      ENDDO
+          ENDIF 
+        ENDIF !END CHAR TESTING LOOP
+      END DO
+C
   900 IF(IN > 0 .AND. NFLD == 0) GOTO 100
+C
   950 RETURN
-      END 
+C
+      END SUBROUTINE 
 C
 C ----------------------------------------------------------------------
 C ######################################################################

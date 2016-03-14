@@ -44,9 +44,13 @@ C     SWEEPING GRID TO CREATE SOLTUION MATRIX DIAGONALS
       DO IZ = 1,NZ
         DO IX = 1,NX
           I = (IZ-1)*NX + IX
+          AC(I)  =  TRX(IZ,IX-1)+TRX(IZ,IX)+TRZ(IZ-1,IX)+TRZ(IZ,IX)
+          IF (AC(I) == 0.0) THEN
+            WRITE(CVAR,2000)I
+            CYCLE
+          END IF
           AD(I)  = -TRZ(IZ-1,IX)
           AW(I)  = -TRX(IZ,IX-1)
-          AC(I)  =  TRX(IZ,IX-1)+TRX(IZ,IX)+TRZ(IZ-1,IX)+TRZ(IZ,IX)
           AE(I)  = -TRX(IZ,IX)
           AU(I)  = -TRZ(IZ,IX) 
           QLEFT  = -TRX(IZ,IX-1)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ,IX-1))
@@ -91,5 +95,7 @@ C
 C
  1000 BOK = .FALSE.
       RETURN
+C
+ 2000 FORMAT(2X,'ERROR - DIAGONAL ELEMENT ',I0,' IS EQUAL TO 0')
 C
       END SUBROUTINE

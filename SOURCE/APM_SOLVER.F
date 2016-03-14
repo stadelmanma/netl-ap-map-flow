@@ -19,7 +19,7 @@ C
       CHARACTER(120) :: C120
 C
       NXZ = NX*NZ
-      ALLOCATE (ROW(-NX:NX), UPPER(NXZ*NX),B(NXZ))
+      ALLOCATE(ROW(-NX:NX),UPPER(NXZ*NX),B(NXZ))
       !
       CALL CPU_TIME(ST)
       !
