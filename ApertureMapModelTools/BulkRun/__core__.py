@@ -400,5 +400,34 @@ def bulk_run(num_CPUs=4.0,sys_RAM=8.0,sim_inputs=[],delim='auto',init_infile='FR
     print("")
     #
     return
+#
+def dry_run(num_CPUs=4.0,sys_RAM=8.0,sim_inputs=[],delim='auto',init_infile='FRACTURE_INITIALIZATION.INP'):
+    r"""
+    This steps through the entire simulation creating directories and 
+    input files without actually starting any of the simulations. 
+    """
+    #
+    print('Beginning dry run of aperture map simulations on INP files output')
+    print("Use function 'bulk_run' with same arguments to actually run models")
+    #
+    avail_RAM = sys_RAM * 0.90
+    input_maps = [args['aperture_map'] for args in sim_inputs]
+    RAM_per_map = estimate_req_RAM(input_maps,avail_RAM,delim)
+    #
+    for i in range(len(sim_inputs)):
+        sim_inputs[i]['RAM_req'] = RAM_per_map[i]
+    #
+    init_input_file = parse_input_file(init_infile)
+    input_file_list = combine_run_args(sim_inputs,init_input_file)
+    #
+    print('')
+    print('Total Number of simulations that would be performed: {:d}'.format(len(input_file_list)))
+    #
+    for f in input_file_list:
+        f.write_inp_file()
+        print(' Est. RAM reqired for this run: {:f}'.format(f.RAM_req))
+        print('')
+    #
+    return
     
       

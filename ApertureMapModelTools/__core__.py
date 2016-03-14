@@ -54,7 +54,7 @@ class DataField:
             infile.close()
             #
             m = re.search(r'[0-9.]+(\D+)[0-9.]+',line)
-            delim = m.group(1).strip()
+            delim = m.group(1)
         #
         with open(self.infile,'r') as infile:
             content = infile.read()
