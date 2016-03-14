@@ -32,13 +32,11 @@ C
       LOGICAL :: BOK
 C
 C     CONDITIONAL COMPILATION TO DETERMINE OS
-      !DEC$ IF DEFINED(_WIN32)
+      SYS_OS = "UNIX"
+      IF (WIN64 == 1) THEN
         SYS_OS = "WINDOWS"
-      !DEC$ ELIF DEFINED(_WIN64)
-        SYS_OS = "WINDOWS"
-      !DEC$ ELSE
-        SYS_OS = "UNIX"
-      !DEC$ ENDIF
+      ENDIF
+      PRINT *, 'SYS: ',SYS_OS
 C
 C     INITIALIZING THE MODEL 
       BOK   = .TRUE.
