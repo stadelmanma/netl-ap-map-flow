@@ -256,6 +256,7 @@ def estimate_req_RAM(input_maps,avail_RAM,delim='auto'):
         field = DataField(f,delim)
         tot_coef = (field.nx * field.nz)**2
         RAM = 0.00505193 * tot_coef**(0.72578813)
+        RAM = RAM * 2**(-20) # KB -> GB
         RAM_per_map.append(RAM)
         if (RAM > avail_RAM):
             error = True
