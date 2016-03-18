@@ -254,8 +254,8 @@ def estimate_req_RAM(input_maps,avail_RAM,delim='auto'):
     for f in input_maps:
         #
         field = DataField(f,delim)
-        nxz = field.nx * field.nz * field.nx #this is the amount of numbers stored by the gaussian solver
-        RAM = float(nxz) * 8.0 * 2.0**(-30)
+        tot_coef = (field.nx * field.nz)**2
+        RAM = 0.00505193 * tot_coef**(0.72578813)
         RAM_per_map.append(RAM)
         if (RAM > avail_RAM):
             error = True
