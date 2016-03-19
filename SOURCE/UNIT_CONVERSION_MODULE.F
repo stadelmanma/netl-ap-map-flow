@@ -244,13 +244,13 @@ C     CONVERTS TEMPERATURE VALUE TO ANOTHER UNIT
         IF (TRIM(UNIT_OUT) == 'SI') UNIT_OUT = 'K'
         !
         ! CONVERTING VALUE FROM UNIT_IN TO SI
-        IF     (UNIT_IN(1:1) == 'F') THEN
+        IF ((UNIT_IN(1:1) == 'F') .OR. (INDEX(UNIT_IN,'FAHR') > 0)) THEN
           VALUE = (VALUE + 459.67)*(5.0/9.0)
-        ELSEIF (UNIT_IN(1:1) == 'R') THEN
+        ELSEIF((UNIT_IN(1:1) == 'R').OR.(INDEX(UNIT_IN,'RANK') > 0))THEN
           VALUE = VALUE * (5.0/9.0)
-        ELSEIF (UNIT_IN(1:1) == 'C') THEN
+        ELSEIF((UNIT_IN(1:1) == 'C').OR.(INDEX(UNIT_IN,'CEL') > 0)) THEN
           VALUE = VALUE + 273.15
-        ELSEIF (UNIT_IN(1:1) == 'K') THEN
+        ELSEIF((UNIT_IN(1:1) == 'K').OR.(INDEX(UNIT_IN,'KEL') > 0)) THEN
           VALUE = VALUE
         ELSE
           GOTO 900

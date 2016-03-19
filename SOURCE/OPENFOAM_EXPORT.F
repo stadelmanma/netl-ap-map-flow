@@ -1,11 +1,13 @@
       PROGRAM OPENFOAM_EXPORT
 C
 C     WRITTEN BY: MATTHEW STADELMAN
-C     PROGRAM DESCRIPTON:
+C     PROGRAM DESCRIPTON: OUTPUTS A BLOCK MESH DICT TO BE READ IN BY 
+C     OPEN FOAM, WILL BE EVENTUALLY TURNED INTO A COMPONENT OF THE 
+C     PYTHON MODEL TOOLS
 C
 C ---------------------------------------------------------------------
 C     VARIABLE DESCRIPTION:
-C     BOK - LOGICAL FLOW CONTROL VARIABLE
+C     BOK - LOGICAL CONTROL VARIABLE
 C
 C ----------------------------------------------------------------------
 C   

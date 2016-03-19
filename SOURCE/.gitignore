@@ -1,5 +1,8 @@
 *.*
+*~
 !*.F
+!*.F90
 !*.TXT
 !*.xml
 !makefile
+

@@ -1,4 +1,4 @@
-TEMP(FAHR),58,,
+TEMP (FAHR),58,,
 PRESSURE (PSI),Z factor,VISCOSITY (CP),Phase
 10,1,1.1545,liquid
 20,1,1.1544,liquid

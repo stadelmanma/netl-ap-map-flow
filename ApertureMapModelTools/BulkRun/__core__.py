@@ -25,23 +25,36 @@ class ArgInput:
         r"""
         Parses the line for the input key string and value
         """
-        line_arr = list(filter(None,re.split(r'\s',line)))
+        # inital values
         self.line = line
-        self.line_arr = line_arr
+        self.line_arr = []
         self.keyword = ''
         self.value = line
         self.value_index = -1
+        self.commented_out = False
+        #
+        # testing if line was commented out
+        m = re.match(r'^;(.*)',line)
+        if m:
+            self.commented_out = True  
+            self.line = m.group(1)
+            self.value = m.group(1)
+        #
+        line_arr = list(filter(None,re.split(r'\s',self.line)))
+        if (len(line_arr) == 0):
+            line_arr = ['']
+        self.line_arr = line_arr
         #
         try:
             m = re.match(r'[; ]*([a-zA-z,-]*)',line_arr[0])
             self.keyword = m.group(1)
         except IndexError:
             print("Error - Bad line input provided - line: '",line,"'")
-            raise IndexError
+            exit()
         #
         # if line has a colon the field after it will be used as the value
         # otherwise the whole line is considered the value
-        if (re.search(r':\s',line)):
+        if (re.search(r':\s',self.line)):
             for ifld in range(len(line_arr)):
                 if (re.search(r':$',line_arr[ifld])):
                     try:
@@ -51,16 +64,29 @@ class ArgInput:
                         self.value = "NONE"
                         self.value_index = ifld+1    
     #
-    def update_value(self,new_value):
+    def update_value(self,new_value,uncomment=True):
         r"""
-        Updates the line with the new value
+        Updates the line with the new value and uncomments the line by default
         """
+        #
+        if (uncomment):
+            self.commented_out = False
+        #
         if (self.value_index > 0):
             self.line_arr[self.value_index] = new_value
         else:
             self.line_arr = list(filter(None,re.split('\s',new_value)))       
         self.line = ' '.join(self.line_arr)
         self.value = new_value
+    #
+    def output_line(self):
+        r"""
+        Returns and input line repsentation of the object
+        """
+        #
+        cmt = (';' if self.commented_out else '')
+        line = cmt + self.line
+        return(line)
 #
 class InputFile:
     r"""
@@ -77,14 +103,21 @@ class InputFile:
             self.filename_formats['input_file'] = self.outfile_name   
     #
     def __repr__(self):
-        string_rep = ''
-        keys = list(self.arg_dict.keys())
-        keys.sort()
-        for key in keys:
-            string_rep += 'Key: '+key+' Value: '+self.arg_dict[key].value+'\n'
+        r"""
+        Writes an input file to the screen 
+        """
         #
-        string_rep += '\n\n'
-        return(string_rep)
+        # updating filenames to match current args
+        self.construct_file_names()
+        #
+        # builidng content from ArgInput class line attribute
+        content = ''
+        for key in self.arg_order:
+            content += self.arg_dict[key].output_line()+'\n'
+        #
+        print('Input file would be saved as: '+self.outfile_name)
+        #
+        return(content)
     #
     def clone(self,file_formats = None):
         r"""
@@ -95,7 +128,7 @@ class InputFile:
             file_formats = self.filename_formats
         #
         input_file = InputFile(file_formats)
-        input_file.arg_dict = {k : ArgInput(self.arg_dict[k].line) for k in self.arg_dict.keys()}
+        input_file.arg_dict = {k : ArgInput(self.arg_dict[k].output_line()) for k in self.arg_dict.keys()}
         input_file.arg_order = [arg for arg in self.arg_order] 
         #
         return input_file
@@ -108,7 +141,7 @@ class InputFile:
             try:
                 self.arg_dict[key].update_value(args[key])
             except KeyError:
-                self.filename_format_args[key] = args[key]
+                self.filename_format_args[key] = args[key] 
     #
     def construct_file_names(self):
         r"""
@@ -160,7 +193,7 @@ class InputFile:
         # builidng content from ArgInput class line attribute
         content = ''
         for key in self.arg_order:
-            content += self.arg_dict[key].line+'\n'
+            content += self.arg_dict[key].output_line()+'\n'
         #
         with open(self.outfile_name,'w') as f:
             f.write(content)
@@ -200,15 +233,9 @@ def parse_input_file(infile):
     for l in range(len(content_arr)):
         line = content_arr[l]
         line = re.sub(r'^(;+)\s+',r'\1',line)
-        line_arr = list(filter(None,re.split('\s',line)))
-        #
-        if (line_arr):
-            m = re.match(r'[; ]*([a-zA-z,-]*)',line_arr[0]) #only keeping text for use as key
-            key = m.group(1)
-            if (key == ''):
-                line = ';'
-            input_file.arg_order.append(key)
-            input_file.arg_dict[key] = ArgInput(line)
+        arg = ArgInput(line)
+        input_file.arg_order.append(arg.keyword)
+        input_file.arg_dict[arg.keyword] = ArgInput(line)
     #
     try:
         print('Using executable defined in inital file header: ',input_file.arg_dict['EXE-FILE'].value)
@@ -227,8 +254,9 @@ def estimate_req_RAM(input_maps,avail_RAM,delim='auto'):
     for f in input_maps:
         #
         field = DataField(f,delim)
-        nxz = field.nx * field.nz * field.nx #this is the amount of numbers stored by the gaussian solver
-        RAM = float(nxz) * 8.0 * 2.0**(-30)
+        tot_coef = (field.nx * field.nz)**2
+        RAM = 0.00505193 * tot_coef**(0.72578813)
+        RAM = RAM * 2**(-20) # KB -> GB
         RAM_per_map.append(RAM)
         if (RAM > avail_RAM):
             error = True
@@ -371,6 +399,35 @@ def bulk_run(num_CPUs=4.0,sys_RAM=8.0,sim_inputs=[],delim='auto',init_infile='FR
     start_simulations(input_file_list,num_CPUs,avail_RAM,start_delay=5)
     print("")
     print("")
+    #
+    return
+#
+def dry_run(num_CPUs=4.0,sys_RAM=8.0,sim_inputs=[],delim='auto',init_infile='FRACTURE_INITIALIZATION.INP'):
+    r"""
+    This steps through the entire simulation creating directories and 
+    input files without actually starting any of the simulations. 
+    """
+    #
+    print('Beginning dry run of aperture map simulations on INP files output')
+    print("Use function 'bulk_run' with same arguments to actually run models")
+    #
+    avail_RAM = sys_RAM * 0.90
+    input_maps = [args['aperture_map'] for args in sim_inputs]
+    RAM_per_map = estimate_req_RAM(input_maps,avail_RAM,delim)
+    #
+    for i in range(len(sim_inputs)):
+        sim_inputs[i]['RAM_req'] = RAM_per_map[i]
+    #
+    init_input_file = parse_input_file(init_infile)
+    input_file_list = combine_run_args(sim_inputs,init_input_file)
+    #
+    print('')
+    print('Total Number of simulations that would be performed: {:d}'.format(len(input_file_list)))
+    #
+    for f in input_file_list:
+        f.write_inp_file()
+        print(' Est. RAM reqired for this run: {:f}'.format(f.RAM_req))
+        print('')
     #
     return
     

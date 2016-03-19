@@ -24,6 +24,7 @@ C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTE
 C
 C ----------------------------------------------------------------------
 C   
+      USE D4_MODULE
       USE TWOD_MODULE 
 C      
       IMPLICIT NONE
@@ -32,11 +33,10 @@ C
       LOGICAL :: BOK
 C
 C     CONDITIONAL COMPILATION TO DETERMINE OS
-      !DEC$ IF DEFINED(_WIN32)
+      SYS_OS = "UNIX"
+      IF (WIN64 == 1) THEN
         SYS_OS = "WINDOWS"
-      !DEC$ ELSE
-        SYS_OS = "POISX"
-      !DEC$ ENDIF
+      ENDIF
 C
 C     INITIALIZING THE MODEL 
       BOK   = .TRUE.
@@ -123,6 +123,7 @@ C
       CALL MESSAGE("     FINAL FRACTURE FLOWS CALCULATED")
 C
 C     CALCULATING AND WRITTING OUTPUT DATA
+      CALL DEALLOCATE_COEF
       CALL OUTPUT_DATA
 C
 C     CLOSING OUTPUT FILES
@@ -150,5 +151,6 @@ C
 C
  1000 WRITE(*,"(1X)")
       WRITE(*,"('     **** EXITING PROGRAM ****')")
+      STOP(1)
 C
       END PROGRAM
