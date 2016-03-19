@@ -12,16 +12,17 @@ C
 C
 C     DEFAULT VALUES
       FOAM_EXPORT = .TRUE.
-      VOX_MET = 0.0
+      VOX_MET  = 1.0
       AVG_FACT = 1.0
       HIGH_MASK = 10000.0
-      LOW_MASK = 1E-9
+      LOW_MASK = 1E-6
       R_FACT = 0.0
       UNIT_IN(1) = 'PA'
       UNIT_IN(2) = 'M'
       UNIT_IN(3) = 'FAHR'
       UNIT_IN(4) = 'SEC'
       UNIT_IN(5) = 'M^3/SEC'
+      UNIT_IN(6) = 'PA*SEC'
       UNIT_IN(7) = 'KG/M^3'
 C
 C     INITIALIZING IO
