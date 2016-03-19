@@ -46,7 +46,7 @@ C     SWEEPING GRID TO CREATE SOLTUION MATRIX DIAGONALS
           I = (IZ-1)*NX + IX
           AC(I)  =  TRX(IZ,IX-1)+TRX(IZ,IX)+TRZ(IZ-1,IX)+TRZ(IZ,IX)
           IF (AC(I) == 0.0) THEN
-            WRITE(CVAR,2000)I
+            WRITE(CVAR,2000) I
             CYCLE
           END IF
           AD(I)  = -TRZ(IZ-1,IX)
