@@ -16,7 +16,7 @@ ApertureMapModelTools contains two sub modules DataProcessing and BulkRun. The D
 
 Basic Usage of APM Model
 ------------------------
-Compiling the model and openFOAM export, the flags shown below are apply to the GNU gfortran compiler::
+The simplest method to build the model from source is using the makefile found in the SOURCE sub-directory, as this sets the proper OS flags. If that is not an option the following commands will work for POISX systems and if the flag -DWIN64=1 is added default file paths will be set to the windows convention.::
 
     >> gfortran -o APM-MODEL.EXE APM_MODULE.F UNIT_CONVERSION_MODULE.F APERTURE_MAP_FLOW.F APM_SUBROUTINES.F APM_SOLVER.F APM_FLOW.F APM_OUTPUT.F -O2 -fimplicit-none -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace
     
@@ -28,9 +28,14 @@ Running the Model::
 
 Pitfalls:
     * If compiled using 32-bit compiler running too large of a map will cause an integer overflow error
-    * Other solver subroutines exist in APM_SOLVER.F, however only GAUSS is the only correctly working solver at this time
-    * openFOAM export is functional however not extremely friendly and may be rewritten into a Python routine at a later date
+    * Other solver subroutines exist in APM_SOLVER.F, however only GAUSS and D4_GUASS work correctly with D4_GAUSS being the primary and most efficient routine.
+    * openFOAM export is functional however not extremely friendly and will be rewritten into a Python routine at a later date
 
 Basic Usage of ApertureMapModelTools
 ------------------------
-Forthcoming...
+This module is designed to ease the process of further data processing and running mulitple simulations in parallel. It is currently divided into two sub-modules DataProcessing and BulkRun. The openFOAM export will be the third component when it is converted from a FORTRAN routine. 
+
+The DataProcessig sub-module is imported by default when the entire module is imported. It can be run equally easily in an interactive session or used to make automatic post-processing scripts such as the pre-built APM_PROCESS_DATA_MAP.PY program. Although designed in conjunction with the flow model the DataProcessing model in theory can be applied to any 2-D data distribution with some minor modifcations. There are several pre-built processing routines in the module and others can be easily added by creating a new class and extending the BaseProcessor routine. 
+
+The BulkRun sub-module is not designed to be used interactively although it is possible. It was built to work with the APM_BULK_RUN.PY script where the user defines the input parameters and files. The routines in the module thendo the rest of the heavy lifting. The program will spawn as many simulatenous processes as possible based on the RAM requirments of each simulation and the user defined RAM and CPUs available to be used. The routine only uses 90% of the user defined limit because each simulation requires some extra overhead that can not be pre-determined.   
+
