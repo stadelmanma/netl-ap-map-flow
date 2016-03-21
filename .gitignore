@@ -11,6 +11,7 @@
 !TEST-FRACTURES
 #
 # Except the following files
+!*.py
 !.gitignore
 !APM_BULK_RUN.PY 
 !APM_PROCESS_DATA_MAP.PY
