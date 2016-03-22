@@ -4,13 +4,12 @@ Inherits most of it's structure from Histogram
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/07
-Last Modifed: 2016/03/07
+Last Modifed: 2016/03/22
 #
 """
 #
-from ApertureMapModelTools.__core__ import *
-from .__BaseProcessor__ import BaseProcessor
-from . import Histogram
+from ApertureMapModelTools.__core__ import ArgProcessor
+from .__Histogram__ import Histogram
 #
 #
 class HistogramLogscale(Histogram):

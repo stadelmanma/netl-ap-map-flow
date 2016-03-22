@@ -50,7 +50,7 @@ class ArgInput:
             self.keyword = m.group(1)
         except IndexError:
             print("Error - Bad line input provided - line: '",line,"'")
-            exit()
+            raise SystemExit
         #
         # if line has a colon the field after it will be used as the value
         # otherwise the whole line is considered the value
@@ -240,7 +240,8 @@ def parse_input_file(infile):
     try:
         print('Using executable defined in inital file header: ',input_file.arg_dict['EXE-FILE'].value)
     except KeyError:
-        exit('Fatal Error: No EXE-FILE specified in initialization file header. \n Exiting...')
+        print('Fatal Error: No EXE-FILE specified in initialization file header. \n Exiting...')
+        raise SystemExit
     #
     return(input_file)
 #
@@ -262,7 +263,7 @@ def estimate_req_RAM(input_maps,avail_RAM,delim='auto'):
             error = True
             print('Fatal Error: Map {} requires {} GBs of RAM only a maximum of {} GBs was alloted.'.format(f,RAM,avail_RAM))
     if (error):
-        exit()
+        raise SystemExit
     #
     return(RAM_per_map)
 #

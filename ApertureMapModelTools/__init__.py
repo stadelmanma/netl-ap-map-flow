@@ -1,5 +1,5 @@
 """
-Automatically imports the two submodules used.
+Automatically imports the DataProcessing and units modules.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
@@ -17,4 +17,5 @@ if sys.version_info < (3,3):
 #
 #
 from .__core__ import *
+from . import UnitConversion #change this to the specific 'converting' functions like in the fortran routine
 from . import DataProcessing

@@ -8,8 +8,6 @@ Last Modifed: 2016/02/26
 #
 """
 #
-from ApertureMapModelTools.__core__ import *
-#
 #
 class BaseProcessor:
     r"""

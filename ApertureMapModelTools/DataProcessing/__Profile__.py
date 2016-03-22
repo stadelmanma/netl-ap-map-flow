@@ -3,11 +3,11 @@ Outputs a set of data profiles along either the X or Z axis
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/07
-Last Modifed: 2016/03/07
+Last Modifed: 2016/03/22
 #
 """
 #
-from ApertureMapModelTools.__core__ import *
+from ApertureMapModelTools.__core__ import ArgProcessor,get_data_vect
 from .__BaseProcessor__ import BaseProcessor
 #
 #

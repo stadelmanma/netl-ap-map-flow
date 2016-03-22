@@ -8,7 +8,7 @@ Last Modifed: 2016/03/07
 #
 """
 #
-from ApertureMapModelTools.__core__ import *
+from ApertureMapModelTools.__core__ import ArgProcessor,calc_percentile
 from .__BaseProcessor__ import BaseProcessor
 #
 #

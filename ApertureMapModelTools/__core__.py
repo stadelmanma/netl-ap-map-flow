@@ -4,11 +4,10 @@ ApertureMapModelTools module.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2016/03/16
+Last Modifed: 2016/03/22
 #
 """
-########################################################################
-#  Required Modules: re
+#
 ########################################################################
 #
 from pathlib import Path,WindowsPath,PosixPath
@@ -49,12 +48,11 @@ class DataField:
         """
         #
         if (delim == 'auto'):
-            infile = open(self.infile,'r')
-            line = infile.readline();
-            infile.close()
-            #
-            m = re.search(r'[0-9.]+(\D+)[0-9.]+',line)
-            delim = m.group(1)
+            with open(self.infile,'r') as f:
+                line = f.readline();
+                #
+                m = re.search(r'[0-9.]+(\D+)[0-9.]+',line)
+                delim = m.group(1)
         #
         with open(self.infile,'r') as infile:
             content = infile.read()
@@ -121,7 +119,8 @@ class StatFile:
             print('Error - one of these lines does not have a file')
             print(map_file_line)
             print(pvt_file_line)
-            exit()
+            print('')
+            raise(IndexError)
         #
         # stepping through pairs of lines to get key -> values
         for i in range(0,len(content_arr),2):
