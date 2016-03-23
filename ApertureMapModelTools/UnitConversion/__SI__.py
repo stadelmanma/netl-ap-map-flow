@@ -28,11 +28,27 @@ class SI:
         'nano'  :	1.0E-9
     }
     #
+    si_abbreviations = {
+        'G'  : 'giga',
+        'M'  : 'mega',
+        'k'  : 'kilo',
+        'h'  : 'hecto',
+        'da' : 'deca',
+        'd'  : 'deci',
+        'c'  : 'centi',
+        'm'  : 'milli',
+        'u'  : 'micro',
+        'n'  : 'nano'
+    }
+    #
     unit_to_si = {
     }
     #
     @classmethod
     def check_prefix(cls,unit_string):
+        r"""
+        Tests unit against a pattern for any SI prefixes
+        """
         pattern = ['^(?:'+p+')' for p in cls.si_prefixes.keys()]
         pattern = '|'.join(pattern)
         pattern = re.compile('('+pattern+')?(.+)',re.I)
@@ -46,18 +62,17 @@ class SI:
             factor = 1.0
             root_unit = unit_string
         #
-        # may add the swap gram for kilogram logic here 
-        #
         return(root_unit,factor)
     #
     @classmethod
-    def convert_to_si(cls,unit):
+    def convert_to_si(cls,unit_string):
         r"""
         Finds and returns the proper unit conversion factor.
         """
         try:
-            factor = cls.unit_to_si[unit]
+            root_unit,factor = cls.check_prefix(unit_string)
+            factor = factor * cls.unit_to_si[root_unit]
         except KeyError:
-            raise(Exception('Error - No conversion factor for unit: '+unit))
+            raise(Exception('Error - No conversion factor for unit: '+unit_string))
         #
         return(factor)

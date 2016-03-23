@@ -3,52 +3,107 @@ Handles unit conversions.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/22
-Last Modifed: 2016/03/22
+Last Modifed: 2016/03/23
 #
 """
 #
+import re
 from .__SI__ import SI
 #
-class ConvertDistance(SI):
+class Distance(SI):
     r"""
     Handles distance unit conversions to Meters
     """
     #
     unit_to_si = {
-        'inch' : 0.0254,
         'feet' : 0.3048,
-        'yard' : 0.9144,
-        'micron' : 1.0E-6
+        'inch' : 0.0254,
+        'meter' : 1.0,
+        'micron' : 1.0E-6,
+        'yard' : 0.9144
     }
+    #
+    @classmethod
+    def convert_to_si(cls,unit_string):
+        r"""
+        Finds and returns the proper unit conversion factor. Subclassed
+        from SI to add special logic for the 'micron' unit
+        """
+        #
+        if (unit_string == 'micron'):
+            unit_string = 'micrometer'
+        #
+        try:
+            root_unit,factor = cls.check_prefix(unit_string)
+            factor = factor * cls.unit_to_si[root_unit]
+        except KeyError:
+            raise(Exception('Error - No conversion factor for unit: '+unit_string))
+        #
+        return(factor)
 #
 #
-class ConvertMass(SI):
+class Mass(SI):
     r"""
-    Handles distance unit conversions to Kilograms
+    Handles mass unit conversions to Kilograms
     """
     #
     unit_to_si = {
-        'pound' : 0.4535924,
-        'slug' : 14.59390,
+        'gram' : 1.0E-3,
+        'kilogram' : 1.0,
         'ounce' : 0.028349523,
-        'kilogram' : 1.0
+        'pound-mass' : 0.4535924,
+        'slug' : 14.59390
     }
     #
     # adjusting si_prefixes to reflect kilogram as the base unit
     si_prefixes = { pf : fact/1000.0 for pf,fact in SI.si_prefixes.items()}
     #
-    # make sure the fact check_prefixes returns grams won't mess things up
-    #
+    @classmethod
+    def check_prefix(cls,unit_string):
+        r"""
+        Tests unit against a pattern for any SI prefixes, subclassed from
+        SI to add special logic for kilogram being base unit.
+        """
+        pattern = ['^(?:'+p+')' for p in cls.si_prefixes.keys()]
+        pattern = '|'.join(pattern)
+        pattern = re.compile('('+pattern+')?(.+)',re.I)
+        #
+        try:
+            m = pattern.search(unit_string)
+            prefix = m.group(1)
+            root_unit = m.group(2)
+            factor = cls.si_prefixes[prefix]
+        except (AttributeError,KeyError):
+            factor = 1.0
+            root_unit = unit_string
+        #
+        # handling issue with kilogram being SI unit instead of grams
+        if (root_unit == 'gram'):
+            factor = (1E-3 if unit_string == 'gram' else factor)
+            root_unit = 'kilogram'
+        #
+        return(root_unit,factor)
 #
 #
-class ConvertTemperature(SI):
+class Pressure(SI):
     r"""
-    Handles distance unit conversions to Kelivin
+    Handles pressure conversions when units aren't a simple Force / Area
+    """
+    unit_to_si = {
+      'atmosphere' : 101325.0,
+      'bar' : 100000.0,
+      'pascal' : 1.0
+    }
+#
+#
+class Temperature(SI):
+    r"""
+    Handles temperure unit conversions 
     """
     #
     unit_to_si = {
-        'rankine' : 9.0/5.0,
-        'kelvin' : 1.0
+        'kelvin' : 1.0,
+        'rankine' : 9.0/5.0
     }
     #
     @classmethod
@@ -85,9 +140,11 @@ class ConvertTemperature(SI):
         return(temp)
 #
 #
-class ConvertTime(SI):
+class Temporal(SI):
     r"""
-    Handles distance unit conversions to Seconds
+    Handles time unit conversions to Seconds, oddly named beacuse of 'time'
+    builtin module even though these aren't meant to be imported directly 
+    into the main namespace
     """
     #
     unit_to_si = {
@@ -98,16 +155,14 @@ class ConvertTime(SI):
     }
 #
 #
-class ConvertVolume(SI):
+class Volume(SI):
     r"""
-    Handles volume unit conversions, nested in this namespace because volume is
-    directly related to a length scale. Converts to Meters^3
+    Handles volume unit conversions when unit isn't a (distanc unit)^3 
     """
     #
     unit_to_si = {
-        'liter' : 28.31684659,
+        'cubic-meter' : 1.0,
+        'fluid-ounce' : 29.573529956E-6,
         'gallon' : 0.003785412,
-        'fluid-ounce' : 29.573529956E-6
+        'liter' : 1.0E-3
     }
-    #
-    

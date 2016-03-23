@@ -8,5 +8,6 @@ Last Modifed: 2016/03/22
 """
 #
 #
-from .__ConversionClasses__ import *
-from .__converter_core__ import *
+from . import __ConversionClasses__ as convert
+from .__converter_core__ import UnitDecomposition
+from .__converter_core__ import convert_value, get_conversion_factor
