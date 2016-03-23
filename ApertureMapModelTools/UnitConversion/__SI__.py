@@ -28,6 +28,9 @@ class SI:
         'nano'  :	1.0E-9
     }
     #
+    unit_to_si = {
+    }
+    #
     @classmethod
     def check_prefix(cls,unit_string):
         pattern = ['^(?:'+p+')' for p in cls.si_prefixes.keys()]
@@ -36,9 +39,25 @@ class SI:
         #
         try:
             m = pattern.search(unit_string)
-            print(m.groups())
             prefix = m.group(1)
+            root_unit = m.group(2)
             factor = cls.si_prefixes[prefix]
-            print(prefix,factor)
-        except AttributeError:
+        except (AttributeError,KeyError):
             factor = 1.0
+            root_unit = unit_string
+        #
+        # may add the swap gram for kilogram logic here 
+        #
+        return(root_unit,factor)
+    #
+    @classmethod
+    def convert_to_si(cls,unit):
+        r"""
+        Finds and returns the proper unit conversion factor.
+        """
+        try:
+            factor = cls.unit_to_si[unit]
+        except KeyError:
+            raise(Exception('Error - No conversion factor for unit: '+unit))
+        #
+        return(factor)
