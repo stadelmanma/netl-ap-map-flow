@@ -3,7 +3,7 @@ Stores basic implementation as well as SI prefixes.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/22
-Last Modifed: 2016/03/22
+Last Modifed: 2016/03/24
 #
 """
 #
@@ -12,7 +12,8 @@ import re
 # 
 class SI:
     r"""
-    Holds basic sub class implementation as well as SI prefixes.
+    Holds basic sub class implementation as well as SI prefixes. Meant to
+    serve as an abstract class for the other conversion classes. 
     """
     #
     si_prefixes = {
@@ -63,6 +64,24 @@ class SI:
             root_unit = unit_string
         #
         return(root_unit,factor)
+    @classmethod
+    def check_abbreviation(cls,unit_string):
+        r"""
+        Tests unit against a pattern for any SI prefixes
+        """
+        pattern = ['^(?:'+p+')' for p in cls.si_abbreviations.keys()]
+        pattern = '|'.join(pattern)
+        pattern = re.compile('('+pattern+')?(.+)')
+        #
+        try:
+            m = pattern.search(unit_string)
+            prefix = cls.si_abbreviations[m.group(1)]
+            root_unit = m.group(2)
+        except (AttributeError,KeyError):
+            prefix = ''
+            root_unit = unit_string
+        #
+        return(root_unit,prefix)
     #
     @classmethod
     def convert_to_si(cls,unit_string):

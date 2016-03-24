@@ -16,7 +16,7 @@ class Distance(SI):
     """
     #
     unit_to_si = {
-        'feet' : 0.3048,
+        'foot' : 0.3048,
         'inch' : 0.0254,
         'meter' : 1.0,
         'micron' : 1.0E-6,
@@ -105,39 +105,6 @@ class Temperature(SI):
         'kelvin' : 1.0,
         'rankine' : 9.0/5.0
     }
-    #
-    @classmethod
-    def convert_temperature(cls,value,unit_in='kelvin',unit_out='kevin'):
-        r"""
-        Handles the non-standard coversion method to get Fahrenheit and Celcius 
-        into and from Kelvin
-        """
-        #
-        # converting to Kelvin
-        if (unit_in == 'fahrenheit'):
-            temp = (value + 459.67)*(5.0/9.0)
-        elif (unit_in == 'rankine'):
-            temp = value * 5.0/9.0
-        elif (unit_in == 'celsius'):
-            temp = value + 273.15
-        elif (unit_in == 'kelvin'):
-            temp = value
-        else:
-            raise(Exception('Error - Invalid input unit: '+unit_in))
-        #
-        # converting from Kelvin to unit out
-        if (unit_in == 'fahrenheit'):
-            temp = temp*(9.0/5.0) - 459.67
-        elif (unit_in == 'rankine'):
-            temp = temp * 9.0/5.0
-        elif (unit_in == 'celsius'):
-            temp = temp - 273.15
-        elif (unit_in == 'kelvin'):
-            temp = temp
-        else:
-            raise(Exception('Error - Invalid ouput unit: '+unit_out))
-        #
-        return(temp)
 #
 #
 class Temporal(SI):

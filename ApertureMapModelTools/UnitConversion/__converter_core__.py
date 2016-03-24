@@ -3,7 +3,7 @@ Holds the core functions use to convert units.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/22
-Last Modifed: 2016/03/23
+Last Modifed: 2016/03/24
 #
 """
 #
@@ -24,9 +24,8 @@ class UnitDecomposition(SI):
     prefix applied needs to be stored as a compound_units unit or
     in a specific unit class above. 
     
-    Units are stored in a namedtuple class called 'unit'
-    that holds the kind of unit, the unit string and the exponent to
-    apply to the conversion factor.
+    Parts of a compound unit are stored in a namedtuple class called 'Component'
+    that holds the kind of unit, the unit string and the exponent of that unit.
     
     When doing the inital parsing of a unit string, the formatted dict
     will be checked first. If that fails then the progam will attempt to 
@@ -34,19 +33,24 @@ class UnitDecomposition(SI):
     abbrevations.
     """
     #
-    unit = namedtuple('unit',['kind','name','exponent'])
+    Component = namedtuple('unit',['kind','name','exponent'])
     #
     compound_units = {
-      'dyne' : (unit(Mass,'gram',1),unit(Distance,'centimeter',1),
-                unit(Temporal,'second',-2)),
-      'newton' : (unit(Mass,'kilogram',1),unit(Distance,'meter',1),
-                  unit(Temporal,'second',-2)),
-      'pascal' : (unit(Mass,'kilogram',1),unit(Distance,'meter',-1),
-                  unit(Temporal,'second',-2)),
-      'poise' : (unit(Mass,'gram',1),unit(Distance,'centimeter',-1),
-                 unit(Temporal,'second',-1)),
-      'pound-force' : (unit(Mass,'slug',1),unit(Distance,'feet',1),
-                       unit(Temporal,'second',-2)),
+      'dyne' : (Component(convert.Mass,'gram',1),
+                Component(convert.Distance,'centimeter',1),
+                Component(convert.Temporal,'second',-2)),
+      'newton' : (Component(convert.Mass,'kilogram',1),
+                  Component(convert.Distance,'meter',1),
+                  Component(convert.Temporal,'second',-2)),
+      'pascal' : (Component(convert.Mass,'kilogram',1),
+                  Component(convert.Distance,'meter',-1),
+                  Component(convert.Temporal,'second',-2)),
+      'poise' : (Component(convert.Mass,'gram',1),
+                 Component(convert.Distance,'centimeter',-1),
+                 Component(convert.Temporal,'second',-1)),
+      'pound-force' : (Component(convert.Mass,'slug',1),
+                       Component(convert.Distance,'foot',1),
+                       Component(convert.Temporal,'second',-2)),
     }
     #
     # making a list of all the units available
@@ -54,19 +58,19 @@ class UnitDecomposition(SI):
     for kind in convert.__dict__.values():
         try:
             for unit in kind.unit_to_si.keys():
-                all_units[unit] = tuple([convert.DecomposedUnits.unit(kind,unit,1)])
+                all_units[unit] = tuple([Component(kind,unit,1)])
         except AttributeError:
             pass
     #
-    for unit,unit_list in convert.DecomposedUnits.compound_units.items():
-        all_units[unit] = unit_list
+    for unit,component_list in compound_units.items():
+        all_units[unit] = component_list
     #  
     common_unit_abrev = {
         'atm' : 'atmosphere',
         'C' : 'celsius',
         'cc' : 'milliliter',
         'dyn' : 'dyne',
-        'ft' : 'feet',
+        'ft' : 'foot',
         'fl-oz' : 'fluid-ounce',
         'F' : 'fahrenheit',
         'gal' : 'gallon',
@@ -75,6 +79,9 @@ class UnitDecomposition(SI):
         'K' : 'kelvin',
         'kg' : 'kilogram',
         'l' : 'liter',
+        'lb' : 'pound-mass',
+        'lbf' : 'pound-force',
+        'lbm' : 'pound-mass',
         'lbs' : 'pound-mass',
         'm' : 'meter',
         'min' : 'minute',
@@ -90,15 +97,7 @@ class UnitDecomposition(SI):
     #
     formatted_unit_strings = {
         'gpm' : '[gallon^1][minute^-1]', 
-        #'kg/m^3' : '[kilogram^1][meter^-3]', #most of these might be 
-        #'lbs/ft^3' : '[pounds-mass^1][feet^-3]', #able to be removed
-        #'m^3/sec' : '[meter^3][second^1]', #if I make my unit parsing 
-        #'m^3/s' : '[meter^3][second^1]', #reliable enough
-        #'ml/min' : '[milliliter^1][minute^-1]',
-        #'mm^3/min' : '[millimeter^3][minute^-1]',
-        #'pa*sec' : '[pascal^1][second^1]',
-        'psi' : '[pounds-force^1][inch^-2]',
-
+        'psi' : '[pound-force^1][inch^-2]',
     }
     #
     #
@@ -106,7 +105,7 @@ class UnitDecomposition(SI):
     def parse_unit_string(cls,unit_string):
         r"""
         Returns a  strcutured unit format for build_unit_list to read.
-        Outputs a string in the format [unit1^exp][unit2^exp] etc. 
+        Outputs a unit component list and initial conversion factor. 
         
         Initial adjustements to the conversion factor are applied here for
         compound units such as 'centipoise'.
@@ -119,19 +118,18 @@ class UnitDecomposition(SI):
         be handled and cause an error or no match at all. 
         """
         #
-        initial_factor = 1.0
-        formatted_string = ''
+        factor = 1.0
         unit_string = re.sub(r'\s','',unit_string)
-        # I'll need to adjust the factor for compound unit prefixes here 
         #
         # checking for a pre-formatted unit string
         if (unit_string.lower() in cls.formatted_unit_strings.keys()):
             formatted_string = cls.formatted_unit_strings[unit_string.lower()]
-            return(initial_factor,formatted_string)
+            return(cls.build_unit_list(formatted_string),factor)
         #
         #
         # locating all * and / in the unit string
         matches = re.finditer('([*/])',unit_string)
+        formatted_string = ''
         components = []
         st = 0
         for m in matches:
@@ -141,43 +139,97 @@ class UnitDecomposition(SI):
         print(components)
         #
         # processing the unit components
+        for i in range(len(components)):
+            comp_str = components[i]
+            try:
+                components[i],comp_factor = cls.parse_component_string(comp_str)
+            except (KeyError,ValueError):
+                components[i],comp_factor = cls.parse_component_string(comp_str.lower())
+            #
+            factor = factor * comp_factor
+        #
+        unit_list = []
         for comp in components:
-            expn = 1.0
-            comp = (comp[1:] if comp[0] =='*' else comp)
-            m = re.search(r'^(?P<bksl>/)?(?P<unit>.+?)(?:[\^](?P<expn>-?\d+))?$',comp)
-            unit_str = m.group('unit')
-            if m.group('bksl'):
-                expn = expn * -1
-            if m.group('expn'):
-                expn = expn * int(m.group('expn'))
-            #
-            # need to add some additional processing of unit_str still,
-            # the unit_str needs to be converted to the full word version 
-            # in common_unit_abrev dict. If a direct value can not be found
-            # in the abbrevation dict or the 'all_units' dict then I will have
-            # try and find a matching SI prefix abbrev on the unit. i.e. 
-            # 'mm' fails but 'm' = milli and then 'm' is the key for 'meter'
-            # so I output millimeter to the formatted string
-            #
-            # If a prefix is found then I'll need to do an additional check
-            # to see if it is a compound unit. If the unit is not compound 
-            # I can just add the prefix to the string, however if it is a 
-            # compound unit then I will have to adjust the factor here 
-            # to match the scaling change and use the root unit in the output.
-            #
-            # All this work kind of phases out the need for the 'build_unit_list'
-            # function with the exception of handling a user supplied pre-formatted 
-            # string. 
-            #
-            # right now this formatted string has incorrect unit strings
-            formatted_string += '[{0}^{1:0.0f}]'.format(unit_str,expn)
+            unit_list += comp
         #
-        #
-        return(initial_factor,formatted_string)   
+        return(unit_list,factor)
     #
     #
     @classmethod
-    def build_unit_list(cls,formatted_unit_string,avail_units):
+    def parse_component_string(cls,comp_str):
+        r"""
+        Parses a component of a unit string and attempts to return an inital 
+        conversion factor as well as a unit list for the component.
+        """
+        #
+        expn = 1.0
+        factor = 1.0
+        #
+        comp_str = (comp_str[1:] if comp_str[0] == '*' else comp_str)
+        m = re.search(r'^(?P<bksl>/)?(?P<unit>.+?)(?:[\^](?P<expn>-?\d+))?$',comp_str)
+        unit_str = m.group('unit')
+        if m.group('bksl'):
+            expn = expn * -1
+        if m.group('expn'):
+            expn = expn * int(m.group('expn'))
+        #
+        # inital check for matching unit
+        try: 
+            comp_list,factor = cls._test_unit_str(unit_str,expn)
+            return(comp_list,factor)
+        except ValueError:
+            pass
+        #
+        # checking against known abbreviations
+        try:
+            unit_str = cls.common_unit_abrev[unit_str]
+            comp_list,factor = cls._test_unit_str(unit_str,expn)
+            return(comp_list,factor)
+        except KeyError:
+            # removing an si prefix abbreviations
+            unit_str,prefix = cls.check_abbreviation(unit_str)
+            unit_str = cls.common_unit_abrev[unit_str]
+            comp_list,factor = cls._test_unit_str(prefix+unit_str,expn)
+            return(comp_list,factor)
+    #
+    #
+    @classmethod
+    def _test_unit_str(cls,unit_str,expn):
+        r"""
+        This performs a repeated test for a valid key in the all_units dict.
+        It first checks the string as whole and if it fails then attemps to 
+        remove a prefix and then retests. 
+        """
+        #
+        # lambda expr to update tuple exponents
+        def new_exp(tup,exp): return(tup._replace(exponent=tup.exponent * exp))
+        #
+        factor = 1.0
+        #
+        # checking unit_str against defined units
+        try: 
+            comp_list = [new_exp(tup,expn) for tup in cls.all_units[unit_str]]
+            return(comp_list,factor**expn)
+        except KeyError:
+            # removing any prefixes
+            unit_str,factor = cls.check_prefix(unit_str)
+        #
+        try:
+            comp_list = [new_exp(tup,expn) for tup in cls.all_units[unit_str]]
+            return(comp_list,factor**expn)
+        except KeyError:
+            if (unit_str == 'celsius'):
+                raise(Exception('Error - celsius does not have a valid '+
+                                'conversion factor. Use convert_temperature instead.'))
+            elif (unit_str == 'fahrenheit'):
+                raise(Exception('Error - fahrenheit does not have a valid '+
+                                'conversion factor. Use convert_temperature instead.'))
+            else:
+                raise(ValueError('Error - no matching unit could be found for '+unit_str))
+    #
+    #
+    @classmethod
+    def build_unit_list(cls,formatted_unit_string):
         r"""
         Parses a structured unit string to build a complex unit list. 
         It assumes any prefixes on the top level units have been accounted 
@@ -195,7 +247,7 @@ class UnitDecomposition(SI):
             try:
                 key,exp = re.search('^(.*?)[\^](-?\d+)',comp).groups()
                 exp = int(exp)
-                for unit_tuple in avail_units[key]:
+                for unit_tuple in cls.all_units[key]:
                     new_exp = unit_tuple.exponent * exp
                     unit_list.append(unit_tuple._replace(exponent=new_exp))
             except AttributeError:
@@ -204,18 +256,25 @@ class UnitDecomposition(SI):
             except KeyError:
                 try:
                     root_unit,factor = cls.check_prefix(key)
+                    # checking if root unit was a compound unit that still had the prefix
+                    if (root_unit in cls.compound_units.keys()):
+                        raise(ValueError)
                     # attempting to use root unit as key
-                    for unit_tuple in avail_units[root_unit]:
+                    for unit_tuple in cls.all_units[root_unit]:
                         new_exp = unit_tuple.exponent * exp
                         unit_list.append(unit_tuple._replace(exponent=new_exp,name=key))
                 except KeyError:
                     raise(Exception('Error - unknown component in unit string: '+
                                     formatted_unit_string+' -> '+key))
+                except ValueError:
+                    raise(Exception('Error - component in unit string was a '+
+                                    'compound unit with a prefix: '+
+                                    formatted_unit_string+' -> '+key))
         #
-        return(unit_list)
+        return(unit_list) 
 #
 # 
-def convert_value(value,unit_str_in='SI',unit_str_out='SI'):
+def convert_value(value,unit_str_in,unit_str_out='SI'):
     r"""
     This returns a converted value. 
     """
@@ -229,7 +288,7 @@ def convert_value(value,unit_str_in='SI',unit_str_out='SI'):
     return value
 #
 # 
-def get_conversion_factor(unit_str_in='SI',unit_str_out='SI'):
+def get_conversion_factor(unit_str_in,unit_str_out='SI'):
     r"""
     This returns a conversion factor, invalid for Fahrenheit and Celcius 
     temperature conversions. 
@@ -259,3 +318,52 @@ def process_unit_list(unit_list):
         factor = factor * (kind.convert_to_si(name))**expn
     #
     return(factor)
+#
+def convert_temperature(value,unit_in='kelvin',unit_out='kelvin'):
+    r"""
+    Handles the non-standard coversion method to get Fahrenheit and Celcius 
+    into and from Kelvin
+    """
+    #
+    temp_abbrev = {
+        'C' : 'celsius',
+        'F' : 'fahrenheit',
+        'K' : 'kelvin',
+        'SI': 'kelvin',
+        'R' : 'rankine'
+    }
+    #
+    if (unit_in in temp_abbrev.keys()):
+        unit_in = temp_abbrev[unit_in]
+    #
+    # converting to Kelvin
+    if (unit_in == 'fahrenheit'):
+        temp = (value + 459.67)*(5.0/9.0)
+    elif (unit_in == 'rankine'):
+        temp = value * 5.0/9.0
+    elif (unit_in == 'celsius'):
+        temp = value + 273.15
+    elif (unit_in == 'kelvin'):
+        temp = value
+    else:
+        raise(Exception('Error - Invalid input unit: '+unit_in))
+    #
+    if (unit_out == 'SI'):
+        return(temp)
+    #
+    elif (unit_out in temp_abbrev.keys()):
+        unit_out = temp_abbrev[unit_out]    
+    #
+    # converting from Kelvin to unit out
+    if (unit_out == 'fahrenheit'):
+        temp = temp*(9.0/5.0) - 459.67
+    elif (unit_out == 'rankine'):
+        temp = temp * 9.0/5.0
+    elif (unit_out == 'celsius'):
+        temp = temp - 273.15
+    elif (unit_out == 'kelvin'):
+        temp = temp
+    else:
+        raise(Exception('Error - Invalid ouput unit: '+unit_out))
+    #
+    return(temp)
