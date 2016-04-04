@@ -4,11 +4,10 @@ ApertureMapModelTools module.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2016/03/16
+Last Modifed: 2016/03/22
 #
 """
-########################################################################
-#  Required Modules: re
+#
 ########################################################################
 #
 from pathlib import Path,WindowsPath,PosixPath
@@ -49,12 +48,11 @@ class DataField:
         """
         #
         if (delim == 'auto'):
-            infile = open(self.infile,'r')
-            line = infile.readline();
-            infile.close()
-            #
-            m = re.search(r'[0-9.]+(\D+)[0-9.]+',line)
-            delim = m.group(1)
+            with open(self.infile,'r') as f:
+                line = f.readline();
+                #
+                m = re.search(r'[0-9.]+(\D+)[0-9.]+',line)
+                delim = m.group(1)
         #
         with open(self.infile,'r') as infile:
             content = infile.read()
@@ -121,7 +119,8 @@ class StatFile:
             print('Error - one of these lines does not have a file')
             print(map_file_line)
             print(pvt_file_line)
-            exit()
+            print('')
+            raise(IndexError)
         #
         # stepping through pairs of lines to get key -> values
         for i in range(0,len(content_arr),2):
@@ -160,49 +159,57 @@ class ArgProcessor:
 ########################################################################
 #
 #
-def files_from_directory(directory='.',pattern='.',cmd_arr=None):
+def files_from_directory(directory='.',pattern='.',deep=True):
     r"""
     Allows the user to get a list of files in the supplied directory 
-    matching a regex pattern. An optional command array
-    argument allows use of user defined command already in 
-    proper format.
+    matching a regex pattern. If deep is set to True then any
+    sub-directories found will also be searched. A pre-compiled pattern
+    can be supplied instead of a string.
     """
     #
     if (isinstance(Path('.'),WindowsPath)):
         path_sep = r'\\'
     else:
         path_sep = r'/'
+    # setting up pattern    
+    try:
+        if (pattern[0] == '*'):
+            pattern = re.sub(r'\.',r'\\.',pattern)
+            pattern = '.'+pattern+'$'
+            print('Modifying glob-like pattern to proper regular expression',pattern)
+        pattern = re.compile(pattern,flags=re.I)
+    except (ValueError,TypeError):
+        print('Using user compiled pattern: ',pattern)
     #
-    # Setting up default cmd arr and quoted directory if it contains spaces
-    if (cmd_arr is None):
-        directory = directory.strip()
-        if (re.search(r'\s',directory)):
-            directory = '"'+directory+'"'
-        cmd_arr = ['ls',directory]
-    #
-    # getting directory contents and inital pre-processing
-    list_dir = subprocess.Popen(cmd_arr, stdout=subprocess.PIPE, shell=True)
-    contents = list_dir.stdout.read()
-    contents = contents.decode()
-    content_arr = contents.split('\n')
-    content_arr = [c.strip() for c in content_arr]
-    #
-    # Testing pattern
-    pattern = re.compile(pattern,flags=re.I)
-    paths = [(c if pattern.search(c) else None) for c in content_arr]
-    paths = list(filter(None,paths))
-    #
-    if (directory[-1] != path_sep):
-        directory += path_sep
-    #
+    # initializing 
+    dirs = [directory]
     files = []
-    for p in paths:
-        p = Path(directory + p)
-        try:
-            files.append(str(p.resolve()))
-        except FileNotFoundError:
-            print('Error an absolute path could not be resolved for: ',str(p))
-    #
+    while dirs:
+        #
+        directory = dirs.pop(0)
+        if (re.search(r'(?:[\\|/])$',directory)):
+            directory = directory[:-1]
+        #
+        cmd_arr = ['ls',directory]
+        list_dir = subprocess.Popen(cmd_arr, stdout=subprocess.PIPE, shell=True)
+        contents = list_dir.stdout.read()
+        contents = contents.decode()
+        content_arr = contents.split('\n')
+        content_arr = [c.strip() for c in content_arr]
+        content_arr = filter(None,content_arr)
+        for c in content_arr:
+            c = directory + path_sep + c
+            p = Path(c)
+            try:
+                if (p.is_dir() and deep):
+                    dirs.append(str(p))
+                else:
+                    if (pattern.search(c)):
+                        files.append(str(p.resolve()))
+            except FileNotFoundError:
+                print('Error an absolute path could not be resolved for: ',str(p))
+            except OSError as e:
+                print('Unknown OS error occured: \n\t',e)
     return(files)
 #
 def load_infile_list(infile_list,delim='auto'):

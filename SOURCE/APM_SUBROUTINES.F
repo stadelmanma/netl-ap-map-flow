@@ -1336,41 +1336,36 @@ C
       ! WILL BE DECREMENTED FROM ITS INITIAL VALUE DOWN TO 1 DURING THE
       !"RETIREMENT-AND-PROMOTION" (HEAP SELECTION) PHASE.
 C
-10     CONTINUE
-      IF(L > 1)THEN
-        L = L-1
-        VAL = VECTOR(L)
-      ELSE
-        VAL = VECTOR(IR)
-        VECTOR(IR) = VECTOR(1)
-        IR = IR-1
-        IF(IR.EQ.1)THEN
-          VECTOR(1) = VAL
-          RETURN
-        END IF
-      END IF
-C
-      I = L
-      J = L+L
-20    IF(J.LE.IR)THEN
-        IF(J < IR)THEN
-          IF(VECTOR(J) < VECTOR(J+1))  J = J+1
-        END IF
-        !
-        IF (VAL < VECTOR(J)) THEN
-          VECTOR(I) = VECTOR(J)
-          I = J; J = J+J
+      DO WHILE (IR > 1)
+        IF(L > 1)THEN
+          L = L-1
+          VAL = VECTOR(L)
         ELSE
-          J = IR+1
+          VAL = VECTOR(IR)
+          VECTOR(IR) = VECTOR(1)
+          IR = IR-1
         END IF
-        GOTO 20
-      END IF
 C
-      VECTOR(I) = VAL
-      GOTO 10
+        I = L
+        J = L+L
+        DO WHILE (J <= IR)
+          IF(J < IR)THEN
+            IF(VECTOR(J) < VECTOR(J+1))  J = J+1
+          END IF
+          !
+          IF (VAL < VECTOR(J)) THEN
+            VECTOR(I) = VECTOR(J)
+            I = J; J = J+J
+          ELSE
+            J = IR+1
+          END IF
+        END DO
+C
+        VECTOR(I) = VAL
+      END DO
+      VECTOR(1) = VAL
 C
       RETURN
-C
       END SUBROUTINE HEAP_SORT   
 C
 C ----------------------------------------------------------------------

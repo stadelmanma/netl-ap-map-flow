@@ -7,4 +7,4 @@ Last Modifed: 2016/02/26
 #
 """
 #
-from .__core__ import *
+from .__bulk_run_core__ import *

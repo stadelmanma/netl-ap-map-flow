@@ -7,7 +7,7 @@ Last Modifed: 2016/02/29
 #
 """
 #
-from ApertureMapModelTools.__core__ import *
+from ApertureMapModelTools.__core__ import ArgProcessor
 from .__BaseProcessor__ import BaseProcessor
 #
 #
