@@ -13,9 +13,7 @@ import re
 class SI:
     r"""
     Holds basic sub class implementation as well as SI prefixes. Meant to
-<<<<<<< HEAD
     serve as an abstract class for the other conversion classes. test23
->>>>>>> refs/remotes/origin/master
     """
     #
     si_prefixes = {
