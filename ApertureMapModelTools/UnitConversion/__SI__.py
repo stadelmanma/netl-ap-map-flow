@@ -13,6 +13,7 @@ import re
 class SI:
     r"""
     Holds basic sub class implementation as well as SI prefixes. Meant to
+    serve as an abstract class for the other conversion classes. test23
     """
     #
     si_prefixes = {
