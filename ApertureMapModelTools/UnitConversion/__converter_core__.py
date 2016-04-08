@@ -104,7 +104,7 @@ class UnitDecomposition(SI):
     @classmethod
     def parse_unit_string(cls,unit_string):
         r"""
-        Returns a  strcutured unit format for build_unit_list to read.
+        Returns a structured unit format for build_unit_list to read.
         Outputs a unit component list and initial conversion factor. 
         
         Initial adjustements to the conversion factor are applied here for
@@ -136,7 +136,6 @@ class UnitDecomposition(SI):
             components.append(unit_string[st:m.start()])
             st = m.start()
         components.append(unit_string[st:])
-        print(components)
         #
         # processing the unit components
         for i in range(len(components)):
@@ -166,7 +165,8 @@ class UnitDecomposition(SI):
         factor = 1.0
         #
         comp_str = (comp_str[1:] if comp_str[0] == '*' else comp_str)
-        m = re.search(r'^(?P<bksl>/)?(?P<unit>.+?)(?:[\^](?P<expn>-?\d+))?$',comp_str)
+        m = re.search(r'^(?P<bksl>/)?(?P<unit>.+?)(?:[\^](?P<expn>-?\d+))?$',
+                      comp_str)
         unit_str = m.group('unit')
         if m.group('bksl'):
             expn = expn * -1
@@ -294,14 +294,20 @@ def get_conversion_factor(unit_str_in,unit_str_out='SI'):
     temperature conversions. 
     """
     #
-    # code to decompose unit strings
-    # make sure there is a check for F and C conversions somewhere
-    # depending on my implementation might be handled by the conversion class
+    # processing input unit to SI conversion factor
+    unit_list,init_factor = UnitDecomposition.parse_unit_string(unit_str_in)
+    unit_in_factor = init_factor * process_unit_list(unit_list)
+    print(unit_in_factor)
+    if (unit_str_out == 'SI'):
+        return(unit_in_factor) #### this doesn't work riht now
     #
-    # if the unit_out = 'SI' just return early
+    # processing ouput unit to SI conversion factor
+    unit_list,init_factor = UnitDecomposition.parse_unit_string(unit_str_in)
+    unit_out_factor = init_factor * process_unit_list(unit_list)
+    print(unit_out_factor)    
     #
-    raise(NotImplementedError('under construction'))
-    return factor
+    factor = ValueError
+    return(unit_in_factor*unit_out_factor)
 #
 #
 def process_unit_list(unit_list):
@@ -321,49 +327,7 @@ def process_unit_list(unit_list):
 #
 def convert_temperature(value,unit_in='kelvin',unit_out='kelvin'):
     r"""
-    Handles the non-standard coversion method to get Fahrenheit and Celcius 
-    into and from Kelvin
+    Public wrapper method to handle temperature conversions
     """
     #
-    temp_abbrev = {
-        'C' : 'celsius',
-        'F' : 'fahrenheit',
-        'K' : 'kelvin',
-        'SI': 'kelvin',
-        'R' : 'rankine'
-    }
-    #
-    if (unit_in in temp_abbrev.keys()):
-        unit_in = temp_abbrev[unit_in]
-    #
-    # converting to Kelvin
-    if (unit_in == 'fahrenheit'):
-        temp = (value + 459.67)*(5.0/9.0)
-    elif (unit_in == 'rankine'):
-        temp = value * 5.0/9.0
-    elif (unit_in == 'celsius'):
-        temp = value + 273.15
-    elif (unit_in == 'kelvin'):
-        temp = value
-    else:
-        raise(Exception('Error - Invalid input unit: '+unit_in))
-    #
-    if (unit_out == 'SI'):
-        return(temp)
-    #
-    elif (unit_out in temp_abbrev.keys()):
-        unit_out = temp_abbrev[unit_out]    
-    #
-    # converting from Kelvin to unit out
-    if (unit_out == 'fahrenheit'):
-        temp = temp*(9.0/5.0) - 459.67
-    elif (unit_out == 'rankine'):
-        temp = temp * 9.0/5.0
-    elif (unit_out == 'celsius'):
-        temp = temp - 273.15
-    elif (unit_out == 'kelvin'):
-        temp = temp
-    else:
-        raise(Exception('Error - Invalid ouput unit: '+unit_out))
-    #
-    return(temp)
+    return(convert.Temperature.convert_temperature(value,unit_in,unit_out))
