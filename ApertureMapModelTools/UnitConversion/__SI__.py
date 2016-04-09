@@ -9,24 +9,24 @@ Last Modifed: 2016/03/24
 #
 import re
 #
-# 
+#
 class SI:
     r"""
     Holds basic sub class implementation as well as SI prefixes. Meant to
-    serve as an abstract class for the other conversion classes. test233223
+    serve as an abstract class for the other conversion classes.
     """
     #
     si_prefixes = {
-        'giga'  :	1.0E09,
-        'mega'  :	1.0E06,
-        'kilo'  :	1.0E03,
-        'hecto' :	1.0E02,
-        'deca'  :	1.0E01,
-        'deci'  :	1.0E-1,
-        'centi' :	1.0E-2,
-        'milli' :	1.0E-3,
-        'micro' :	1.0E-6,
-        'nano'  :	1.0E-9
+        'giga'  : 1.0E09,
+        'mega'  : 1.0E06,
+        'kilo'  : 1.0E03,
+        'hecto' : 1.0E02,
+        'deca'  : 1.0E01,
+        'deci'  : 1.0E-1,
+        'centi' : 1.0E-2,
+        'milli' : 1.0E-3,
+        'micro' : 1.0E-6,
+        'nano'  : 1.0E-9
     }
     #
     si_abbreviations = {
