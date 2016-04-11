@@ -106,22 +106,25 @@ class Temperature(SI):
         'rankine' : 9.0/5.0
     }
     #
-    def convert_temperature(value,unit_in='kelvin',unit_out='kelvin'):
+    temp_abbrev = {
+        'C' : 'celsius',
+        'F' : 'fahrenheit',
+        'K' : 'kelvin',
+        'SI': 'kelvin',
+        'R' : 'rankine'
+    }
+    #
+    @classmethod
+    def convert_temperature(cls,value,unit_in='kelvin',unit_out='kelvin'):
         r"""
         Handles the non-standard coversion method to get Fahrenheit and Celcius 
         into and from Kelvin
         """
         #
-        temp_abbrev = {
-            'C' : 'celsius',
-            'F' : 'fahrenheit',
-            'K' : 'kelvin',
-            'SI': 'kelvin',
-            'R' : 'rankine'
-        }
-        #
-        if (unit_in in temp_abbrev.keys()):
-            unit_in = temp_abbrev[unit_in]
+        if (unit_in in cls.temp_abbrev.keys()):
+            unit_in = cls.temp_abbrev[unit_in]
+        if (unit_out in cls.temp_abbrev.keys()):
+            unit_out = cls.temp_abbrev[unit_out] 
         #
         # converting to Kelvin
         if (unit_in == 'fahrenheit'):
@@ -133,13 +136,7 @@ class Temperature(SI):
         elif (unit_in == 'kelvin'):
             temp = value
         else:
-            raise(Exception('Error - Invalid input unit: '+unit_in))
-        #
-        if (unit_out == 'SI'):
-            return(temp)
-        #
-        elif (unit_out in temp_abbrev.keys()):
-            unit_out = temp_abbrev[unit_out]    
+            raise(Exception('Error - Invalid input unit: '+unit_in)) 
         #
         # converting from Kelvin to unit out
         if (unit_out == 'fahrenheit'):

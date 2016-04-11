@@ -85,7 +85,7 @@ class UnitDecomposition(SI):
         'lbs' : 'pound-mass',
         'm' : 'meter',
         'min' : 'minute',
-        'N' : 'netwon',
+        'N' : 'newton',
         'oz' : 'ounce',
         'p' : 'poise',
         'pa' : 'pascal',
@@ -279,13 +279,24 @@ def convert_value(value,unit_str_in,unit_str_out='SI'):
     This returns a converted value. 
     """
     #
-    # code to decompose unit strings
-    # additional logic to convert between C,F,R,K temperatures
+    temp_units  = list(convert.Temperature.temp_abbrev.keys()) 
+    temp_units += list(convert.Temperature.temp_abbrev.values())
     #
-    # if the unit_out = 'SI' just return early
     #
-    raise(NotImplementedError('under construction'))
-    return value
+    if (unit_str_in in temp_units):
+        value = convert_temperature(value,unit_str_in,unit_str_out)
+    else:
+        unit_list,init_factor = UnitDecomposition.parse_unit_string(unit_str_in)
+        unit_in_factor = init_factor * process_unit_list(unit_list)
+        if (unit_str_out.upper() == 'SI'):
+            return(value * unit_in_factor)
+        #
+        unit_list,init_factor = UnitDecomposition.parse_unit_string(unit_str_out)
+        unit_out_factor = init_factor * process_unit_list(unit_list)
+        #
+        value = value * unit_in_factor/unit_out_factor
+    #
+    return(value)
 #
 # 
 def get_conversion_factor(unit_str_in,unit_str_out='SI'):
@@ -297,17 +308,14 @@ def get_conversion_factor(unit_str_in,unit_str_out='SI'):
     # processing input unit to SI conversion factor
     unit_list,init_factor = UnitDecomposition.parse_unit_string(unit_str_in)
     unit_in_factor = init_factor * process_unit_list(unit_list)
-    print(unit_in_factor)
-    if (unit_str_out == 'SI'):
-        return(unit_in_factor) #### this doesn't work riht now
+    if (unit_str_out.upper() == 'SI'):
+        return(unit_in_factor)
     #
     # processing ouput unit to SI conversion factor
-    unit_list,init_factor = UnitDecomposition.parse_unit_string(unit_str_in)
+    unit_list,init_factor = UnitDecomposition.parse_unit_string(unit_str_out)
     unit_out_factor = init_factor * process_unit_list(unit_list)
-    print(unit_out_factor)    
     #
-    factor = ValueError
-    return(unit_in_factor*unit_out_factor)
+    return(unit_in_factor/unit_out_factor)
 #
 #
 def process_unit_list(unit_list):
