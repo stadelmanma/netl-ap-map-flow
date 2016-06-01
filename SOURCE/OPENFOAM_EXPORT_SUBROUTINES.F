@@ -4,7 +4,7 @@ C ######################################################################
 C ----------------------------------------------------------------------
 C
       SUBROUTINE INITIALIZE_EXPORT(BOK)
-C     
+C
       USE TWOD_MODULE
       USE UNIT_CONVERSION_MODULE
       IMPLICIT NONE
@@ -46,7 +46,7 @@ C
 C
  1000 BOK = .FALSE.
       RETURN
-C 
+C
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
@@ -54,7 +54,7 @@ C ######################################################################
 C ----------------------------------------------------------------------
 C
       SUBROUTINE GENERATE_2DMESH
-C     
+C
       USE TWOD_MODULE
       USE UNIT_CONVERSION_MODULE
 C
@@ -69,10 +69,10 @@ C
 C     ARRAY ALLOCATIONS
       ALLOCATE(REAL_ARRAY(0:NX*NZ*8-1,4),INT_ARRAY(0:NX*NZ*8-1,4))
       ALLOCATE(POINT_MAP(NZ+1,NX+1,4))
-      ALLOCATE(VERTICIES(0:NX*NZ*8-1,3)) 
-      ALLOCATE(BLOCKS(0:NX*NZ-1,8)) 
-      ALLOCATE(INLET(0:NX*NZ*8-1,4),OUTLET(0:NX*NZ*8-1,4)) 
-      ALLOCATE(FRONTBACK(0:NX*NZ*8-1,4),SIDES(0:NX*NZ*8-1,4)) 
+      ALLOCATE(VERTICIES(0:NX*NZ*8-1,3))
+      ALLOCATE(BLOCKS(0:NX*NZ-1,8))
+      ALLOCATE(INLET(0:NX*NZ*8-1,4),OUTLET(0:NX*NZ*8-1,4))
+      ALLOCATE(FRONTBACK(0:NX*NZ*8-1,4),SIDES(0:NX*NZ*8-1,4))
 C
 C     INITIALIZING ARRAYS AND ITERATORS/COUNTERS
       POINT_MAP(:,:,:) = -1
@@ -107,7 +107,7 @@ C     CREATING THE POINT MAP AND VERTICIES
       POINT_MAP(1,1,1) = IV !POINT MAP WILL STORE THE LOWER SURFACE KNOWING THE UPPER IS IV+1
       IV = IV + 1
       VERTICIES(IV,:) = (/ 0.0D0, AP_MAP(1,1,1)/2.0, 0.0D0 /)
-      IV = IV + 1   
+      IV = IV + 1
       !
       DO IZ = 1,NZ
         DO IX = 1,NX
@@ -140,7 +140,7 @@ C     CREATING THE POINT MAP AND VERTICIES
           VERTICIES(IV,1) =  DBLE(IX) * AVG_FACT
           VERTICIES(IV,2) = -AP_MAP(IZ,IX,3)/2.0
           VERTICIES(IV,3) =  DBLE(IZ) * AVG_FACT
-          POINT_MAP(IZ,IX,3)   = IV 
+          POINT_MAP(IZ,IX,3)   = IV
           POINT_MAP(IZ+1,IX,2) = IV
           POINT_MAP(IZ,IX+1,4) = IV
           POINT_MAP(IZ+1,IX+1,1) = IV
@@ -155,12 +155,12 @@ C
 C     POPULATING BLOCK ARRAY
       DO IZ = 1,NZ
         DO IX = 1,NX
-          BLOCKS(IB,1) = POINT_MAP(IZ,IX,1)     !BACK BOTTOM LEFT 
-          BLOCKS(IB,2) = POINT_MAP(IZ,IX,2)     !BACK BOTTOM RIGHT 
+          BLOCKS(IB,1) = POINT_MAP(IZ,IX,1)     !BACK BOTTOM LEFT
+          BLOCKS(IB,2) = POINT_MAP(IZ,IX,2)     !BACK BOTTOM RIGHT
           BLOCKS(IB,3) = POINT_MAP(IZ,IX,2) + 1 !FRONT BOTTOM RIGHT
           BLOCKS(IB,4) = POINT_MAP(IZ,IX,1) + 1 !FRONT BOTTOM LEFT
-          BLOCKS(IB,5) = POINT_MAP(IZ,IX,4)     !BACK TOP LEFT 
-          BLOCKS(IB,6) = POINT_MAP(IZ,IX,3)     !BACK TOP RIGHT 
+          BLOCKS(IB,5) = POINT_MAP(IZ,IX,4)     !BACK TOP LEFT
+          BLOCKS(IB,6) = POINT_MAP(IZ,IX,3)     !BACK TOP RIGHT
           BLOCKS(IB,7) = POINT_MAP(IZ,IX,3) + 1 !FRONT TOP RIGHT
           BLOCKS(IB,8) = POINT_MAP(IZ,IX,4) + 1 !FRONT TOP LEFT
           IB = IB + 1
@@ -168,24 +168,24 @@ C     POPULATING BLOCK ARRAY
       END DO !END NZ
 C
 C     CREATING INLET, OUTLET, SIDES AND FRONTBACK ARRAYS
-      IB = 0 
+      IB = 0
       DO IX = 1,NX !GOING ALONG Z = 0 EDGE
         IF (TOP) THEN
           INLET(IN,1) =  BLOCKS(IB,1)
-          INLET(IN,2) =  BLOCKS(IB,2)   
-          INLET(IN,3) =  BLOCKS(IB,3)  
-          INLET(IN,4) =  BLOCKS(IB,4) 
+          INLET(IN,2) =  BLOCKS(IB,2)
+          INLET(IN,3) =  BLOCKS(IB,3)
+          INLET(IN,4) =  BLOCKS(IB,4)
           IN = IN + 1
         ELSE IF (BOT) THEN
           OUTLET(IO,1) =  BLOCKS(IB,1)
-          OUTLET(IO,2) =  BLOCKS(IB,2)   
-          OUTLET(IO,3) =  BLOCKS(IB,3)  
-          OUTLET(IO,4) =  BLOCKS(IB,4) 
+          OUTLET(IO,2) =  BLOCKS(IB,2)
+          OUTLET(IO,3) =  BLOCKS(IB,3)
+          OUTLET(IO,4) =  BLOCKS(IB,4)
           IO = IO + 1
         ELSE IF ((LFT) .OR. (RHT)) THEN
           SIDES(IS,1) =  BLOCKS(IB,1)
-          SIDES(IS,2) =  BLOCKS(IB,2)   
-          SIDES(IS,3) =  BLOCKS(IB,3)  
+          SIDES(IS,2) =  BLOCKS(IB,2)
+          SIDES(IS,3) =  BLOCKS(IB,3)
           SIDES(IS,4) =  BLOCKS(IB,4)
           IS = IS + 1
         END IF
@@ -196,20 +196,20 @@ C     CREATING INLET, OUTLET, SIDES AND FRONTBACK ARRAYS
       DO IX = 1,NX !GOING ALONG Z = NZ EDGE
         IF (TOP) THEN
           OUTLET(IO,1) =  BLOCKS(IB,5)
-          OUTLET(IO,2) =  BLOCKS(IB,6)   
-          OUTLET(IO,3) =  BLOCKS(IB,7)  
-          OUTLET(IO,4) =  BLOCKS(IB,8) 
+          OUTLET(IO,2) =  BLOCKS(IB,6)
+          OUTLET(IO,3) =  BLOCKS(IB,7)
+          OUTLET(IO,4) =  BLOCKS(IB,8)
           IO = IO + 1
         ELSE IF (BOT) THEN
           INLET(IN,1) =  BLOCKS(IB,5)
-          INLET(IN,2) =  BLOCKS(IB,6)   
-          INLET(IN,3) =  BLOCKS(IB,7)  
-          INLET(IN,4) =  BLOCKS(IB,8) 
+          INLET(IN,2) =  BLOCKS(IB,6)
+          INLET(IN,3) =  BLOCKS(IB,7)
+          INLET(IN,4) =  BLOCKS(IB,8)
           IN = IN + 1
         ELSE IF ((LFT) .OR. (RHT)) THEN
           SIDES(IS,1) =  BLOCKS(IB,5)
-          SIDES(IS,2) =  BLOCKS(IB,6)   
-          SIDES(IS,3) =  BLOCKS(IB,7)  
+          SIDES(IS,2) =  BLOCKS(IB,6)
+          SIDES(IS,3) =  BLOCKS(IB,7)
           SIDES(IS,4) =  BLOCKS(IB,8)
           IS = IS + 1
         END IF
@@ -220,21 +220,21 @@ C     CREATING INLET, OUTLET, SIDES AND FRONTBACK ARRAYS
         IB = (IZ*NX)
         IF ((TOP) .OR. (BOT)) THEN
           SIDES(IS,1) =  BLOCKS(IB,1)
-          SIDES(IS,2) =  BLOCKS(IB,4)   
-          SIDES(IS,3) =  BLOCKS(IB,8)  
+          SIDES(IS,2) =  BLOCKS(IB,4)
+          SIDES(IS,3) =  BLOCKS(IB,8)
           SIDES(IS,4) =  BLOCKS(IB,5)
           IS = IS + 1
         ELSE IF (LFT) THEN
           OUTLET(IO,1) =  BLOCKS(IB,1)
-          OUTLET(IO,2) =  BLOCKS(IB,4)   
-          OUTLET(IO,3) =  BLOCKS(IB,8)  
-          OUTLET(IO,4) =  BLOCKS(IB,5) 
+          OUTLET(IO,2) =  BLOCKS(IB,4)
+          OUTLET(IO,3) =  BLOCKS(IB,8)
+          OUTLET(IO,4) =  BLOCKS(IB,5)
           IO = IO + 1
         ELSE IF (RHT) THEN
           INLET(IN,1) =  BLOCKS(IB,1)
-          INLET(IN,2) =  BLOCKS(IB,4)   
-          INLET(IN,3) =  BLOCKS(IB,8)  
-          INLET(IN,4) =  BLOCKS(IB,5) 
+          INLET(IN,2) =  BLOCKS(IB,4)
+          INLET(IN,3) =  BLOCKS(IB,8)
+          INLET(IN,4) =  BLOCKS(IB,5)
           IN = IN + 1
         END IF
       END DO
@@ -243,36 +243,36 @@ C     CREATING INLET, OUTLET, SIDES AND FRONTBACK ARRAYS
         IB = (IZ*NX) + NX - 1
         IF ((TOP) .OR. (BOT)) THEN
           SIDES(IS,1) =  BLOCKS(IB,2)
-          SIDES(IS,2) =  BLOCKS(IB,3)   
-          SIDES(IS,3) =  BLOCKS(IB,7)  
+          SIDES(IS,2) =  BLOCKS(IB,3)
+          SIDES(IS,3) =  BLOCKS(IB,7)
           SIDES(IS,4) =  BLOCKS(IB,6)
           IS = IS + 1
         ELSE IF (LFT) THEN
           OUTLET(IO,1) =  BLOCKS(IB,2)
-          OUTLET(IO,2) =  BLOCKS(IB,3)   
-          OUTLET(IO,3) =  BLOCKS(IB,7)  
-          OUTLET(IO,4) =  BLOCKS(IB,6) 
+          OUTLET(IO,2) =  BLOCKS(IB,3)
+          OUTLET(IO,3) =  BLOCKS(IB,7)
+          OUTLET(IO,4) =  BLOCKS(IB,6)
           IO = IO + 1
         ELSE IF (RHT) THEN
           INLET(IN,1) =  BLOCKS(IB,2)
-          INLET(IN,2) =  BLOCKS(IB,3)   
-          INLET(IN,3) =  BLOCKS(IB,7)  
-          INLET(IN,4) =  BLOCKS(IB,6) 
+          INLET(IN,2) =  BLOCKS(IB,3)
+          INLET(IN,3) =  BLOCKS(IB,7)
+          INLET(IN,4) =  BLOCKS(IB,6)
           IN = IN + 1
         END IF
       END DO
-      ! 
-      DO IZ = 0,NZ-1 
+      !
+      DO IZ = 0,NZ-1
         DO IX = 0,NX-1
           IB = (IZ*NX) + IX
           ! BACK FACE
-          FRONTBACK(IFB,1) = BLOCKS(IB,1) 
+          FRONTBACK(IFB,1) = BLOCKS(IB,1)
           FRONTBACK(IFB,2) = BLOCKS(IB,2)
           FRONTBACK(IFB,3) = BLOCKS(IB,6)
           FRONTBACK(IFB,4) = BLOCKS(IB,5)
           IFB = IFB + 1
           ! FRONT FACE
-          FRONTBACK(IFB,1) = BLOCKS(IB,4) 
+          FRONTBACK(IFB,1) = BLOCKS(IB,4)
           FRONTBACK(IFB,2) = BLOCKS(IB,3)
           FRONTBACK(IFB,3) = BLOCKS(IB,7)
           FRONTBACK(IFB,4) = BLOCKS(IB,8)
@@ -310,7 +310,7 @@ C     RESIZING ARRAYS SO I CAN USE SIZE FOR OUTPUT (THIS PART IM KEEPING JUST WA
       DEALLOCATE(FRONTBACK)
       ALLOCATE(FRONTBACK(0:IFB-1,4))
       FORALL (I = 0:IFB-1) FRONTBACK(I,1:4) = INT_ARRAY(I,1:4)
-C     
+C
 C
       RETURN
 C
@@ -338,7 +338,7 @@ C     WRITTING HEADER DATA
       WRITE(IBMD,1020)VOX_MET
       WRITE(IBMD,"(A)")BL
 C
-C     WRITING VERTICES 
+C     WRITING VERTICES
       WRITE(IBMD,1030)'vertices',NL
       DO I = 0,SIZE(VERTICIES,1) - 1
         WRITE(IBMD,1100)VERTICIES(I,:)
@@ -346,7 +346,7 @@ C     WRITING VERTICES
       WRITE(IBMD,1031)
       WRITE(IBMD,"(A)")BL
 C
-C     WRITING BLOCKS 
+C     WRITING BLOCKS
       WRITE(IBMD,1030)'blocks',NL
       DO I = 0,SIZE(BLOCKS,1) - 1
         WRITE(IBMD,1110)BLOCKS(I,:),INTERNAL_MESH(:)
@@ -354,12 +354,12 @@ C     WRITING BLOCKS
       WRITE(IBMD,1031)
       WRITE(IBMD,"(A)")BL
 C
-C     WRITING EDGES 
+C     WRITING EDGES
       WRITE(IBMD,1030)'edges',NL
       WRITE(IBMD,1031)
       WRITE(IBMD,"(A)")BL
 C
-C     WRITING BOUNDARIES 
+C     WRITING BOUNDARIES
       WRITE(IBMD,1030)'boundary',NL
       ! INLET
       WRITE(IBMD,1040)'inlet',NL
@@ -404,10 +404,10 @@ C     WRITING BOUNDARIES
       WRITE(IBMD,1031)
       WRITE(IBMD,"(A)")BL
 C
-C     WRITING MERGE PATCH PAIRS 
+C     WRITING MERGE PATCH PAIRS
       WRITE(IBMD,1030)'mergePatchPairs',NL
       WRITE(IBMD,1031)
-      WRITE(IBMD,"(A)")BL   
+      WRITE(IBMD,"(A)")BL
 C
       CLOSE(IBMD)
       RETURN
@@ -446,4 +446,4 @@ C
 C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
-C           
+C

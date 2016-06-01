@@ -49,7 +49,7 @@ C     ELIMINATE ELEMENTS TO THE LEFT OF THE DIAGONAL
 C
           DO IA = IL,-1
             TEMP = ROW(IA)
-            IB_UP = IB + IA            
+            IB_UP = IB + IA
             IU = NX*(IB_UP - 1) !WORKS BECAUSE OFF DIAGIONALS ARE NX AWAY
             DO JA = IA+1,IA+NX
               IU = IU + 1
@@ -90,7 +90,7 @@ C
       ENDDO
       !
       CALL CPU_TIME(EN)
-      WRITE(C120,"(5X,'REQUIRED TIME FOR BACK SUB: ',F13.6)")(EN-ST) 
+      WRITE(C120,"(5X,'REQUIRED TIME FOR BACK SUB: ',F13.6)")(EN-ST)
       CALL MESSAGE(C120)
 C
       DEALLOCATE (ROW, UPPER)
@@ -159,7 +159,7 @@ C
 C     WRITTEN BY: W. NEAL SAMS
 C     DATE WRITTEN: 02/29/2016
 C
-      USE D4_MODULE 
+      USE D4_MODULE
 C
       IMPLICIT NONE
       INTEGER :: NX,NZ,NXZ
@@ -294,7 +294,7 @@ C
             IBU = INAT(IBRU)
             FACTOR = TT(IB,ID)/CC(IBU)
             DO JD = 1,4
-              JBR = LINK_D4(IBRU,JD)            
+              JBR = LINK_D4(IBRU,JD)
               IF(JBR > 0) THEN
                 ICOL = JBR - IBR
                 IF(ICOL < IL) IL = ICOL
@@ -303,7 +303,7 @@ C
             END DO
             TEMP_RHS = TEMP_RHS - FACTOR*RHS(IBU)
           END IF
-        END DO         
+        END DO
 !
 !     ELIMINATE ELEMENTS TO THE LEFT OF THE DIAGONAL
 !
@@ -368,7 +368,7 @@ C     JACOBI ITTERATIVE SOLVER
 C     Solves Ax=b where A is a square matrix of size NX*NZ
 C     with four off diagonals at -nx, -1, 1, nx.
 C
-C     Taken from: 
+C     Taken from:
 C     @inbook{doi:10.1137/1.9781611971446.ch6,
 C     title = {6. Iterative Methods for Linear Systems},
 C     booktitle = {Applied Numerical Linear Algebra},
@@ -397,7 +397,7 @@ C-------------------------------------------------------------------------
       REAL(8) :: AD(*), AW(*), AC(*), AE(*), AU(*), RHS(*), X(*)
       REAL(8) :: TEMP, RMAX, Q, QMAX, TOL
       INTEGER :: NX, NZ, IB, J, I, IT, ITMAX
-C      
+C
       TOL = 1E-05
       ITMAX = 10000
       ITERATION: DO IT = 1, ITMAX
@@ -413,7 +413,7 @@ C
             X(IB) = TEMP/AC(IB)
           END DO
         END DO
-      
+
         RMAX = 0.0
         QMAX = 0.0
         IB = 0
@@ -424,19 +424,19 @@ C
             TEMP = RHS(IB)
             IF(I /= 1) Q = ABS(AW(IB)*X(IB-1))
             IF(I /= 1) TEMP = TEMP - AW(IB)*X(IB-1)
-            IF(Q > QMAX) QMAX = Q 
+            IF(Q > QMAX) QMAX = Q
             IF(J /= 1) Q = ABS(AD(IB)*X(IB-NX))
             IF(J /= 1) TEMP = TEMP - AD(IB)*X(IB-NX)
-            IF(Q > QMAX) QMAX = Q 
+            IF(Q > QMAX) QMAX = Q
             IF(I /= NX) Q = ABS(AE(IB)*X(IB+1))
             IF(I /= NX) TEMP = TEMP - AE(IB)*X(IB+1)
-            IF(Q > QMAX) QMAX = Q 
+            IF(Q > QMAX) QMAX = Q
             IF(J /= NZ) Q = ABS(AE(IB)*X(IB+1))
             IF(J /= NZ) TEMP = TEMP - AE(IB)*X(IB+1)
-            IF(Q > QMAX) QMAX = Q 
+            IF(Q > QMAX) QMAX = Q
             Q = ABS(AC(IB)*X(IB))
             TEMP = TEMP - AC(IB)*X(IB)
-            IF(Q > QMAX) QMAX = Q 
+            IF(Q > QMAX) QMAX = Q
             TEMP = ABS(TEMP)
             IF(TEMP > RMAX) RMAX = TEMP
           END DO
@@ -450,8 +450,8 @@ C
 C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
-C  
-C-------------------------------------------------------------------------      
+C
+C-------------------------------------------------------------------------
       SUBROUTINE MATRIX_MULTIPLY(AW,AD,AC,AU,AE,X,B,NX,NZ)
 C-------------------------------------------------------------------------
 C
@@ -464,7 +464,7 @@ C-------------------------------------------------------------------------
       REAL(8) :: AD(*), AW(*), AC(*), AE(*), AU(*), X(*), B(*)
       REAL(8) :: TEMP
       INTEGER :: NX, NZ, IB, I, J
-      
+
       IB = 0
       DO J = 1, NZ
         DO I = 1, NX
@@ -479,53 +479,53 @@ C-------------------------------------------------------------------------
         END DO
       END DO
       RETURN
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
       END SUBROUTINE MATRIX_MULTIPLY
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
 
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
       SUBROUTINE VECTOR_MULTIPLY(X, B, NXZ)
 C-------------------------------------------------------------------------
 C
 C     VECTOR MULTIPLICATION
-C     Returns b for xTx=b 
+C     Returns b for xTx=b
 C
 C-------------------------------------------------------------------------
       IMPLICIT NONE
       REAL(8) :: X(*),B
-      INTEGER :: I,NXZ 
-      
+      INTEGER :: I,NXZ
+
       B = 0
       DO I = 1, NXZ
         B = B + X(I)*X(I)
       END DO
       RETURN
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
       END SUBROUTINE VECTOR_MULTIPLY
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
 
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
       SUBROUTINE XAX_MULTIPLY(X, AX, B, NXZ)
 C-------------------------------------------------------------------------
 C
 C     VECTOR MULTIPLICATION
-C     Returns b for (xT)Ax=b 
+C     Returns b for (xT)Ax=b
 C
 C-------------------------------------------------------------------------
       IMPLICIT NONE
       REAL(8) :: X(*), AX(*), B
       INTEGER :: NXZ, J
-      
+
       B = 0
       DO J = 1, NXZ
         B = B + X(J)*AX(J)
       END DO
       RETURN
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
       END SUBROUTINE XAX_MULTIPLY
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
 
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
       SUBROUTINE CG(AD,AW,AC,AE,AU,RHS,NX,NZ,X)
 C-------------------------------------------------------------------------
 C
@@ -534,7 +534,7 @@ C     Solves Ax=b where A is a square matrix of size NX*NZ
 
 C     with four off diagonals at -nx, -1, 1, nx.
 C
-C     Taken from: 
+C     Taken from:
 C
 C     WRITTEN BY: SETH KING
 C     DATE WRITTEN: 12/12/2015
@@ -594,11 +594,11 @@ C-------------------------------------------------------------------------
       DEALLOCATE( R, P, AP)
       RETURN
 
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
       END SUBROUTINE CG
 C-------------------------------------------------------------------------
 
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
       SUBROUTINE DUMMY_SOLVE(AW,AD,AC,AU,AE,RHS,NX,NZ,X)
 C-------------------------------------------------------------------------
       IMPLICIT NONE
@@ -641,7 +641,7 @@ C-------------------------------------------------------------------------
       RETURN
  290  FORMAT(2(I4, ' , '),'MAX RES=',E15.4)
  300  FORMAT(6(EN15.4, ' , '))
-C-------------------------------------------------------------------------      
+C-------------------------------------------------------------------------
       END SUBROUTINE DUMMY_SOLVE
 C-------------------------------------------------------------------------
 
