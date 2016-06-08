@@ -7,8 +7,6 @@ Last Modifed: 2016/02/26
 #
 """
 #
-import os
-import re
 import sys
 #
 # checking python version

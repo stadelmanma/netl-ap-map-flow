@@ -15,7 +15,7 @@ from ApertureMapModelTools.__core__ import DataField
 #
 ########################################################################
 #
-# Class Definitions 
+# Class Definitions
 #
 class ArgInput:
     r"""
@@ -36,7 +36,7 @@ class ArgInput:
         # testing if line was commented out
         m = re.match(r'^;(.*)',line)
         if m:
-            self.commented_out = True  
+            self.commented_out = True
             self.line = m.group(1)
             self.value = m.group(1)
         #
@@ -62,7 +62,7 @@ class ArgInput:
                         self.value_index = ifld+1
                     except IndexError:
                         self.value = "NONE"
-                        self.value_index = ifld+1    
+                        self.value_index = ifld+1
     #
     def update_value(self,new_value,uncomment=True):
         r"""
@@ -75,7 +75,7 @@ class ArgInput:
         if (self.value_index > 0):
             self.line_arr[self.value_index] = new_value
         else:
-            self.line_arr = list(filter(None,re.split('\s',new_value)))       
+            self.line_arr = list(filter(None,re.split(r'\s',new_value)))
         self.line = ' '.join(self.line_arr)
         self.value = new_value
     #
@@ -100,11 +100,11 @@ class InputFile:
         self.outfile_name = 'FRACTURE_INITIALIZATION.INP'
         self.filename_formats = dict(filename_formats)
         if ('input_file' not in filename_formats):
-            self.filename_formats['input_file'] = self.outfile_name   
+            self.filename_formats['input_file'] = self.outfile_name
     #
     def __repr__(self):
         r"""
-        Writes an input file to the screen 
+        Writes an input file to the screen
         """
         #
         # updating filenames to match current args
@@ -129,7 +129,7 @@ class InputFile:
         #
         input_file = InputFile(file_formats)
         input_file.arg_dict = {k : ArgInput(self.arg_dict[k].output_line()) for k in self.arg_dict.keys()}
-        input_file.arg_order = [arg for arg in self.arg_order] 
+        input_file.arg_order = [arg for arg in self.arg_order]
         #
         return input_file
     #
@@ -141,11 +141,11 @@ class InputFile:
             try:
                 self.arg_dict[key].update_value(args[key])
             except KeyError:
-                self.filename_format_args[key] = args[key] 
+                self.filename_format_args[key] = args[key]
     #
     def construct_file_names(self):
         r"""
-        This updates the INP file's base outfile names to match current 
+        This updates the INP file's base outfile names to match current
         arguments and creates file paths if directories do not exist yet
         """
         #
@@ -163,7 +163,7 @@ class InputFile:
         #
         # checking existance of directories and updating arg_dict
         for f in outfiles.keys():
-            try: 
+            try:
                 self.arg_dict[f].update_value(outfiles[f])
             except KeyError:
                 if (f == 'input_file'):
@@ -178,7 +178,7 @@ class InputFile:
             path = outfiles[f][:i]
             if (not os.path.isdir(path)):
                 syscmd = 'mkdir '+path
-                os.system(syscmd) 
+                os.system(syscmd)
         self.outfile_name = outfiles['input_file']
         #
     #
@@ -224,7 +224,7 @@ def parse_input_file(infile):
     """
     #
     with open(infile,'r') as f:
-      content = f.read()
+        content = f.read()
     #
     input_file = InputFile()
     #
@@ -270,13 +270,13 @@ def estimate_req_RAM(input_maps,avail_RAM,delim='auto'):
 def combine_run_args(input_map_args,init_input_file):
     r"""
     This function takes all of the args for each input map and then makes
-    a list of InputFile objects to be run in parallel. 
+    a list of InputFile objects to be run in parallel.
     """
     #
     # creating a combination of all arg lists for each input map
     input_file_list = []
     for map_args in input_map_args:
-        keys, values = list(map_args['run_params'].keys()),list(map_args['run_params'].values())  
+        keys, values = list(map_args['run_params'].keys()),list(map_args['run_params'].values())
         param_combs = list(product(*values))
         for comb in param_combs:
             #
@@ -285,7 +285,7 @@ def combine_run_args(input_map_args,init_input_file):
             inp_file = init_input_file.clone(map_args['filename_formats'])
             inp_file.RAM_req = map_args['RAM_req']
             inp_file.update_args(args)
-            input_file_list.append(inp_file) 
+            input_file_list.append(inp_file)
     #
     return(input_file_list)
 #
@@ -304,7 +304,7 @@ def start_simulations(input_file_list,num_CPUs,avail_RAM,start_delay=5):
 #
 def test_processes(processes,RAM_in_use,retest_delay=5):
     r"""
-    This tests the processes list for any of them that have completed. 
+    This tests the processes list for any of them that have completed.
     A small delay is used to prevent an obscene amount of queries.
     """
     while True:
@@ -316,7 +316,7 @@ def test_processes(processes,RAM_in_use,retest_delay=5):
         #
         sleep(retest_delay)
     #
-    return       
+    return
 #
 def start_run(processes,input_file_list,num_CPUs,avail_RAM,RAM_in_use,start_delay=5):
     r"""
@@ -346,7 +346,7 @@ def start_run(processes,input_file_list,num_CPUs,avail_RAM,RAM_in_use,start_dela
         if not recheck:
             break
     #
-    return   
+    return
 #
 def process_input_tuples(input_tuples,global_params = {},global_name_format = {}):
     r"""
@@ -376,7 +376,7 @@ def process_input_tuples(input_tuples,global_params = {},global_name_format = {}
 def bulk_run(num_CPUs=4.0,sys_RAM=8.0,sim_inputs=[],delim='auto',init_infile='FRACTURE_INITIALIZATION.INP'):
     r"""
     This acts as the driver function for the entire bulk run of simulations.
-    It handles calling the required functions in the required order. 
+    It handles calling the required functions in the required order.
     """
     #
     print('Beginning bulk run of aperture map simulations')
@@ -405,8 +405,8 @@ def bulk_run(num_CPUs=4.0,sys_RAM=8.0,sim_inputs=[],delim='auto',init_infile='FR
 #
 def dry_run(num_CPUs=4.0,sys_RAM=8.0,sim_inputs=[],delim='auto',init_infile='FRACTURE_INITIALIZATION.INP'):
     r"""
-    This steps through the entire simulation creating directories and 
-    input files without actually starting any of the simulations. 
+    This steps through the entire simulation creating directories and
+    input files without actually starting any of the simulations.
     """
     #
     print('Beginning dry run of aperture map simulations on INP files output')
@@ -431,5 +431,4 @@ def dry_run(num_CPUs=4.0,sys_RAM=8.0,sim_inputs=[],delim='auto',init_infile='FRA
         print('')
     #
     return
-    
-      
+

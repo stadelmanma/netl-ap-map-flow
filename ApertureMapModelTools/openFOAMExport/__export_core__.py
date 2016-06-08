@@ -7,9 +7,11 @@ Last Modifed: 2016/03/22
 #
 """
 #
+from ApertureMapModelTools.__core__ import DataField
+#
 ########################################################################
 #
-# Class Definitions 
+# Class Definitions
 #
 
 #
@@ -17,4 +19,5 @@ Last Modifed: 2016/03/22
 #
 # Function Definitions
 #
-print('Place holder file for now')
+def export_aperture_map(map_file):
+    pass
