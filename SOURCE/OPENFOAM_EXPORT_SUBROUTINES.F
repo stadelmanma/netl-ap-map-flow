@@ -17,6 +17,7 @@ C     DEFAULT VALUES
       HIGH_MASK = 10000.0
       LOW_MASK = 1E-6
       R_FACT = 0.0
+      UNIT(:)     = 'SI'
       UNIT_IN(1) = 'PA'
       UNIT_IN(2) = 'M'
       UNIT_IN(3) = 'FAHR'
