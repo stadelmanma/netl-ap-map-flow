@@ -249,17 +249,17 @@ C     CREATING INLET, OUTLET, SIDES AND FRONTBACK ARRAYS
           SIDES(IS,4) =  BLOCKS(IB,6)
           IS = IS + 1
         ELSE IF (LFT) THEN
-          OUTLET(IO,1) =  BLOCKS(IB,2)
-          OUTLET(IO,2) =  BLOCKS(IB,3)
-          OUTLET(IO,3) =  BLOCKS(IB,7)
-          OUTLET(IO,4) =  BLOCKS(IB,6)
-          IO = IO + 1
-        ELSE IF (RHT) THEN
-          INLET(IN,1) =  BLOCKS(IB,2)
-          INLET(IN,2) =  BLOCKS(IB,3)
-          INLET(IN,3) =  BLOCKS(IB,7)
-          INLET(IN,4) =  BLOCKS(IB,6)
+          INLET(IO,1) =  BLOCKS(IB,2)
+          INLET(IO,2) =  BLOCKS(IB,3)
+          INLET(IO,3) =  BLOCKS(IB,7)
+          INLET(IO,4) =  BLOCKS(IB,6)
           IN = IN + 1
+        ELSE IF (RHT) THEN
+          OUTLET(IN,1) =  BLOCKS(IB,2)
+          OUTLET(IN,2) =  BLOCKS(IB,3)
+          OUTLET(IN,3) =  BLOCKS(IB,7)
+          OUTLET(IN,4) =  BLOCKS(IB,6)
+          IO = IO + 1
         END IF
       END DO
       !
