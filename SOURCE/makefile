@@ -13,17 +13,17 @@ WFLAGS = -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing 
 FFLAGS = -fimplicit-none -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace -cpp
 #
 ifdef SystemRoot
-      RM = del /Q
-      RM_TEMP = del /Q *~
-      OS = -DWIN64=1
+	RM = del /Q
+	RM_TEMP = del /Q *~
+	OS = -DWIN64=1
 else ifdef SYSTEMROOT
-      RM = del /Q
-      RM_TEMP = del /Q *~
-      OS = -DWIN64=1
+	RM = del /Q
+	RM_TEMP = del /Q *~
+	OS = -DWIN64=1
 else
-      RM = rm -f
-      RM_TEMP = find . -type f -name "*~" -delete
-      OS = -DWIN64=0
+	RM = rm -f
+	RM_TEMP = find . -type f -name "*~" -delete
+	OS = -DWIN64=0
 endif
 #
 # hardcoding for now it since make cant seem to access windows commands only it's shell commands
@@ -34,24 +34,24 @@ RM_TEMP = find . -type f -name "*~" -delete
 all: modules model export
 
 modules:
-      $(COMPILER) -c APM_MODULE.F
-      $(COMPILER) -c UNIT_CONVERSION_MODULE.F
-      $(COMPILER) -c D4_MODULE.F90
+	$(COMPILER) -c APM_MODULE.F
+	$(COMPILER) -c UNIT_CONVERSION_MODULE.F
+	$(COMPILER) -c D4_MODULE.F90
 
 model: modules
-      $(COMPILER) -o $(MODELNAME) $(SHAREDFILES) $(MODELFILES) $(OPTIMIZE) $(FFLAGS) $(OS) $(WFLAGS)
-      mv $(MODELNAME) ..
+	$(COMPILER) -o $(MODELNAME) $(SHAREDFILES) $(MODELFILES) $(OPTIMIZE) $(FFLAGS) $(OS) $(WFLAGS)
+	mv $(MODELNAME) ..
 
 export: modules
-      $(COMPILER) -o $(EXPORTNAME) $(SHAREDFILES) $(EXPORTFILES) $(OPTIMIZE) $(FFLAGS) $(OS) $(WFLAGS)
-      mv $(EXPORTNAME) ..
+	$(COMPILER) -o $(EXPORTNAME) $(SHAREDFILES) $(EXPORTFILES) $(OPTIMIZE) $(FFLAGS) $(OS) $(WFLAGS)
+	mv $(EXPORTNAME) ..
 
 clean:
-      $(RM) *.o
-      $(RM) *.mod
-      $(RM) *.EXE
-      #
-      cd ..; $(RM) *.EXE
+	$(RM) *.o
+	$(RM) *.mod
+	$(RM) *.EXE
+	#
+	cd ..; $(RM) *.EXE
 
 rm_temp:
-      cd ..; $(RM_TEMP)
+	cd ..; $(RM_TEMP)
