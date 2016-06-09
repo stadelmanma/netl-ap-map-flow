@@ -134,6 +134,7 @@ class OpenFoamExport(dict):
         for key, value in default_params.items():
             self[key] = value
         #
+        field.create_point_data()
         field.copy_data(self)
         if export_params is not None:
             for key, value in export_params.items():
@@ -264,7 +265,8 @@ class OpenFoamExport(dict):
             fname = os.path.join(path,fname)
         #
         # checking if file exists
-        # do stuff
+        if overwrite:
+            pass
         #
         # creating file header
         file_header = 'FoamFile\n{\n'
@@ -305,7 +307,7 @@ class OpenFoamExport(dict):
         file_content += 'boundary\n(\n'
         bounds = []
         for key in self.keys():
-            mat = re.match('boundary.(\w+)[.]?',key)
+            mat = re.match(r'boundary.(\w+)[.]?',key)
             bounds.append(mat.group(1)) if mat else None
         bounds = set(bounds)
         #
