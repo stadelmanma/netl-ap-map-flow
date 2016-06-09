@@ -1,5 +1,0 @@
-The three contained maps here represent simplifed 100x100 grid aperture maps.
-
-PARALELL-PLATE-01VOX.TXT and PARALELL-PLATE-10VOX.TXT are uniform and can serve as test cases to manual validation if desired. 
-
-PARALELL-PLATE-10VOX-0AP-BANDS.TXT has several horizontal and vertical bands of zero aperture and requires use of the 'LOW-MASK' parameter 

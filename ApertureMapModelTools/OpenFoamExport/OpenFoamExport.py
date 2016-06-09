@@ -10,6 +10,7 @@ Last Modifed: 2016/06/10
 import os
 import re
 import scipy as sp
+from ApertureMapModelTools.__core__ import DataField
 #
 ########################################################################
 #
@@ -267,7 +268,7 @@ params = {
     'boundary.front.type' : 'wall',
     'boundary.back.type' : 'wall'
 }
-apmap_field = DataFieldNew(map_file)
+apmap_field = DataField(map_file)
 apmap_field.create_point_data()
 export = OpenFoamExport(apmap_field, avg_fact=10.0, export_params=params)
 self = export
