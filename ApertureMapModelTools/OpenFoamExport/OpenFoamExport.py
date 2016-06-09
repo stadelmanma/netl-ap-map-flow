@@ -66,34 +66,45 @@ class DataFieldNew:
         Index Locations: 0 = BLC, 1 = BRC, 2 = TRC, 3 = TLC
         """
         #
-        self.point_data = sp.zeros((self.nz, self.nx, 4))
+        self.point_data = sp.zeros((self.nz+1, self.nx+1, 4))
         #
         # setting corners of map first
-        self.point_data[0,0,0] = self.data_map[0,0]
-        self.point_data[0,-1,1] = self.data_map[0,-1]
-        self.point_data[-1,-1,2] = self.data_map[-1,-1]
-        self.point_data[-1,0,3] = self.data_map[-1,0]
+        self.point_data[0, 0, 0] = self.data_map[0, 0]
+        self.point_data[0, -1, 1] = self.data_map[0, -1]
+        self.point_data[-1, -1, 2] = self.data_map[-1, -1]
+        self.point_data[-1, 0, 3] = self.data_map[-1, 0]
         #
         # calculating point values for the map interior
         for iz in range(self.nz):
             for ix in range(self.nx):
-                val = sp.average(self.data_map[iz:iz+2,ix:ix+2])
-                self.point_data[iz,ix,2] = val
-                self.point_data[iz+1,ix+1,0] = val
-                self.point_data[iz+1,ix,1] = val
-                self.point_data[iz,ix+1,3] = val
+                val = sp.average(self.data_map[iz:iz+2, ix:ix+2])
+                self.point_data[iz, ix, 2] = val
+                self.point_data[iz+1, ix+1, 0] = val
+                self.point_data[iz+1, ix, 1] = val
+                self.point_data[iz, ix+1, 3] = val
         #
         # handling left and right edges
         for iz in range(self.nz):
-            val =
-            self.point_data[iz,0,3] = val
-            self.point_data[iz+1,0,0] = val
+            val = sp.average(self.data_map[iz:iz+2, 0])
+            self.point_data[iz, 0, 3] = val
+            self.point_data[iz+1, 0, 0] = val
+            #
+            val = sp.average(self.data_map[iz:iz+2, -1])
+            self.point_data[iz, -1, 2] = val
+            self.point_data[iz+1, -1, 1] = val
         #
         # handling top and bottom edges
         for ix in range(self.nx):
-            val =
-            self.point_data[0,ix,3] = val
-            self.point_data[0,0,0] = val
+            val = sp.average(self.data_map[0, ix:ix+2])
+            self.point_data[0, ix, 1] = val
+            self.point_data[0, ix+1, 0] = val
+            #
+            val = sp.average(self.data_map[-1, ix:ix+2])
+            self.point_data[-1, ix, 2] = val
+            self.point_data[-1, ix+1, 3] = val
+        #
+        self.point_data = self.point_data[0:self.nz, 0:self.nx, :]
+
 
 #
 class OpenFoamExport(dict):
