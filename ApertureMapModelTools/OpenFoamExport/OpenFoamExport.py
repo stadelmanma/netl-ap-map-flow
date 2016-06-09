@@ -173,10 +173,10 @@ class OpenFoamExport(dict):
         for iz in range(self.nz):
             for ix in range(self.nx):
                 xdist = (ix + 1.0) * avg_fact
-                ydist = self.data_map[iz, ix]/2.0
                 zdist = (iz + 1.0) * avg_fact
                 #
                 if ix == 0:
+                    ydist = self.point_data[iz, ix, 3]/2.0
                     self._verticies[iv] = [0.0, -ydist, zdist]
                     vert_map[iz, ix, 3] = iv
                     vert_map[iz+1, ix, 0] = iv
@@ -185,6 +185,7 @@ class OpenFoamExport(dict):
                     iv += 1
                 #
                 if iz == 0:
+                    ydist = self.point_data[iz, ix, 1]/2.0
                     self._verticies[iv] = [xdist, -ydist, 0.0]
                     vert_map[iz, ix, 1] = iv
                     vert_map[iz, ix+1, 0] = iv
@@ -192,6 +193,7 @@ class OpenFoamExport(dict):
                     self._verticies[iv] = [xdist, ydist, 0.0]
                     iv += 1
                 #
+                ydist = self.point_data[iz, ix, 2]/2.0
                 self._verticies[iv] = [xdist, -ydist, zdist]
                 vert_map[iz, ix, 2] = iv
                 vert_map[iz+1, ix, 1] = iv
