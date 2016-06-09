@@ -68,8 +68,29 @@ class DataFieldNew:
         #
         self.point_data = sp.zeros((self.nz, self.nx, 4))
         #
-        # do stuff
+        # setting corners of map first
+        self.point_data[0,0,0] = self.data_map[0,0]
+        self.point_data[0,-1,1] = self.data_map[0,-1]
+        self.point_data[-1,-1,2] = self.data_map[-1,-1]
+        self.point_data[-1,0,3] = self.data_map[-1,0]
         #
+        # calculating point values for the map interior
+        for iz in range(self.nz):
+            for ix in range(self.nx):
+                val = sp.average(self.data_map[iz:iz+2,ix:ix+2])
+                self.point_data[iz,ix,2] = val
+                self.point_data[iz+1,ix+1,0] = val
+                self.point_data[iz+1,ix,1] = val
+                self.point_data[iz,ix+1,3] = val
+        #
+        # handling left and right edges
+        for iz in range(self.nz):
+            pass
+        #
+        # handling top and bottom edges
+        for ix in range(self.nx):
+            pass
+
 #
 class OpenFoamExport(dict):
     r"""
@@ -320,6 +341,7 @@ params = {
     'boundary.back.type' : 'wall'
 }
 apmap_field = DataFieldNew(map_file)
+apmap_field.create_point_data()
 export = OpenFoamExport(apmap_field, avg_fact=10.0, export_params=params)
 self = export
 export.write_mesh_file()
