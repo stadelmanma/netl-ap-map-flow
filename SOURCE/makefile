@@ -31,7 +31,7 @@ RM = rm -f
 RM_TEMP = find . -type f -name "*~" -delete
 #
 # This will compile the entire program and it's modules
-all: modules model export
+all: modules model
 
 modules:
 	$(COMPILER) -c APM_MODULE.F
