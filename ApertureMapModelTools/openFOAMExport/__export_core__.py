@@ -85,11 +85,15 @@ class DataFieldNew:
         #
         # handling left and right edges
         for iz in range(self.nz):
-            pass
+            val =
+            self.point_data[iz,0,3] = val
+            self.point_data[iz+1,0,0] = val
         #
         # handling top and bottom edges
         for ix in range(self.nx):
-            pass
+            val =
+            self.point_data[0,ix,3] = val
+            self.point_data[0,0,0] = val
 
 #
 class OpenFoamExport(dict):
