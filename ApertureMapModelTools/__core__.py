@@ -61,7 +61,7 @@ class DataField:
         #
         self.nz, self.nx = self.data_map.shape
 
-    def createe_point_data(self):
+    def create_point_data(self):
         r"""
         The data_map attribute stores the cell data read in from file.
         This function takes that cell data and calculates average values

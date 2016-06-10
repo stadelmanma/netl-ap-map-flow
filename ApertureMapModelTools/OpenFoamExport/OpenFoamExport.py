@@ -42,6 +42,10 @@ class OpenFoamExport(dict):
         for key, value in default_params.items():
             self[key] = value
         #
+        self.nx = None
+        self.nz = None
+        self.data_map = sp.array([])
+        self.point_data = sp.array([])
         field.create_point_data()
         field.copy_data(self)
         if export_params is not None:
@@ -138,7 +142,7 @@ class OpenFoamExport(dict):
             self['boundary.right'][i] = True
             i += 1
         for ix in range(self.nx):
-            ib =  (self.nz - 1)*self.nx + ix
+            ib = (self.nz - 1)*self.nx + ix
             self._faces[i] = self._blocks[ib, [4, 5, 6, 7]]
             self['boundary.top'][i] = True
             i += 1
@@ -166,13 +170,13 @@ class OpenFoamExport(dict):
         """
         #
         fname = 'blockMeshDict'
-        if (create_dirs):
-            path = os.path.join(path,'constant','polyMesh')
+        if create_dirs:
+            path = os.path.join(path, 'constant', 'polyMesh')
             try:
                 os.makedirs(path)
             except FileExistsError:
                 print('Using exiting directories')
-            fname = os.path.join(path,fname)
+            fname = os.path.join(path, fname)
         #
         # checking if file exists
         if overwrite:
@@ -202,7 +206,7 @@ class OpenFoamExport(dict):
         for val in self._blocks:
             val = ['{:7d}'.format(v) for v in val]
             val = ' '.join(val)
-            val = 'hex ({0}) {1} {2}\n'.format(val,self['numbersOfCells'],
+            val = 'hex ({0}) {1} {2}\n'.format(val, self['numbersOfCells'],
                                                self['cellExpansionRatios'])
             file_content += val
         file_content += ');\n\n'
@@ -217,13 +221,12 @@ class OpenFoamExport(dict):
         file_content += 'boundary\n(\n'
         bounds = []
         for key in self.keys():
-            mat = re.match(r'boundary.(\w+)[.]?',key)
-            bounds.append(mat.group(1)) if mat else None
+            mat = re.match(r'boundary.(\w+)[.]?', key)
+            mat = bounds.append(mat.group(1)) if mat else None
         bounds = set(bounds)
         #
         # writing boundaries
         for side in bounds:
-            print(side)
             file_content += '    '+side+'\n    {\n'
             file_content += '        type '+self['boundary.'+side+'.type']+';\n'
             file_content += '        faces\n        (\n'
@@ -244,7 +247,7 @@ class OpenFoamExport(dict):
         file_content += ');\n\n'
         #
         # saving file
-        with open(fname,'w') as mesh_file:
+        with open(fname, 'w') as mesh_file:
             mesh_file.write(file_header)
             mesh_file.write(file_content)
         #

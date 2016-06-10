@@ -6,6 +6,12 @@ Date Written: 2016/06/09
 Last Modifed: 2016/06/10
 #
 """
+import os
+import sys
+#
+module_path = os.path.abspath(os.path.join(os.getcwd(), os.pardir))
+sys.path.insert(0,module_path)
+#
 from TestBulkRun import  TestBulkRun
 from TestDataProcessing import  TestDataProcessing
 from TestUnitConversion import  TestUnitConversion

@@ -7,7 +7,8 @@ Last Modifed: 2016/06/10
 #
 """
 #
-from os import path
+import os
+import sys
 from ApertureMapModelTools.__core__ import DataField
 from ApertureMapModelTools.OpenFoamExport import OpenFoamExport
 #
@@ -16,7 +17,7 @@ class TestOpenFoamExport:
     Executes a set of functions to handle testing of the export routines
     """
     def __init__(self):
-        map_file = path.join('TEST-FRACTURES','PARALELL-PLATE-10VOX.TXT')
+        map_file = os.path.join('TEST-FRACTURES','PARALELL-PLATE-10VOX.TXT')
         self._field = DataField(map_file)
 
     def run_tests(self):
@@ -26,7 +27,7 @@ class TestOpenFoamExport:
             self.test_export()
         except Exception as err:
             errors = True
-            print('*** Error - :'+self.__class__.__name__+':',err,' ***')
+            print('*** Error - :'+self.__class__.__name__+':', err, ' ***')
         #
         return errors
 
