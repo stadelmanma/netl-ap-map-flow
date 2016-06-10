@@ -1,20 +1,4 @@
-# Ignore all
-*.*
-#
-# Except the following directories 
-!ApertureMapModelTools
-!AVERAGED-FRACTURES
-!FULL-FRACTURES
-!OUTFILES
-!PVT
-!SOURCE
-!TEST-FRACTURES
-#
-# Except the following files
-!*.py
-!.gitignore
-!APM_BULK_RUN.PY 
-!APM_PROCESS_DATA_MAP.PY
-!FRACTURE_INITIALIZATION.INP
-!README.rst
-SOURCE/#Untitled-1#
+# Ignore jedit temp files
+*~
+# Ignore any compiled python files
+*.pyc
