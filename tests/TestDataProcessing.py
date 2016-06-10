@@ -16,6 +16,21 @@ class TestDataProcessing:
         pass
 
     def run_tests(self):
-        pass
+        r"""
+        Loops through supplied testing functions
+        """
+        #
+        test_functions = [
+        ]
+        #
+        errors = False
+        for func in test_functions:
+            try:
+                func()
+            except Exception as err:
+                errors = True
+                print('*** Error - :'+self.__class__.__name__+':', err, ' ***')
+        #
+        return errors
 #
 print('Testing data processing')

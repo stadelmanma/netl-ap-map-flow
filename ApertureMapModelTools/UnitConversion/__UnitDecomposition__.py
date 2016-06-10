@@ -83,7 +83,7 @@ class UnitDecomposition(SI):
         'min' : 'minute',
         'N' : 'newton',
         'oz' : 'ounce',
-        'p' : 'poise',
+        'P' : 'poise',
         'pa' : 'pascal',
         'R' : 'rankine',
         's' : 'second',

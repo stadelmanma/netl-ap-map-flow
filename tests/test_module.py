@@ -18,9 +18,9 @@ from TestUnitConversion import  TestUnitConversion
 from TestOpenFoamExport import  TestOpenFoamExport
 #
 test_classes = [
-    TestBulkRun,
-    TestDataProcessing,
     TestUnitConversion,
+    TestDataProcessing,
+    TestBulkRun,
     TestOpenFoamExport
 ]
 #
@@ -28,10 +28,11 @@ print('')
 errors = False
 for test_class in test_classes:
     test_class = test_class()
-    errors = test_class.run_tests()
+    error = test_class.run_tests()
+    if (error):
+        print(test_class.__class__.__name__+' has failed')
+        errors = True
 #
 print('')
-if (errors):
-    print('Not all tests were sucessful')
-else:
+if not errors:
     print('All tests have passed')

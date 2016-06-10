@@ -8,7 +8,6 @@ Last Modifed: 2016/06/10
 """
 #
 import os
-import sys
 from ApertureMapModelTools.__core__ import DataField
 from ApertureMapModelTools.OpenFoamExport import OpenFoamExport
 #

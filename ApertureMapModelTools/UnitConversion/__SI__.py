@@ -9,7 +9,6 @@ Last Modifed: 2016/03/24
 #
 import re
 #
-#
 class SI:
     r"""
     Holds basic sub class implementation as well as SI prefixes. Meant to
