@@ -2,5 +2,5 @@
 *~
 # ignoring compiled python files
 *.pyc
-$ ignoring any executables generated
+# ignoring any executables generated
 *.exe
