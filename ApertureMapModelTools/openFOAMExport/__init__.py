@@ -7,4 +7,4 @@ Last Modifed: 2016/03/22
 #
 """
 #
-from .OpenFoamExport import *
+from .OpenFoamExport import OpenFoamExport

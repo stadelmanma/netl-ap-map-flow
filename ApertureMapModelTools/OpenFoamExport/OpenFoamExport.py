@@ -10,7 +10,6 @@ Last Modifed: 2016/06/10
 import os
 import re
 import scipy as sp
-from ApertureMapModelTools.__core__ import DataField
 #
 ########################################################################
 #
@@ -250,29 +249,3 @@ class OpenFoamExport(dict):
             mesh_file.write(file_content)
         #
         print('Mesh file saved as: '+fname)
-    #
-#
-########################################################################
-#
-# Test area
-map_file = r'M:\Desktop\AP_MAP_FLOW\Fracture1ApertureMap-100avg.txt'
-params = {
-    'convertToMeters' : '0.000010000',
-    'numbersOfCells' : '(5 5 5)',
-    'cellExpansionRatios' : 'simpleGrading (1 2 3)',
-    #
-    'boundary.left.type' : 'empty',
-    'boundary.right.type' : 'empty',
-    'boundary.top.type' : 'wall',
-    'boundary.bottom.type' : 'wall',
-    'boundary.front.type' : 'wall',
-    'boundary.back.type' : 'wall'
-}
-apmap_field = DataField(map_file)
-apmap_field.create_point_data()
-export = OpenFoamExport(apmap_field, avg_fact=10.0, export_params=params)
-self = export
-export.write_mesh_file()
-
-
-
