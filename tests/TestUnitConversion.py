@@ -7,13 +7,16 @@ Last Modifed: 2016/06/10
 #
 """
 #
+from ApertureMapModelTools import UnitConversion
+#
 class TestUnitConversion:
     r"""
     Executes a set of functions to handle testing of the unit conversion
     routines
     """
     def __init__(self):
-        pass
+        #
+        self.decomp = UnitConversion.UnitDecomposition
 
     def run_tests(self):
         pass
