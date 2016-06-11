@@ -16,8 +16,7 @@ addons:
       - gfortran
 
 install:
-  - pip install pathlib
-  - pip install scipy
+  - pip install -r requirements.txt
   - pip install -r test_requirements.txt
 
 before_script:
