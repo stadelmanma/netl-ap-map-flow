@@ -38,4 +38,6 @@ class TestOpenFoamExport:
             'boundary.back.type': 'wall'
         }
         export = OpenFoamExport(self._field, avg_fact=10.0, export_params=params)
-        export.write_mesh_file(TEMP_DIR)
+        export._edges = ['placeholder']
+        export._mergePatchPairs = ['placeholder']
+        export.write_mesh_file(TEMP_DIR, overwrite=True)
