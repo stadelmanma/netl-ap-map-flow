@@ -15,22 +15,14 @@ class TestOpenFoamExport:
     r"""
     Executes a set of functions to handle testing of the export routines
     """
-    def __init__(self):
-        map_file = os.path.join('TEST-FRACTURES','PARALELL-PLATE-10VOX.TXT')
-        self._field = DataField(map_file)
-
-    def run_tests(self):
-        #
-        errors = False
-        try:
-            self.test_export()
-        except Exception as err:
-            errors = True
-            print('*** Error - :'+self.__class__.__name__+':', err, ' ***')
-        #
-        return errors
+    def setup_class(self):
+        pass
 
     def test_export(self):
+        #
+        map_file = os.path.join(FIXTURE_DIR,'TEST-FRACTURES','PARALELL-PLATE-10VOX.TXT')
+        self._field = DataField(map_file)
+        #
         params = {
             'convertToMeters' : '0.000010000',
             'numbersOfCells' : '(5 10 15)',
@@ -44,4 +36,4 @@ class TestOpenFoamExport:
             'boundary.back.type' : 'wall'
         }
         export = OpenFoamExport(self._field, avg_fact=10.0, export_params=params)
-        export.write_mesh_file('OUTFILES')
+        export.write_mesh_file(TEMP_DIR)

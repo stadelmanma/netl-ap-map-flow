@@ -2,14 +2,11 @@
 # Building the flow model from source
 cd ../source/
 make
-cd ../tests/
-mv ../APM-MODEL.EXE .
-./APM-MODEL.EXE PARALELL-PLATE-01VOX_INIT.INP
+cd ../test/
 #
-# running python test scripts
-PYCMD="python3";
-command -v $PYCMD >/dev/null 2>&1 || {
-    PYCMD="python";
-}
-#$PYCMD test_module.py
-$SHELL
+mv ../APM-MODEL.EXE .
+#
+# testing it
+./APM-MODEL.EXE fixtures/PARALELL-PLATE-01VOX_INIT.INP
+#
+#../bin/test

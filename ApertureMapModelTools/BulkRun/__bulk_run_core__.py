@@ -387,7 +387,7 @@ def process_input_tuples(input_tuples, global_params=None, global_name_format=No
     #
     return sim_inputs
 #
-def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto', init_infile='FRACTURE_INITIALIZATION.INP'):
+def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto', init_infile='FRACTURE_INITIALIZATION.INP', start_delay=20):
     r"""
     This acts as the driver function for the entire bulk run of simulations.
     It handles calling the required functions in the required order.
@@ -411,8 +411,8 @@ def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto', init_infi
     print('')
     print('Total Number of simulations to perform: {:d}'.format(len(input_file_list)))
     print('')
-    print('Simulations will begin in 20 seconds, hit ctrl+c to cancel at anytime.')
-    sleep(20)
+    print('Simulations will begin in ',start_delay,' seconds, hit ctrl+c to cancel at anytime.')
+    sleep(start_delay)
     #
     start_simulations(input_file_list, num_CPUs, avail_RAM, start_delay=5)
     print("")

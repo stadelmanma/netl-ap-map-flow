@@ -24,4 +24,4 @@ def temp_directory(request):
             rmtree(temp_dir)
         except:
             pass
-request.addfinalizer(clean)
+    request.addfinalizer(clean)

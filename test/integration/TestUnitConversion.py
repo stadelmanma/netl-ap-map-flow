@@ -15,7 +15,7 @@ class TestUnitConversion:
     Executes a set of functions to handle testing of the unit conversion
     routines
     """
-    def __init__(self):
+    def setup_class(self):
         # value, unit_in='kelvin', unit_out='kelvin'
         self.temperature_units = [
             (0.0, 'C', 'SI', 273.15),
@@ -48,28 +48,6 @@ class TestUnitConversion:
             (1.0, 'cP','dyne*s/cm^2',0.01),
             (10.0, 'P','pascal*second',1.0)
         ]
-
-    def run_tests(self):
-        r"""
-        Loops through supplied testing functions
-        """
-        #
-        test_functions = [
-            self.test_convert_abbrev_units,
-            self.test_convert_temperature,
-            self.test_convert_formatted_units,
-            self.test_convert_all_units
-        ]
-        #
-        errors = False
-        for func in test_functions:
-            try:
-                func()
-            except Exception as err:
-                errors = True
-                print('*** Error - :'+self.__class__.__name__+':', err, ' ***')
-        #
-        return errors
 
     def test_convert_temperature(self):
         r"""
