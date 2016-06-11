@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # Building the flow model from source
-ls -la
 cd ./source/
 make
 cd ../test/
@@ -9,4 +8,5 @@ cd ../test/
 mv ../APM-MODEL.EXE .
 #
 # runnning a test case
+ls -la
 ./APM-MODEL.EXE fixtures/PARALELL-PLATE-01VOX_INIT.INP
