@@ -9,11 +9,11 @@ python:
 
 # addons:
    apt:
-     packages:
-     - libatlas-dev
-     - libatlas-base-dev
-     - liblapack-dev
-     - gfortran
+      packages:
+      - libatlas-dev
+      - libatlas-base-dev
+      - liblapack-dev
+      - gfortran
 #
 # install:
   # - pip install scipy
