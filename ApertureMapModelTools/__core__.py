@@ -199,6 +199,7 @@ def files_from_directory(directory='.', pattern='.', deep=True):
     can be supplied instead of a string.
     """
     #
+    # !!! Might try to replace the use of this stuff with os.path.join
     if (isinstance(Path('.'), WindowsPath)):
         path_sep = r'\\'
     else:
