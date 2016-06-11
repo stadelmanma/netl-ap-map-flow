@@ -1,5 +1,5 @@
 """
-This is a basic template that is used to add additional processors to 
+This is a basic template that is used to add additional processors to
 the package.
 #
 Written By: Matthew Stadelman
@@ -16,7 +16,7 @@ class BaseProcessor:
     """
     #
     # initializing data
-    def __init__(self,field,**kwargs):
+    def __init__(self, field, **kwargs):
         field.copy_data(self)
         self.action = 'base'
         self.args = {}
@@ -27,12 +27,12 @@ class BaseProcessor:
         self.processed_data = False
         self.validated = False
     #
-    def set_args(self,arg_dict,skip_validation=False):
+    def set_args(self, arg_dict, skip_validation=False):
         self.args = dict(arg_dict)
         if (skip_validation):
             self.validated = True
         else:
-            self.validated = self.validate_args() 
+            self.validated = self.validate_args()
     #
     def validate_args(self):
         r"""
@@ -53,30 +53,30 @@ class BaseProcessor:
                         raise IndexError
                     self.args[arg] = input_val
                 else:
-                    input_list = list(filter(None,self.args[arg].split(',')))
-                    input_list = list(map(processor.map_func,input_list))
+                    input_list = list(filter(None, self.args[arg].split(',')))
+                    input_list = list(map(processor.map_func, input_list))
                     #
                     if (len(input_list) < processor.min_num_vals):
                         raise IndexError
                     self.args[arg] = input_list
             #
-            except (KeyError,ValueError,IndexError) as err:
-                recv = ("" if isinstance(err,KeyError) else self.args[arg])
-                self.input_error(err,received=recv,**processor.__dict__)
+            except (KeyError, ValueError, IndexError) as err:
+                recv = ('' if isinstance(err, KeyError) else self.args[arg])
+                self.input_error(err, received=recv, **processor.__dict__)
                 valid = False
         #
         return valid
     #
-    # generates an error message 
-    def input_error(self,err=KeyError,field="",received="",expected="",err_desc_str="",**kwargs):
+    # generates an error message
+    def input_error(self, err=KeyError, field='', received='', expected='', err_desc_str='', **kwargs):
         r"""
         Outputs a useful error message if an input has a missing or invalid entry
         """
-        if  (isinstance(err,KeyError)):
+        if  (isinstance(err, KeyError)):
             msg = "Error - "+self.action+" requires "+field+"="+expected+" argument."
-        elif (isinstance(err,IndexError)):
+        elif (isinstance(err, IndexError)):
             msg = "Error - "+self.action+" requires "+field+"="+expected+" "+err_desc_str+". recieved: '"+received+"'"
-        elif (isinstance(err,ValueError)):
+        elif (isinstance(err, ValueError)):
             msg = "Error - "+self.action+" requires "+field+"="+expected+" "+err_desc_str+". recieved: '"+received+"'"
         else:
             print("Unhandled eroor type encountered.")
@@ -84,7 +84,7 @@ class BaseProcessor:
         #
         print(msg)
     #
-    def process(self,**kwargs):
+    def process(self, **kwargs):
         r"""
         Calls the subclassed routine process_data to create outfile content
         """
@@ -95,14 +95,14 @@ class BaseProcessor:
         self.process_data(**kwargs)
         #
     #
-    def process_data(self,**kwargs):
+    def process_data(self, **kwargs):
         r"""
         Not implemented
         """
-        raise NotImplementedError('This method must be implemented by a specific '+
+        raise NotImplementedError('This method must be implemented by a specific ' +
                                   'data processing class')
     #
-    def gen_output(self,**kwargs):
+    def gen_output(self, **kwargs):
         r"""
         Calls the subclassed routine output_data to create outfile content
         """
@@ -113,14 +113,14 @@ class BaseProcessor:
         self.output_data(**kwargs)
         #
     #
-    def output_data(self,**kwargs):
+    def output_data(self, **kwargs):
         r"""
         Not implemented
         """
-        raise NotImplementedError('This method must be implemented by a specific '+
+        raise NotImplementedError('This method must be implemented by a specific ' +
                                   'data processing class')
     #
-    def copy_processed_data(self,data_dict,alt_key=False):
+    def copy_processed_data(self, data_dict, alt_key=False):
         r"""
         Copys the current processed data array to a dict object using a
         key defined in the subclass initialization. If alt key is specifi
@@ -151,10 +151,9 @@ class BaseProcessor:
             print('Error output content has not been generated. Run .gen_output() method first')
             return
         #
-        with open(self.outfile_name,'w') as f:
+        with open(self.outfile_name, 'w') as f:
             f.write(self.outfile_content)
         print("Output saved as: "+self.outfile_name)
     #
 #
 #
-     

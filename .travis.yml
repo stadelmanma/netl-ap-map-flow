@@ -17,6 +17,7 @@ addons:
 
 install:
   - pip install scipy
+  - pip install -r test_requirements.txt
 
 before_script:
   - ./bin/build_model

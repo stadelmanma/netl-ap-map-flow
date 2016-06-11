@@ -14,7 +14,8 @@ import scipy as sp
 ########################################################################
 #
 # Class Definitions
-#
+
+
 class OpenFoamExport(dict):
     r"""
     A class to handle exporting an aperture map to an OpenFOAM blockMeshDict
@@ -28,16 +29,16 @@ class OpenFoamExport(dict):
         # defining default parameters
         super().__init__()
         default_params = {
-            'convertToMeters' : '1.0',
-            'numbersOfCells' : '(1 1 1)',
-            'cellExpansionRatios' : 'simpleGrading (1 1 1)',
+            'convertToMeters': '1.0',
+            'numbersOfCells': '(1 1 1)',
+            'cellExpansionRatios': 'simpleGrading (1 1 1)',
             #
-            'boundary.left.type' : 'wall',
-            'boundary.right.type' : 'wall',
-            'boundary.top.type' : 'wall',
-            'boundary.bottom.type' : 'wall',
-            'boundary.front.type' : 'wall',
-            'boundary.back.type' : 'wall'
+            'boundary.left.type': 'wall',
+            'boundary.right.type': 'wall',
+            'boundary.top.type': 'wall',
+            'boundary.bottom.type': 'wall',
+            'boundary.front.type': 'wall',
+            'boundary.back.type': 'wall'
         }
         for key, value in default_params.items():
             self[key] = value
@@ -120,14 +121,14 @@ class OpenFoamExport(dict):
             for ix in range(self.nx):
                 ib = iz * self.nx + ix
                 #
-                self._blocks[ib, 0] = vert_map[iz, ix, 0]     # back bottom left
-                self._blocks[ib, 1] = vert_map[iz, ix, 1]     # back bottom right
-                self._blocks[ib, 2] = vert_map[iz, ix, 1] + 1 # front bottom right
-                self._blocks[ib, 3] = vert_map[iz, ix, 0] + 1 # front bottom left
-                self._blocks[ib, 4] = vert_map[iz, ix, 3]     # back top left
-                self._blocks[ib, 5] = vert_map[iz, ix, 2]     # back top right
-                self._blocks[ib, 6] = vert_map[iz, ix, 2] + 1 # front top right
-                self._blocks[ib, 7] = vert_map[iz, ix, 3] + 1 # front top left
+                self._blocks[ib, 0] = vert_map[iz, ix, 0]      # back bottom left
+                self._blocks[ib, 1] = vert_map[iz, ix, 1]      # back bottom right
+                self._blocks[ib, 2] = vert_map[iz, ix, 1] + 1  # front bottom right
+                self._blocks[ib, 3] = vert_map[iz, ix, 0] + 1  # front bottom left
+                self._blocks[ib, 4] = vert_map[iz, ix, 3]      # back top left
+                self._blocks[ib, 5] = vert_map[iz, ix, 2]      # back top right
+                self._blocks[ib, 6] = vert_map[iz, ix, 2] + 1  # front top right
+                self._blocks[ib, 7] = vert_map[iz, ix, 3] + 1  # front top left
         #
         # building face arrays
         i = 0

@@ -16,11 +16,13 @@ from ApertureMapModelTools.__core__ import DataField
 ########################################################################
 #
 # Class Definitions
-#
+
+
 class ArgInput:
     r"""
     Stores the value of a single input line of an INP file
     """
+
     def __init__(self, line):
         r"""
         Parses the line for the input key string and value
@@ -64,7 +66,7 @@ class ArgInput:
                     except IndexError:
                         self.value = "NONE"
                         self.value_index = ifld+1
-    #
+
     def update_value(self, new_value, uncomment=True):
         r"""
         Updates the line with the new value and uncomments the line by default
@@ -80,7 +82,7 @@ class ArgInput:
             self.line_arr = [l for l in self.line_arr if l is not None]
         self.line = ' '.join(self.line_arr)
         self.value = new_value
-    #
+
     def output_line(self):
         r"""
         Returns and input line repsentation of the object
@@ -89,7 +91,8 @@ class ArgInput:
         cmt = (';' if self.commented_out else '')
         line = cmt + self.line
         return line
-#
+
+
 class InputFile:
     r"""
     Stores the data for an entire input file and methods to output one
@@ -106,7 +109,7 @@ class InputFile:
         self.filename_formats = dict(filename_formats)
         if 'input_file' not in filename_formats:
             self.filename_formats['input_file'] = self.outfile_name
-    #
+
     def __repr__(self):
         r"""
         Writes an input file to the screen
@@ -123,7 +126,7 @@ class InputFile:
         print('Input file would be saved as: '+self.outfile_name)
         #
         return content
-    #
+
     def clone(self, file_formats=None):
         r"""
         Creates a new InputFile obj and then populates it with the current
@@ -133,11 +136,13 @@ class InputFile:
             file_formats = self.filename_formats
         #
         input_file = InputFile(file_formats)
-        input_file.arg_dict = {k : ArgInput(self.arg_dict[k].output_line()) for k in self.arg_dict.keys()}
+        keys = self.arg_dict.keys()
+        args = self.arg_dict
+        input_file.arg_dict = {k: ArgInput(args[k].output_line()) for k in keys}
         input_file.arg_order = [arg for arg in self.arg_order]
         #
         return input_file
-    #
+
     def update_args(self, args):
         r"""
         Passes data to the ArgLine update_value function
@@ -147,46 +152,48 @@ class InputFile:
                 self.arg_dict[key].update_value(args[key])
             except KeyError:
                 self.filename_format_args[key] = args[key]
-    #
+
     def construct_file_names(self):
         r"""
         This updates the INP file's base outfile names to match current
         arguments and creates file paths if directories do not exist yet
         """
         #
-        outfiles = {k : self.filename_formats[k] for k in self.filename_formats.keys()}
+        formats = self.filename_formats
+        outfiles = {k: formats[k] for k in formats.keys()}
         #
         for arg in self.arg_dict.keys():
             pattern = re.compile('%'+arg+'%', flags=re.I)
-            for file in outfiles.keys():
-                outfiles[file] = pattern.sub(self.arg_dict[arg].value, outfiles[file])
+            for fname in outfiles.keys():
+                outfiles[fname] = pattern.sub(self.arg_dict[arg].value, outfiles[fname])
         #
         for arg in self.filename_format_args.keys():
             pattern = re.compile('%'+arg+'%', flags=re.I)
-            for file in outfiles.keys():
-                outfiles[file] = pattern.sub(self.filename_format_args[arg], outfiles[file])
+            for fname in outfiles.keys():
+                outfiles[fname] = pattern.sub(self.filename_format_args[arg], outfiles[fname])
         #
         # checking existance of directories and updating arg_dict
-        for file in outfiles.keys():
+        for fname in outfiles.keys():
             try:
-                self.arg_dict[file].update_value(outfiles[file])
+                self.arg_dict[fname].update_value(outfiles[fname])
             except KeyError:
-                if file == 'input_file':
+                if fname == 'input_file':
                     pass
                 else:
-                    print('Error - outfile: '+file+' not defined in initialization file')
+                    print('Error - outfile: '+fname+
+                          ' not defined in initialization file')
                     print('')
                     print('')
-                    raise KeyError(file)
+                    raise KeyError(fname)
             #
-            i = outfiles[file].rfind('\\')
-            path = outfiles[file][:i]
+            i = outfiles[fname].rfind('\\')
+            path = outfiles[fname][:i]
             if not os.path.isdir(path):
                 syscmd = 'mkdir '+path
                 os.system(syscmd)
         self.outfile_name = outfiles['input_file']
         #
-    #
+
     def write_inp_file(self):
         r"""
         Writes an input file to the outfile_name based on the current args
@@ -200,18 +207,20 @@ class InputFile:
         for key in self.arg_order:
             content += self.arg_dict[key].output_line()+'\n'
         #
-        with open(self.outfile_name, 'w') as file:
-            file.write(content)
+        with open(self.outfile_name, 'w') as fname:
+            fname.write(content)
         print('Input file saved as: '+self.outfile_name)
-#
+
+
 class dummy_process:
     r"""
     A palceholder used to initialize the processes list cleanly. Returns
     0 to simulate a successful completion and signal the start of a new process
     """
+
     def __init__(self):
         pass
-    #
+
     def poll(self):
         r"""
         mimics a successful execution return code
@@ -221,15 +230,16 @@ class dummy_process:
 ########################################################################
 #
 # Function Definitions
-#
+
+
 def parse_input_file(infile):
     r"""
     This function is used to create the first InputFile from which the
     rest will be copied from.
     """
     #
-    with open(infile, 'r') as file:
-        content = file.read()
+    with open(infile, 'r') as fname:
+        content = fname.read()
     #
     input_file = InputFile()
     #
@@ -245,11 +255,14 @@ def parse_input_file(infile):
         msg = 'Using executable defined in inital file header: '
         print(msg + input_file.arg_dict['EXE-FILE'].value)
     except KeyError:
-        print('Fatal Error: No EXE-FILE specified in initialization file header. \n Exiting...')
+        msg = 'Fatal Error: '
+        msg += 'No EXE-FILE specified in initialization file header. \n Exiting...'
+        print()
         raise SystemExit
     #
     return input_file
-#
+
+
 def estimate_req_RAM(input_maps, avail_RAM, delim='auto'):
     r"""
     Reads in the input maps to estimate the RAM requirement of each map
@@ -257,22 +270,24 @@ def estimate_req_RAM(input_maps, avail_RAM, delim='auto'):
     """
     RAM_per_map = []
     error = False
-    for file in input_maps:
+    for fname in input_maps:
         #
-        field = DataField(file, delim=delim)
+        field = DataField(fname, delim=delim)
         tot_coef = (field.nx * field.nz)**2
         RAM = 0.00505193 * tot_coef**(0.72578813)
-        RAM = RAM * 2**(-20) # KB -> GB
+        RAM = RAM * 2**(-20)  # KB -> GB
         RAM_per_map.append(RAM)
         if RAM > avail_RAM:
             error = True
-            fmt = 'Fatal Error: Map {} requires {} GBs of RAM only {} GBs was alloted.'
-            print(fmt.format(file, RAM, avail_RAM))
+            fmt = 'Fatal Error: '
+            fmt += 'Map {} requires {} GBs of RAM only {} GBs was alloted.'
+            print(fmt.format(fname, RAM, avail_RAM))
     if error:
         raise SystemExit
     #
     return RAM_per_map
-#
+
+
 def combine_run_args(input_map_args, init_input_file):
     r"""
     This function takes all of the args for each input map and then makes
@@ -282,11 +297,14 @@ def combine_run_args(input_map_args, init_input_file):
     # creating a combination of all arg lists for each input map
     input_file_list = []
     for map_args in input_map_args:
-        keys, values = list(map_args['run_params'].keys()), list(map_args['run_params'].values())
+        keys = list(map_args['run_params'].keys())
+        values = list(map_args['run_params'].values())
+        print(keys,values)
         param_combs = list(product(*values))
         for comb in param_combs:
             #
-            args = {k : v for k, v in zip(keys, comb)}
+            print(keys,comb)
+            args = {k: v for k, v in zip(keys, comb)}
             args['APER-MAP'] = map_args['aperture_map']
             inp_file = init_input_file.clone(map_args['filename_formats'])
             inp_file.RAM_req = map_args['RAM_req']
@@ -294,7 +312,8 @@ def combine_run_args(input_map_args, init_input_file):
             input_file_list.append(inp_file)
     #
     return input_file_list
-#
+
+
 def start_simulations(input_file_list, num_CPUs, avail_RAM, start_delay=5):
     r"""
     Handles the stepping through all of the desired simulations
@@ -308,7 +327,8 @@ def start_simulations(input_file_list, num_CPUs, avail_RAM, start_delay=5):
     while input_file_list:
         check_processes(processes, RAM_in_use)
         start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use)
-#
+
+
 def check_processes(processes, RAM_in_use, retest_delay=5):
     r"""
     This tests the processes list for any of them that have completed.
@@ -324,8 +344,10 @@ def check_processes(processes, RAM_in_use, retest_delay=5):
         sleep(retest_delay)
     #
     return
-#
-def start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use, start_delay=5):
+
+
+def start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use,
+              start_delay=5):
     r"""
     This starts additional simulations if there is enough free RAM.
     """
@@ -356,7 +378,8 @@ def start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use, start
             break
     #
     return
-#
+
+
 def process_input_tuples(input_tuples, global_params=None, global_name_format=None):
     r"""
     This program takes the tuples containing a list of aperture maps, run params and
@@ -375,19 +398,21 @@ def process_input_tuples(input_tuples, global_params=None, global_name_format=No
             args['aperture_map'] = apm
             #
             # setting global run params first and then map specific params
-            args['run_params'] = {k : list(global_params[k]) for k in global_params}
+            args['run_params'] = {k: list(global_params[k]) for k in global_params}
             for key in tup[1].keys():
                 args['run_params'][key] = tup[1][key]
             #
             # setting global name format first and then map specific formats
-            args['filename_formats'] = {k : global_name_format[k] for k in global_name_format}
+            args['filename_formats'] = {k: global_name_format[k] for k in global_name_format}
             for key in tup[2].keys():
                 args['filename_formats'][key] = tup[2][key]
             sim_inputs.append(dict(args))
     #
     return sim_inputs
-#
-def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto', init_infile='FRACTURE_INITIALIZATION.INP', start_delay=20):
+
+
+def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
+             init_infile='FRACTURE_INITIALIZATION.INP', start_delay=20):
     r"""
     This acts as the driver function for the entire bulk run of simulations.
     It handles calling the required functions in the required order.
@@ -411,7 +436,8 @@ def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto', init_infi
     print('')
     print('Total Number of simulations to perform: {:d}'.format(len(input_file_list)))
     print('')
-    print('Simulations will begin in ',start_delay,' seconds, hit ctrl+c to cancel at anytime.')
+    print('Simulations will begin in ', start_delay,
+          ' seconds, hit ctrl+c to cancel at anytime.')
     sleep(start_delay)
     #
     start_simulations(input_file_list, num_CPUs, avail_RAM, start_delay=5)
@@ -419,8 +445,10 @@ def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto', init_infi
     print("")
     #
     return
-#
-def dry_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto', init_infile='FRACTURE_INITIALIZATION.INP'):
+
+
+def dry_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
+            init_infile='FRACTURE_INITIALIZATION.INP'):
     r"""
     This steps through the entire simulation creating directories and
     input files without actually starting any of the simulations.
@@ -445,10 +473,9 @@ def dry_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto', init_infil
     print('')
     print('Total Number of simulations that would be performed: {:d}'.format(len(input_file_list)))
     #
-    for file in input_file_list:
-        file.write_inp_file()
-        print(' Est. RAM reqired for this run: {:f}'.format(file.RAM_req))
+    for inp_file in input_file_list:
+        inp_file.write_inp_file()
+        print(' Est. RAM reqired for this run: {:f}'.format(inp_file.RAM_req))
         print('')
     #
     return
-

@@ -9,22 +9,23 @@ Last Modifed: 2016/03/23
 #
 import re
 from .__SI__ import SI
-#
+
+
 class Distance(SI):
     r"""
     Handles distance unit conversions to Meters
     """
     #
     unit_to_si = {
-        'foot' : 0.3048,
-        'inch' : 0.0254,
-        'meter' : 1.0,
-        'micron' : 1.0E-6,
-        'yard' : 0.9144
+        'foot': 0.3048,
+        'inch': 0.0254,
+        'meter': 1.0,
+        'micron': 1.0E-6,
+        'yard': 0.9144
     }
-    #
+
     @classmethod
-    def convert_to_si(cls,unit_string):
+    def convert_to_si(cls, unit_string):
         r"""
         Finds and returns the proper unit conversion factor. Subclassed
         from SI to add special logic for the 'micron' unit
@@ -34,46 +35,46 @@ class Distance(SI):
             unit_string = 'micrometer'
         #
         try:
-            root_unit,factor = cls.check_prefix(unit_string)
+            root_unit, factor = cls.check_prefix(unit_string)
             factor = factor * cls.unit_to_si[root_unit]
         except KeyError:
             raise(Exception('Error - No conversion factor for unit: '+unit_string))
         #
         return(factor)
-#
-#
+
+
 class Mass(SI):
     r"""
     Handles mass unit conversions to Kilograms
     """
     #
     unit_to_si = {
-        'gram' : 1.0E-3,
-        'kilogram' : 1.0,
-        'ounce' : 0.028349523,
-        'pound-mass' : 0.4535924,
-        'slug' : 14.59390
+        'gram': 1.0E-3,
+        'kilogram': 1.0,
+        'ounce': 0.028349523,
+        'pound-mass': 0.4535924,
+        'slug': 14.59390
     }
     #
     # adjusting si_prefixes to reflect kilogram as the base unit
-    si_prefixes = { pf : fact/1000.0 for pf,fact in SI.si_prefixes.items()}
-    #
+    si_prefixes = {pf: fact/1000.0 for pf, fact in SI.si_prefixes.items()}
+
     @classmethod
-    def check_prefix(cls,unit_string):
+    def check_prefix(cls, unit_string):
         r"""
         Tests unit against a pattern for any SI prefixes, subclassed from
         SI to add special logic for kilogram being base unit.
         """
         pattern = ['^(?:'+p+')' for p in cls.si_prefixes.keys()]
         pattern = '|'.join(pattern)
-        pattern = re.compile('('+pattern+')?(.+)',re.I)
+        pattern = re.compile('('+pattern+')?(.+)', re.I)
         #
         try:
             m = pattern.search(unit_string)
             prefix = m.group(1)
             root_unit = m.group(2)
             factor = cls.si_prefixes[prefix]
-        except (AttributeError,KeyError):
+        except (AttributeError, KeyError):
             factor = 1.0
             root_unit = unit_string
         #
@@ -82,40 +83,40 @@ class Mass(SI):
             factor = (1E-3 if unit_string == 'gram' else factor)
             root_unit = 'kilogram'
         #
-        return(root_unit,factor)
-#
-#
+        return(root_unit, factor)
+
+
 class Pressure(SI):
     r"""
     Handles pressure conversions when units aren't a simple Force / Area
     """
     unit_to_si = {
-      'atmosphere' : 101325.0,
-      'bar' : 100000.0,
-      'pascal' : 1.0
+        'atmosphere': 101325.0,
+        'bar': 100000.0,
+        'pascal': 1.0
     }
-#
-#
+
+
 class Temperature(SI):
     r"""
     Handles temperure unit conversions
     """
     #
     unit_to_si = {
-        'kelvin' : 1.0,
-        'rankine' : 9.0/5.0
+        'kelvin': 1.0,
+        'rankine': 9.0/5.0
     }
     #
     temp_abbrev = {
-        'C' : 'celsius',
-        'F' : 'fahrenheit',
-        'K' : 'kelvin',
+        'C': 'celsius',
+        'F': 'fahrenheit',
+        'K': 'kelvin',
         'SI': 'kelvin',
-        'R' : 'rankine'
+        'R': 'rankine'
     }
-    #
+
     @classmethod
-    def convert_temperature(cls,value,unit_in='kelvin',unit_out='kelvin'):
+    def convert_temperature(cls, value, unit_in='kelvin', unit_out='kelvin'):
         r"""
         Handles the non-standard coversion method to get Fahrenheit and Celcius
         into and from Kelvin
@@ -151,8 +152,8 @@ class Temperature(SI):
             raise(Exception('Error - Invalid ouput unit: '+unit_out))
         #
         return(temp)
-#
-#
+
+
 class Temporal(SI):
     r"""
     Handles time unit conversions to Seconds, oddly named beacuse of 'time'
@@ -161,21 +162,21 @@ class Temporal(SI):
     """
     #
     unit_to_si = {
-        'day' : 86400.0,
-        'hour' : 3600.0,
-        'minute' : 60.0,
-        'second' : 1.0
+        'day': 86400.0,
+        'hour': 3600.0,
+        'minute': 60.0,
+        'second': 1.0
     }
-#
-#
+
+
 class Volume(SI):
     r"""
     Handles volume unit conversions when unit isn't a (distanc unit)^3
     """
     #
     unit_to_si = {
-        'cubic-meter' : 1.0,
-        'fluid-ounce' : 29.573529956E-6,
-        'gallon' : 0.003785412,
-        'liter' : 1.0E-3
+        'cubic-meter': 1.0,
+        'fluid-ounce': 29.573529956E-6,
+        'gallon': 0.003785412,
+        'liter': 1.0E-3
     }
