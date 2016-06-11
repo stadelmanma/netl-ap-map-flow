@@ -6,7 +6,10 @@ Date Written: 2016/06/09
 Last Modifed: 2016/06/10
 #
 """
+import pytest
 from ApertureMapModelTools import UnitConversion
+from ApertureMapModelTools.UnitConversion.__SI__ import SI
+from ApertureMapModelTools.UnitConversion.__UnitDecomposition__ import UnitDecomposition
 
 
 class TestUnitConversion:
@@ -46,6 +49,15 @@ class TestUnitConversion:
             (1000.0, 'kilogram/meter^3', 'lbm/ft^3', 62.42795644724207),
             (1.0, 'cP', 'dyne*s/cm^2', 0.01),
             (10.0, 'P', 'pascal*second', 1.0)
+        ]
+        #
+        self._convertion_factor_test = [
+            ('psi', 'kN/m^2', 6.894755905511812),
+            ('lbf', 'N', 4.44822072),
+            ('kilogram/meter^3', 'lbm/ft^3', 0.06242795644724206),
+            ('cP', 'dyne*s/cm^2', 0.01),
+            ('P', 'pascal*second', 0.1),
+            ('kl/sec', 'SI', 1.0)
         ]
 
     def test_convert_temperature(self):
@@ -106,3 +118,29 @@ class TestUnitConversion:
             msg = msg.format(unit_in, unit_out)
             #
             assert val == val_out, msg
+
+    def test_get_conversion_factor(self):
+        r"""
+        Testing the get_conversion_factor function
+        """
+        for unit_in, unit_out, test_fact in self._convertion_factor_test:
+            fact = UnitConversion.get_conversion_factor(unit_in, unit_out)
+            fact = round(fact * 1.0E9)
+            test_fact = round(test_fact * 1.0E9)
+            msg = 'Get conversion factor for {} to {} failed.'
+            msg = msg.format(unit_in, unit_out)
+            #
+            assert fact == test_fact, msg
+
+    def test_conversion_errors(self):
+        r"""
+        Sends an invalid SI abbrevation and an invalid unit
+        """
+        #
+        root_unit, prefix = SI.check_abbreviation('badunit')
+        assert(root_unit == 'badunit')
+        assert(prefix == '')
+        #
+        with pytest.raises(ValueError):
+            SI.convert_to_si('badunit')
+        #

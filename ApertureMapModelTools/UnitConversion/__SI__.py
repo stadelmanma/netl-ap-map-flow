@@ -93,6 +93,6 @@ class SI:
             root_unit, factor = cls.check_prefix(unit_string)
             factor = factor * cls.unit_to_si[root_unit]
         except KeyError:
-            raise(Exception('Error - No conversion factor for unit: '+unit_string))
+            raise ValueError('Error - No conversion factor for unit: '+unit_string)
         #
         return(factor)
