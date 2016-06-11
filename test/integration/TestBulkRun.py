@@ -63,7 +63,7 @@ class TestBulkRun:
         #
         BulkRun.dry_run(sim_inputs=sim_inputs, init_infile=init_inp_file)
 
-    def test_bulk_run(self):
+    def skip_test_bulk_run(self):
         r"""
         Testing the bulk run routine
         """
