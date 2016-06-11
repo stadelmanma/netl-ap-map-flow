@@ -56,11 +56,7 @@ class Profile(BaseProcessor):
         #
         self.loc_ids = {loc: st_id for loc, st_id in zip(locs, start_ids)}
         for loc, st_id in zip(locs, start_ids):
-            self.processed_data[loc] = get_data_vect(self.data_map,
-                                                     self.nx,
-                                                     self.nz,
-                                                     dir_,
-                                                     st_id)
+            self.processed_data[loc] = get_data_vect(self.data_map, dir_, st_id)
 
     def output_data(self, filename=None, delim=',', **kwargs):
         r"""
