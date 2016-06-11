@@ -12,7 +12,7 @@ install:
   - pip install scipy
 
 before_script:
-  - .bin/build_model
+  - ./bin/build_model
 
 script:
   - ./bin/test pep8 cov
