@@ -8,12 +8,12 @@ python:
   - "3.5"
 
 # addons:
-  # apt:
-    # packages:
-    # - libatlas-dev
-    # - libatlas-base-dev
-    # - liblapack-dev
-    # - gfortran
+   apt:
+     packages:
+     - libatlas-dev
+     - libatlas-base-dev
+     - liblapack-dev
+     - gfortran
 #
 # install:
   # - pip install scipy
