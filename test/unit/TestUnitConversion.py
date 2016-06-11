@@ -8,6 +8,7 @@ Last Modifed: 2016/06/10
 """
 import pytest
 from ApertureMapModelTools import UnitConversion
+from ApertureMapModelTools.UnitConversion.__converter_core__ import process_unit_list
 from ApertureMapModelTools.UnitConversion.__SI__ import SI
 from ApertureMapModelTools.UnitConversion.__UnitDecomposition__ import UnitDecomposition
 
@@ -88,6 +89,7 @@ class TestUnitConversion:
             msg = msg.format(unit_in, unit_out)
             #
             assert val == val_out, msg
+        #
 
     def test_convert_formatted_units(self):
         r"""
@@ -103,6 +105,11 @@ class TestUnitConversion:
             msg = msg.format(unit_in, unit_out)
             #
             assert val == val_out, msg
+        #
+        # manually sending a formatted unit list with a prefix
+        unit_list = UnitDecomposition.build_unit_list('[millimeter^1]')
+        factor = process_unit_list(unit_list)
+        assert factor == 0.001
 
     def test_convert_all_units(self):
         r"""
@@ -134,7 +141,7 @@ class TestUnitConversion:
 
     def test_conversion_errors(self):
         r"""
-        Sends an invalid SI abbrevation and an invalid unit
+        Sends invalid unit strings to various functions
         """
         #
         root_unit, prefix = SI.check_abbreviation('badunit')
@@ -144,3 +151,17 @@ class TestUnitConversion:
         with pytest.raises(ValueError):
             SI.convert_to_si('badunit')
         #
+        with pytest.raises(Exception):
+            UnitDecomposition.parse_unit_string('celsius')
+        #
+        with pytest.raises(KeyError):
+            UnitDecomposition.parse_unit_string('badunit')
+        #
+        with pytest.raises(AttributeError):
+            UnitDecomposition.build_unit_list('[pascal_1]')
+        #
+        with pytest.raises(ValueError):
+            UnitDecomposition.build_unit_list('[millipascal^1]')
+        #
+        with pytest.raises(KeyError):
+            UnitDecomposition.build_unit_list('[badunit^1]')
