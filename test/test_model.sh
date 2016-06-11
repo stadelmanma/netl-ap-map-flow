@@ -11,5 +11,5 @@ PYCMD="python3";
 command -v $PYCMD >/dev/null 2>&1 || {
     PYCMD="python";
 }
-$PYCMD test_module.py
+#$PYCMD test_module.py
 $SHELL

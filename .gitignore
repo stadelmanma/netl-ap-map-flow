@@ -1,6 +1,5 @@
-# ignoring jedit temp files
 *~
-# ignoring compiled python files
 *.pyc
-# ignoring any executables generated
 *.exe
+.coverage
+.cache

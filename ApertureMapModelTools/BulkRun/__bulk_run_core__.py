@@ -306,10 +306,10 @@ def start_simulations(input_file_list, num_CPUs, avail_RAM, start_delay=5):
     #
     # testing if processes have finished and starting additional ones if they have
     while input_file_list:
-        test_processes(processes, RAM_in_use)
+        check_processes(processes, RAM_in_use)
         start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use)
 #
-def test_processes(processes, RAM_in_use, retest_delay=5):
+def check_processes(processes, RAM_in_use, retest_delay=5):
     r"""
     This tests the processes list for any of them that have completed.
     A small delay is used to prevent an obscene amount of queries.
