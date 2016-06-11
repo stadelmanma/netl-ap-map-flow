@@ -1,4 +1,5 @@
-# Ignore jedit temp files
 *~
-# Ignore any compiled python files
-*.pyc
+*.py[co]
+*.exe
+.coverage
+.cache

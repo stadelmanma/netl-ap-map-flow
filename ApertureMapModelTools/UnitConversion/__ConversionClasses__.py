@@ -98,7 +98,7 @@ class Pressure(SI):
 #
 class Temperature(SI):
     r"""
-    Handles temperure unit conversions 
+    Handles temperure unit conversions
     """
     #
     unit_to_si = {
@@ -117,14 +117,14 @@ class Temperature(SI):
     @classmethod
     def convert_temperature(cls,value,unit_in='kelvin',unit_out='kelvin'):
         r"""
-        Handles the non-standard coversion method to get Fahrenheit and Celcius 
+        Handles the non-standard coversion method to get Fahrenheit and Celcius
         into and from Kelvin
         """
         #
         if (unit_in in cls.temp_abbrev.keys()):
             unit_in = cls.temp_abbrev[unit_in]
         if (unit_out in cls.temp_abbrev.keys()):
-            unit_out = cls.temp_abbrev[unit_out] 
+            unit_out = cls.temp_abbrev[unit_out]
         #
         # converting to Kelvin
         if (unit_in == 'fahrenheit'):
@@ -136,7 +136,7 @@ class Temperature(SI):
         elif (unit_in == 'kelvin'):
             temp = value
         else:
-            raise(Exception('Error - Invalid input unit: '+unit_in)) 
+            raise(Exception('Error - Invalid input unit: '+unit_in))
         #
         # converting from Kelvin to unit out
         if (unit_out == 'fahrenheit'):
@@ -156,7 +156,7 @@ class Temperature(SI):
 class Temporal(SI):
     r"""
     Handles time unit conversions to Seconds, oddly named beacuse of 'time'
-    builtin module even though these aren't meant to be imported directly 
+    builtin module even though these aren't meant to be imported directly
     into the main namespace
     """
     #
@@ -170,7 +170,7 @@ class Temporal(SI):
 #
 class Volume(SI):
     r"""
-    Handles volume unit conversions when unit isn't a (distanc unit)^3 
+    Handles volume unit conversions when unit isn't a (distanc unit)^3
     """
     #
     unit_to_si = {
