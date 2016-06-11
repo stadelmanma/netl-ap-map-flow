@@ -7,16 +7,16 @@ python:
   - "3.4"
   - "3.5"
 
-addons:
-  apt:
-    packages:
-    - libatlas-dev
-    - libatlas-base-dev
-    - liblapack-dev
-    - gfortran
-
-install:
-  - pip install scipy
+# addons:
+  # apt:
+    # packages:
+    # - libatlas-dev
+    # - libatlas-base-dev
+    # - liblapack-dev
+    # - gfortran
+#
+# install:
+  # - pip install scipy
 
 before_script:
   - ./bin/build_model

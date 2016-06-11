@@ -1,6 +1,7 @@
 #!/bin/bash
 #
 # Building the flow model from source
+ls -la
 cd ./source/
 make
 cd ../test/
