@@ -7,27 +7,26 @@ Date Written: 2016/02/29
 Last Modifed: 2016/03/07
 #
 """
-#
 from ApertureMapModelTools.__core__ import ArgProcessor, calc_percentile
 from .__BaseProcessor__ import BaseProcessor
-#
-#
+
+
 class Histogram(BaseProcessor):
-    #
+
     def __init__(self, field, **kwargs):
         super().__init__(field, **kwargs)
         self.output_key = 'hist'
         self.action = 'histogram'
         self.arg_processors = {
-            'num_bins':  ArgProcessor('num_bins',
-                                       map_func = lambda x: int(x),
-                                       min_num_vals = 1,
-                                       out_type = 'single' ,
-                                       expected = '##',
-                                       err_desc_str='to have a numeric value')
+            'num_bins': ArgProcessor('num_bins',
+                                     map_func=lambda x: int(x),
+                                     min_num_vals=1,
+                                     out_type='single',
+                                     expected='##',
+                                     err_desc_str='to have a numeric value')
 
         }
-    #
+
     def process_data(self, **kwargs):
         r"""
         Calculates a histogram from a range of data. This uses the 1st and
@@ -62,7 +61,7 @@ class Histogram(BaseProcessor):
                 bin = self.bins[b]
                 self.processed_data.append((bin[0], bin[1], num_vals))
                 num_vals = 0  # setting to 0 for all subsequent bins
-    #
+
     def define_bins(self, **kwargs):
         r"""
         This defines the bins for a regular histogram
@@ -84,8 +83,9 @@ class Histogram(BaseProcessor):
             high = low + step
             self.bins.append((low, high))
             low = high
-        self.bins.append((low, self.data_map[-1]*1.0001))  # slight increase to prevent last point being excluded
-    #
+        # slight increase to prevent last point being excluded
+        self.bins.append((low, self.data_map[-1]*1.0001))
+
     def output_data(self, filename=None, delim=',', **kwargs):
         r"""
         Creates the output content for histograms

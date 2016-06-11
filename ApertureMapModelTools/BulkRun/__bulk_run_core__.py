@@ -165,12 +165,14 @@ class InputFile:
         for arg in self.arg_dict.keys():
             pattern = re.compile('%'+arg+'%', flags=re.I)
             for fname in outfiles.keys():
-                outfiles[fname] = pattern.sub(self.arg_dict[arg].value, outfiles[fname])
+                name = pattern.sub(self.arg_dict[arg].value, outfiles[fname])
+                outfiles[fname] = name
         #
         for arg in self.filename_format_args.keys():
             pattern = re.compile('%'+arg+'%', flags=re.I)
             for fname in outfiles.keys():
-                outfiles[fname] = pattern.sub(self.filename_format_args[arg], outfiles[fname])
+                name = pattern.sub(self.filename_format_args[arg], outfiles[fname])
+                outfiles[fname] = name
         #
         # checking existance of directories and updating arg_dict
         for fname in outfiles.keys():
@@ -180,8 +182,8 @@ class InputFile:
                 if fname == 'input_file':
                     pass
                 else:
-                    print('Error - outfile: '+fname+
-                          ' not defined in initialization file')
+                    msg = 'Error - outfile: {} not defined in initialization file'
+                    print(msg.format(fname))
                     print('')
                     print('')
                     raise KeyError(fname)
@@ -299,11 +301,9 @@ def combine_run_args(input_map_args, init_input_file):
     for map_args in input_map_args:
         keys = list(map_args['run_params'].keys())
         values = list(map_args['run_params'].values())
-        print(keys,values)
         param_combs = list(product(*values))
         for comb in param_combs:
             #
-            print(keys,comb)
             args = {k: v for k, v in zip(keys, comb)}
             args['APER-MAP'] = map_args['aperture_map']
             inp_file = init_input_file.clone(map_args['filename_formats'])
@@ -380,7 +380,9 @@ def start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use,
     return
 
 
-def process_input_tuples(input_tuples, global_params=None, global_name_format=None):
+def process_input_tuples(input_tuples,
+                         global_params=None,
+                         global_name_format=None):
     r"""
     This program takes the tuples containing a list of aperture maps, run params and
     file formats and turns it into a standard format for teh bulk simulator.
@@ -403,7 +405,8 @@ def process_input_tuples(input_tuples, global_params=None, global_name_format=No
                 args['run_params'][key] = tup[1][key]
             #
             # setting global name format first and then map specific formats
-            args['filename_formats'] = {k: global_name_format[k] for k in global_name_format}
+            formats = {k: global_name_format[k] for k in global_name_format}
+            args['filename_formats'] = formats
             for key in tup[2].keys():
                 args['filename_formats'][key] = tup[2][key]
             sim_inputs.append(dict(args))
@@ -433,16 +436,20 @@ def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
     init_input_file = parse_input_file(init_infile)
     input_file_list = combine_run_args(sim_inputs, init_input_file)
     #
+    fmt = 'Total Number of simulations to perform: {:d}'
     print('')
-    print('Total Number of simulations to perform: {:d}'.format(len(input_file_list)))
+    print(fmt.format(len(input_file_list)))
     print('')
-    print('Simulations will begin in ', start_delay,
-          ' seconds, hit ctrl+c to cancel at anytime.')
+    fmt = 'Simulations will begin in {} seconds, hit ctrl+c to cancel at anytime.'
+    print(fmt.format(start_delay))
     sleep(start_delay)
     #
-    start_simulations(input_file_list, num_CPUs, avail_RAM, start_delay=5)
-    print("")
-    print("")
+    start_simulations(input_file_list,
+                      num_CPUs,
+                      avail_RAM,
+                      start_delay=start_delay)
+    print('')
+    print('')
     #
     return
 
@@ -470,8 +477,9 @@ def dry_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
     init_input_file = parse_input_file(init_infile)
     input_file_list = combine_run_args(sim_inputs, init_input_file)
     #
+    fmt = 'Total Number of simulations that would be performed: {:d}'
     print('')
-    print('Total Number of simulations that would be performed: {:d}'.format(len(input_file_list)))
+    print(fmt.format(len(input_file_list)))
     #
     for inp_file in input_file_list:
         inp_file.write_inp_file()

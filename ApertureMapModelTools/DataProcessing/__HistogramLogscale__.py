@@ -7,26 +7,25 @@ Date Written: 2016/03/07
 Last Modifed: 2016/03/22
 #
 """
-#
 from ApertureMapModelTools.__core__ import ArgProcessor
 from .__Histogram__ import Histogram
-#
-#
+
+
 class HistogramLogscale(Histogram):
-    #
+
     def __init__(self, field, **kwargs):
         super().__init__(field, **kwargs)
         self.output_key = 'hist_logscale'
         self.action = 'histogram_logscale'
         self.arg_processors = {
-            'scale_fact':  ArgProcessor('scale_fact',
-                                    map_func = lambda x: float(x),
-                                    min_num_vals = 1,
-                                    out_type = 'single',
-                                    expected = '##',
-                                    err_desc_str='to have a numeric value')
+            'scale_fact': ArgProcessor('scale_fact',
+                                       map_func=lambda x: float(x),
+                                       min_num_vals=1,
+                                       out_type='single',
+                                       expected='##',
+                                       err_desc_str='to have a numeric value')
         }
-    #
+
     def define_bins(self, **kwargs):
         r"""
         This defines the bins for a logscaled histogram
@@ -46,4 +45,3 @@ class HistogramLogscale(Histogram):
             self.bins.append((low, high))
             low = high
             exp += 1.0
-
