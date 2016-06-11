@@ -1,3 +1,9 @@
+.. image:: https://travis-ci.org/stadelmanma/netl-AP_MAP_FLOW.svg?branch=master
+   :target: https://travis-ci.org/stadelmanma/netl-AP_MAP_FLOW
+
+.. image:: https://codecov.io/gh/stadelmanma/netl-AP_MAP_FLOW/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/stadelmanma/netl-AP_MAP_FLOW
+
 AP_MAP_FLOW
 ====
 
