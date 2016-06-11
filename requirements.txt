@@ -1,4 +1,4 @@
-pathlib
+pathlib2
 atlas
 numpy
 scipy
