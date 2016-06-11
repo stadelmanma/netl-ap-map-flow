@@ -9,6 +9,7 @@ Last Modifed: 2016/06/10
 import pytest
 from ApertureMapModelTools import UnitConversion
 from ApertureMapModelTools.UnitConversion.__converter_core__ import process_unit_list
+from ApertureMapModelTools.UnitConversion.__ConversionClasses__ import Distance
 from ApertureMapModelTools.UnitConversion.__SI__ import SI
 from ApertureMapModelTools.UnitConversion.__UnitDecomposition__ import UnitDecomposition
 
@@ -25,7 +26,9 @@ class TestUnitConversion:
             (273.15, 'kelvin', 'C', 0.0),
             (273.15, 'K', 'celsius', 0.0),
             (0.0, 'C', 'F', 32.0),
+            (32.0, 'F', 'C', 0.0),
             (459.67, 'R', 'F', 0.0),
+            (0.0, 'F', 'R', 459.67),
             (0.0, 'R', 'K', 0.0)
         ]
         #
@@ -49,7 +52,8 @@ class TestUnitConversion:
             (1.0, 'lbf', 'N', 4.44822072),
             (1000.0, 'kilogram/meter^3', 'lbm/ft^3', 62.42795644724207),
             (1.0, 'cP', 'dyne*s/cm^2', 0.01),
-            (10.0, 'P', 'pascal*second', 1.0)
+            (10.0, 'P', 'pascal*second', 1.0),
+            (1000.0, 'micron', 'SI', 0.001)
         ]
         #
         self._convertion_factor_test = [
@@ -165,3 +169,12 @@ class TestUnitConversion:
         #
         with pytest.raises(KeyError):
             UnitDecomposition.build_unit_list('[badunit^1]')
+        #
+        with pytest.raises(ValueError):
+            UnitConversion.convert_temperature(0.0, 'badunit', 'SI')
+        #
+        with pytest.raises(ValueError):
+            UnitConversion.convert_temperature(0.0, 'SI', 'badunit')
+        #
+        with pytest.raises(ValueError):
+            Distance.convert_to_si('badunit')

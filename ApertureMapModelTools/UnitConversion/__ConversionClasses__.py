@@ -38,7 +38,7 @@ class Distance(SI):
             root_unit, factor = cls.check_prefix(unit_string)
             factor = factor * cls.unit_to_si[root_unit]
         except KeyError:
-            raise(Exception('Error - No conversion factor for unit: '+unit_string))
+            raise ValueError('Error - No conversion factor for unit: '+unit_string)
         #
         return(factor)
 
@@ -137,7 +137,7 @@ class Temperature(SI):
         elif (unit_in == 'kelvin'):
             temp = value
         else:
-            raise(Exception('Error - Invalid input unit: '+unit_in))
+            raise ValueError('Error - Invalid input unit: '+unit_in)
         #
         # converting from Kelvin to unit out
         if (unit_out == 'fahrenheit'):
@@ -149,7 +149,7 @@ class Temperature(SI):
         elif (unit_out == 'kelvin'):
             temp = temp
         else:
-            raise(Exception('Error - Invalid ouput unit: '+unit_out))
+            raise ValueError('Error - Invalid ouput unit: '+unit_out)
         #
         return(temp)
 
