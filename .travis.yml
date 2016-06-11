@@ -14,9 +14,9 @@ addons:
       - libatlas-base-dev
       - liblapack-dev
       - gfortran
-#
-# install:
-  # - pip install scipy
+
+install:
+  - pip install scipy
 
 before_script:
   - ./bin/build_model
