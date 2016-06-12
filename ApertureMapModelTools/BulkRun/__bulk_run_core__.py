@@ -43,17 +43,13 @@ class ArgInput:
             self.value = mat.group(1)
         #
         line_arr = re.split(r'\s', self.line)
-        line_arr = [l for l in line_arr if l is not None]
-        if len(line_arr) == 0:
+        line_arr = [l for l in line_arr if l]
+        if not line_arr:
             line_arr = ['']
         self.line_arr = line_arr
         #
-        try:
-            mat = re.match(r'[; ]*([a-zA-z, -]*)', line_arr[0])
-            self.keyword = mat.group(1)
-        except IndexError:
-            print("Error - Bad line input provided - line: '", line, "'")
-            raise SystemExit
+        mat = re.match(r'[; ]*([a-zA-z, -]*)', line_arr[0])
+        self.keyword = mat.group(1)
         #
         # if line has a colon the field after it will be used as the value
         # otherwise the whole line is considered the value
@@ -64,7 +60,7 @@ class ArgInput:
                         self.value = line_arr[ifld+1]
                         self.value_index = ifld+1
                     except IndexError:
-                        self.value = "NONE"
+                        self.value = 'NONE'
                         self.value_index = ifld+1
 
     def update_value(self, new_value, uncomment=True):
@@ -97,7 +93,7 @@ class InputFile:
     r"""
     Stores the data for an entire input file and methods to output one
     """
-    def __init__(self, filename_formats=None):
+    def __init__(self, infile=None, filename_formats=None):
         self.arg_dict = {}
         self.filename_format_args = {}
         self.arg_order = []
@@ -107,8 +103,12 @@ class InputFile:
         if filename_formats is None:
             filename_formats = {}
         self.filename_formats = dict(filename_formats)
+        #
         if 'input_file' not in filename_formats:
             self.filename_formats['input_file'] = self.outfile_name
+        #
+        if infile is not None:
+            self.parse_input_file(infile)
 
     def __repr__(self):
         r"""
@@ -127,6 +127,32 @@ class InputFile:
         #
         return content
 
+    def parse_input_file(self, infile):
+        r"""
+        This function is used to create the first InputFile from which the
+        rest will be copied from.
+        """
+        #
+        with open(infile, 'r') as fname:
+            content = fname.read()
+        #
+        # parsing contents into input_file object
+        content_arr = content.split('\n')
+        for line in content_arr:
+            line = re.sub(r'^(;+)\s+', r'\1', line)
+            arg = ArgInput(line)
+            self.arg_order.append(arg.keyword)
+            self.arg_dict[arg.keyword] = ArgInput(line)
+        #
+        try:
+            msg = 'Using executable defined in inital file header: '
+            print(msg + self.arg_dict['EXE-FILE'].value)
+        except KeyError:
+            msg = 'Fatal Error: '
+            msg += 'No EXE-FILE specified in initialization file header.'
+            msg += ' \n Exiting...'
+            raise SystemExit(msg)
+
     def clone(self, file_formats=None):
         r"""
         Creates a new InputFile obj and then populates it with the current
@@ -135,7 +161,7 @@ class InputFile:
         if file_formats is None:
             file_formats = self.filename_formats
         #
-        input_file = InputFile(file_formats)
+        input_file = InputFile(filename_formats=file_formats)
         keys = self.arg_dict.keys()
         args = self.arg_dict
         input_file.arg_dict = {k: ArgInput(args[k].output_line()) for k in keys}
@@ -145,7 +171,7 @@ class InputFile:
 
     def update_args(self, args):
         r"""
-        Passes data to the ArgLine update_value function
+        Passes data to the ArgInput update_value function
         """
         for key in args:
             try:
@@ -196,7 +222,7 @@ class InputFile:
         self.outfile_name = outfiles['input_file']
         #
 
-    def write_inp_file(self):
+    def write_inp_file(self, alt_path=None):
         r"""
         Writes an input file to the outfile_name based on the current args
         """
@@ -209,60 +235,37 @@ class InputFile:
         for key in self.arg_order:
             content += self.arg_dict[key].output_line()+'\n'
         #
-        with open(self.outfile_name, 'w') as fname:
+        file_name = self.outfile_name
+        if alt_path:
+            file_name = os.path.join(alt_path, file_name)
+        #
+        with open(file_name, 'w') as fname:
             fname.write(content)
-        print('Input file saved as: '+self.outfile_name)
+        #
+        print('Input file saved as: '+file_name)
 
 
-class dummy_process:
+class DummyProcess:
     r"""
     A palceholder used to initialize the processes list cleanly. Returns
     0 to simulate a successful completion and signal the start of a new process
     """
 
     def __init__(self):
-        pass
+        r"""
+        Setting return code
+        """
+        self.return_val = 0
 
     def poll(self):
         r"""
-        mimics a successful execution return code
+        mimics a successful execution of a subprocess Popen object
         """
-        return 0
+        return self.return_val
 #
 ########################################################################
 #
 # Function Definitions
-
-
-def parse_input_file(infile):
-    r"""
-    This function is used to create the first InputFile from which the
-    rest will be copied from.
-    """
-    #
-    with open(infile, 'r') as fname:
-        content = fname.read()
-    #
-    input_file = InputFile()
-    #
-    # parsing contents into input_file object
-    content_arr = content.split('\n')
-    for line in content_arr:
-        line = re.sub(r'^(;+)\s+', r'\1', line)
-        arg = ArgInput(line)
-        input_file.arg_order.append(arg.keyword)
-        input_file.arg_dict[arg.keyword] = ArgInput(line)
-    #
-    try:
-        msg = 'Using executable defined in inital file header: '
-        print(msg + input_file.arg_dict['EXE-FILE'].value)
-    except KeyError:
-        msg = 'Fatal Error: '
-        msg += 'No EXE-FILE specified in initialization file header. \n Exiting...'
-        print()
-        raise SystemExit
-    #
-    return input_file
 
 
 def estimate_req_RAM(input_maps, avail_RAM, delim='auto'):
@@ -319,7 +322,7 @@ def start_simulations(input_file_list, num_CPUs, avail_RAM, start_delay=5):
     Handles the stepping through all of the desired simulations
     """
     # initializing processes list with dummy processes
-    processes = [dummy_process()]
+    processes = [DummyProcess()]
     RAM_in_use = [0.0]
     sleep(start_delay)
     #
@@ -433,7 +436,7 @@ def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
     for i, RAM in enumerate(RAM_per_map):
         sim_inputs[i]['RAM_req'] = RAM
     #
-    init_input_file = parse_input_file(init_infile)
+    init_input_file = InputFile(init_infile)
     input_file_list = combine_run_args(sim_inputs, init_input_file)
     #
     fmt = 'Total Number of simulations to perform: {:d}'
@@ -462,7 +465,7 @@ def dry_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
     """
     #
     print('Beginning dry run of aperture map simulations on INP files output')
-    print("Use function 'bulk_run' with same arguments to actually run models")
+    print('Use function "bulk_run" with same arguments to actually run models')
     #
     if sim_inputs is None:
         sim_inputs = []
@@ -474,7 +477,7 @@ def dry_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
     for i, RAM in enumerate(RAM_per_map):
         sim_inputs[i]['RAM_req'] = RAM
     #
-    init_input_file = parse_input_file(init_infile)
+    init_input_file = InputFile(init_infile)
     input_file_list = combine_run_args(sim_inputs, init_input_file)
     #
     fmt = 'Total Number of simulations that would be performed: {:d}'
