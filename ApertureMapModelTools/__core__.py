@@ -10,9 +10,9 @@ Last Modifed: 2016/06/10
 #
 ########################################################################
 #
-from pathlib import Path, WindowsPath
 import subprocess
 import re
+import os
 import scipy as sp
 #
 ########################################################################
@@ -201,11 +201,6 @@ def files_from_directory(directory='.', pattern='.', deep=True):
     can be supplied instead of a string.
     """
     #
-    # !!! Might try to replace the use of this stuff with os.path.join
-    if (isinstance(Path('.'), WindowsPath)):
-        path_sep = r'\\'
-    else:
-        path_sep = r'/'
     # setting up pattern
     try:
         if (pattern[0] == '*'):
@@ -232,17 +227,17 @@ def files_from_directory(directory='.', pattern='.', deep=True):
         content_arr = contents.split('\n')
         content_arr = [c.strip() for c in content_arr]
         content_arr = filter(None, content_arr)
-        for c in content_arr:
-            c = directory + path_sep + c
-            p = Path(c)
+        for path in content_arr:
+            path = os.path.join(directory, path)
+            path = os.path.realpath(path)
             try:
-                if (p.is_dir() and deep):
-                    dirs.append(str(p))
+                if os.path.isdir(path) and deep:
+                    dirs.append(str(path))
                 else:
-                    if (pattern.search(c)):
-                        files.append(str(p.resolve()))
+                    if (pattern.search(path)):
+                        files.append(path)
             except FileNotFoundError:
-                print('Error an absolute path could not be resolved for: ', str(p))
+                print('Error an absolute path could not be resolved for: '+path)
             except OSError as e:
                 print('Unknown OS error occured: \n\t', e)
     return files
