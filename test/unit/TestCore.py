@@ -6,9 +6,12 @@ Date Written: 2016/06/09
 Last Modifed: 2016/06/10
 #
 """
+from collections import namedtuple
+from imp import reload
 import os
 import pytest
 import re
+import sys
 import scipy as sp
 import ApertureMapModelTools as amt
 
@@ -19,6 +22,14 @@ class TestCore:
     """
     def setup_class(self):
         pass
+
+    def test_import(self):
+        version = namedtuple('version', ['major', 'minor', 'micro', 'releaselevel', 'serial'])
+        test_vers = version(major=2, minor=7, micro=5, releaselevel='final', serial='')
+        #
+        sys.version_info = test_vers
+        with pytest.raises(Exception):
+            reload(amt)
 
     def test_data_field(self):
         r"""
