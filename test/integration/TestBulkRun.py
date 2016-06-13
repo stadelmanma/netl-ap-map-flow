@@ -45,7 +45,7 @@ class TestBulkRun:
         arg = BulkRun.ArgInput(line)
 
     def test_input_file(self):
-        self.inp_file = os.path.join(FIXTURE_DIR, 'BULK_RUN_INIT.INP')
+        self.inp_file = os.path.join(FIXTURE_DIR, 'TEST_INIT.INP')
         #
         inp_file = BulkRun.InputFile(self.inp_file)
         assert inp_file.arg_order
@@ -146,7 +146,8 @@ class TestBulkRun:
         #
         BulkRun.dry_run(sim_inputs=sim_inputs, init_infile=self.inp_file)
 
-    def skip_test_bulk_run(self):
+    @pytest.mark.skip('Actual modeling program execution fails on travis server')
+    def test_bulk_run(self):
         r"""
         Testing the bulk run routine
         """
