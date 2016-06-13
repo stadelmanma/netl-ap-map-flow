@@ -71,7 +71,9 @@ class Histogram(BaseProcessor):
             bin = bins.__next__()
             b = 0
             while True:
-                if ((val >= bin[0]) and (val < bin[1])):
+                if val < bin[0]:
+                    val = data.__next__()
+                elif ((val >= bin[0]) and (val < bin[1])):
                     num_vals += 1
                     val = data.__next__()
                 else:

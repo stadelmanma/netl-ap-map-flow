@@ -36,9 +36,10 @@ class HistogramRange(Histogram):
         r"""
         This defines the bins for a range histogram
         """
+        self.data_vector.sort()
         num_bins = self.args['num_bins']
-        min_val = calc_percentile(self.args['range'][0], self.data_vector)
-        max_val = calc_percentile(self.args['range'][1], self.data_vector)
+        min_val = calc_percentile(self.args['range'][0], self.data_vector, False)
+        max_val = calc_percentile(self.args['range'][1], self.data_vector, False)
         step = (max_val - min_val)/float(num_bins)
         #
         low = min_val

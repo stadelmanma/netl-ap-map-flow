@@ -1,5 +1,5 @@
 """
-Handles testing of the HistogramLogscale class
+Handles testing of the HistogramRange class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
@@ -7,7 +7,7 @@ Last Modifed: 2016/06/12
 #
 """
 import scipy as sp
-from ApertureMapModelTools.DataProcessing.__HistogramLogscale__ import HistogramLogscale
+from ApertureMapModelTools.DataProcessing.__HistogramRange__ import HistogramRange
 
 
 class TestHistogramLogscale:
@@ -18,28 +18,25 @@ class TestHistogramLogscale:
         r"""
         Checking args so an error is generated if they change and the test does not
         """
-        hist = HistogramLogscale(data_field_class())
+        hist = HistogramRange(data_field_class())
         args = list(hist.arg_processors.keys())
         args.sort()
         #
-        assert len(args) == 1
-        for arg, test in zip(args, ['scale_fact']):
+        assert len(args) == 2
+        for arg, test in zip(args, ['num_bins', 'range']):
             assert arg == test
 
     def test_define_bins(self, data_field_class):
         r"""
         Testing logscale bin generation
         """
-        hist = HistogramLogscale(data_field_class())
-        hist.args = {'scale_fact': 10}
+        hist = HistogramRange(data_field_class())
+        hist.args = {'num_bins': 10, 'range': [10.0, 90.0]}
         hist.data_map = sp.ones((hist.nz, hist.nx), dtype=int)
         for i in range(hist.nz):
-            hist.data_map[i, :] = 10 * (i+2)
+            hist.data_map[i, :] = 10 * (i+1)
         hist.data_vector = sp.ravel(hist.data_map)
-        hist.data_vector[0] = -1
         #
         hist.define_bins()
         #
-        assert len(hist.bins) == 5
-        assert hist.bins[0][0] == hist.data_vector[0]
-        assert hist.bins[-1][1] > hist.data_vector[-1]
+        assert len(hist.bins) == 10
