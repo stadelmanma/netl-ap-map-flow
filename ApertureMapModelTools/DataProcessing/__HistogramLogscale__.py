@@ -30,6 +30,7 @@ class HistogramLogscale(Histogram):
         r"""
         This defines the bins for a logscaled histogram
         """
+        self.data_vector.sort()
         sf = self.args['scale_fact']
         #
         # Adding "catch all" bins for anything less than 0 and between 0 - 1

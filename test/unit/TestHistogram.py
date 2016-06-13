@@ -13,7 +13,7 @@ from ApertureMapModelTools.DataProcessing.__Histogram__ import Histogram
 
 class TestHistogram:
     r"""
-    Testing each method of the EvalChannels class
+    Testing each method of the Histogram class
     """
     def test_initialization(self, data_field_class):
         r"""
