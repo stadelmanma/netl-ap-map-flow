@@ -34,10 +34,10 @@ class Percentiles(BaseProcessor):
         perc_list.sort()
         #
         # getting percentiles from data map
-        self.data_map.sort()
+        self.data_vector.sort()
         self.processed_data = dict()
         for perc in perc_list:
-            val = calc_percentile(perc, self.data_map, sort=False)
+            val = calc_percentile(perc, self.data_vector, sort=False)
             self.processed_data[perc] = val
 
     def output_data(self, filename=None, delim=',', **kwargs):

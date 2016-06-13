@@ -1,5 +1,5 @@
 """
-Evaluates channelization in flow data based on the number an widths of channels
+Evaluates channelization in flow data based on the number and widths of channels
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
@@ -12,7 +12,11 @@ from .__BaseProcessor__ import BaseProcessor
 
 
 class EvalChannels(BaseProcessor):
-    # i
+    r"""
+    Evaluates channelization in flow data based on the number and widths
+    of channels. More work needs to be done on this class to make it
+    not dependent on a specfic direction.
+    """
     def __init__(self, field, **kwargs):
         super().__init__(field, **kwargs)
         self.output_key = 'eval_chan'
@@ -48,7 +52,7 @@ class EvalChannels(BaseProcessor):
             span = self.nz
             step = self.nx
         else:
-            print("error - invalid direction supplied, can only be x or z")
+            print('error - invalid direction supplied, can only be x or z')
             return
         #
         self.processed_data = dict()
@@ -63,7 +67,7 @@ class EvalChannels(BaseProcessor):
             bounds = [-1, -1]
             en = st + step
             for j in range(st, en, 1):
-                if (self.data_map[j] > min_val):
+                if (self.data_vector[j] > min_val):
                     bounds[0] = (j if bounds[0] < 0 else bounds[0])
                 else:
                     if (bounds[0] > 0):

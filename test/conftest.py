@@ -51,6 +51,7 @@ def data_field_class():
             self.nx = 10
             self.nz = 10
             self.data_map = sp.arange(100).reshape(10, 10)
+            self.data_vector = sp.arange(100)
             self.point_data = None
             self.output_data = dict()
 
@@ -59,6 +60,7 @@ def data_field_class():
             obj.nx = self.nx
             obj.nz = self.nz
             obj.data_map = sp.copy(self.data_map)
+            obj.data_vector = sp.copy(self.data_vector)
             obj.point_data = sp.copy(self.point_data)
 
         def parse_data_file(self):

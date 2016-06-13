@@ -34,13 +34,13 @@ class HistogramLogscale(Histogram):
         #
         # Adding "catch all" bins for anything less than 0 and between 0 - 1
         self.bins = []
-        if (self.data_map[0] < 0.0):
-            self.bins.append((self.data_map[0], 0.0))
+        if (self.data_vector[0] < 0.0):
+            self.bins.append((self.data_vector[0], 0.0))
         self.bins.append((0.0, 1.0))
         #
         low = 1.0
         exp = 1.0
-        while (low < self.data_map[-1]):
+        while (low < self.data_vector[-1]):
             high = sf**exp
             self.bins.append((low, high))
             low = high

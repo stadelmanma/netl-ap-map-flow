@@ -33,13 +33,13 @@ class Histogram(BaseProcessor):
         99th percentiles as limits when defining bins
         """
         #
-        self.data_map.sort()
+        self.data_vector.sort()
         self.processed_data = []
         self.define_bins()
         #
         # populating bins
         num_vals = 0
-        data = self.data_map.__iter__()
+        data = self.data_vector.__iter__()
         bins = self.bins.__iter__()
         try:
             val = data.__next__()
@@ -68,23 +68,23 @@ class Histogram(BaseProcessor):
         """
         num_bins = self.args['num_bins']
         perc = 1.00
-        min_val = self.data_map[0]
+        min_val = self.data_vector[0]
         # ensuring the upper limit is greater than data_map[0]
-        while (min_val <= self.data_map[0]):
-            min_val = calc_percentile(perc, self.data_map)
+        while (min_val <= self.data_vector[0]):
+            min_val = calc_percentile(perc, self.data_vector)
             perc += 0.050
         print('Upper limit of first bin adjusted to percentile: '+str(perc))
-        max_val = calc_percentile(99.0, self.data_map)
+        max_val = calc_percentile(99.0, self.data_vector)
         step = (max_val - min_val)/(num_bins-2.0)
         #
-        self.bins = [(self.data_map[0], min_val)]
+        self.bins = [(self.data_vector[0], min_val)]
         low = min_val
         while (low < max_val):
             high = low + step
             self.bins.append((low, high))
             low = high
         # slight increase to prevent last point being excluded
-        self.bins.append((low, self.data_map[-1]*1.0001))
+        self.bins.append((low, self.data_vector[-1]*1.0001))
 
     def output_data(self, filename=None, delim=',', **kwargs):
         r"""

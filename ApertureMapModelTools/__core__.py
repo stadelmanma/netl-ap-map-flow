@@ -43,6 +43,7 @@ class DataField:
         obj.nx = self.nx
         obj.nz = self.nz
         obj.data_map = sp.copy(self.data_map)
+        obj.data_vector = sp.copy(self.data_vector)
         obj.point_data = sp.copy(self.point_data)
 
     def parse_data_file(self, delim='auto'):
@@ -59,6 +60,7 @@ class DataField:
                 delim = match.group(1)
         #
         self.data_map = sp.loadtxt(self.infile, delimiter=delim)
+        self.data_vector = sp.ravel(self.data_map)
         #
         self.nz, self.nx = self.data_map.shape
 
