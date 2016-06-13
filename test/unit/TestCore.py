@@ -24,6 +24,10 @@ class TestCore:
         pass
 
     def test_import(self):
+        r"""
+        Tests that the main __init__ module method properly flags early
+        versions of python
+        """
         version = namedtuple('version', ['major', 'minor', 'micro', 'releaselevel', 'serial'])
         test_vers = version(major=2, minor=7, micro=5, releaselevel='final', serial='')
         #
@@ -76,6 +80,7 @@ class TestCore:
         infile_list = [fname1, fname2]
         #
         fields = amt.load_infile_list(infile_list)
+        assert fields
 
     def test_calc_percentile(self):
         r"""
