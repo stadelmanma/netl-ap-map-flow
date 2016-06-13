@@ -1,6 +1,11 @@
 #
 r"""
-Holds the UnitDecomposition class
+Holds the UnitDecomposition class which does the heavy lifting in unit conversion
+#
+Written By: Matthew Stadelman
+Date Written: 2016/03/22
+Last Modifed: 2016/06/12
+#
 """
 #
 import re

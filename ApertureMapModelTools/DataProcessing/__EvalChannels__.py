@@ -3,7 +3,7 @@ Evaluates channelization in flow data based on the number and widths of channels
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2016/02/29
+Last Modifed: 2016/06/13
 #
 """
 #

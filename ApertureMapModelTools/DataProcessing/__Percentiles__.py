@@ -3,7 +3,7 @@ Calculates a set of percentiles for a dataset
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2016/03/22
+Last Modifed: 2016/06/13
 #
 """
 from ApertureMapModelTools.__core__ import ArgProcessor, calc_percentile

@@ -3,7 +3,7 @@ Stores basic implementation as well as SI prefixes.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/22
-Last Modifed: 2016/03/24
+Last Modifed: 2016/06/13
 #
 """
 #

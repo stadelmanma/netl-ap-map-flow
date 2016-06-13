@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-
 import sys
 import pytest
-
+#
 args = ['-v']
-
+# setting pytest pep8 arg
 if 'pep8' in sys.argv:
     args.append('--pep8')
-
+# setting pytest coverage args
 if 'cov' in sys.argv:
     args.extend(['--cov-report=term-missing',
                  '--cov=ApertureMapModelTools'])
-
+# testing entire module
 exit_code = pytest.main(args)
 exit(exit_code)

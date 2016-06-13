@@ -3,7 +3,7 @@ This stores the basic classes and functions needed for the bulk run code
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/02
-Last Modifed: 2016/03/02
+Last Modifed: 2016/06/12
 #
 """
 from itertools import product
