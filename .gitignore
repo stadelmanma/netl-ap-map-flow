@@ -1,5 +1,7 @@
 *~
 *.py[co]
+*.mod
+*.o
 *.exe
 .coverage
 .cache
