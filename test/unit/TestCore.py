@@ -42,6 +42,8 @@ class TestCore:
         fname = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT')
         field = amt.DataField(fname)
         field.create_point_data()
+        field.copy_data(field)
+        #
         assert field.nx == 100
         assert field.nz == 100
         assert field.data_map.size == 10000

@@ -19,11 +19,11 @@ class TestOpenFoamExport:
     def setup_class(self):
         pass
 
-    def test_export(self):
+    def test_export(self, data_field_class):
         #
         map_file = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES',
                                 'PARALELL-PLATE-10VOX.TXT')
-        self._field = DataField(map_file)
+        self._field = data_field_class()
         #
         params = {
             'convertToMeters': '0.000010000',

@@ -59,6 +59,12 @@ class TestHistogram:
             assert data_bin[0] == bounds[0]
             assert data_bin[1] == bounds[1]
             assert data_bin[2] == 10
+        #
+        # testing perserve bins
+        hist.data_vector = sp.array([-1, 1, 2, 3])
+        hist.bins = [(0, 5), (5, 10)]
+        hist.process_data(preserve_bins=True)
+        assert len(hist.bins) == 2
 
     def test_output_data(self, data_field_class):
         r"""
