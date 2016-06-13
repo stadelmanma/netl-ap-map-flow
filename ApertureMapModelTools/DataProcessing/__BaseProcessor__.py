@@ -27,10 +27,11 @@ class BaseProcessor:
         self.validated = False
 
     def set_args(self, arg_dict, skip_validation=False):
+        #
         self.args = dict(arg_dict)
-        if (skip_validation):
-            self.validated = True
-        else:
+        self.validated = skip_validation
+        #
+        if not self.validated:
             self.validated = self.validate_args()
 
     def validate_args(self):
@@ -46,9 +47,9 @@ class BaseProcessor:
         for arg in self.arg_processors.keys():
             processor = self.arg_processors[arg]
             try:
-                if (processor.out_type == "single"):
+                if (processor.out_type == 'single'):
                     input_val = processor.map_func(self.args[arg])
-                    if (input_val == ""):
+                    if (input_val == ''):
                         raise IndexError
                     self.args[arg] = input_val
                 else:
@@ -59,7 +60,7 @@ class BaseProcessor:
                         raise IndexError
                     self.args[arg] = input_list
             #
-            except (KeyError, ValueError, IndexError) as err:
+            except Exception as err:
                 recv = ('' if isinstance(err, KeyError) else self.args[arg])
                 self.input_error(err, received=recv, **processor.__dict__)
                 valid = False
@@ -86,7 +87,7 @@ class BaseProcessor:
             msg = 'Error - {} requires {}={} {}. recieved: "{}"'
             msg = msg.format(self.action, field, expected, err_desc_str, received)
         else:
-            print('Unhandled eroor type encountered.')
+            print('Unhandled error type encountered.')
             raise err
         #
         print(msg)
@@ -136,10 +137,8 @@ class BaseProcessor:
         Copys the current processed data array to a dict object using a
         key defined in the subclass initialization. If alt key is specifi
         """
-        if (not self.outfile_content):
-            msg = 'Error output content has not been generated. '
-            msg += 'Run .gen_output() method first'
-            print(msg)
+        if (not self.processed_data):
+            print('Error no data has been processed. Run .process() method first')
             return
         #
         key = alt_key if alt_key else self.output_key
