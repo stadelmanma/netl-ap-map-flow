@@ -50,12 +50,13 @@ class Profile(BaseProcessor):
         else:
             msg = 'Error - Invalid direction: "{}" supplied. '
             msg += 'valid values are x or z.'
-            print(msg.format(_dir))
+            print(msg.format(dir_))
             self.processed_data = None
             return
         #
-        self.loc_ids = {loc: st_id for loc, st_id in zip(locs, start_ids)}
-        for loc, st_id in zip(locs, start_ids):
+        fmt = '{:4.2f}'
+        self.loc_ids = {fmt.format(loc): sid for loc, sid in zip(locs, start_ids)}
+        for loc, st_id in self.loc_ids.items():
             self.processed_data[loc] = get_data_vect(self.data_map, dir_, st_id)
 
     def output_data(self, filename=None, delim=',', **kwargs):
