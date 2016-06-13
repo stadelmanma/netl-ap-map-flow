@@ -14,7 +14,7 @@ def fixtures_directory(request):
     request.function.__globals__['FIXTURE_DIR'] = fixture_dir
 
 
-@pytest.fixture(scope='session', autouse=True)
+@pytest.fixture(scope='session')
 def setup_temp_directory(request):
     r"""
     Defines TEMP_DIR global for saving files
