@@ -14,8 +14,8 @@ def fixtures_directory(request):
     request.function.__globals__['FIXTURE_DIR'] = fixture_dir
 
 
-@pytest.fixture(autouse=True)
-def temp_directory(request):
+@pytest.fixture(scope='session', autouse=True)
+def setup_temp_directory(request):
     r"""
     Defines TEMP_DIR global for saving files
     """
@@ -24,7 +24,6 @@ def temp_directory(request):
         mkdir(temp_dir)
     except:
         pass
-    request.function.__globals__['TEMP_DIR'] = temp_dir
 
     def clean():
         try:
@@ -32,6 +31,21 @@ def temp_directory(request):
         except:
             pass
     request.addfinalizer(clean)
+    #
+    return temp_dir
+
+
+@pytest.fixture(scope='function', autouse=True)
+def temp_directory(request, setup_temp_directory):
+    r"""
+    Defines TEMP_DIR global for saving files
+    """
+    temp_dir = join(dirname(realpath(__file__)), 'temp')
+    try:
+        mkdir(temp_dir)
+    except:
+        pass
+    request.function.__globals__['TEMP_DIR'] = setup_temp_directory
 
 
 @pytest.fixture

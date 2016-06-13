@@ -3,6 +3,9 @@ import sys
 import pytest
 #
 args = ['-v']
+# allowing stdout is desired
+if '-s' in sys.argv:
+    args.append('-s')
 # setting pytest pep8 arg
 if 'pep8' in sys.argv:
     args.append('--pep8')

@@ -41,3 +41,6 @@ class TestOpenFoamExport:
         export._edges = ['placeholder']
         export._mergePatchPairs = ['placeholder']
         export.write_mesh_file(TEMP_DIR, overwrite=True)
+        #
+        # attempting to rewrite mesh file to same location to test error handling
+        export.write_mesh_file(TEMP_DIR, overwrite=True)
