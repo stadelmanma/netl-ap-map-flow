@@ -11,7 +11,9 @@ from .__BaseProcessor__ import BaseProcessor
 
 
 class Percentiles(BaseProcessor):
-
+    r"""
+    Automatica method to calculate and nicely output a list of data precentiles
+    """
     def __init__(self, field, **kwargs):
         super().__init__(field, **kwargs)
         self.output_key = 'perc'
@@ -30,7 +32,7 @@ class Percentiles(BaseProcessor):
         Takes a list of percentiles specified in self.args and generates
         the corresponding set of values.
         """
-        perc_list = self.args["perc"]
+        perc_list = self.args['perc']
         perc_list.sort()
         #
         # getting percentiles from data map
@@ -38,7 +40,7 @@ class Percentiles(BaseProcessor):
         self.processed_data = dict()
         for perc in perc_list:
             val = calc_percentile(perc, self.data_vector, sort=False)
-            self.processed_data[perc] = val
+            self.processed_data['{:4.2f}'.format(perc)] = val
 
     def output_data(self, filename=None, delim=',', **kwargs):
         r"""
@@ -61,7 +63,7 @@ class Percentiles(BaseProcessor):
         perc_keys = list(self.processed_data.keys())
         perc_keys.sort()
         for perc in perc_keys:
-            content += str(perc)+delim+str(self.processed_data[perc])+"\n"
-        content += "\n"
+            content += perc + delim + str(self.processed_data[perc]) + '\n'
+        content += '\n'
         #
         self.outfile_content = content

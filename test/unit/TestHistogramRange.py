@@ -28,7 +28,7 @@ class TestHistogramLogscale:
 
     def test_define_bins(self, data_field_class):
         r"""
-        Testing logscale bin generation
+        Testing range bin generation
         """
         hist = HistogramRange(data_field_class())
         hist.args = {'num_bins': 10, 'range': [10.0, 90.0]}
