@@ -249,7 +249,7 @@ class InputFile:
 
 class DummyProcess:
     r"""
-    A palceholder used to initialize the processes list cleanly. Returns
+    A place holder used to initialize the processes list cleanly. Returns
     0 to simulate a successful completion and signal the start of a new process
     """
 

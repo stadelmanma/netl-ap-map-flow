@@ -142,6 +142,22 @@ class TestBulkRun:
         assert not processes
         assert not RAM_in_use
 
+    def test_process_input_tuples(self):
+        r"""
+        Testing the front end input processing function
+        """
+        #
+        input_tuples = [
+            (['test-map1', 'test-map2'], {'test-param1': [1000]}, {'test-format': 'path-to-file12'}),
+            (['test-map3', 'test-map4'], {'test-param2': 'ABC'}, {'test-format': 'path-to-file34'}),
+            (['test-map5'], {'test-param3': 'LEFT'}, {'test-format': 'path-to-file5'})
+        ]
+        #
+        sim_inputs = BulkRun.process_input_tuples(input_tuples)
+        print(sim_inputs)
+        assert len(sim_inputs) == 5
+        assert {'aperture_map', 'filename_formats', 'run_params'}.issubset(sim_inputs[0].keys())
+
     def test_bulk_run(self):
         r"""
         Passes nothing to the function but still hits most of the lines.
@@ -157,6 +173,8 @@ class TestBulkRun:
         # first with no inputs
         inp_file = BulkRun.InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
         BulkRun.dry_run(init_infile=inp_file)
+        #
+        # setting inputs for full test
         input_params = [{'aperture_map': os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT'),
                          'filename_formats': {'APER-FILE': os.path.join(TEMP_DIR, 'test-map.txt'),
                                               'FLOW-FILE': os.path.join(TEMP_DIR, 'test-flow.csv'),
@@ -169,7 +187,6 @@ class TestBulkRun:
                                         'OUTLET-PRESS': ['990.00']}}]
         #
         BulkRun.dry_run(sim_inputs=input_params, init_infile=inp_file)
-        assert 0
 
     @pytest.mark.skip(reason='Can not be unit tested')
     def test_start_simulations(self):
