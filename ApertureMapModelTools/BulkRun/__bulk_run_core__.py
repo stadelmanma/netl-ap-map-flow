@@ -217,12 +217,13 @@ class InputFile:
                     print('')
                     raise KeyError(fname)
             #
-            i = outfiles[fname].rfind('\\')
-            path = outfiles[fname][:i]
+            dir_arr = list(os.path.split(outfiles[fname]))
+            dir_arr[0] = '.' if not dir_arr[0] else dir_arr[0]
+            path = os.path.join(*dir_arr[:-1])
             if not os.path.isdir(path):
                 os.makedirs(path)
+            #
         self.outfile_name = outfiles['input_file']
-        #
 
     def write_inp_file(self, alt_path=None):
         r"""
