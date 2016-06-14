@@ -326,7 +326,6 @@ def start_simulations(input_file_list, num_CPUs, avail_RAM, start_delay=5):
     # initializing processes list with dummy processes
     processes = [DummyProcess()]
     RAM_in_use = [0.0]
-    sleep(start_delay)
     #
     # testing if processes have finished and starting additional ones if they have
     while input_file_list:
@@ -417,7 +416,7 @@ def process_input_tuples(input_tuples,
     return sim_inputs
 
 
-def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
+def bulk_run(sim_inputs=None, num_CPUs=4.0, sys_RAM=8.0, delim='auto',
              init_infile='FRACTURE_INITIALIZATION.INP', start_delay=20):
     r"""
     This acts as the driver function for the entire bulk run of simulations.
@@ -457,7 +456,7 @@ def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
     return
 
 
-def dry_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
+def dry_run(sim_inputs=None, num_CPUs=4.0, sys_RAM=8.0, delim='auto',
             init_infile='FRACTURE_INITIALIZATION.INP'):
     r"""
     This steps through the entire simulation creating directories and
