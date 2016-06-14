@@ -9,7 +9,8 @@ Last Modifed: 2016/06/11
 #
 import os
 import pytest
-from ApertureMapModelTools.BulkRun import process_input_tuples, bulk_run, dry_run
+from ApertureMapModelTools.BulkRun import InputFile, process_input_tuples
+from ApertureMapModelTools.BulkRun import bulk_run, dry_run
 
 
 class TestBulkRun:
@@ -59,14 +60,14 @@ class TestBulkRun:
                                                  global_params=global_run_params,
                                                  global_name_format=global_file_formats)
         #
+        inp_file = InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
         dry_run(simulation_inputs,
                 num_CPUs=2.0,
                 sys_RAM=8.0,
                 delim='auto',
-                init_infile=os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
+                init_infile=inp_file)
         #
-        os.system('pwd')
-        os.system('ls -la')
+        os.system('ls '+TEMP_DIR)
         #
         bulk_run(simulation_inputs,
                  num_CPUs=2.0,
