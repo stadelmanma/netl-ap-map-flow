@@ -14,6 +14,8 @@ import re
 import sys
 import scipy as sp
 import ApertureMapModelTools as amt
+from ApertureMapModelTools.__core__ import ArgProcessor
+from ApertureMapModelTools.__core__ import multi_output_columns
 
 
 class TestCore:
@@ -61,7 +63,7 @@ class TestCore:
         r"""
         Builds an ArgProcessor object
         """
-        arg = amt.ArgProcessor(True)
+        arg = ArgProcessor(True)
         assert arg.field
 
     def test_files_from_directory(self):
@@ -127,4 +129,4 @@ class TestCore:
         output function. That way I'll rememeber to make a test function
         """
         with pytest.raises(NotImplementedError):
-            amt.multi_output_columns(None)
+            multi_output_columns(None)

@@ -20,6 +20,26 @@ import scipy as sp
 ########################################################################
 
 
+class ArgProcessor:
+    r"""
+    Generalizes the processing of an input argument
+    """
+
+    def __init__(self, field,
+                 map_func=lambda x: x,
+                 min_num_vals=1,
+                 out_type='single',
+                 expected='str',
+                 err_desc_str='to have a value'):
+        #
+        self.field = field
+        self.map_func = map_func
+        self.min_num_vals = min_num_vals
+        self.out_type = out_type
+        self.expected = expected
+        self.err_desc_str = err_desc_str
+
+
 class DataField:
     r"""
     Base class to store raw data from a 2-D field data file and
@@ -139,7 +159,7 @@ class StatFile:
             content_arr = content.split('\n')
             content_arr = [re.sub(r', *$', '', l).strip() for l in content_arr]
             content_arr = [re.sub(r'^#.*', '', l) for l in content_arr]
-            content_arr = list(filter(None, content_arr))
+            content_arr = [l for l in content_arr if l]
         #
         map_file_line = content_arr.pop(0)
         pvt_file_line = content_arr.pop(0)
@@ -148,11 +168,7 @@ class StatFile:
             self.map_file = re.split(r'\s', map_file_line, 1)[1]
             self.pvt_file = re.split(r'\s', pvt_file_line, 1)[1]
         except IndexError:
-            print('Error - one of these lines does not have a file')
-            print(map_file_line)
-            print(pvt_file_line)
-            print('')
-            raise(IndexError)
+            print('Warning - no map and/or PVT file listed in Stats file')
         #
         # stepping through pairs of lines to get key -> values
         for i in range(0, len(content_arr), 2):
@@ -168,25 +184,6 @@ class StatFile:
                 self.data_dict[key] = val
                 self.unit_dict[key] = unit
 
-
-class ArgProcessor:
-    r"""
-    Generalizes the processing of an input argument
-    """
-
-    def __init__(self, field,
-                 map_func=lambda x: x,
-                 min_num_vals=1,
-                 out_type='single',
-                 expected='str',
-                 err_desc_str='to have a value'):
-        #
-        self.field = field
-        self.map_func = map_func
-        self.min_num_vals = min_num_vals
-        self.out_type = out_type
-        self.expected = expected
-        self.err_desc_str = err_desc_str
 #
 ########################################################################
 #  Base functions
@@ -281,7 +278,7 @@ def calc_percentile(perc, data, sort=True):
             num_vals += 1
     #
     #
-    return(sorted_data[index])
+    return sorted_data[index]
 
 
 def calc_percentile_num(num, data, last=False, sort=True):
@@ -307,7 +304,7 @@ def calc_percentile_num(num, data, last=False, sort=True):
     #
     perc = num_vals/tot_vals
     #
-    return(perc)
+    return perc
 
 
 def get_data_vect(data_map, direction, start_id=1):
