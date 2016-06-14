@@ -65,6 +65,9 @@ class TestBulkRun:
                 delim='auto',
                 init_infile=os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
         #
+        os.system('pwd')
+        os.system('ls')
+        #
         bulk_run(simulation_inputs,
                  num_CPUs=2.0,
                  sys_RAM=4.0,
