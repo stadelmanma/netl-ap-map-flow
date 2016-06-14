@@ -105,8 +105,8 @@ group_data_dict = {}
 #
 # checking number of args and if > 1 processing them
 if (len(sys.argv) <= 1):
-    print('error - this program requires command line arguments')
-    exit('Exiting...')
+    msg = 'Fatal Error: This program requires command line arguments'
+    raise SystemExit(msg)
 else:
     for i in range(1, len(sys.argv)):
         arg = sys.argv[i]
@@ -115,14 +115,14 @@ else:
                 flag_dict[arg] = True
                 arg_dict['flag_list'].append(arg)
             else:
-                print('Error - invalid flag: "'+arg+'" provided.')
-                exit()
+                raise SystemExit('Error - invalid flag: "'+arg+'" provided.')
         else:
             # splitting arg into a key,value pair
             kv_pair = arg.split('=')
             if (len(kv_pair) < 2):
-                print('Error - invalid argument: "'+arg+'" provided. Required to have form of arg=values')
-                os.sys.exit()
+                msg = 'Error - invalid argument: "'+arg+'" provided. '
+                msg += 'Required to have form of arg=values'
+                raise SystemExit(msg)
             arg_dict[kv_pair[0]] = kv_pair[1]
 print('')
 print('')
@@ -144,18 +144,23 @@ except IndexError:
 #
 # checking files value
 try:
-    files = list(filter(None, re.split(',', arg_dict['files'])))
+    files = re.split(',', arg_dict['files'])
+    files = [f for f in files if f]
     if (len(files) == 0):
         raise IndexError
 except KeyError:
     file_error = True
-    print('Error - No input files provided. One argument needs to be files=file1, file2, ..., file_n')
+    msg = 'Error - No input files provided. '
+    msg += 'One argument needs to be files=file1,file2,...,file_n'
+    print(msg)
 except IndexError:
     file_error = True
-    print('Error - file argument specified but no files listed. Check for spaces, valid format is: files=file1, file2, ..., file_n')
+    msg = 'Error - file argument specified but no files listed. '
+    msg += 'Check for spaces, valid format is: files=file1,file2,...,file_n'
+    print(msg)
 #
 if ((action_error) or (file_error)):
-    exit()
+    raise SystemExit
 #
 # processing data field data
 data_fields = apm.load_infile_list(files, arg_dict['delim'])
@@ -188,5 +193,3 @@ for dat_proc in data_processors:
         # only writting data
         dat_proc.gen_output(delim=',')
         dat_proc.write_data()
-
-

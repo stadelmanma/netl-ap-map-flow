@@ -19,11 +19,11 @@ class TestOpenFoamExport:
     def setup_class(self):
         pass
 
-    def test_export(self):
+    def test_export(self, data_field_class):
         #
         map_file = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES',
                                 'PARALELL-PLATE-10VOX.TXT')
-        self._field = DataField(map_file)
+        self._field = data_field_class()
         #
         params = {
             'convertToMeters': '0.000010000',
@@ -38,4 +38,9 @@ class TestOpenFoamExport:
             'boundary.back.type': 'wall'
         }
         export = OpenFoamExport(self._field, avg_fact=10.0, export_params=params)
-        export.write_mesh_file(TEMP_DIR)
+        export._edges = ['placeholder']
+        export._mergePatchPairs = ['placeholder']
+        export.write_mesh_file(TEMP_DIR, overwrite=True)
+        #
+        # attempting to rewrite mesh file to same location to test error handling
+        export.write_mesh_file(TEMP_DIR, overwrite=True)

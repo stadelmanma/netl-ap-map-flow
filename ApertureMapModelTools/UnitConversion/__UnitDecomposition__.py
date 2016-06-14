@@ -1,6 +1,11 @@
 #
 r"""
-Holds the UnitDecomposition class
+Holds the UnitDecomposition class which does the heavy lifting in unit conversion
+#
+Written By: Matthew Stadelman
+Date Written: 2016/03/22
+Last Modifed: 2016/06/12
+#
 """
 #
 import re
@@ -245,7 +250,7 @@ class UnitDecomposition(SI):
             except AttributeError:
                 msg = 'Error - component in unit string was in invalid format: '
                 msg += formatted_unit_string+' -> '+comp
-                raise Exception(msg)
+                raise AttributeError(msg)
             except KeyError:
                 try:
                     root_unit, factor = cls.check_prefix(key)
@@ -259,11 +264,11 @@ class UnitDecomposition(SI):
                         tup = unit_tuple._replace(exponent=new_exp, name=key)
                         unit_list.append(tup)
                 except KeyError:
-                    raise Exception('Error - unknown component in unit string: ' +
-                                    formatted_unit_string+' -> '+key)
+                    raise KeyError('Error - unknown component in unit string: ' +
+                                   formatted_unit_string+' -> '+key)
                 except ValueError:
-                    raise Exception('Error - component in unit string was a ' +
-                                    'compound unit with a prefix: ' +
-                                    formatted_unit_string+' -> '+key)
+                    raise ValueError('Error - component in unit string was a ' +
+                                     'compound unit with a prefix: ' +
+                                     formatted_unit_string+' -> '+key)
         #
         return unit_list

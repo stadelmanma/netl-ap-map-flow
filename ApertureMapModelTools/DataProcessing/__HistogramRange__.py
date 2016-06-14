@@ -4,7 +4,7 @@ Inherits most of it's structure from Histogram
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/07
-Last Modifed: 2016/03/22
+Last Modifed: 2016/06/13
 #
 """
 from ApertureMapModelTools.__core__ import ArgProcessor, calc_percentile
@@ -36,9 +36,10 @@ class HistogramRange(Histogram):
         r"""
         This defines the bins for a range histogram
         """
+        self.data_vector.sort()
         num_bins = self.args['num_bins']
-        min_val = calc_percentile(self.args['range'][0], self.data_map)
-        max_val = calc_percentile(self.args['range'][1], self.data_map)
+        min_val = calc_percentile(self.args['range'][0], self.data_vector, False)
+        max_val = calc_percentile(self.args['range'][1], self.data_vector, False)
         step = (max_val - min_val)/float(num_bins)
         #
         low = min_val

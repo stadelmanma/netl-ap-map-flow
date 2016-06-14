@@ -4,7 +4,7 @@ super class for variants of a simple histogram.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/29
-Last Modifed: 2016/03/07
+Last Modifed: 2016/06/13
 #
 """
 from ApertureMapModelTools.__core__ import ArgProcessor, calc_percentile
@@ -26,27 +26,53 @@ class Histogram(BaseProcessor):
                                      err_desc_str='to have a numeric value')
 
         }
+        self.bins = []
 
-    def process_data(self, **kwargs):
+    def define_bins(self, **kwargs):
+        r"""
+        This defines the bins for a regular histogram
+        """
+        self.data_vector.sort()
+        num_bins = self.args['num_bins']
+        perc = 1.00
+        min_val = self.data_vector[0]
+        # ensuring the upper limit is greater than data_map[0]
+        while (min_val <= self.data_vector[0]):
+            min_val = calc_percentile(perc, self.data_vector)
+            perc += 0.050
+        print('Upper limit of first bin adjusted to percentile: '+str(perc))
+        max_val = calc_percentile(99.0, self.data_vector)
+        step = (max_val - min_val)/(num_bins - 2)
+        #
+        self.bins = [(self.data_vector[0], min_val)]
+        low = min_val
+        while (low < max_val):
+            high = low + step
+            self.bins.append((low, high))
+            low = high
+        # slight increase to prevent last point being excluded
+        self.bins.append((low, self.data_vector[-1]*1.0001))
+
+    def process_data(self, preserve_bins=False, **kwargs):
         r"""
         Calculates a histogram from a range of data. This uses the 1st and
         99th percentiles as limits when defining bins
         """
         #
-        self.data_map.sort()
         self.processed_data = []
-        self.define_bins()
+        if not preserve_bins:
+            self.define_bins()
         #
         # populating bins
         num_vals = 0
-        data = self.data_map.__iter__()
+        data = self.data_vector.__iter__()
         bins = self.bins.__iter__()
         try:
             val = data.__next__()
             bin = bins.__next__()
             b = 0
             while True:
-                if (val < bin[0]):
+                if val < bin[0]:
                     val = data.__next__()
                 elif ((val >= bin[0]) and (val < bin[1])):
                     num_vals += 1
@@ -61,30 +87,6 @@ class Histogram(BaseProcessor):
                 bin = self.bins[b]
                 self.processed_data.append((bin[0], bin[1], num_vals))
                 num_vals = 0  # setting to 0 for all subsequent bins
-
-    def define_bins(self, **kwargs):
-        r"""
-        This defines the bins for a regular histogram
-        """
-        num_bins = self.args['num_bins']
-        perc = 1.00
-        min_val = self.data_map[0]
-        # ensuring the upper limit is greater than data_map[0]
-        while (min_val <= self.data_map[0]):
-            min_val = calc_percentile(perc, self.data_map)
-            perc += 0.050
-        print('Upper limit of first bin adjusted to percentile: '+str(perc))
-        max_val = calc_percentile(99.0, self.data_map)
-        step = (max_val - min_val)/(num_bins-2.0)
-        #
-        self.bins = [(self.data_map[0], min_val)]
-        low = min_val
-        while (low < max_val):
-            high = low + step
-            self.bins.append((low, high))
-            low = high
-        # slight increase to prevent last point being excluded
-        self.bins.append((low, self.data_map[-1]*1.0001))
 
     def output_data(self, filename=None, delim=',', **kwargs):
         r"""

@@ -10,14 +10,34 @@ Last Modifed: 2016/06/10
 #
 ########################################################################
 #
-from pathlib import Path, WindowsPath
 import subprocess
 import re
+import os
 import scipy as sp
 #
 ########################################################################
 #  Basic classes
 ########################################################################
+
+
+class ArgProcessor:
+    r"""
+    Generalizes the processing of an input argument
+    """
+
+    def __init__(self, field,
+                 map_func=lambda x: x,
+                 min_num_vals=1,
+                 out_type='single',
+                 expected='str',
+                 err_desc_str='to have a value'):
+        #
+        self.field = field
+        self.map_func = map_func
+        self.min_num_vals = min_num_vals
+        self.out_type = out_type
+        self.expected = expected
+        self.err_desc_str = err_desc_str
 
 
 class DataField:
@@ -43,6 +63,7 @@ class DataField:
         obj.nx = self.nx
         obj.nz = self.nz
         obj.data_map = sp.copy(self.data_map)
+        obj.data_vector = sp.copy(self.data_vector)
         obj.point_data = sp.copy(self.point_data)
 
     def parse_data_file(self, delim='auto'):
@@ -59,6 +80,7 @@ class DataField:
                 delim = match.group(1)
         #
         self.data_map = sp.loadtxt(self.infile, delimiter=delim)
+        self.data_vector = sp.ravel(self.data_map)
         #
         self.nz, self.nx = self.data_map.shape
 
@@ -137,7 +159,7 @@ class StatFile:
             content_arr = content.split('\n')
             content_arr = [re.sub(r', *$', '', l).strip() for l in content_arr]
             content_arr = [re.sub(r'^#.*', '', l) for l in content_arr]
-            content_arr = list(filter(None, content_arr))
+            content_arr = [l for l in content_arr if l]
         #
         map_file_line = content_arr.pop(0)
         pvt_file_line = content_arr.pop(0)
@@ -146,11 +168,7 @@ class StatFile:
             self.map_file = re.split(r'\s', map_file_line, 1)[1]
             self.pvt_file = re.split(r'\s', pvt_file_line, 1)[1]
         except IndexError:
-            print('Error - one of these lines does not have a file')
-            print(map_file_line)
-            print(pvt_file_line)
-            print('')
-            raise(IndexError)
+            print('Warning - no map and/or PVT file listed in Stats file')
         #
         # stepping through pairs of lines to get key -> values
         for i in range(0, len(content_arr), 2):
@@ -166,25 +184,6 @@ class StatFile:
                 self.data_dict[key] = val
                 self.unit_dict[key] = unit
 
-
-class ArgProcessor:
-    r"""
-    Generalizes the processing of an input argument
-    """
-
-    def __init__(self, field,
-                 map_func=lambda x: x,
-                 min_num_vals=1,
-                 out_type='single',
-                 expected='str',
-                 err_desc_str='to have a value'):
-        #
-        self.field = field
-        self.map_func = map_func
-        self.min_num_vals = min_num_vals
-        self.out_type = out_type
-        self.expected = expected
-        self.err_desc_str = err_desc_str
 #
 ########################################################################
 #  Base functions
@@ -199,10 +198,6 @@ def files_from_directory(directory='.', pattern='.', deep=True):
     can be supplied instead of a string.
     """
     #
-    if (isinstance(Path('.'), WindowsPath)):
-        path_sep = r'\\'
-    else:
-        path_sep = r'/'
     # setting up pattern
     try:
         if (pattern[0] == '*'):
@@ -229,17 +224,17 @@ def files_from_directory(directory='.', pattern='.', deep=True):
         content_arr = contents.split('\n')
         content_arr = [c.strip() for c in content_arr]
         content_arr = filter(None, content_arr)
-        for c in content_arr:
-            c = directory + path_sep + c
-            p = Path(c)
+        for path in content_arr:
+            path = os.path.join(directory, path)
+            path = os.path.realpath(path)
             try:
-                if (p.is_dir() and deep):
-                    dirs.append(str(p))
+                if os.path.isdir(path) and deep:
+                    dirs.append(str(path))
                 else:
-                    if (pattern.search(c)):
-                        files.append(str(p.resolve()))
+                    if (pattern.search(path)):
+                        files.append(path)
             except FileNotFoundError:
-                print('Error an absolute path could not be resolved for: ', str(p))
+                print('Error an absolute path could not be resolved for: '+path)
             except OSError as e:
                 print('Unknown OS error occured: \n\t', e)
     return files
@@ -283,7 +278,7 @@ def calc_percentile(perc, data, sort=True):
             num_vals += 1
     #
     #
-    return(sorted_data[index])
+    return sorted_data[index]
 
 
 def calc_percentile_num(num, data, last=False, sort=True):
@@ -309,21 +304,22 @@ def calc_percentile_num(num, data, last=False, sort=True):
     #
     perc = num_vals/tot_vals
     #
-    return(perc)
+    return perc
 
 
-def get_data_vect(data_map, nx, nz, direction, start_id=0):
+def get_data_vect(data_map, direction, start_id=1):
     r"""
     Returns either of a row or column of cells as a vector in the x or z direction
     """
+    #
+    nz, nx = data_map.shape
     if (direction.lower() == 'x'):
         # getting row index
         if (start_id >= nz):
             start_id = nz
         elif (start_id <= 0):
             start_id = 1
-        vect = data_map[(start_id-1)*nx:(start_id)*nx]
-        return(vect)
+        return data_map[start_id-1, :]
 
     elif (direction.lower() == 'z'):
         if (start_id >= nx):
@@ -331,52 +327,49 @@ def get_data_vect(data_map, nx, nz, direction, start_id=0):
         elif (start_id <= 0):
             start_id = 1
         #
-        vect = []
-        start_id = start_id - 1
-        for iz in range(nz):
-            vect.append(data_map[iz*nx+start_id])
-        return(vect)
+        return data_map[:, start_id-1]
     else:
-        print("error - invalid direction supplied, can only be x or z")
-        return None
+        raise ValueError("Error - invalid direction supplied, can only be x or z")
 
 
-def multi_output_columns(data_fields):  # rework this so it doesn't suck so much
+def multi_output_columns(data_fields):
     r"""
     Takes the content of several fields of output data and outputs them
     columnwise side by side
     """
-    # splitting content of each outfile
-    num_lines = 0
-    for field in data_fields:
-        content_arr = field.outfile_content.split('\n')
-        field.outfile_arr = list(content_arr)
-        num_lines = len(content_arr) if (len(content_arr) > num_lines) else num_lines
-    # processing content
-    content_arr = []
-    max_len = 0
-    for l in range(num_lines):
-        line_arr = []
-        for field in data_fields:
-            try:
-                line = field.outfile_arr[l].split(',')
-                max_len = len(line) if (len(line) > max_len) else max_len
-            except IndexError:
-                line = ['']
-            line_arr.append(line)
-        content_arr.append(line_arr)
+    msg = 'This function is retired until I make a better version'
+    raise NotImplementedError(msg)
+    #   splitting content of each outfile
+    # num_lines = 0
+    # for field in data_fields:
+    #     content_arr = field.outfile_content.split('\n')
+    #     field.outfile_arr = list(content_arr)
+    #  num_lines = len(content_arr) if (len(content_arr) > num_lines) else num_lines
+    #   processing content
+    # content_arr = []
+    # max_len = 0
+    # for l in range(num_lines):
+    #     line_arr = []
+    #     for field in data_fields:
+    #         try:
+    #             line = field.outfile_arr[l].split(',')
+    #             max_len = len(line) if (len(line) > max_len) else max_len
+    #         except IndexError:
+    #             line = ['']
+    #         line_arr.append(line)
+    #     content_arr.append(line_arr)
     #
-    # creating group content
-    group_content = ""
-    for l in range(len(content_arr)):
-        line = list(content_arr[l])
-        out_str = ""
-        for i in range(len(line)):
-            for j in range(max_len):
-                if (j < len(line[i])):
-                    out_str += line[i][j]+','
-                else:
-                    out_str += ','
-            out_str += ','
-        group_content += out_str + '\n'
-    return(group_content)
+    #   creating group content
+    # group_content = ''
+    # for l in range(len(content_arr)):
+    #     line = list(content_arr[l])
+    #     out_str = ''
+    #     for i in range(len(line)):
+    #         for j in range(max_len):
+    #             if (j < len(line[i])):
+    #                 out_str += line[i][j]+','
+    #             else:
+    #                 out_str += ','
+    #         out_str += ','
+    #     group_content += out_str + '\n'
+    # return group_content
