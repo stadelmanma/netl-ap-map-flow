@@ -217,6 +217,7 @@ class InputFile:
                     print('')
                     raise KeyError(fname)
             #
+            # using path split to prevent creating directories out of filenames
             dir_arr = list(os.path.split(outfiles[fname]))
             dir_arr[0] = '.' if not dir_arr[0] else dir_arr[0]
             path = os.path.join(*dir_arr[:-1])
