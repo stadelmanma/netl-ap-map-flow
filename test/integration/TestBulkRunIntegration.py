@@ -61,12 +61,15 @@ class TestBulkRun:
                                                  global_name_format=global_file_formats)
         #
         inp_file = InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
+        exe_path = os.path.realpath(os.path.join('.', inp_file.arg_dict['EXE-FILE'].value))
+        inp_file.arg_dict['EXE-FILE'].update_value(exe_path, False)
         dry_run(simulation_inputs,
                 num_CPUs=2.0,
                 sys_RAM=8.0,
                 delim='auto',
                 init_infile=inp_file)
         #
+        os.system('echo '+inp_file.arg_dict['EXE-FILE'].output_line())
         os.system('ls '+TEMP_DIR)
         #
         bulk_run(simulation_inputs,
