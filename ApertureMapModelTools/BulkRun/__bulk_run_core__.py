@@ -133,8 +133,11 @@ class InputFile:
         rest will be copied from.
         """
         #
-        with open(infile, 'r') as fname:
-            content = fname.read()
+        if isinstance(infile, InputFile):
+            content = infile.__repr__()
+        else:
+            with open(infile, 'r') as fname:
+                content = fname.read()
         #
         # parsing contents into input_file object
         content_arr = content.split('\n')
@@ -344,8 +347,6 @@ def check_processes(processes, RAM_in_use, retest_delay=5):
                 return
         #
         sleep(retest_delay)
-    #
-    return
 
 
 def start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use,

@@ -86,3 +86,95 @@ class TestBulkRun:
         # re-reading the output file to test what happens with no EXE-FILE
         with pytest.raises(SystemExit):
             inp_file = BulkRun.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
+
+    def test_estimate_req_RAM(self):
+        r"""
+        Ensuring RAM req is being calculated
+        """
+        map_file = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT')
+        BulkRun.estimate_req_RAM([map_file], 10)
+        with pytest.raises(SystemExit):
+            BulkRun.estimate_req_RAM([map_file], 0)
+
+    def test_combine_run_args(self, input_file_class):
+        r"""
+        ensuring this returns a valid list of input file objects
+        """
+        map_args = [{'aperture_map': 'test-map.txt',
+                     'filename_formats': {'APER-FILE': 'test-map.txt',
+                                          'FLOW-FILE': 'test-flow.csv',
+                                          'PRESS-FILE': 'test-press.csv',
+                                          'STAT-FILE': 'test-stat.csv',
+                                          'SUMMARY-PATH': 'test-summary.txt',
+                                          'VTK-FILE': 'test-para.vtk',
+                                          'input_file': 'test-init.inp'},
+                     'run_params': {'FRAC-PRESS': ['1000'],
+                                    'MAP': ['1'],
+                                    'OUTLET-PRESS': ['995.13', '993.02', '989.04', '977.78', '966.20', '960.53'],
+                                    'OUTPUT-UNITS': ['PSI, MM, MM^3/MIN'],
+                                    'ROUGHNESS': ['2.50'],
+                                    'VOXEL': ['26.8']},
+                     'RAM_req': 0.0}]
+        inp_file_list = BulkRun.combine_run_args(map_args, input_file_class())
+        assert len(inp_file_list) == 6
+
+    def test_check_processes(self):
+        r"""
+        Testing if check processes works properly
+        """
+
+        class TestProcess:
+            def __init__(self):
+                self.value = None
+
+            def poll(self):
+                if self.value is None:
+                    self.value = 0
+                    return None
+                #
+                return self.value
+
+        processes = [TestProcess()]
+        RAM_in_use = [0.0]
+        #
+        BulkRun.check_processes(processes, RAM_in_use, retest_delay=0)
+        #
+        assert not processes
+        assert not RAM_in_use
+
+    def test_bulk_run(self):
+        r"""
+        Passes nothing to the function but still hits most of the lines.
+        True testing will be done in integration tests
+        """
+        inp_file = BulkRun.InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
+        BulkRun.bulk_run(init_infile=inp_file, start_delay=0)
+
+    def test_dry_run(self):
+        r"""
+        Testing dry run function
+        """
+        # first with no inputs
+        inp_file = BulkRun.InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
+        BulkRun.dry_run(init_infile=inp_file)
+        input_params = [{'aperture_map': os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT'),
+                         'filename_formats': {'APER-FILE': os.path.join(TEMP_DIR, 'test-map.txt'),
+                                              'FLOW-FILE': os.path.join(TEMP_DIR, 'test-flow.csv'),
+                                              'PRESS-FILE': os.path.join(TEMP_DIR, 'test-press.csv'),
+                                              'STAT-FILE': os.path.join(TEMP_DIR, 'test-stat.csv'),
+                                              'SUMMARY-PATH': os.path.join(TEMP_DIR, 'test-summary.txt'),
+                                              'VTK-FILE': os.path.join(TEMP_DIR, 'test-para.vtk'),
+                                              'input_file': os.path.join(TEMP_DIR, 'test-init.inp')},
+                         'run_params': {'FRAC-PRESS': ['1000'],
+                                        'OUTLET-PRESS': ['990.00']}}]
+        #
+        BulkRun.dry_run(sim_inputs=input_params, init_infile=inp_file)
+        assert 0
+
+    @pytest.mark.skip(reason='Can not be unit tested')
+    def test_start_simulations(self):
+        pass
+
+    @pytest.mark.skip(reason='Can not be unit tested')
+    def test_start_run(self):
+        pass
