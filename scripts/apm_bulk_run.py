@@ -1,8 +1,8 @@
-#
-# This script allows the user to set input parameters for the aperture map
-# bulk parallel run program. The user updates the parameters and sets up
-# the creation of the inital input list for the requirements of thier bulk run.
-#
+r"""
+ This script allows the user to set input parameters for the aperture map
+ bulk parallel run program. The user updates the parameters and sets up
+ the creation of the inital input list for the requirements of thier bulk run.
+"""
 import re
 from ApertureMapModelTools.BulkRun import process_input_tuples, bulk_run, dry_run
 #
@@ -75,19 +75,38 @@ global_run_params = {
     'VOXEL': ['26.8']
 }
 #
+test_8_file_fmts = [
+    {k: global_file_formats[k].format(dir_8, prefix_8[0]) for k in global_file_formats},
+    {k: global_file_formats[k].format(dir_8, prefix_8[1]) for k in global_file_formats},
+    {k: global_file_formats[k].format(dir_8, prefix_8[2]) for k in global_file_formats},
+    {k: global_file_formats[k].format(dir_8, prefix_8[3]) for k in global_file_formats},
+    {k: global_file_formats[k].format(dir_8, prefix_8[4]) for k in global_file_formats}
+]
+#
+test_8_run_params = [
+    {'OUTLET-PRESS': ['995.13', '993.02', '989.04', '977.78', '966.20', '960.53']},
+    {'OUTLET-PRESS': ['995.32', '979.55', '945.06', '772.90']},
+    {'OUTLET-PRESS': ['997.84', '993.04', '982.18', '957.69', '929.59']},
+    {'OUTLET-PRESS': ['997.70', '999.58', '999.40', '998.95', '997.83', '996.50', '994.36']},
+    {'OUTLET-PRESS': ['999.70', '999.63', '999.49', '999.22', '998.44', '997.53', '996.82']}
+]
+#
 input_params = [
     #
-    (test_8_maps[0:1], {'OUTLET-PRESS': ['995.13', '993.02', '989.04', '977.78', '966.20', '960.53']}, {k: global_file_formats[k].format(dir_8, prefix_8[0]) for k in global_file_formats}),
-    (test_8_maps[1:2], {'OUTLET-PRESS': ['995.32', '979.55', '945.06', '772.90']}, {k: global_file_formats[k].format(dir_8, prefix_8[1]) for k in global_file_formats}),
-    (test_8_maps[2:3], {'OUTLET-PRESS': ['997.84', '993.04', '982.18', '957.69', '929.59']}, {k: global_file_formats[k].format(dir_8, prefix_8[2]) for k in global_file_formats}),
-    (test_8_maps[3:4], {'OUTLET-PRESS': ['997.70', '999.58', '999.40', '998.95', '997.83', '996.50', '994.36']}, {k: global_file_formats[k].format(dir_8, prefix_8[3]) for k in global_file_formats}),
-    (test_8_maps[4:5], {'OUTLET-PRESS': ['999.70', '999.63', '999.49', '999.22', '998.44', '997.53', '996.82']}, {k: global_file_formats[k].format(dir_8, prefix_8[4]) for k in global_file_formats})
+    # slices are used because a list is expected
+    (test_8_maps[0:1], test_8_run_params[0], test_8_file_fmts[0]),
+    (test_8_maps[1:2], test_8_run_params[1], test_8_file_fmts[1]),
+    (test_8_maps[2:3], test_8_run_params[2], test_8_file_fmts[2]),
+    (test_8_maps[3:4], test_8_run_params[3], test_8_file_fmts[3]),
+    (test_8_maps[4:5], test_8_run_params[4], test_8_file_fmts[4])
 ]
 # unsetting demo values
 del dir_8
 del prefix_8
 del map_format_str
 del test_8_maps
+del test_8_file_fmts
+del test_8_run_params
 del global_file_formats
 del global_run_params
 del input_params
@@ -100,7 +119,6 @@ del input_params
 max_CPUs_to_use = 4
 max_RAM_to_use = 8.0
 base_inp_file = 'FRACTURE_INITIALIZATION.INP'
-aperture_map_delimiter = 'auto'
 #
 #
 global_file_formats = {}
@@ -114,15 +132,15 @@ input_params = []
 #
 # pre processing the input params list of tuples
 simulation_inputs = process_input_tuples(input_params,
-                                         global_params = global_run_params,
-                                         global_name_format = global_file_formats)
+                                         global_params=global_run_params,
+                                         global_name_format=global_file_formats)
 #
 # testing simulations (replace 'dry_run' with 'bulk_run' to actually run sims)
-dry_run(num_CPUs = max_CPUs_to_use,
-         sys_RAM = max_RAM_to_use,
-         sim_inputs = simulation_inputs,
-         delim = aperture_map_delimiter,
-         init_infile = base_inp_file)
+dry_run(num_CPUs=max_CPUs_to_use,
+        sys_RAM=max_RAM_to_use,
+        sim_inputs=simulation_inputs,
+        delim='auto',
+        init_infile=base_inp_file)
 
 
 
