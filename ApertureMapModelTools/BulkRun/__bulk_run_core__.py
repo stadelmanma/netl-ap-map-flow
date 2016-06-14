@@ -217,8 +217,7 @@ class InputFile:
             i = outfiles[fname].rfind('\\')
             path = outfiles[fname][:i]
             if not os.path.isdir(path):
-                syscmd = 'mkdir '+path
-                os.system(syscmd)
+                os.makedirs(path)
         self.outfile_name = outfiles['input_file']
         #
 

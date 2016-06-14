@@ -44,6 +44,13 @@ class TestBulkRun:
         line = ''
         arg = BulkRun.ArgInput(line)
 
+    def test_dummy_process(self):
+        r"""
+        Ensuring dummy process class returns 0
+        """
+        proc = BulkRun.DummyProcess()
+        assert proc.poll() == 0
+
     def test_input_file(self):
         #
         inp_file = BulkRun.InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
@@ -70,137 +77,12 @@ class TestBulkRun:
         del inp_file.filename_formats['NONEXISTANT-FILE']
         print(inp_file)
         #
-        # writing the output file to TEMP_DIR
+        # writing the output file to TEMP_DIR without an EXE-FILE and a directory needing created
+        del inp_file.arg_order[inp_file.arg_order.index('EXE-FILE')]
+        del inp_file.arg_dict['EXE-FILE']
+        inp_file.filename_formats['PVT-PATH'] = os.path.join(TEMP_DIR, 'new-dir', 'PVT/H2O_TEMP_058F.CSV')
         inp_file.write_inp_file(alt_path=TEMP_DIR)
-
-    def test_dummy_process(self):
-        r"""
-        Ensuring dummy process class returns 0
-        """
-        proc = BulkRun.DummyProcess()
-        assert proc.poll() == 0
-
-    def test_estimate_req_RAM(self):
-        r"""
-        Ensuring RAM req is being calculated
-        """
-        map_file = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT')
-        BulkRun.estimate_req_RAM([map_file], 10)
+        #
+        # re-reading the output file to test what happens with no EXE-FILE
         with pytest.raises(SystemExit):
-            BulkRun.estimate_req_RAM([map_file], 0)
-
-    def test_dry_run(self):
-        r"""
-        Testing the dry run routine
-        """
-        #
-        inp_file = os.path.join(FIXTURE_DIR, 'BULK_RUN_INIT.INP')
-        #
-        file_formats = {
-            'SUMMARY-PATH': os.path.join(TEMP_DIR,
-                                         '{0}-OUT_PRESS_%OUTLET-PRESS%-LOG.TXT'),
-            'STAT-FILE': os.path.join(TEMP_DIR,
-                                      '{0}-OUT_PRESS_%OUTLET-PRESS%-STAT.CSV'),
-            'APER-FILE': os.path.join(TEMP_DIR,
-                                      '{0}-OUT_PRESS_%OUTLET-PRESS%-APER.CSV'),
-            'FLOW-FILE': os.path.join(TEMP_DIR,
-                                      '{0}-OUT_PRESS_%OUTLET-PRESS%-FLOW.CSV'),
-            'PRESS-FILE': os.path.join(TEMP_DIR,
-                                       '{0}-OUT_PRESS_%OUTLET-PRESS%-PRES.CSV'),
-            'VTK-FILE': os.path.join(TEMP_DIR,
-                                     '{0}-OUT_PRESS_%OUTLET-PRESS%-VTK.vtk'),
-            'input_file': os.path.join(TEMP_DIR,
-                                       '{0}-OUT_PRESS_%OUTLET-PRESS%-INIT.INP')
-        }
-        #
-        maps = [
-            os.path.join(FIXTURE_DIR, 'TEST-FRACTURES',
-                         'PARALELL-PLATE-01VOX.TXT'),
-            os.path.join(FIXTURE_DIR, 'TEST-FRACTURES',
-                         'PARALELL-PLATE-10VOX.TXT'),
-            os.path.join(FIXTURE_DIR, 'TEST-FRACTURES',
-                         'PARALELL-PLATE-10VOX-0AP-BANDS.TXT')
-        ]
-        #
-        global_run_params = {
-            'FRAC-PRESS': ['1000'],
-            'MAP': ['10'],
-            'ROUGHNESS': ['1.00'],
-            'OUTPUT-UNITS': ['PA, MM, MM^3/SEC'],
-            'VOXEL': ['26.8']
-        }
-        #
-        input_params = [
-            #
-            (maps[0:1], {'OUTLET-PRESS': ['995.13']},
-             {k: file_formats[k].format('01VOX') for k in file_formats}),
-            (maps[1:2], {'OUTLET-PRESS': ['995.32']},
-             {k: file_formats[k].format('10VOX') for k in file_formats}),
-            (maps[2:3], {'OUTLET-PRESS': ['997.84']},
-             {k: file_formats[k].format('10VOX-ZAB') for k in file_formats}),
-        ]
-        #
-        sim_inputs = BulkRun.process_input_tuples(input_params)
-        sim_inputs = BulkRun.process_input_tuples(input_params, global_run_params)
-        #
-        BulkRun.dry_run(sim_inputs=sim_inputs, init_infile=inp_file)
-
-    @pytest.mark.skip('Actual modeling program execution fails on travis server')
-    def test_bulk_run(self):
-        r"""
-        Testing the bulk run routine
-        """
-        #
-        inp_file = os.path.join(FIXTURE_DIR, 'BULK_RUN_INIT.INP')
-        OUT_DIR = os.path.join(FIXTURE_DIR, os.pardir, 'OUTFILES')
-        OUT_DIR = os.path.realpath(OUT_DIR)
-        #
-        file_formats = {
-            'SUMMARY-PATH': os.path.join(OUT_DIR,
-                                         '{0}-OUT_PRESS_%OUTLET-PRESS%-LOG.TXT'),
-            'STAT-FILE': os.path.join(OUT_DIR,
-                                      '{0}-OUT_PRESS_%OUTLET-PRESS%-STAT.CSV'),
-            'APER-FILE': os.path.join(OUT_DIR,
-                                      '{0}-OUT_PRESS_%OUTLET-PRESS%-APER.CSV'),
-            'FLOW-FILE': os.path.join(OUT_DIR,
-                                      '{0}-OUT_PRESS_%OUTLET-PRESS%-FLOW.CSV'),
-            'PRESS-FILE': os.path.join(OUT_DIR,
-                                       '{0}-OUT_PRESS_%OUTLET-PRESS%-PRES.CSV'),
-            'VTK-FILE': os.path.join(OUT_DIR,
-                                     '{0}-OUT_PRESS_%OUTLET-PRESS%-VTK.vtk'),
-            'input_file': os.path.join(OUT_DIR,
-                                       '{0}-OUT_PRESS_%OUTLET-PRESS%-INIT.INP')
-        }
-        #
-        maps = [
-            os.path.join(FIXTURE_DIR, 'TEST-FRACTURES',
-                         'PARALELL-PLATE-01VOX.TXT'),
-            os.path.join(FIXTURE_DIR, 'TEST-FRACTURES',
-                         'PARALELL-PLATE-10VOX.TXT'),
-            os.path.join(FIXTURE_DIR, 'TEST-FRACTURES',
-                         'PARALELL-PLATE-10VOX-0AP-BANDS.TXT')
-        ]
-        #
-        global_run_params = {
-            'EXE-FILE': [os.path.realpath(os.path.join(FIXTURE_DIR, os.pardir, 'APM-MODEL.EXE'))],
-            'FRAC-PRESS': ['1000'],
-            'MAP': ['10'],
-            'ROUGHNESS': ['1.00'],
-            'OUTPUT-UNITS': ['PA, MM, MM^3/SEC'],
-            'VOXEL': ['26.8']
-        }
-        #
-        input_params = [
-            #
-            (maps[0:1], {'OUTLET-PRESS': ['995.13']},
-             {k: file_formats[k].format('01VOX') for k in file_formats}),
-            (maps[1:2], {'OUTLET-PRESS': ['995.32']},
-             {k: file_formats[k].format('10VOX') for k in file_formats}),
-            (maps[2:3], {'OUTLET-PRESS': ['997.84']},
-             {k: file_formats[k].format('10VOX-ZAB') for k in file_formats}),
-        ]
-        #
-        sim_inputs = BulkRun.process_input_tuples(input_params, global_run_params)
-        #
-        #
-        BulkRun.bulk_run(sim_inputs=sim_inputs, init_infile=inp_file, start_delay=1.0)
+            inp_file = BulkRun.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
