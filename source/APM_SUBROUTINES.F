@@ -2103,8 +2103,8 @@ C
           LENG = -1
         ELSE
           J = IACHAR(C1)
-          IF(J >= 97 .AND. J <= 122) J = J - 32
-          C1 = ACHAR(J)
+          !IF(J >= 97 .AND. J <= 122) J = J - 32
+          !C1 = ACHAR(J)
 C
           IF(LENG <= 0) THEN
             IF(NFLD == MAXFLD) GOTO 950
