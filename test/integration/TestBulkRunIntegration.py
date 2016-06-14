@@ -76,5 +76,5 @@ class TestBulkRun:
                  num_CPUs=2.0,
                  sys_RAM=4.0,
                  delim='auto',
-                 init_infile=os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'),
+                 init_infile=inp_file,
                  start_delay=1.0)
