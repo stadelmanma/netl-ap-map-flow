@@ -45,9 +45,8 @@ class TestBulkRun:
         arg = BulkRun.ArgInput(line)
 
     def test_input_file(self):
-        self.inp_file = os.path.join(FIXTURE_DIR, 'TEST_INIT.INP')
         #
-        inp_file = BulkRun.InputFile(self.inp_file)
+        inp_file = BulkRun.InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
         assert inp_file.arg_order
         inp_file2 = inp_file.clone()
         assert inp_file.arg_order == inp_file2.arg_order
@@ -95,7 +94,7 @@ class TestBulkRun:
         Testing the dry run routine
         """
         #
-        self.inp_file = os.path.join(FIXTURE_DIR, 'BULK_RUN_INIT.INP')
+        inp_file = os.path.join(FIXTURE_DIR, 'BULK_RUN_INIT.INP')
         #
         file_formats = {
             'SUMMARY-PATH': os.path.join(TEMP_DIR,
@@ -144,7 +143,7 @@ class TestBulkRun:
         sim_inputs = BulkRun.process_input_tuples(input_params)
         sim_inputs = BulkRun.process_input_tuples(input_params, global_run_params)
         #
-        BulkRun.dry_run(sim_inputs=sim_inputs, init_infile=self.inp_file)
+        BulkRun.dry_run(sim_inputs=sim_inputs, init_infile=inp_file)
 
     @pytest.mark.skip('Actual modeling program execution fails on travis server')
     def test_bulk_run(self):
@@ -152,8 +151,7 @@ class TestBulkRun:
         Testing the bulk run routine
         """
         #
-        self.inp_file = os.path.join(FIXTURE_DIR, 'BULK_RUN_INIT.INP')
-        #
+        inp_file = os.path.join(FIXTURE_DIR, 'BULK_RUN_INIT.INP')
         OUT_DIR = os.path.join(FIXTURE_DIR, os.pardir, 'OUTFILES')
         OUT_DIR = os.path.realpath(OUT_DIR)
         #
@@ -184,8 +182,7 @@ class TestBulkRun:
         ]
         #
         global_run_params = {
-            'EXE-FILE': [os.path.realpath(os.path.join(FIXTURE_DIR, os.pardir,
-                                                       'APM-MODEL.EXE'))],
+            'EXE-FILE': [os.path.realpath(os.path.join(FIXTURE_DIR, os.pardir, 'APM-MODEL.EXE'))],
             'FRAC-PRESS': ['1000'],
             'MAP': ['10'],
             'ROUGHNESS': ['1.00'],
@@ -205,9 +202,5 @@ class TestBulkRun:
         #
         sim_inputs = BulkRun.process_input_tuples(input_params, global_run_params)
         #
-        init_inp_file = os.path.join(FIXTURE_DIR, self.inp_file)
         #
-        #
-        BulkRun.bulk_run(sim_inputs=sim_inputs,
-                         init_infile=init_inp_file,
-                         start_delay=1.0)
+        BulkRun.bulk_run(sim_inputs=sim_inputs, init_infile=inp_file, start_delay=1.0)

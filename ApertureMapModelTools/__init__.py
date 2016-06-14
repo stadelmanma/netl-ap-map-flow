@@ -7,7 +7,7 @@ Last Modifed: 2016/06/14
 #
 """
 #
-import _sys
+import sys as _sys
 #
 # checking python version
 if _sys.version_info < (3, 3):
