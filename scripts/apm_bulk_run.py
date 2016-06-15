@@ -136,9 +136,9 @@ simulation_inputs = process_input_tuples(input_params,
                                          global_name_format=global_file_formats)
 #
 # testing simulations (replace 'dry_run' with 'bulk_run' to actually run sims)
-dry_run(num_CPUs=max_CPUs_to_use,
+dry_run(simulation_inputs,
+        num_CPUs=max_CPUs_to_use,
         sys_RAM=max_RAM_to_use,
-        sim_inputs=simulation_inputs,
         delim='auto',
         init_infile=base_inp_file)
 

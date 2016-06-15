@@ -3,10 +3,10 @@
 # Building the flow model from source
 cd ./source/
 make
-cd ../test/
+cd ..
+ls -la
 #
-mv ../APM-MODEL.EXE .
 #
 # runnning a test case - can't get it to work in travis
-ls -la
+#mv ../APM-MODEL.EXE .
 #./APM-MODEL.EXE fixtures/PARALELL-PLATE-01VOX_INIT.INP

@@ -23,7 +23,6 @@ before_install:
 
 install:
   - conda install --yes python=$TRAVIS_PYTHON_VERSION --file requirements.txt
-  - pip install pathlib
   - pip install -r test_requirements.txt
 
 before_script:

@@ -133,8 +133,11 @@ class InputFile:
         rest will be copied from.
         """
         #
-        with open(infile, 'r') as fname:
-            content = fname.read()
+        if isinstance(infile, InputFile):
+            content = infile.__repr__()
+        else:
+            with open(infile, 'r') as fname:
+                content = fname.read()
         #
         # parsing contents into input_file object
         content_arr = content.split('\n')
@@ -214,13 +217,14 @@ class InputFile:
                     print('')
                     raise KeyError(fname)
             #
-            i = outfiles[fname].rfind('\\')
-            path = outfiles[fname][:i]
+            # using path split to prevent creating directories out of filenames
+            dir_arr = list(os.path.split(outfiles[fname]))
+            dir_arr[0] = '.' if not dir_arr[0] else dir_arr[0]
+            path = os.path.join(*dir_arr[:-1])
             if not os.path.isdir(path):
-                syscmd = 'mkdir '+path
-                os.system(syscmd)
+                os.makedirs(path)
+            #
         self.outfile_name = outfiles['input_file']
-        #
 
     def write_inp_file(self, alt_path=None):
         r"""
@@ -247,7 +251,7 @@ class InputFile:
 
 class DummyProcess:
     r"""
-    A palceholder used to initialize the processes list cleanly. Returns
+    A place holder used to initialize the processes list cleanly. Returns
     0 to simulate a successful completion and signal the start of a new process
     """
 
@@ -324,7 +328,6 @@ def start_simulations(input_file_list, num_CPUs, avail_RAM, start_delay=5):
     # initializing processes list with dummy processes
     processes = [DummyProcess()]
     RAM_in_use = [0.0]
-    sleep(start_delay)
     #
     # testing if processes have finished and starting additional ones if they have
     while input_file_list:
@@ -345,8 +348,6 @@ def check_processes(processes, RAM_in_use, retest_delay=5):
                 return
         #
         sleep(retest_delay)
-    #
-    return
 
 
 def start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use,
@@ -367,8 +368,11 @@ def start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use,
             if inp_file.RAM_req <= free_RAM:
                 inp_file = input_file_list.pop(i)
                 inp_file.write_inp_file()
-                cmd = '{0} {1}'.format(inp_file.arg_dict['EXE-FILE'].value,
-                                       inp_file.outfile_name)
+                #
+                # this works on windows but fails on linux
+                # cmd = '{0} {1}'.format(inp_file.arg_dict['EXE-FILE'].value,
+                #                        inp_file.outfile_name)
+                cmd = (inp_file.arg_dict['EXE-FILE'].value, inp_file.outfile_name)
                 #
                 processes.append(Popen(cmd))
                 RAM_in_use.append(inp_file.RAM_req)
@@ -417,7 +421,7 @@ def process_input_tuples(input_tuples,
     return sim_inputs
 
 
-def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
+def bulk_run(sim_inputs=None, num_CPUs=4.0, sys_RAM=8.0, delim='auto',
              init_infile='FRACTURE_INITIALIZATION.INP', start_delay=20):
     r"""
     This acts as the driver function for the entire bulk run of simulations.
@@ -457,7 +461,7 @@ def bulk_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
     return
 
 
-def dry_run(num_CPUs=4.0, sys_RAM=8.0, sim_inputs=None, delim='auto',
+def dry_run(sim_inputs=None, num_CPUs=4.0, sys_RAM=8.0, delim='auto',
             init_infile='FRACTURE_INITIALIZATION.INP'):
     r"""
     This steps through the entire simulation creating directories and

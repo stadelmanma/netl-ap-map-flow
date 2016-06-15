@@ -164,11 +164,9 @@ class StatFile:
         map_file_line = content_arr.pop(0)
         pvt_file_line = content_arr.pop(0)
         #
-        try:
-            self.map_file = re.split(r'\s', map_file_line, 1)[1]
-            self.pvt_file = re.split(r'\s', pvt_file_line, 1)[1]
-        except IndexError:
-            print('Warning - no map and/or PVT file listed in Stats file')
+        # adding the space prevents a possible index error
+        self.map_file = re.split(r'\s', map_file_line+' ', 1)[1]
+        self.pvt_file = re.split(r'\s', pvt_file_line+' ', 1)[1]
         #
         # stepping through pairs of lines to get key -> values
         for i in range(0, len(content_arr), 2):
@@ -225,18 +223,16 @@ def files_from_directory(directory='.', pattern='.', deep=True):
         content_arr = [c.strip() for c in content_arr]
         content_arr = filter(None, content_arr)
         for path in content_arr:
-            path = os.path.join(directory, path)
-            path = os.path.realpath(path)
+            pth = os.path.join(directory, path)
+            pth = os.path.realpath(pth)
             try:
-                if os.path.isdir(path) and deep:
-                    dirs.append(str(path))
+                if os.path.isdir(pth) and deep:
+                    dirs.append(str(pth))
                 else:
-                    if (pattern.search(path)):
-                        files.append(path)
-            except FileNotFoundError:
-                print('Error an absolute path could not be resolved for: '+path)
-            except OSError as e:
-                print('Unknown OS error occured: \n\t', e)
+                    if (pattern.search(pth)):
+                        files.append(pth)
+            except (FileNotFoundError, OSError) as err:
+                print('An Error occured on file: '+path, err)
     return files
 
 
