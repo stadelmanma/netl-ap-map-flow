@@ -368,8 +368,11 @@ def start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use,
             if inp_file.RAM_req <= free_RAM:
                 inp_file = input_file_list.pop(i)
                 inp_file.write_inp_file()
-                cmd = '{0} {1}'.format(inp_file.arg_dict['EXE-FILE'].value,
-                                       inp_file.outfile_name)
+                #
+                # this works on windows but fails on linux
+                #cmd = '{0} {1}'.format(inp_file.arg_dict['EXE-FILE'].value,
+                #                       inp_file.outfile_name)
+                cmd = (inp_file.arg_dict['EXE-FILE'].value, inp_file.outfile_name)
                 #
                 processes.append(Popen(cmd))
                 RAM_in_use.append(inp_file.RAM_req)

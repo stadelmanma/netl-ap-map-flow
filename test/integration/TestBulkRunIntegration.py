@@ -69,9 +69,6 @@ class TestBulkRun:
                 delim='auto',
                 init_infile=inp_file)
         #
-        os.system('echo "'+inp_file.arg_dict['EXE-FILE'].output_line()+'"')
-        os.system('ls -la '+TEMP_DIR)
-        #
         bulk_run(simulation_inputs,
                  num_CPUs=2.0,
                  sys_RAM=4.0,

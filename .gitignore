@@ -5,3 +5,5 @@
 *.exe
 .coverage
 .cache
+.spyderworkspace
+.spyderproject
