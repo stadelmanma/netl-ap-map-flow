@@ -9,8 +9,8 @@ Last Modifed: 2016/06/11
 #
 import os
 import pytest
-from ApertureMapModelTools.BulkRun import InputFile, process_input_tuples
-from ApertureMapModelTools.BulkRun import bulk_run, dry_run
+from ApertureMapModelTools.RunModel import InputFile
+from ApertureMapModelTools.RunModel import BulkRun
 
 
 class TestBulkRun:
@@ -56,22 +56,16 @@ class TestBulkRun:
             (maps[1:2], run_params[1], {'SUMMARY-PATH': os.path.join(TEMP_DIR, '%APERMAP%-RF%ROUGHNESS%-%OUTLET-PRESS%PA-LOG2.TXT')})
         ]
         #
-        simulation_inputs = process_input_tuples(input_tuples,
-                                                 global_params=global_run_params,
-                                                 global_name_format=global_file_formats)
-        #
         inp_file = InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
         exe_path = os.path.realpath(os.path.join('.', inp_file.arg_dict['EXE-FILE'].value))
         inp_file.arg_dict['EXE-FILE'].update_value(exe_path, False)
-        dry_run(simulation_inputs,
-                num_CPUs=2.0,
-                sys_RAM=8.0,
-                delim='auto',
-                init_infile=inp_file)
         #
-        bulk_run(simulation_inputs,
-                 num_CPUs=2.0,
-                 sys_RAM=4.0,
-                 delim='auto',
-                 init_infile=inp_file,
-                 start_delay=1.0)
+        # creating the class and then building the inputs
+        args = {'start_delay': 1.0, 'spawn_delay': 1.0, 'retest_delay': 1.0}
+        test_bulk_run = BulkRun(inp_file, **args)
+        test_bulk_run.process_input_tuples(input_tuples,
+                                           default_params=global_run_params,
+                                           default_name_format=global_file_formats)
+        test_bulk_run.dry_run()
+        #
+        test_bulk_run.start()

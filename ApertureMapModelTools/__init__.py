@@ -1,5 +1,5 @@
 """
-Automatically imports the DataProcessing and units modules.
+Automatically imports several modules.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
@@ -19,3 +19,4 @@ from .__core__ import files_from_directory, load_infile_list
 from .__core__ import calc_percentile, calc_percentile_num, get_data_vect
 from . import UnitConversion
 from . import DataProcessing
+from . import RunModel

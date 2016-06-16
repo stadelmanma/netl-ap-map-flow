@@ -126,7 +126,7 @@ def input_file_class():
     the amount of data required for the real class this may not be applicable
     to use in all functions that require an InputFile object
     """
-    class PseudoInputFile:
+    class PseudoInputFile(dict):
         r"""
         Setting up placeholder methods
         """
@@ -156,3 +156,50 @@ def input_file_class():
             pass
 
     return PseudoInputFile
+
+
+@pytest.fixture
+def bulk_run_class(input_file_class):
+    r"""
+    Returns a pseduo BulkRun class object for unit testing of the class where
+    possible
+    """
+    class PseudoBulkRun(dict):
+        r"""
+        Setting placeholder methods and arguments
+        """
+        def __init__(self):
+            super().__init__()
+            self.init_input_file = input_file_class()
+            self.sim_inputs = []
+            self.num_CPUs = 2.0
+            self.sys_RAM = 4.0
+            self.avail_RAM = self.sys_RAM * 0.90
+            self.input_file_list = []
+            #
+            # setting keys
+            self['delim'] = 'auto'
+            self['start_delay'] = 10.0
+            self['spawn_delay'] = 2.5
+            self['retest_delay'] = 1.5
+
+        def process_input_tuples(self, *args, **kwargs):
+            pass
+
+        def dry_run(self, *args, **kwargs):
+            pass
+
+        def start(self, *args, **kwargs):
+            pass
+
+        def _combine_run_args(self, *args, **kwargs):
+            pass
+
+        @staticmethod
+        def _check_processes(*args, **kwargs):
+            pass
+
+        def _start_simulations(self, *args, **kwargs):
+            pass
+
+    return PseudoBulkRun

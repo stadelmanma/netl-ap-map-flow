@@ -1,24 +1,19 @@
 """
-This stores the basic classes and functions needed for the bulk run code
+This stores the basic classes and functions needed to the run model
 #
 Written By: Matthew Stadelman
-Date Written: 2016/03/02
-Last Modifed: 2016/06/12
+Date Written: 2016/06/16
+Last Modifed: 2016/06/16
 #
 """
-from itertools import product
 import os
 import re
 from subprocess import Popen
 from time import sleep
 from ApertureMapModelTools.__core__ import DataField
-#
-########################################################################
-#
-# Class Definitions
 
 
-class ArgInput:
+class ArgInput(object):
     r"""
     Stores the value of a single input line of an INP file
     """
@@ -89,7 +84,7 @@ class ArgInput:
         return line
 
 
-class InputFile:
+class InputFile(dict):
     r"""
     Stores the data for an entire input file and methods to output one
     """
@@ -249,30 +244,7 @@ class InputFile:
         print('Input file saved as: '+file_name)
 
 
-class DummyProcess:
-    r"""
-    A place holder used to initialize the processes list cleanly. Returns
-    0 to simulate a successful completion and signal the start of a new process
-    """
-
-    def __init__(self):
-        r"""
-        Setting return code
-        """
-        self.return_val = 0
-
-    def poll(self):
-        r"""
-        mimics a successful execution of a subprocess Popen object
-        """
-        return self.return_val
-#
-########################################################################
-#
-# Function Definitions
-
-
-def estimate_req_RAM(input_maps, avail_RAM, delim='auto'):
+def estimate_req_RAM(input_maps, avail_RAM, suppress=False, **kwargs):
     r"""
     Reads in the input maps to estimate the RAM requirement of each map
     and to make sure the user has alloted enough space.
@@ -281,7 +253,7 @@ def estimate_req_RAM(input_maps, avail_RAM, delim='auto'):
     error = False
     for fname in input_maps:
         #
-        field = DataField(fname, delim=delim)
+        field = DataField(fname, **kwargs)
         tot_coef = (field.nx * field.nz)**2
         RAM = 0.00505193 * tot_coef**(0.72578813)
         RAM = RAM * 2**(-20)  # KB -> GB
@@ -291,206 +263,28 @@ def estimate_req_RAM(input_maps, avail_RAM, delim='auto'):
             fmt = 'Fatal Error: '
             fmt += 'Map {} requires {} GBs of RAM only {} GBs was alloted.'
             print(fmt.format(fname, RAM, avail_RAM))
-    if error:
+    if error and not suppress:
         raise SystemExit
     #
     return RAM_per_map
 
 
-def combine_run_args(input_map_args, init_input_file):
+def run_model(input_file_obj, synchronous=False):
     r"""
-    This function takes all of the args for each input map and then makes
-    a list of InputFile objects to be run in parallel.
+    Runs an instance of the aperture map model specified in the 'EXE-FILE' argument
+    in the input file. If synhronous is True then a while loop is used to hold the
+    program until the model finishes running.
+    --
+    Returns a Popen object
     """
+    input_file_obj.write_inp_file()
+    cmd = (input_file_obj.arg_dict['EXE-FILE'].value, input_file_obj.outfile_name)
     #
-    # creating a combination of all arg lists for each input map
-    input_file_list = []
-    for map_args in input_map_args:
-        keys = list(map_args['run_params'].keys())
-        values = list(map_args['run_params'].values())
-        param_combs = list(product(*values))
-        for comb in param_combs:
-            #
-            args = {k: v for k, v in zip(keys, comb)}
-            args['APER-MAP'] = map_args['aperture_map']
-            inp_file = init_input_file.clone(map_args['filename_formats'])
-            inp_file.RAM_req = map_args['RAM_req']
-            inp_file.update_args(args)
-            input_file_list.append(inp_file)
-    #
-    return input_file_list
-
-
-def start_simulations(input_file_list, num_CPUs, avail_RAM, start_delay=5):
-    r"""
-    Handles the stepping through all of the desired simulations
-    """
-    # initializing processes list with dummy processes
-    processes = [DummyProcess()]
-    RAM_in_use = [0.0]
-    #
-    # testing if processes have finished and starting additional ones if they have
-    while input_file_list:
-        check_processes(processes, RAM_in_use)
-        start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use)
-
-
-def check_processes(processes, RAM_in_use, retest_delay=5):
-    r"""
-    This tests the processes list for any of them that have completed.
-    A small delay is used to prevent an obscene amount of queries.
-    """
+    proc = Popen(cmd)
     while True:
-        for i, proc in enumerate(processes):
-            if proc.poll() is not None:
-                del processes[i]
-                del RAM_in_use[i]
-                return
-        #
-        sleep(retest_delay)
-
-
-def start_run(processes, input_file_list, num_CPUs, avail_RAM, RAM_in_use,
-              start_delay=5):
-    r"""
-    This starts additional simulations if there is enough free RAM.
-    """
-    #
-    free_RAM = avail_RAM - sum(RAM_in_use)
-    #
-    while True:
-        recheck = False
-        #
-        if len(processes) >= num_CPUs:
-            break
-        #
-        for i, inp_file in enumerate(input_file_list):
-            if inp_file.RAM_req <= free_RAM:
-                inp_file = input_file_list.pop(i)
-                inp_file.write_inp_file()
-                #
-                # this works on windows but fails on linux
-                # cmd = '{0} {1}'.format(inp_file.arg_dict['EXE-FILE'].value,
-                #                        inp_file.outfile_name)
-                cmd = (inp_file.arg_dict['EXE-FILE'].value, inp_file.outfile_name)
-                #
-                processes.append(Popen(cmd))
-                RAM_in_use.append(inp_file.RAM_req)
-                free_RAM = avail_RAM - sum(RAM_in_use)
-                recheck = True
-                sleep(start_delay)
-                break
-        #
-        if not recheck:
-            break
-    #
-    return
-
-
-def process_input_tuples(input_tuples,
-                         global_params=None,
-                         global_name_format=None):
-    r"""
-    This program takes the tuples containing a list of aperture maps, run params and
-    file formats and turns it into a standard format for teh bulk simulator.
-    """
-    #
-    if global_params is None:
-        global_params = {}
-    if global_name_format is None:
-        global_name_format = {}
-    #
-    sim_inputs = []
-    for tup in input_tuples:
-        for apm in tup[0]:
-            args = dict()
-            args['aperture_map'] = apm
-            #
-            # setting global run params first and then map specific params
-            args['run_params'] = {k: list(global_params[k]) for k in global_params}
-            for key in tup[1].keys():
-                args['run_params'][key] = tup[1][key]
-            #
-            # setting global name format first and then map specific formats
-            formats = {k: global_name_format[k] for k in global_name_format}
-            args['filename_formats'] = formats
-            for key in tup[2].keys():
-                args['filename_formats'][key] = tup[2][key]
-            sim_inputs.append(dict(args))
-    #
-    return sim_inputs
-
-
-def bulk_run(sim_inputs=None, num_CPUs=4.0, sys_RAM=8.0, delim='auto',
-             init_infile='FRACTURE_INITIALIZATION.INP', start_delay=20):
-    r"""
-    This acts as the driver function for the entire bulk run of simulations.
-    It handles calling the required functions in the required order.
-    """
-    #
-    print('Beginning bulk run of aperture map simulations')
-    #
-    if sim_inputs is None:
-        sim_inputs = []
-    #
-    avail_RAM = sys_RAM * 0.90
-    input_maps = [args['aperture_map'] for args in sim_inputs]
-    RAM_per_map = estimate_req_RAM(input_maps, avail_RAM, delim)
-    #
-    for i, RAM in enumerate(RAM_per_map):
-        sim_inputs[i]['RAM_req'] = RAM
-    #
-    init_input_file = InputFile(init_infile)
-    input_file_list = combine_run_args(sim_inputs, init_input_file)
-    #
-    fmt = 'Total Number of simulations to perform: {:d}'
-    print('')
-    print(fmt.format(len(input_file_list)))
-    print('')
-    fmt = 'Simulations will begin in {} seconds, hit ctrl+c to cancel at anytime.'
-    print(fmt.format(start_delay))
-    sleep(start_delay)
-    #
-    start_simulations(input_file_list,
-                      num_CPUs,
-                      avail_RAM,
-                      start_delay=start_delay)
-    print('')
-    print('')
-    #
-    return
-
-
-def dry_run(sim_inputs=None, num_CPUs=4.0, sys_RAM=8.0, delim='auto',
-            init_infile='FRACTURE_INITIALIZATION.INP'):
-    r"""
-    This steps through the entire simulation creating directories and
-    input files without actually starting any of the simulations.
-    """
-    #
-    print('Beginning dry run of aperture map simulations on INP files output')
-    print('Use function "bulk_run" with same arguments to actually run models')
-    #
-    if sim_inputs is None:
-        sim_inputs = []
-    #
-    avail_RAM = sys_RAM * 0.90
-    input_maps = [args['aperture_map'] for args in sim_inputs]
-    RAM_per_map = estimate_req_RAM(input_maps, avail_RAM, delim)
-    #
-    for i, RAM in enumerate(RAM_per_map):
-        sim_inputs[i]['RAM_req'] = RAM
-    #
-    init_input_file = InputFile(init_infile)
-    input_file_list = combine_run_args(sim_inputs, init_input_file)
-    #
-    fmt = 'Total Number of simulations that would be performed: {:d}'
-    print('')
-    print(fmt.format(len(input_file_list)))
-    #
-    for inp_file in input_file_list:
-        inp_file.write_inp_file()
-        print(' Est. RAM reqired for this run: {:f}'.format(inp_file.RAM_req))
-        print('')
-    #
-    return
+        if proc.poll() is not None:
+            return proc
+        if not synchronous:
+            return proc
+        # pausing the re-test of poll to avoid slamming the CPU in the loop
+        sleep(5)
