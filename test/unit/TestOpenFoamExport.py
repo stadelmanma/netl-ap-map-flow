@@ -8,6 +8,7 @@ Last Modifed: 2016/06/10
 """
 #
 import os
+import pytest
 from ApertureMapModelTools.__core__ import DataField
 from ApertureMapModelTools.OpenFoamExport import OpenFoamExport
 
@@ -43,4 +44,5 @@ class TestOpenFoamExport:
         export.write_mesh_file(TEMP_DIR, overwrite=True)
         #
         # attempting to rewrite mesh file to same location to test error handling
-        export.write_mesh_file(TEMP_DIR, overwrite=True)
+        with pytest.raises(FileExistsError):
+            export.write_mesh_file(TEMP_DIR, overwrite=False)

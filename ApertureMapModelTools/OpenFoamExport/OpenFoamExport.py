@@ -41,7 +41,7 @@ class OpenFoamExport(dict):
             'boundary.back.type': 'wall'
         }
         for key, value in default_params.items():
-            self[key] = value
+            self[key] = str(value)
         #
         self.nx = None
         self.nz = None
@@ -55,13 +55,13 @@ class OpenFoamExport(dict):
         #
         # initializing required arrays
         num_verts = 2*(self.nx - 1)*(self.nz - 1) + 4*(self.nx + self.nz)
-        num_faces = 2*(self.nx + self.nz) + 2*self.data_map.size
+        num_faces = 6*self.data_map.size
         #
         self._verticies = -sp.ones((num_verts, 3), dtype=float)
         self._blocks = -sp.ones((self.data_map.size, 8), dtype=int)
         self._faces = -sp.ones((num_faces, 4), dtype=int)
-        self._edges = -sp.ones(0)
-        self._mergePatchPairs = -sp.ones(0)
+        self._edges = sp.ones(0, dtype=str)
+        self._mergePatchPairs = sp.ones(0, dtype=str)
         #
         # initializing boundary face labels
         for side in ['left', 'right', 'top', 'bottom', 'front', 'back']:
@@ -170,18 +170,21 @@ class OpenFoamExport(dict):
         Creates the directories and the blockMeshDict file.
         """
         #
-        fname = 'blockMeshDict'
+        # if create dirs then appending the required openFOAM directories
         if create_dirs:
             path = os.path.join(path, 'constant', 'polyMesh')
-            try:
-                os.makedirs(path)
-            except FileExistsError:
-                print('Using exiting directories')
-            fname = os.path.join(path, fname)
+        #
+        try:
+            os.makedirs(path)
+        except FileExistsError:
+            print('Using existing directory structure for provided path '+path)
+        fname = os.path.join(path, 'blockMeshDict')
         #
         # checking if file exists
-        if overwrite:
-            pass
+        if not overwrite and os.path.exists(fname):
+            msg = 'Error - there is already a file at '+fname+'.'
+            msg += ' Specify "overwrite=True" to replace it'
+            raise FileExistsError(msg)
         #
         # creating file header
         file_header = 'FoamFile\n{\n'
