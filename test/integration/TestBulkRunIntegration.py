@@ -57,8 +57,8 @@ class TestBulkRun:
         ]
         #
         inp_file = InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
-        exe_path = os.path.realpath(os.path.join('.', inp_file.arg_dict['EXE-FILE'].value))
-        inp_file.arg_dict['EXE-FILE'].update_value(exe_path, False)
+        exe_path = os.path.realpath(os.path.join('.', inp_file['EXE-FILE'].value))
+        inp_file['EXE-FILE'].update_value(exe_path, False)
         #
         # creating the class and then building the inputs
         args = {'start_delay': 1.0, 'spawn_delay': 1.0, 'retest_delay': 1.0}

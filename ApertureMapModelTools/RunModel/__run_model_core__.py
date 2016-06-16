@@ -88,8 +88,7 @@ class InputFile(dict):
     r"""
     Stores the data for an entire input file and methods to output one
     """
-    def __init__(self, infile=None, filename_formats=None):
-        self.arg_dict = {}
+    def __init__(self, infile, filename_formats=None):
         self.filename_format_args = {}
         self.arg_order = []
         self.RAM_req = 0.0
@@ -99,11 +98,15 @@ class InputFile(dict):
             filename_formats = {}
         self.filename_formats = dict(filename_formats)
         #
+        if isinstance(infile, InputFile):
+            self.outfile_name = infile.outfile_name
+        else:
+            self.outfile_name = infile
+        #
+        self.parse_input_file(infile)
+        #
         if 'input_file' not in filename_formats:
             self.filename_formats['input_file'] = self.outfile_name
-        #
-        if infile is not None:
-            self.parse_input_file(infile)
 
     def __repr__(self):
         r"""
@@ -111,12 +114,12 @@ class InputFile(dict):
         """
         #
         # updating filenames to match current args
-        self.construct_file_names()
+        self._construct_file_names()
         #
         # builidng content from ArgInput class line attribute
         content = ''
         for key in self.arg_order:
-            content += self.arg_dict[key].output_line()+'\n'
+            content += self[key].output_line()+'\n'
         #
         print('Input file would be saved as: '+self.outfile_name)
         #
@@ -140,11 +143,11 @@ class InputFile(dict):
             line = re.sub(r'^(;+)\s+', r'\1', line)
             arg = ArgInput(line)
             self.arg_order.append(arg.keyword)
-            self.arg_dict[arg.keyword] = ArgInput(line)
+            self[arg.keyword] = ArgInput(line)
         #
         try:
             msg = 'Using executable defined in inital file header: '
-            print(msg + self.arg_dict['EXE-FILE'].value)
+            print(msg + self['EXE-FILE'].value)
         except KeyError:
             msg = 'Fatal Error: '
             msg += 'No EXE-FILE specified in initialization file header.'
@@ -159,11 +162,7 @@ class InputFile(dict):
         if file_formats is None:
             file_formats = self.filename_formats
         #
-        input_file = InputFile(filename_formats=file_formats)
-        keys = self.arg_dict.keys()
-        args = self.arg_dict
-        input_file.arg_dict = {k: ArgInput(args[k].output_line()) for k in keys}
-        input_file.arg_order = [arg for arg in self.arg_order]
+        input_file = InputFile(self, filename_formats=file_formats)
         #
         return input_file
 
@@ -173,11 +172,11 @@ class InputFile(dict):
         """
         for key in args:
             try:
-                self.arg_dict[key].update_value(args[key])
+                self[key].update_value(args[key])
             except KeyError:
                 self.filename_format_args[key] = args[key]
 
-    def construct_file_names(self):
+    def _construct_file_names(self, make_dirs=False):
         r"""
         This updates the INP file's base outfile names to match current
         arguments and creates file paths if directories do not exist yet
@@ -186,10 +185,10 @@ class InputFile(dict):
         formats = self.filename_formats
         outfiles = {k: formats[k] for k in formats.keys()}
         #
-        for arg in self.arg_dict.keys():
+        for arg in self.keys():
             pattern = re.compile('%'+arg+'%', flags=re.I)
             for fname in outfiles.keys():
-                name = pattern.sub(self.arg_dict[arg].value, outfiles[fname])
+                name = pattern.sub(self[arg].value, outfiles[fname])
                 outfiles[fname] = name
         #
         for arg in self.filename_format_args.keys():
@@ -198,10 +197,10 @@ class InputFile(dict):
                 name = pattern.sub(self.filename_format_args[arg], outfiles[fname])
                 outfiles[fname] = name
         #
-        # checking existance of directories and updating arg_dict
+        # checking existance of directories and updating dict
         for fname in outfiles.keys():
             try:
-                self.arg_dict[fname].update_value(outfiles[fname])
+                self[fname].update_value(outfiles[fname])
             except KeyError:
                 if fname == 'input_file':
                     pass
@@ -211,6 +210,9 @@ class InputFile(dict):
                     print('')
                     print('')
                     raise KeyError(fname)
+            #
+            if not make_dirs:
+                continue
             #
             # using path split to prevent creating directories out of filenames
             dir_arr = list(os.path.split(outfiles[fname]))
@@ -227,12 +229,12 @@ class InputFile(dict):
         """
         #
         # updating filenames to match current args
-        self.construct_file_names()
+        self._construct_file_names(make_dirs=True)
         #
         # builidng content from ArgInput class line attribute
         content = ''
         for key in self.arg_order:
-            content += self.arg_dict[key].output_line()+'\n'
+            content += self[key].output_line()+'\n'
         #
         file_name = self.outfile_name
         if alt_path:
@@ -278,7 +280,7 @@ def run_model(input_file_obj, synchronous=False):
     Returns a Popen object
     """
     input_file_obj.write_inp_file()
-    cmd = (input_file_obj.arg_dict['EXE-FILE'].value, input_file_obj.outfile_name)
+    cmd = (input_file_obj['EXE-FILE'].value, input_file_obj.outfile_name)
     #
     proc = Popen(cmd)
     while True:

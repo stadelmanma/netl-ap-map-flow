@@ -131,7 +131,6 @@ def input_file_class():
         Setting up placeholder methods
         """
         def __init__(self):
-            self.arg_dict = {}
             self.filename_format_args = {}
             self.filename_formats = {
                 'input_file': 'FRACTURE_INITIALIZATION.INP'

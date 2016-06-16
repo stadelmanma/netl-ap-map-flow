@@ -50,7 +50,8 @@ class TestRunCore:
         #
         # testing clone method
         inp_file2 = inp_file.clone()
-        assert inp_file.arg_order == inp_file2.arg_order
+        assert [l for l in inp_file.arg_order if l] == [l for l in inp_file2.arg_order if l]
+        assert [inp_file[k].value for k in inp_file.arg_order if k] == [inp_file[k].value for k in inp_file2.arg_order if k]
         #
         # creating instance of InputFil using an existing instance
         inp_file2 = RunModel.InputFile(inp_file)
@@ -61,8 +62,8 @@ class TestRunCore:
             'BAD-ARG': 'IN FORMATS'
         }
         inp_file.update_args(new_args)
-        assert inp_file.arg_dict['FRAC-PRESS'].value == new_args['FRAC-PRESS']
-        assert inp_file.arg_dict['MANIFOLD'].value == new_args['MANIFOLD']
+        assert inp_file['FRAC-PRESS'].value == new_args['FRAC-PRESS']
+        assert inp_file['MANIFOLD'].value == new_args['MANIFOLD']
         assert inp_file.filename_format_args['BAD-ARG'] == new_args['BAD-ARG']
         #
         # testing __repr__ function with an undefined file in formats
@@ -73,8 +74,9 @@ class TestRunCore:
         #
         # writing the output file to TEMP_DIR without an EXE-FILE and a directory needing created
         del inp_file.arg_order[inp_file.arg_order.index('EXE-FILE')]
-        del inp_file.arg_dict['EXE-FILE']
+        del inp_file['EXE-FILE']
         inp_file.filename_formats['PVT-PATH'] = os.path.join(TEMP_DIR, 'new-dir', 'PVT/H2O_TEMP_058F.CSV')
+        inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'
         inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
         # re-reading the output file to test what happens with no EXE-FILE
@@ -100,21 +102,21 @@ class TestRunCore:
         # updating paths so they are absolute
         files = ['SUMMARY-PATH', 'STAT-FILE', 'APER-FILE', 'FLOW-FILE', 'PRESS-FILE', 'VTK-FILE']
         for file in files:
-            dirs = os.path.split(inp_file.arg_dict[file].value)
+            dirs = os.path.split(inp_file[file].value)
             new_path = os.path.join(TEMP_DIR, dirs[-1])
-            inp_file.arg_dict[file].update_value(new_path)
+            inp_file[file].update_value(new_path)
         #
-        dirs = os.path.split(inp_file.arg_dict['PVT-PATH'].value)
+        dirs = os.path.split(inp_file['PVT-PATH'].value)
         new_path = os.path.join(FIXTURE_DIR, 'PVT', 'H2O_TEMP_058F.CSV')
-        inp_file.arg_dict['PVT-PATH'].update_value(new_path)
+        inp_file['PVT-PATH'].update_value(new_path)
         #
-        dirs = os.path.split(inp_file.arg_dict['APER-MAP'].value)
+        dirs = os.path.split(inp_file['APER-MAP'].value)
         new_path = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT')
-        inp_file.arg_dict['APER-MAP'].update_value(new_path)
+        inp_file['APER-MAP'].update_value(new_path)
         #
         inp_file.outfile_name = os.path.join(TEMP_DIR, 'TEST-INIT-run-model.INP')
-        exe_path = os.path.realpath(os.path.join('.', inp_file.arg_dict['EXE-FILE'].value))
-        inp_file.arg_dict['EXE-FILE'].update_value(exe_path, False)
+        exe_path = os.path.realpath(os.path.join('.', inp_file['EXE-FILE'].value))
+        inp_file['EXE-FILE'].update_value(exe_path, False)
         #
         # running the model both async and in sync
         proc = RunModel.run_model(inp_file, synchronous=False)
