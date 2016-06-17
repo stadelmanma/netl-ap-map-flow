@@ -105,6 +105,7 @@ class TestRunCore:
             dirs = os.path.split(inp_file[file].value)
             new_path = os.path.join(TEMP_DIR, dirs[-1])
             inp_file[file].update_value(new_path)
+        inp_file.filename_formats['input_file'] = os.path.join(TEMP_DIR, 'TEST_INIT.INP')
         #
         dirs = os.path.split(inp_file['PVT-PATH'].value)
         new_path = os.path.join(FIXTURE_DIR, 'PVT', 'H2O_TEMP_058F.CSV')
