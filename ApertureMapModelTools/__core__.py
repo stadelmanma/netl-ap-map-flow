@@ -66,7 +66,7 @@ class DataField:
         obj.data_vector = sp.copy(self.data_vector)
         obj.point_data = sp.copy(self.point_data)
 
-    def parse_data_file(self, delim='auto'):
+    def parse_data_file(self, delim='auto', **kwargs):
         r"""
         Reads the field's infile data and then populates the data_map array
         and sets the fields nx and nz properties.
