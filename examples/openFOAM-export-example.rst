@@ -78,9 +78,12 @@ The template below can be used with some minor customization for simple exports.
     from ApertureMapModelTools import DataField
     from ApertureMapModelTools.OpenFoamExport import OpenFoamExport
     #
+    # The path to the aperture map needs to be updated to match the file you want to export
     aper_map_file = os.path.join('path', 'to', 'aperture_map_file.txt')
     aper_map_field = DataField(aper_map_file)
     #
+    # convertToMeters needs to be updated to match your data
+    # numbersOfCells needs to be updated to match your desired internal block meshing
     my_params = {
         'convertToMeters': '1.0',
         'numbersOfCells': '(1 1 1)',
