@@ -1,12 +1,13 @@
 #!/bin/bash
 #
+# testing if the script was called from the bin folder
+loc=${PWD##*/}
+if [ "bin" = "$loc" ]; then
+    cd ..
+fi
+#
 # Building the flow model from source
 cd ./source/
 make
 cd ..
-ls -la
-#
-#
-# runnning a test case - can't get it to work in travis
-#mv ../APM-MODEL.EXE .
-#./APM-MODEL.EXE fixtures/PARALELL-PLATE-01VOX_INIT.INP
+
