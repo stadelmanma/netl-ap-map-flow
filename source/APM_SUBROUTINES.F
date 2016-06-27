@@ -21,7 +21,7 @@ C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTE
 C
 C ---------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
@@ -166,7 +166,7 @@ C       FLOX_FILE,FLOZ_FILE,FLOM_FILE - FLOW MAP FILE NAMES
 C
 C ---------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       INTEGER :: I,IFLD,NFLD
@@ -422,7 +422,7 @@ C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTE
 C
 C ---------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
@@ -647,7 +647,7 @@ C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTE
 C
 C ---------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
       USE UNIT_CONVERSION_MODULE
       IMPLICIT NONE
 C
@@ -818,7 +818,7 @@ C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTE
 C
 C ---------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
@@ -1146,7 +1146,7 @@ C       SMS - USED TO STORE THE SUM OF DIFFERENCES SQUARED IN VARIANCE CALCULATI
 C
 C ----------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
@@ -1390,7 +1390,7 @@ C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTE
 C
 C ----------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       REAL(8) :: PH,PL,B,BF3,BP3,DBF,DBP,W3,THETA
@@ -1585,7 +1585,7 @@ C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTE
 C
 C ----------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       INTEGER :: I,IX,IZ
@@ -1705,7 +1705,7 @@ C       RES - RHS OF THE SOLTUION MATRIX, NET FLOW CHANGE THAT IS SOLVED FOR
 C
 C ----------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       REAL(8), ALLOCATABLE :: DPS(:)
@@ -1716,13 +1716,10 @@ C     INITIALIZING DPS VECTOR
       ALLOCATE(DPS(NX*NZ))
       DPS(:) = 0.0
 C
-C     CALLING THE DESIRED SOLVER (ONLY GAUSS AND D4_GAUSS PRODUCE VALID RESULTS)
+C     CALLING THE SOLVER (ONLY GAUSS AND D4_GAUSS PRODUCE VALID RESULTS)
       CALL BLANK
       CALL MESSAGE('     USING D4 GAUSS SOLVER')
-      !CALL GAUSS(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)
-      CALL D4_GAUSS(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)
-      !CALL JACOBI(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)
-      !CALL CG(AD,AW,AC,AE,AU,RES,NX,NZ,DPS)
+      CALL D4_GAUSS(AD,AW,AC,AE,AU,RES,DPS)
 C
 C     UPDATING THE FRACTURE PRESSURE
       DO IZ = 1,NZ
@@ -1762,7 +1759,7 @@ C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTE
 C
 C ----------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       REAL(8) :: P,PSEU
@@ -1814,7 +1811,7 @@ C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTE
 C
 C ----------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
       IMPLICIT NONE
       REAL(8) :: P,PSEU
       REAL(8) :: PH,PL,SPS
@@ -1862,7 +1859,7 @@ C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTE
 C
 C ----------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
@@ -1961,7 +1958,7 @@ C       IUNIT - UNIT NUMBER OF FILE TO WRITE TO
 C
 C ----------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       INTEGER :: IUNIT
@@ -2204,7 +2201,7 @@ C       C_OUT - STRING TO PRINT
 C
 C ----------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       CHARACTER(*) :: C_OUT
@@ -2242,7 +2239,7 @@ C
 C     WRITTEN BY: W. NEAL SAMS
 C     DATE WRITTEN: 03/07/2014
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       CHARACTER(*) :: C_IN
@@ -2264,7 +2261,7 @@ C
 C     WRITTEN BY: W. NEAL SAMS
 C     DATE WRITTEN: 03/07/2014
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       CHARACTER(*) CHAR_IN
@@ -2288,7 +2285,7 @@ C
 C     WRITTEN BY: W. NEAL SAMS
 C     DATE WRITTEN: 03/07/2014
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       INTEGER :: IFLD
@@ -2313,7 +2310,7 @@ C
 C     WRITTEN BY: W. NEAL SAMS
 C     DATE WRITTEN: 03/08/2014
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       CHARACTER(*) :: CHAR_IN
