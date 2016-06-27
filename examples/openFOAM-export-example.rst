@@ -1,6 +1,7 @@
 
 Using the OpenFoamExport class
-====
+==============================
+
 Description
 -----------
 Using the OpenFoamExport class is a very simple and all the heavy lifting is done internally unless additional customizations are needed. Additional customizations can include setting up your own edges and patches to merge as well as apply more than just the standard boundary face labels. The routine can also create the two sub directories OpenFOAM requires the mesh file to be in if desired. The template at the bottom of the file can be used to simple base exports off of. **Currently there is not a good method to add custom face labels that is in the works.**
