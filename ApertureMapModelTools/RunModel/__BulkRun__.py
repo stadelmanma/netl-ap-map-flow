@@ -1,5 +1,5 @@
 """
-This stores BulkRun class used for running mulitple concurrent simulations
+This stores BulkRun class used for running multiple concurrent simulations
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/16
