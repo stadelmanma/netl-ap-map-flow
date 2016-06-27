@@ -1,5 +1,5 @@
-Using the BulkRun module
-====
+Using the BulkRun Module
+========================
 .. contents::
 
 Description
