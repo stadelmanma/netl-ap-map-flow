@@ -13,7 +13,7 @@ The Local Cubic Law flow model by default is named :code:`APM-MODEL.EXE`, the ad
 The Input Parameters File
 -------------------------
 
-A template of the input parameters file can be found in `this <APM-MODEL-INPUT-FILE-TEMPLATE.INP>`_ directory. An additional sample of the input file is located in `test/fixtures <../test/fixtures/TEST_INIT.INP>`_. Editing the input file in `test/fixtures` is not recommended because it will interfere with testing of the model and module. The input file is parsed by a special routine in the model that treats semicolons :code:`;` as comments and one or more spaces as delimiters. A value enclosed in double quotations will have any internal spaces ignored. ApertureMapModelTools also reads the input files when needed and for consistency it is recommended you append a colon :code:`:` onto the end of keywords. Nearly all of the input parameters have default values and they are defined in `APM_SUBROUTINES.F <../source/APM_SUBROUTINES.F>`_ in the first subroutine :code:`INITIALIZE_RUN` 
+A template of the input parameters file can be found in `here <APM-MODEL-INPUT-FILE-TEMPLATE.INP>`_. An additional sample of the input file is located in `test/fixtures <../test/fixtures/TEST_INIT.INP>`_. Editing the input file in `test/fixtures` is not recommended because it will interfere with testing of the model and module. The input file is parsed by a special routine in the model that treats semicolons :code:`;` as comments and one or more spaces as delimiters. A value enclosed in double quotations will have any internal spaces ignored. ApertureMapModelTools also reads the input files when needed and for consistency it is recommended you append a colon :code:`:` onto the end of keywords. Nearly all of the input parameters have default values and they are defined in `APM_SUBROUTINES.F <../source/APM_SUBROUTINES.F>`_ in the first subroutine :code:`INITIALIZE_RUN` 
 
 **Important Notes**
  * There must be at least one space separating keyword and value.
@@ -37,54 +37,54 @@ This is where the path of input and output files are defined. If the line :code:
 
 Input Files
 
-  - PVT-PATH: File storing state data for liquids or gases, required if :code:`FLUID-TYPE: GAS` is present. Only iso-thermal data is accepted. 
-  - APER-MAP PATH: File that stores the aperture map data.  
+  - :code:`PVT-PATH:` File storing state data for liquids or gases, required if :code:`FLUID-TYPE: GAS` is present. Only iso-thermal data is accepted. 
+  - :code:`APER-MAP PATH:` File that stores the aperture map data.  
 
 Output Files
 
-  - SUMMARY-PATH: Logs the information printed to the screen (.txt expected)
-  - STAT-FILE PATH: Stores statistics calculated and certain simulation parameters (.csv expected)
-  - APER-FILE PATH: Stores a copy of the input aperture map that is converted to the desired output units and has any applied roughness factored in (.csv expected)
-  - FLOW-FILE PATH: Used as the root name for the three flow files output X-component, Z-component and magnitude. The files have -X, -Z, -M respectively appended to the root name before the extension.  (.csv expected)
-  - PRESS-FILE PATH: Stores a pressure distribution map of the fracture(.csv expected)
-  - VTK-FILE PATH: A legacy formatted input file for Paraview which combines all of the former input files and includes several other data maps. (.vtk expected)
+  - :code:`SUMMARY-PATH:` Logs the information printed to the screen (.txt expected)
+  - :code:`STAT-FILE PATH:` Stores statistics calculated and certain simulation parameters (.csv expected)
+  - :code:`APER-FILE PATH:` Stores a copy of the input aperture map that is converted to the desired output units and has any applied roughness factored in (.csv expected)
+  - :code:`FLOW-FILE PATH:` Used as the root name for the three flow files output X-component, Z-component and magnitude. The files have -X, -Z, -M respectively appended to the root name before the extension.  (.csv expected)
+  - :code:`PRESS-FILE PATH:` Stores a pressure distribution map of the fracture(.csv expected)
+  - :code:`VTK-FILE PATH:` A legacy formatted input file for Paraview which combines all of the former input files and includes several other data maps. (.vtk expected)
 
 Boundary Conditions
 ~~~~~~~~~~~~~~~~~~~
 
 Defines the boundary conditions for the model, only :code:`OUTLET-PRESS` or :code:`OUTLET-RATE` should be specified. If both keywords are defined unexpected results can occur.
 
- * FRAC-PRESS: value unit ;The pressure value to use at the inlet
- * OUTLET-PRESS: value unit ;The pressure value to use at the outlet
- * OUTLET-RATE:  value unit ;The flow rate to apply at the outlet.
- * OUTFLOW-SIDE: [LEFT, RIGHT, TOP, BOTTOM] sets the outlet side, the inlet is assumed to be the opposite face. i.e. top is outlet, bottom is inlet
+ * :code:`FRAC-PRESS:` value unit ;The pressure value to use at the inlet
+ * :code:`OUTLET-PRESS:` value unit ;The pressure value to use at the outlet
+ * :code:`OUTLET-RATE:`  value unit ;The flow rate to apply at the outlet.
+ * :code:`OUTFLOW-SIDE:` [LEFT, RIGHT, TOP, BOTTOM] sets the outlet side, the inlet is assumed to be the opposite face. i.e. top is outlet, bottom is inlet
 
 Model Properties
 ~~~~~~~~~~~~~~~~
 
 Sets various fluid and model properties.
 
- * FLUID-TYPE: [LIQUID or GAS] ;determines the type of simulation to run. Gas simulations require full set of isothermal PVT data
- * FLUID-DENSITY: value unit ;Density of liquid to use in Reynolds number calculation
- * FLUID-VISCOSITY: value unit ;Viscosity of liquid, if this is supplied PVT data can be neglected for liquid simulations. 
- * MAXIMUM MAP DIMENSION: value ;Maximum number of blocks along either axis. Values close to actual axis size slightly improve runtime memory conservation over larger values. 
- * STD-TEMP: value unit User defined standard (or surface) temperature used in gas simulations
- * STD-PRESS: value unit User defined standard (or surface) pressure used in gas simulations
+ * :code:`FLUID-TYPE:` [LIQUID or GAS] ;determines the type of simulation to run. Gas simulations require full set of isothermal PVT data
+ * :code:`FLUID-DENSITY:` value unit ;Density of liquid to use in Reynolds number calculation
+ * :code:`FLUID-VISCOSITY:` value unit ;Viscosity of liquid, if this is supplied PVT data can be neglected for liquid simulations. 
+ * :code:`MAXIMUM MAP DIMENSION:` value ;Maximum number of blocks along either axis. Values close to actual axis size slightly improve runtime memory conservation over larger values. 
+ * :code:`STD-TEMP:` value unit User defined standard (or surface) temperature used in gas simulations
+ * :code:`STD-PRESS:` value unit User defined standard (or surface) pressure used in gas simulations
 
 Other Parameters
 ~~~~~~~~~~~~~~~~
 
 Sets other important but miscellaneous runtime parameters. 
 
- * MAP AVERAGING FACTOR: value ;The number of voxels required to span an edge of a grid-block along the X or Z direction.
- * VOXEL SIZE: value unit ;Specifies the voxel to meter conversion factor
- * ROUGHNESS REDUCTION: value ;**The value is in voxels** Amount to symmetrically bring the front and back fracture surfaces together by. 
- * CALCULATE PERCENTILES: value1,value2,value3 ;A comma separated list of percentiles to calculate of various quantities during runtime. Commenting this line out tells it to not calculate them at all
- * HIGH-MASK: value ;**The value is in voxels** All data values in the aperture map above this value will be reduced to this value. 
- * LOW-MASK: value ;**The value is in voxels** All data values in the aperture map below this value will be raised to this value
+ * :code:`MAP AVERAGING FACTOR:` value ;The number of voxels required to span an edge of a grid-block along the X or Z direction.
+ * :code:`VOXEL SIZE:` value unit ;Specifies the voxel to meter conversion factor
+ * :code:`ROUGHNESS REDUCTION:` value ;**The value is in voxels** Amount to symmetrically bring the front and back fracture surfaces together by. 
+ * :code:`CALCULATE PERCENTILES:` value1,value2,value3 ;A comma separated list of percentiles to calculate of various quantities during runtime. Commenting this line out tells it to not calculate them at all
+ * :code:`HIGH-MASK:` value ;**The value is in voxels** All data values in the aperture map above this value will be reduced to this value. 
+ * :code:`LOW-MASK:` value ;**The value is in voxels** All data values in the aperture map below this value will be raised to this value
 
 This tells the model what units you want the data output in. Commenting out or omitting this line will output everything in SI (pascals, meters and meters^3/second)
- * OUTPUT-UNITS: pressure unit, distance unit, flow rate unit 
+ * :code:`OUTPUT-UNITS:` pressure unit, distance unit, flow rate unit 
 
 Blank Input File
 ~~~~~~~~~~~~~~~~
@@ -179,7 +179,7 @@ Open model-input-params.inp with your favorite text editor and copy and paste th
 Running Directly
 ~~~~~~~~~~~~~~~~
 
-With the above steps compelte running the model is as simple as this: 
+With the above steps complete running the model is as simple as this: 
 
 .. code-block:: bash
 
@@ -187,8 +187,18 @@ With the above steps compelte running the model is as simple as this:
 
 You will notice that several output files have been generated in the current directory. The are saved with the default names because they were not specified in the input file. If we try to run that line again you will see an error is generated because the line :code:`;OVERWRITE EXISTING FILES` is preceded by a semicolon meaning it is ignored. You can view the VTK file in paraview and the other CSV data maps in your viewer of choice. The STATS file is not a data map but being saved as a CSV file allows for quick calculations in excel or similar software. 
 
-
 Running by Python Script
 ~~~~~~~~~~~~~~~~~~~~~~~~
+
+The RunModel sub-module allows for much more power and convenience when running the model or mulitple instances of the model. The sub-module also houses the BulkRun class which can be used to automate and parallelize the running of many simulations. Useage of the BulkRun class is outside the scope of this example file and is gone over in depth in `this file <bulk-run-example.rst>_`. 
+
+go over each of the public functions/classes in __run_model_core__ and then show an example of using them all together
+
+**The InputFile Class**
+
+**estimate_req_RAM Function**
+
+**run_model Function**
+
 
 
