@@ -7,13 +7,13 @@ Running the Flow Model
 Intro
 -----
 
-The Local Cubic Law flow model by default is named :code:`APM-MODEL.EXE`. There are two methods to run the model, first is directly on the command line specifying your input parameters file and the second is using Python scripting through the :code:`RunModel` sub-module in :code:`ApertureMapModelTools`. The model requires two or three input files and generates several output files. The model works in the X-Z plane where +Z is vertical and +X is to the right. The Y direction is the aperture variation and the model assumes a planar mid surface. This implies that the fracture is symmetric with respect to the X-Z plane. If you envision a spiral bound notebook with the bottom left corner as the origin. The Z-axis follows the metal spiral upward, positive X is the direction moving away from the spiral. Y is the thickness of the notebook. 
+The Local Cubic Law flow model by default is named :code:`APM-MODEL.EXE`, the added extension doesn't affect UNIX systems and allows Windows to recognize it as executable. There are two methods to run the model, first is directly on the command line specifying your input parameters file and the second is using Python scripting through the :code:`RunModel` sub-module in :code:`ApertureMapModelTools`. The model requires two or three input files and generates several output files. The model works in the X-Z plane where +Z is vertical and +X is to the right. The Y direction is the aperture variation and the model assumes a planar mid surface. This implies that the fracture is symmetric with respect to the X-Z plane. If you envision a spiral bound notebook with the bottom left corner as the origin. The Z-axis follows the metal spiral upward, positive X is the direction moving away from the spiral. Y is the thickness of the notebook. 
 
 
 The Input Parameters File
 -------------------------
 
-A template of the input parameters file can be found in the `examples` directory. An additional sample of the input file is located in `test/fixtures/TEST_INIT.INP`. Editing the input file in `test/fixtures` is not recommended because it will interfere with testing of the model and module. The input file is parsed by a special routine in the model that treats semicolons :code:`;` as comments and one or more spaces as delimiters. A value enclosed in double quotations will have any internal spaces ignored. ApertureMapModelTools also reads the input files when needed and for consistency it is recommended you append a colon :code:`:` onto the end of keywords. Nearly all of the input parameters have default values and they are defined in [APM_SUBROUTINES.F](../source/APM_SUBROUTINES.F) in the first subroutine :code:`INITIALIZE_RUN` 
+A template of the input parameters file can be found in `this <APM-MODEL-INPUT-FILE-TEMPLATE.INP>`_ directory. An additional sample of the input file is located in `test/fixtures <../test/fixtures/TEST_INIT.INP>`_. Editing the input file in `test/fixtures` is not recommended because it will interfere with testing of the model and module. The input file is parsed by a special routine in the model that treats semicolons :code:`;` as comments and one or more spaces as delimiters. A value enclosed in double quotations will have any internal spaces ignored. ApertureMapModelTools also reads the input files when needed and for consistency it is recommended you append a colon :code:`:` onto the end of keywords. Nearly all of the input parameters have default values and they are defined in `APM_SUBROUTINES.F <../source/APM_SUBROUTINES.F>`_ in the first subroutine :code:`INITIALIZE_RUN` 
 
 **Important Notes**
  * There must be at least one space separating keyword and value.
@@ -137,7 +137,7 @@ This can be copy and pasted into a blank text document to quickly create a new i
 Running the Model
 -----------------
 
-Before we actually run the model it will be helpful to have a place to store the output files generated. We also need to define an input file to use with the model in this case we will take advantage of many of the defaults defined in the model. You will also need to have already built the model from source, if not click [here](../README.rst#setting-up-the-modeling-package). Running the following code in a terminal while in the top level directory (AP_MAP_FLOW) will get things started. 
+Before we actually run the model it will be helpful to have a place to store the output files generated. We also need to define an input file to use with the model in this case we will take advantage of many of the defaults defined in the model. You will also need to have already built the model from source, if not click `here <../README.rst#setting-up-the-modeling-package>`_. Running the following code in a terminal while in the top level directory (AP_MAP_FLOW) will get things started. 
 
 .. code-block:: bash
 
