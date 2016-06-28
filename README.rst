@@ -79,7 +79,7 @@ Full usage instructions can be found in the 'examples' directory.
 
 Pitfalls:
     * If the model is compiled using 32-bit compiler, running too large of a map can cause an integer overflow error
-    * The LCL Model requires that all of the parent directories of output file locations already exist. Otherwise a :code:`FileDoesNotExist` Error or something similar will be raised.
+    * The LCL Model requires that all of the parent directories of output file locations already exist. Otherwise a :code:`FileDoesNotExist` error or something similar will be raised.
 
 
 
