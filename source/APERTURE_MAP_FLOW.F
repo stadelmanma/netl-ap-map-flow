@@ -24,8 +24,7 @@ C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTE
 C
 C ----------------------------------------------------------------------
 C
-      USE D4_MODULE
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       REAL(8) :: FLOW
