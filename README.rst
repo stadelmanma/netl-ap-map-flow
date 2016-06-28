@@ -12,14 +12,14 @@ AP_MAP_FLOW
 
 Description
 -----------
-AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law simulations of single phase flow through a discrete fracture and analyze the data. There are several tools written in `Python <https://www.python.org/>`_ to provide added functionality which are packaged in the ApertureMapModelTools module. The Fortran code was compiled on Windows 7 with the `Cygwin <https://www.cygwin.com/>`_ gfortran 64-bit compiler and using the standalone gfortran compiler on OSX and Linux. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen reader functions the images may be upside down. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when usuing the `text-image` upload method. 
+AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law simulations of single phase flow through a discrete fracture and analyze the data. There are several tools written in `Python <https://www.python.org/>`_ to provide added functionality which are packaged in the ApertureMapModelTools module. The Fortran code was compiled on Windows 7 with the `Cygwin <https://www.cygwin.com/>`_ gfortran 64-bit compiler and using the standalone gfortran compiler on OSX and Linux. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen reader functions the images may be upside down. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. 
 
 
 ApertureMapModelTools contains four sub modules DataProcessing, OpenFoamExport, RunModel and UnitConversion.
 
 | 
 
- * DataProcessing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is apm_process_data.py accepts various command line arguments to automatically perform basic post-processing. 
+ * DataProcessing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is apm_process_data.py which accepts various command line arguments to automatically perform basic post-processing. 
 
 |
 
@@ -38,7 +38,7 @@ Setting up the Modeling Package
 
 Getting the model and module up and running is a very straight forward process. After either cloning or downloading the repository into your chosen location you will need to download gfortran and `Python <https://www.python.org/>`_ if you do not already have them. If you are running Windows you will need to download `Cygwin <https://www.cygwin.com/>`_ or something similar to have access to gfortran and other unix commands. The module uses scipy for many operations and the simplest method to install the scipy stack is through Anaconda from `Continuum Analytics <http://continuum.io/downloads#all?>`_ on both Mac and Linux. Windows users can install the `WinPython <http://winpython.github.io/>`_ package, both provide the Spyder IDE and many other useful modules. The alternative is to manually install the required packages into your version of Python; `requirements.txt <https://github.com/stadelmanma/netl-AP_MAP_FLOW/blob/master/requirements.tx/>`_ lists out the minimum requirements however scipy may require additional packages on its own.
 
-Once you have gfortran and Python you will need to build the flow model from source, the easiest way is by running :code:`./bin/build_model` from the main directory. That script uses the make file in the `source` directory which sets proper OS flags. Cygwin users can open a command prompt and run the :code:`bash` command to use the script. If that is not an option the following command should work for all systems assuming gfortran is installed. If the flag -DWIN64=1 is added default file paths will be set to the windows convention. You will need to be in the `source` directory for the following command to work.
+Once you have gfortran and Python you will need to build the flow model from source, the easiest way is by running :code:`./bin/build_model` from the main directory. That script uses the make file in the `source` directory which sets proper OS flags. Cygwin users can open a command prompt and run the :code:`bash` command to use the script. If that is not an option the following command should work for all systems assuming gfortran is installed. If the flag :code:`-DWIN64=1` is added default file paths will be set to the windows convention. You will need to be in the `source` directory for the following command to work.
 
 .. code-block:: bash
 
@@ -73,12 +73,13 @@ Basic Usage of APM Model
 
 Running the Model in a terminal::
 
-    >> .\APM-MODEL.EXE  model_initialization_file
+    >> ./APM-MODEL.EXE  model_initialization_file
 
 Full usage instructions can be found in the 'examples' directory.
 
 Pitfalls:
     * If the model is compiled using 32-bit compiler, running too large of a map can cause an integer overflow error
+    * The LCL Model requires that all of the parent directories of output file locations already exist. Otherwise a :code:`FileDoesNotExist` Error or something similar will be raised.
 
 
 
