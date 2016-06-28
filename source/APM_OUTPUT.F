@@ -26,7 +26,7 @@ C       X,Y,Z - POINT COORDINATES USED TO CREATE VTK MESH
 C
 C ----------------------------------------------------------------------
 C
-      USE TWOD_MODULE
+      USE APM_MODULE
 C
       IMPLICIT NONE
       REAL(8), ALLOCATABLE :: PQX_OUT(:),PQZ_OUT(:),PQM_OUT(:)
