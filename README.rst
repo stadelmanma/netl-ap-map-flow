@@ -38,7 +38,7 @@ Setting up the Modeling Package
 
 Getting the model and module up and running is a very straight forward process. After either cloning or downloading the repository into your chosen location you will need to download gfortran and `Python <https://www.python.org/>`_ if you do not already have them. If you are running Windows you will need to download `Cygwin <https://www.cygwin.com/>`_ or something similar to have access to gfortran and other unix commands. The module uses scipy for many operations and the simplest method to install the scipy stack is through Anaconda from `Continuum Analytics <http://continuum.io/downloads#all?>`_ on both Mac and Linux. Windows users can install the `WinPython <http://winpython.github.io/>`_ package, both provide the Spyder IDE and many other useful modules. The alternative is to manually install the required packages into your version of Python; `requirements.txt <https://github.com/stadelmanma/netl-AP_MAP_FLOW/blob/master/requirements.tx/>`_ lists out the minimum requirements however scipy may require additional packages on its own.
 
-Once you have gfortran and Python you will need to build the flow model from source, the easiest way is by running :code:`./bin/build_model` from the main directory. That script uses the make file in the `source` directory which sets proper OS flags. Cygwin users can open a command prompt and run the :code:`bash` command to use the script. If that is not an option the following command should work for all systems assuming gfortran is installed. If the flag :code:`-DWIN64=1` is added default file paths will be set to the windows convention. You will need to be in the `source` directory for the following command to work.
+Once you have gfortran and Python you will need to build the flow model from source, the easiest way is by running :code:`./bin/build_model` from the main directory or running :code:`make` in the source directory. That script uses the make file in the `source` directory which sets proper OS flags. Cygwin users can open a command prompt and run the :code:`bash` command to use the script. If that is not an option the following command should work for all systems assuming gfortran is installed. If the flag :code:`-DWIN64=1` is added default file paths will be set to the windows convention. You will need to be in the `source` directory for the following command to work.
 
 .. code-block:: bash
 
@@ -78,6 +78,7 @@ Running the Model in a terminal::
 Full usage instructions can be found in `<examples/running-the-flow-model.rst>`_.
 
 Pitfalls:
+    * Make sure required programs are added to the Path, this will likely need to be manually performed in Windows
     * If the model is compiled using 32-bit compiler, running too large of a map can cause an integer overflow error
     * The LCL Model requires that all of the parent directories of output file locations already exist. Otherwise a :code:`FileDoesNotExist` error or something similar will be raised.
 
