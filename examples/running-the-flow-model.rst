@@ -333,7 +333,7 @@ Argument - Type - Description
    print('PID: ', proc.pid) # could be useful for tracking progress of async runs
    print('Return Code: ', proc.returncode) # 0 means successful
    print('Standard output generated:\n', proc.stdout_content)
-   print(Standard err generated:\n', proc.stderr_content)
+   print('Standard err generated:\n', proc.stderr_content)
 
 Another instance where running the model synchronously is helpful would be running data processing scripts after it completes.
 
