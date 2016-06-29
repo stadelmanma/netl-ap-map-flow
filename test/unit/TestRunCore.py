@@ -89,7 +89,7 @@ class TestRunCore:
         """
         map_file = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT')
         RunModel.estimate_req_RAM([map_file], 10)
-        with pytest.raises(SystemExit):
+        with pytest.raises(EnvironmentError):
             RunModel.estimate_req_RAM([map_file], 0)
 
     def test_run_model(self):
