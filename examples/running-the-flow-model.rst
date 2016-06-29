@@ -268,14 +268,14 @@ In addition to updating arguments you can also apply a set of filename formats t
     # setting the formats dict up
     # Format replacements are recognized by %KEYWORD% in the filename
     name_formats = {
-        'SUMMARY-PATH': '%MAP%-SUMMARY-VISC-%FLUID-VISCOSITY%CP.TXT',
-        'STAT-FILE': '%MAP%-STAT-VISC-%FLUID-VISCOSITY%CP.CSV',
-        'VTK-FILE': '%MAP%-VTK-VISC-%FLUID-VISCOSITY%CP.vtk'
+        'SUMMARY-PATH': '%APMAP%-SUMMARY-VISC-%FLUID-VISCOSITY%CP.TXT',
+        'STAT-FILE': '%APMAP%-STAT-VISC-%FLUID-VISCOSITY%CP.CSV',
+        'VTK-FILE': '%APMAP%-VTK-VISC-%FLUID-VISCOSITY%CP.vtk'
     }
 
     # recycling our existing input file object
     inp_file = InputFile(inp_file, filename_formats=name_formats)
-    inp_file.update_args({'MAP': 'AVG-FRAC1'})
+    inp_file.update_args({'APMAP': 'AVG-FRAC1'})
 
     # showing the changes
     print(inp_file)
