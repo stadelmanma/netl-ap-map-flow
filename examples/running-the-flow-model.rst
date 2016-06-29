@@ -137,7 +137,7 @@ This can be copy and pasted into a blank text document to quickly create a new i
 Running the Model
 -----------------
 
-Before we actually run the model it will be helpful to have a place to store the output files generated. We also need to define an input file to use with the model in this case we will take advantage of many of the defaults defined in the model. You will also need to have already built the model from source, if not click `here <../README.rst#setting-up-the-modeling-package>`_. Running the following code in a terminal while in the top level directory (AP_MAP_FLOW) will get things started. 
+Before we actually run the model it will be helpful to have a place to store the output files generated. We also need to define an input file to use with the model in this case we will take advantage of many of the defaults defined in the model. You will also need to have already built the model from source, there are instructions in the main `README <../README.rst#setting-up-the-modeling-package>`_. Running the following code in a terminal while in the top level directory (AP_MAP_FLOW) will get things started. 
 
 .. code-block:: bash
 
@@ -155,6 +155,12 @@ Open model-input-params.inp with your favorite text editor and copy and paste th
 	;
 	; FILE PATHS AND NAMES
 	APER-MAP PATH: ../examples/AVERAGED-FRACTURES/Fracture1ApertureMap-10avg.txt
+	;SUMMARY-PATH: "  
+	;STAT-FILE PATH:  
+	;APER-FILE PATH:  
+	;FLOW-FILE PATH: 
+	;PRESS-FILE PATH: 
+	;VTK-FILE PATH: 
 	;OVERWRITE EXISTING FILES
 	;
 	; BOUNDARY CONDITIONS
@@ -190,15 +196,121 @@ You will notice that several output files have been generated in the current dir
 Running by Python Script
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The RunModel sub-module allows for much more power and convenience when running the model or mulitple instances of the model. The sub-module also houses the BulkRun class which can be used to automate and parallelize the running of many simulations. Useage of the BulkRun class is outside the scope of this example file and is gone over in depth in `this file <bulk-run-example.rst>_`. 
+The RunModel sub-module allows for much more power and convenience when running the model or mulitple instances of the model. The sub-module also houses the BulkRun class which can be used to automate and parallelize the running of many simulations. Useage of the BulkRun class is outside the scope of this example file and is gone over in depth in `this file <bulk-run-example.rst>`_. 
 
-go over each of the public functions/classes in __run_model_core__ and then show an example of using them all together
+The core components of the `RunModule <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ consists of one class used to manipulate an input parameters file and two functions to handle running of the model. Code snippets below will demonstrate their functionality. The first step is to run the Python interpreter and import them from the parent module. 
+
+.. code-block:: python
+
+    import os
+    from ApertureMapModelTools.RunModel import InputFile
+    from ApertureMapModelTools.RunModel import estimate_req_RAM, run_model
+
 
 **The InputFile Class**
+ * The InputFile class is used to read and manipulate the input parameters file. It provides an easy to use interface for updating parameters and can dynamically generate filenames based on those input parameters. One caveat is you can not easily add in new parameters that weren't in the original input file used to instantiate the class. Therefore, when using this class it is best to use a template file that has all of the parameters present and unneeded ones commented out. The examples here assume you are working with the files created at the beginning of the section `Running the Model`_.
 
-**estimate_req_RAM Function**
+|
 
-**run_model Function**
+ * Notes: 
+    - The keywords of the input file class are the first characters occuring before *any* spaces on a line. The keyword for parameter :code:`FLOW-FILE PATH: path/to/filename` is :code:`FLOW-FILE`
+    - Currently the original units are preserved and can not easily be updated.
 
+.. code-block:: python
+    
+    # Creating an InputFile object
+    inp_file = InputFile('model-input-params.inp', filename_formats=None)
+
+    # upating arguments can be done two ways
+    #inp_file['param_keyword'].update_value(value, uncomment=True)
+    #inp_file.update_args(dict_of_param_values)
+
+    # Directly updating the viscosity value
+    inp_file['FLUID-VISCOSITY'].update_value('1.00')
+
+    # updating a set of parameters
+    new_param_values = {
+        'OVERWRITE': 'OVERWRITE FILES',
+        'FRAC-PRESS': '150.00'
+    }
+    inp_file.update_args(new_param_values)
+
+    # printing the InputFile object shows the changes
+    print(inp_file)
+    
+
+You will notice that the line :code:`OVERWRITE EXISTING FILES` has been changed and uncommented. The class by default will uncomment any parameter that is updated. Parameters are stored in their own class called `ArgInput <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ which can be directly manipulated by accessing the keyword of an InputFile object like so, :code:`inp_file['FLUID-VISCOSITY']`. Earlier when we updated the value of the viscosity directly we called the method :code:`.update_value` which is a method of the ArgInput class not the InputFile class.
+
+In addition to updating arguments you can also apply a set of filename formats to the InputFile class. These allow the filenames to be dynamically created based on the argument parameters present. Using the :code:`update_args` method of the InputFile class you can also add a special set of args not used as parameters but instead to format filenames. Any args passed into :code:`update_args` that aren't already a parameter are added to the :code:`filename_format_args` attribute of the class. 
+
+.. code-block:: python
+
+    # setting the formats dict up
+    # Format replacements are recognized by %KEYWORD% in the filename
+    name_formats = {
+        'SUMMARY-PATH': '%APER_MAP%-SUMMARY-VISC-%FLUID-VISCOSITY%CP.TXT',
+        'STAT-FILE': '%APER_MAP%-STAT-VISC-%FLUID-VISCOSITY%CP.CSV',
+        'VTK-FILE': '%APER_MAP%-VTK-VISC-%FLUID-VISCOSITY%CP.vtk'               
+    }
+    
+    # recycling our existing input file object
+    inp_file = InputFile(inp_file, filename_formats=name_formats)
+    inp_file.update_args({'APER_MAP': 'AVG-FRAC1'})
+    
+    # showing the changes
+    print(inp_file)
+    
+Right below the :code:`print(inp_file)` command, the name the input parameters file would be saved as when being run or written using the "code"`.write_inp_file` method is shown. This name can also be altered with formatting by adding an 'input_file' entry to the filename_formats_dict. An entry in the filename_formats_dict will overwrite any changes directly make to the :code:`.outfile_name` attribute of the InputFile class. The default name is the name of the parameters file being read.
+
+**The estimate_req_RAM Function**
+
+The estimate_req_RAM function estimates the maximum amount of RAM the model will use while running. This is handy when running large maps on a smaller workstation or when you want to run several maps asyncronously.
+
+Argument - Type - Description:
+ * input_maps - (list) - A list of filenames of aperture maps.
+ * avail_RAM - (float) - The amount of RAM the user wants to allow for use
+ * suppress - (boolean) - If set to True and too large of a map is read only a message is printed to the screen and no Exception is raised. False is the default value.
+ 
+Returns a list of required RAM per map.
+
+.. code-block:: python
+
+    # setting the maps list
+    maps = [
+        os.path.join('..', 'examples', 'AVERAGED-FRACTURES', 'Fracture1ApertureMap-10avg.txt'),
+        os.path.join('..', 'examples', 'AVERAGED-FRACTURES', 'Fracture2ApertureMap-10avg.txt'),
+        os.path.join('..', 'examples', 'FULL-FRACTURES', 'Fracture1ApertureMap.txt'),
+        os.path.join('..', 'examples', 'FULL-FRACTURES', 'Fracture2ApertureMap.txt'),
+    ]
+    
+    #checking RAM required for each
+    estimate_req_RAM(maps, 4.0, suppress=True)
+
+Because suppress was true we only received a message along with the amount of RAM each map would require. If you re-run the last line with :code:`suppress=False` or omitting it altogther an Exception is raised: :code:`estimate_req_RAM(maps, 4.0)`  
+
+**The run_model Function**
+
+The run_model function combines some higher level Python functionality for working with the system shell into a simple package. The model can be both run synchronously or asynchronously but in both cases it returns a `Popen <https://docs.python.org/3/library/subprocess.html#subprocess.Popen>`_ object. Running the model synchronously can take a long time when running large aperture maps. 
+
+Argument - Type - Description
+ * input_file_obj - InputFile - the input file object run with the model. Note: This file has to be written be careful to not overwrite existing files by accident
+ * synchronous - boolean - If True the function will halt execution of the script until the model finishes running. The default is False. 
+ 
+ .. code-block:: python
+ 
+   # running our current input file object 
+   # synchronous is True here because we need the process to have completed for 
+   # all of stdout to be seen. 
+   proc = run_model(inp_file, synchronous=True) 
+   
+   # proc is a Popen object and has several attributes here are a few useful ones
+   print('PID: ', proc.pid) #could be useful of async runs
+   print('Return Code: ', proc.returncode) #0 means successful
+   print('\n')
+   print('Standard output generated:\n', proc.stdout.read())
+   print('\n')
+   print('Standard error generated:\n', proc.stderr.read())
+   
+Another instance where running the model synchronously is helpful would be running data processing scripts after it completes. 
 
 
