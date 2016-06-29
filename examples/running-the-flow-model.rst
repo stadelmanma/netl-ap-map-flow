@@ -31,7 +31,6 @@ File Paths
 This is where the path of input and output files are defined. If the line :code:`OVERWRITE EXISTING FILES` is uncommented any existing files sharing the same name will be replaced. If the line is commented out or absent an error will be raised if a pre-existing file with the same name is encountered. Input file delimiters can be commas, spaces or tabs. The model assumes the aperture map data being input is stored as a 2-D grid with the first value being the origin and the last value being the top right corner. The data maps output by the model also follow this convention. The output files accept the extension the user provides however the expected extensions are noted below. 
 
 **Notes:**
-
  * Any output files that are omitted will be saved using a default name in the current working directory.
  * Output files are opened relative to where the executable is being run. For this reason it makes things much simpler to either use absolute paths or have the executable in the same directory as the input file. 
 
@@ -45,7 +44,7 @@ Output Files
   - :code:`SUMMARY-PATH:` Logs the information printed to the screen (.txt expected)
   - :code:`STAT-FILE PATH:` Stores statistics calculated and certain simulation parameters (.csv expected)
   - :code:`APER-FILE PATH:` Stores a copy of the input aperture map that is converted to the desired output units and has any applied roughness factored in (.csv expected)
-  - :code:`FLOW-FILE PATH:` Used as the root name for the three flow files output X-component, Z-component and magnitude. The files have -X, -Z, -M respectively appended to the root name before the extension.  (.csv expected)
+  - :code:`FLOW-FILE PATH:` Used as the root name for the three flow files output: X-component, Z-component and magnitude. The files have -X, -Z, -M suffixes appended to the root name before the extension.  (.csv expected)
   - :code:`PRESS-FILE PATH:` Stores a pressure distribution map of the fracture(.csv expected)
   - :code:`VTK-FILE PATH:` A legacy formatted input file for Paraview which combines all of the former input files and includes several other data maps. (.vtk expected)
 
@@ -67,16 +66,16 @@ Sets various fluid and model properties.
  * :code:`FLUID-TYPE:` [LIQUID or GAS] ;determines the type of simulation to run. Gas simulations require full set of isothermal PVT data
  * :code:`FLUID-DENSITY:` value unit ;Density of liquid to use in Reynolds number calculation
  * :code:`FLUID-VISCOSITY:` value unit ;Viscosity of liquid, if this is supplied PVT data can be neglected for liquid simulations. 
- * :code:`MAXIMUM MAP DIMENSION:` value ;Maximum number of blocks along either axis. Values close to actual axis size slightly improve runtime memory conservation over larger values. 
- * :code:`STD-TEMP:` value unit User defined standard (or surface) temperature used in gas simulations
- * :code:`STD-PRESS:` value unit User defined standard (or surface) pressure used in gas simulations
+ * :code:`MAXIMUM MAP DIMENSION:` value ;Maximum number of blocks along either axis. Values close to actual axis size slightly improve runtime memory conservation relative to much larger values. 
+ * :code:`STD-TEMP:` value unit ;User defined standard (or surface) temperature used in gas simulations
+ * :code:`STD-PRESS:` value unit ;User defined standard (or surface) pressure used in gas simulations
 
 Other Parameters
 ~~~~~~~~~~~~~~~~
 
-Sets other important but miscellaneous runtime parameters. 
+Sets other important miscellaneous runtime parameters. 
 
- * :code:`MAP AVERAGING FACTOR:` value ;The number of voxels required to span an edge of a grid-block along the X or Z direction.
+ * :code:`MAP AVERAGING FACTOR:` value ;The number of voxels required to span an edge of a grid block along the X or Z direction. Grid blocks are assumed square in the X-Z plane.
  * :code:`VOXEL SIZE:` value unit ;Specifies the voxel to meter conversion factor
  * :code:`ROUGHNESS REDUCTION:` value ;**The value is in voxels** Amount to symmetrically bring the front and back fracture surfaces together by. 
  * :code:`CALCULATE PERCENTILES:` value1,value2,value3 ;A comma separated list of percentiles to calculate of various quantities during runtime. Commenting this line out tells it to not calculate them at all
@@ -84,6 +83,7 @@ Sets other important but miscellaneous runtime parameters.
  * :code:`LOW-MASK:` value ;**The value is in voxels** All data values in the aperture map below this value will be raised to this value
 
 This tells the model what units you want the data output in. Commenting out or omitting this line will output everything in SI (pascals, meters and meters^3/second)
+
  * :code:`OUTPUT-UNITS:` pressure unit, distance unit, flow rate unit 
 
 Blank Input File
@@ -137,7 +137,7 @@ This can be copy and pasted into a blank text document to quickly create a new i
 Running the Model
 -----------------
 
-Before we actually run the model it will be helpful to have a place to store the output files generated. We also need to define an input file to use with the model in this case we will take advantage of many of the defaults defined in the model. You will also need to have already built the model from source, there are instructions in the main `README <../README.rst#setting-up-the-modeling-package>`_. Running the following code in a terminal while in the top level directory (AP_MAP_FLOW) will get things started. 
+Before we actually run the model it will be helpful to have a place to store the output files generated. We need to define an input file to use with the model and in this case we will take advantage of many of the predefined defaults. You will also need to have already built the model from source, there are instructions in the main `README <../README.rst#setting-up-the-modeling-package>`_. Running the following code in a terminal while in the top level directory (AP_MAP_FLOW) will get things started. 
 
 .. code-block:: bash
 
@@ -191,14 +191,14 @@ With the above steps complete running the model is as simple as this:
 
     ./APM-MODEL.EXE model-input-params.inp
 
-You will notice that several output files have been generated in the current directory. The are saved with the default names because they were not specified in the input file. If we try to run that line again you will see an error is generated because the line :code:`;OVERWRITE EXISTING FILES` is preceded by a semicolon meaning it is ignored. You can view the VTK file in paraview and the other CSV data maps in your viewer of choice. The STATS file is not a data map but being saved as a CSV file allows for quick calculations in excel or similar software. 
+You will notice that several output files have been generated in the current directory. They are saved under the default names because we did not specified our own filenames in the input file. You can view the VTK file in paraview and the other CSV data maps in your viewer of choice. The STATS file is not a data map but being saved as a CSV file allows for quick calculations in excel or similar software. If we try to run the model a second time as before line again you will see an error is generated and execution is terminated. This is because the line :code:`;OVERWRITE EXISTING FILES` is preceded by a semicolon meaning it is commented out and by default existing files will not be overwritten.
 
 Running by Python Script
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-The RunModel sub-module allows for much more power and convenience when running the model or mulitple instances of the model. The sub-module also houses the BulkRun class which can be used to automate and parallelize the running of many simulations. Useage of the BulkRun class is outside the scope of this example file and is gone over in depth in `this file <bulk-run-example.rst>`_. 
+The RunModel sub-module allows for much more power and convenience when running the model or multiple instances of the model. The sub-module also houses the BulkRun class which can be used to automate and parallelize the running of many simulations. Usage of the BulkRun class is outside the scope of this example file and is gone over in depth in `this file <bulk-run-example.rst>`_. 
 
-The core components of the `RunModule <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ consists of one class used to manipulate an input parameters file and two functions to handle running of the model. Code snippets below will demonstrate their functionality. The first step is to run the Python interpreter and import them from the parent module. 
+The core components of the `RunModule <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ consist of one class used to manipulate an input parameters files and two functions to handle running of the model. Code snippets below will demonstrate their functionality. The examples here assume you are working with the files created at the beginning of the section `Running the Model`_. The first step is to run the Python interpreter and import them from the parent module. 
 
 .. code-block:: python
 
@@ -208,12 +208,10 @@ The core components of the `RunModule <../ApertureMapModelTools/RunModel/__run_m
 
 
 **The InputFile Class**
- * The InputFile class is used to read and manipulate the input parameters file. It provides an easy to use interface for updating parameters and can dynamically generate filenames based on those input parameters. One caveat is you can not easily add in new parameters that weren't in the original input file used to instantiate the class. Therefore, when using this class it is best to use a template file that has all of the parameters present and unneeded ones commented out. The examples here assume you are working with the files created at the beginning of the section `Running the Model`_.
-
-|
+ * The InputFile class is used to read, write and manipulate an input parameters file. It provides an easy to use interface for updating parameters and can dynamically generate filenames based on those input parameters. One caveat is you can not easily add in new parameters that weren't in the original input file used to instantiate the class. Therefore, when using this class it is best to use a template file that has all of the parameters present and unneeded ones commented out. 
 
  * Notes: 
-    - The keywords of the input file class are the first characters occuring before *any* spaces on a line. The keyword for parameter :code:`FLOW-FILE PATH: path/to/filename` is :code:`FLOW-FILE`
+    - The keywords of the input file class are the first characters occurring before *any* spaces on a line. The keyword for parameter :code:`FLOW-FILE PATH: path/to/filename` is :code:`FLOW-FILE`
     - Currently the original units are preserved and can not easily be updated.
 
 .. code-block:: python
@@ -221,7 +219,7 @@ The core components of the `RunModule <../ApertureMapModelTools/RunModel/__run_m
     # Creating an InputFile object
     inp_file = InputFile('model-input-params.inp', filename_formats=None)
 
-    # upating arguments can be done two ways
+    # updating arguments can be done two ways
     #inp_file['param_keyword'].update_value(value, uncomment=True)
     #inp_file.update_args(dict_of_param_values)
 
@@ -239,7 +237,20 @@ The core components of the `RunModule <../ApertureMapModelTools/RunModel/__run_m
     print(inp_file)
     
 
-You will notice that the line :code:`OVERWRITE EXISTING FILES` has been changed and uncommented. The class by default will uncomment any parameter that is updated. Parameters are stored in their own class called `ArgInput <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ which can be directly manipulated by accessing the keyword of an InputFile object like so, :code:`inp_file['FLUID-VISCOSITY']`. Earlier when we updated the value of the viscosity directly we called the method :code:`.update_value` which is a method of the ArgInput class not the InputFile class.
+You will notice that the line :code:`OVERWRITE EXISTING FILES` has been changed and uncommented. The class by default will uncomment any parameter that is updated. Parameters are stored in their own class called `ArgInput <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ which can be directly manipulated by accessing the keyword of an InputFile object like so, :code:`inp_file['FLUID-VISCOSITY']`. Earlier when we updated the value of the viscosity directly we called the method :code:`.update_value` which is a method of the ArgInput class not the InputFile class. Directly manipulating the ArgInput objects stored by the InputFile class allows you to perform more complex operations on a parameter such as commenting it out or updating the units. 
+
+.. code-block:: python
+
+    # commenting out percentile parameter
+    inp_file['CALCULATE'].commented_out = True
+    
+    # changing the unit and value of density 
+    val_index = inp_file['FLUID-DENSITY'].value_index
+    inp_file['FLUID-DENSITY'].line_arr[val_index+1] = 'LB/FT^3'
+    inp_file['FLUID-DENSITY'].update_value('62.42796')
+    
+    #
+    print(inp_file)
 
 In addition to updating arguments you can also apply a set of filename formats to the InputFile class. These allow the filenames to be dynamically created based on the argument parameters present. Using the :code:`update_args` method of the InputFile class you can also add a special set of args not used as parameters but instead to format filenames. Any args passed into :code:`update_args` that aren't already a parameter are added to the :code:`filename_format_args` attribute of the class. 
 
@@ -248,28 +259,28 @@ In addition to updating arguments you can also apply a set of filename formats t
     # setting the formats dict up
     # Format replacements are recognized by %KEYWORD% in the filename
     name_formats = {
-        'SUMMARY-PATH': '%APER_MAP%-SUMMARY-VISC-%FLUID-VISCOSITY%CP.TXT',
-        'STAT-FILE': '%APER_MAP%-STAT-VISC-%FLUID-VISCOSITY%CP.CSV',
-        'VTK-FILE': '%APER_MAP%-VTK-VISC-%FLUID-VISCOSITY%CP.vtk'               
+        'SUMMARY-PATH': '%MAP%-SUMMARY-VISC-%FLUID-VISCOSITY%CP.TXT',
+        'STAT-FILE': '%MAP%-STAT-VISC-%FLUID-VISCOSITY%CP.CSV',
+        'VTK-FILE': '%MAP%-VTK-VISC-%FLUID-VISCOSITY%CP.vtk'               
     }
     
     # recycling our existing input file object
     inp_file = InputFile(inp_file, filename_formats=name_formats)
-    inp_file.update_args({'APER_MAP': 'AVG-FRAC1'})
+    inp_file.update_args({'MAP': 'AVG-FRAC1'})
     
     # showing the changes
     print(inp_file)
     
-Right below the :code:`print(inp_file)` command, the name the input parameters file would be saved as when being run or written using the "code"`.write_inp_file` method is shown. This name can also be altered with formatting by adding an 'input_file' entry to the filename_formats_dict. An entry in the filename_formats_dict will overwrite any changes directly make to the :code:`.outfile_name` attribute of the InputFile class. The default name is the name of the parameters file being read.
+Right below the :code:`print(inp_file)` command, the name the input parameters file would be saved as when being run or written using the "code"`.write_inp_file` method is shown. This name can also be altered with formatting by adding an 'input_file' entry to the filename_formats_dict. An entry in the filename_formats_dict will overwrite any changes directly make to the :code:`.outfile_name` attribute of the InputFile class. The default outfile name is the name of the parameters file being read, so the original file would be overwritten.
 
 **The estimate_req_RAM Function**
 
-The estimate_req_RAM function estimates the maximum amount of RAM the model will use while running. This is handy when running large maps on a smaller workstation or when you want to run several maps asyncronously.
+The estimate_req_RAM function estimates the maximum amount of RAM the model will use while running. This is handy when running large maps on a smaller workstation or when you want to run several maps asynchronously.
 
 Argument - Type - Description:
- * input_maps - (list) - A list of filenames of aperture maps.
- * avail_RAM - (float) - The amount of RAM the user wants to allow for use
- * suppress - (boolean) - If set to True and too large of a map is read only a message is printed to the screen and no Exception is raised. False is the default value.
+ * input_maps - list - A list of filenames of aperture maps.
+ * avail_RAM - float - The amount of RAM the user wants to allow for use
+ * suppress - boolean - If set to True and too large of a map is read only a message is printed to the screen and no Exception is raised. False is the default value.
  
 Returns a list of required RAM per map.
 
@@ -285,8 +296,11 @@ Returns a list of required RAM per map.
     
     #checking RAM required for each
     estimate_req_RAM(maps, 4.0, suppress=True)
+    
+    #raises EnvironmentError
+    estimate_req_RAM(maps, 4.0)    
 
-Because suppress was true we only received a message along with the amount of RAM each map would require. If you re-run the last line with :code:`suppress=False` or omitting it altogther an Exception is raised: :code:`estimate_req_RAM(maps, 4.0)`  
+Because suppress was true we only received a message along with the amount of RAM each map would require. However the last line generates an error. 
 
 **The run_model Function**
 
@@ -304,8 +318,8 @@ Argument - Type - Description
    proc = run_model(inp_file, synchronous=True) 
    
    # proc is a Popen object and has several attributes here are a few useful ones
-   print('PID: ', proc.pid) #could be useful of async runs
-   print('Return Code: ', proc.returncode) #0 means successful
+   print('PID: ', proc.pid) # could be useful for tracking progress of async runs
+   print('Return Code: ', proc.returncode) # 0 means successful
    print('\n')
    print('Standard output generated:\n', proc.stdout.read())
    print('\n')
