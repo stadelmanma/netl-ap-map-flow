@@ -1,3 +1,4 @@
+======================
 Running the Flow Model
 ======================
 
@@ -5,13 +6,13 @@ Running the Flow Model
 
 
 Intro
------
+=====
 
 The Local Cubic Law flow model by default is named :code:`APM-MODEL.EXE`, the added extension doesn't affect UNIX systems and allows Windows to recognize it as executable. There are two methods to run the model, first is directly on the command line specifying your input parameters file and the second is using Python scripting through the :code:`RunModel` sub-module in :code:`ApertureMapModelTools`. The model requires two or three input files and generates several output files. The model works in the X-Z plane where +Z is vertical and +X is to the right. The Y direction is the aperture variation and the model assumes a planar mid surface. This implies that the fracture is symmetric with respect to the X-Z plane. If you envision a spiral bound notebook with the bottom left corner as the origin. The Z-axis follows the metal spiral upward, positive X is the direction moving away from the spiral. Y is the thickness of the notebook. 
 
 
 The Input Parameters File
--------------------------
+=========================
 
 A template of the input parameters file can be found in `here <APM-MODEL-INPUT-FILE-TEMPLATE.INP>`_. An additional sample of the input file is located in `test/fixtures <../test/fixtures/TEST_INIT.INP>`_. Editing the input file in `test/fixtures` is not recommended because it will interfere with testing of the model and module. The input file is parsed by a special routine in the model that treats semicolons :code:`;` as comments and one or more spaces as delimiters. A value enclosed in double quotations will have any internal spaces ignored. ApertureMapModelTools also reads the input files when needed and for consistency it is recommended you append a colon :code:`:` onto the end of keywords. Nearly all of the input parameters have default values and they are defined in `APM_SUBROUTINES.F <../source/APM_SUBROUTINES.F>`_ in the first subroutine :code:`INITIALIZE_RUN` 
 
@@ -26,7 +27,7 @@ At the top of the input file there should be a commented line reading :code:`;EX
 The input file can be broken down into four main components:
 
 File Paths
-~~~~~~~~~~
+----------
 
 This is where the path of input and output files are defined. If the line :code:`OVERWRITE EXISTING FILES` is uncommented any existing files sharing the same name will be replaced. If the line is commented out or absent an error will be raised if a pre-existing file with the same name is encountered. Input file delimiters can be commas, spaces or tabs. The model assumes the aperture map data being input is stored as a 2-D grid with the first value being the origin and the last value being the top right corner. The data maps output by the model also follow this convention. The output files accept the extension the user provides however the expected extensions are noted below. 
 
@@ -35,12 +36,12 @@ This is where the path of input and output files are defined. If the line :code:
  * Output files are opened relative to where the executable is being run. For this reason it makes things much simpler to either use absolute paths or have the executable in the same directory as the input file. 
 
 Input Files
-
+~~~~~~~~~~~
   - :code:`PVT-PATH:` File storing state data for liquids or gases, required if :code:`FLUID-TYPE: GAS` is present. Only iso-thermal data is accepted. 
   - :code:`APER-MAP PATH:` File that stores the aperture map data.  
 
 Output Files
-
+~~~~~~~~~~~~
   - :code:`SUMMARY-PATH:` Logs the information printed to the screen (.txt expected)
   - :code:`STAT-FILE PATH:` Stores statistics calculated and certain simulation parameters (.csv expected)
   - :code:`APER-FILE PATH:` Stores a copy of the input aperture map that is converted to the desired output units and has any applied roughness factored in (.csv expected)
@@ -49,7 +50,7 @@ Output Files
   - :code:`VTK-FILE PATH:` A legacy formatted input file for Paraview which combines all of the former input files and includes several other data maps. (.vtk expected)
 
 Boundary Conditions
-~~~~~~~~~~~~~~~~~~~
+-------------------
 
 Defines the boundary conditions for the model, only :code:`OUTLET-PRESS` or :code:`OUTLET-RATE` should be specified. If both keywords are defined unexpected results can occur.
 
@@ -59,7 +60,7 @@ Defines the boundary conditions for the model, only :code:`OUTLET-PRESS` or :cod
  * :code:`OUTFLOW-SIDE:` [LEFT, RIGHT, TOP, BOTTOM] sets the outlet side, the inlet is assumed to be the opposite face. i.e. top is outlet, bottom is inlet
 
 Model Properties
-~~~~~~~~~~~~~~~~
+----------------
 
 Sets various fluid and model properties.
 
@@ -71,7 +72,7 @@ Sets various fluid and model properties.
  * :code:`STD-PRESS:` value unit ;User defined standard (or surface) pressure used in gas simulations
 
 Other Parameters
-~~~~~~~~~~~~~~~~
+----------------
 
 Sets other important miscellaneous runtime parameters. 
 
@@ -87,7 +88,7 @@ This tells the model what units you want the data output in. Commenting out or o
  * :code:`OUTPUT-UNITS:` pressure unit, distance unit, flow rate unit 
 
 Blank Input File
-~~~~~~~~~~~~~~~~
+----------------
 
 This can be copy and pasted into a blank text document to quickly create a new input file. The inputs you want to use will need to be uncommented. Remember to keep at least one space between the keyword and the value. Some default values have been left in place.
 
@@ -135,7 +136,7 @@ This can be copy and pasted into a blank text document to quickly create a new i
 	;OUTPUT-UNITS:
 
 Running the Model
------------------
+=================
 
 Before we actually run the model it will be helpful to have a place to store the output files generated. We need to define an input file to use with the model and in this case we will take advantage of many of the predefined defaults. You will also need to have already built the model from source, there are instructions in the main `README <../README.rst#setting-up-the-modeling-package>`_. Running the following code in a terminal while in the top level directory (AP_MAP_FLOW) will get things started. 
 
@@ -155,7 +156,7 @@ Open model-input-params.inp with your favorite text editor and copy and paste th
 	;
 	; FILE PATHS AND NAMES
 	APER-MAP PATH: ../examples/AVERAGED-FRACTURES/Fracture1ApertureMap-10avg.txt
-	;SUMMARY-PATH: "  
+	;SUMMARY-PATH:   
 	;STAT-FILE PATH:  
 	;APER-FILE PATH:  
 	;FLOW-FILE PATH: 
@@ -183,7 +184,7 @@ Open model-input-params.inp with your favorite text editor and copy and paste th
 	OUTPUT-UNITS: PA,MM,MM^3/SEC
 
 Running Directly
-~~~~~~~~~~~~~~~~
+----------------
 
 With the above steps complete running the model is as simple as this: 
 
@@ -194,7 +195,7 @@ With the above steps complete running the model is as simple as this:
 You will notice that several output files have been generated in the current directory. They are saved under the default names because we did not specified our own filenames in the input file. You can view the VTK file in paraview and the other CSV data maps in your viewer of choice. The STATS file is not a data map but being saved as a CSV file allows for quick calculations in excel or similar software. If we try to run the model a second time as before line again you will see an error is generated and execution is terminated. This is because the line :code:`;OVERWRITE EXISTING FILES` is preceded by a semicolon meaning it is commented out and by default existing files will not be overwritten.
 
 Running by Python Script
-~~~~~~~~~~~~~~~~~~~~~~~~
+------------------------
 
 The RunModel sub-module allows for much more power and convenience when running the model or multiple instances of the model. The sub-module also houses the BulkRun class which can be used to automate and parallelize the running of many simulations. Usage of the BulkRun class is outside the scope of this example file and is gone over in depth in `this file <bulk-run-example.rst>`_. 
 
@@ -207,12 +208,17 @@ The core components of the `RunModule <../ApertureMapModelTools/RunModel/__run_m
     from ApertureMapModelTools.RunModel import estimate_req_RAM, run_model
 
 
-**The InputFile Class**
- * The InputFile class is used to read, write and manipulate an input parameters file. It provides an easy to use interface for updating parameters and can dynamically generate filenames based on those input parameters. One caveat is you can not easily add in new parameters that weren't in the original input file used to instantiate the class. Therefore, when using this class it is best to use a template file that has all of the parameters present and unneeded ones commented out. 
-
- * Notes: 
-    - The keywords of the input file class are the first characters occurring before *any* spaces on a line. The keyword for parameter :code:`FLOW-FILE PATH: path/to/filename` is :code:`FLOW-FILE`
-    - Currently the original units are preserved and can not easily be updated.
+The InputFile Class
+~~~~~~~~~~~~~~~~~~~
+The InputFile class is used to read, write and manipulate an input parameters file. It provides an easy to use interface for updating parameters and can dynamically generate filenames based on those input parameters. One caveat is you can not easily add in new parameters that weren't in the original input file used to instantiate the class. Therefore, when using this class it is best to use a template file that has all of the parameters present and unneeded ones commented out. 
+ 
+Notes: 
+ * The keywords of the input file class are the first characters occurring before *any* spaces on a line. The keyword for parameter :code:`FLOW-FILE PATH: path/to/filename` is :code:`FLOW-FILE`
+ * Currently the original units are preserved and can not easily be updated.
+    
+Argument - Type - Description
+ * infile - String or InputFile - The path to the file you want to read or the variable storing the InputFile object you want to recycle.
+ * filename_formats - dict - A dict containing filename formats to use when creating outfile names and the save name of the input file itself based on current params. If none are provided then the original names read in will be used.
 
 .. code-block:: python
     
@@ -273,7 +279,8 @@ In addition to updating arguments you can also apply a set of filename formats t
     
 Right below the :code:`print(inp_file)` command, the name the input parameters file would be saved as when being run or written using the "code"`.write_inp_file` method is shown. This name can also be altered with formatting by adding an 'input_file' entry to the filename_formats_dict. An entry in the filename_formats_dict will overwrite any changes directly make to the :code:`.outfile_name` attribute of the InputFile class. The default outfile name is the name of the parameters file being read, so the original file would be overwritten.
 
-**The estimate_req_RAM Function**
+The estimate_req_RAM Function
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The estimate_req_RAM function estimates the maximum amount of RAM the model will use while running. This is handy when running large maps on a smaller workstation or when you want to run several maps asynchronously.
 
@@ -302,7 +309,8 @@ Returns a list of required RAM per map.
 
 Because suppress was true we only received a message along with the amount of RAM each map would require. However the last line generates an error. 
 
-**The run_model Function**
+The run_model Function
+~~~~~~~~~~~~~~~~~~~~~~
 
 The run_model function combines some higher level Python functionality for working with the system shell into a simple package. The model can be both run synchronously or asynchronously but in both cases it returns a `Popen <https://docs.python.org/3/library/subprocess.html#subprocess.Popen>`_ object. Running the model synchronously can take a long time when running large aperture maps. 
 
