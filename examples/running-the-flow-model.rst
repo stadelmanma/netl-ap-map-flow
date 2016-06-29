@@ -204,9 +204,12 @@ The core components of the `RunModule <../ApertureMapModelTools/RunModel/__run_m
 .. code-block:: python
 
     import os
+    import sys
     from ApertureMapModelTools.RunModel import InputFile
     from ApertureMapModelTools.RunModel import estimate_req_RAM, run_model
-
+    
+    # this allows examples to work for those who didn't add the module to site-packages
+    sys.path.insert(0, os.path.abspath(os.pardir)))
 
 The InputFile Class
 ~~~~~~~~~~~~~~~~~~~
