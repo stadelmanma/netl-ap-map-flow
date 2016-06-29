@@ -19,19 +19,19 @@ ApertureMapModelTools contains four sub modules DataProcessing, OpenFoamExport, 
 
 | 
 
- * DataProcessing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is apm_process_data.py which accepts various command line arguments to automatically perform basic post-processing. 
+ * DataProcessing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is apm_process_data.py which accepts various command line arguments to automatically perform basic post-processing. There will be an example of post processing data in the 'examples' directory.
 
 |
 
- * OpenFoamExport is used to create a blockMeshDict file from the flattened aperture map used in the LCL model. There is an example of how to utilize the OpenFoamExport class in the 'examples' directory. 
+ * OpenFoamExport is used to create a blockMeshDict file from the flattened aperture map used in the LCL model. There is an example of how to utilize the OpenFoamExport class in `<examples/openfoam-export-example.rst>`_. 
 
 |
 
- * RunModel houses functions used to run the LCL model via python scripts instead of single instances on the command line. In addition to the core methods used to run individual simulations a BulkRun class exists which allows the user to automate the running of mulitple simulations concurrently. There is an example of how to utilize the BulkRun class in the 'examples' directory as well as running single instances of the model in Python.
+ * RunModel houses functions used to run the LCL model via python scripts instead of single instances on the command line. In addition to the core methods used to run individual simulations a BulkRun class exists which allows the user to automate the running of mulitple simulations concurrently. There will be an example of how to utilize the BulkRun class in the 'examples' directory. Utilization of the RunModel sub-module is under `<examples/running-the-flow-model.rst>`_ in section `Running by Python Script <examples/running-the-flow-model.rst#running-by-python-script>`_
 
 |
 
- * UnitConversion performs unit conversions for the user and is able to handle a wide variety of inputs. However it assumes the user is supplying a valid conversion i.e. meters to feet, where the dimensionality matches. There is an example of how to use the module in the 'examples' directory. 
+ * UnitConversion performs unit conversions for the user and is able to handle a wide variety of inputs. However it assumes the user is supplying a valid conversion i.e. meters to feet, where the dimensionality matches. There will be an example of how to use the module in the 'examples' directory. 
 
 Setting up the Modeling Package
 -------------------------------
@@ -75,7 +75,7 @@ Running the Model in a terminal::
 
     >> ./APM-MODEL.EXE  model_initialization_file
 
-Full usage instructions can be found in the 'examples' directory.
+Full usage instructions can be found in `<examples/running-the-flow-model.rst>`_.
 
 Pitfalls:
     * If the model is compiled using 32-bit compiler, running too large of a map can cause an integer overflow error
