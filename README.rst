@@ -78,9 +78,10 @@ Running the Model in a terminal::
 Full usage instructions can be found in `<examples/running-the-flow-model.rst>`_.
 
 Pitfalls:
-    * Make sure required programs are added to the Path, this will likely need to be manually performed in Windows
-    * If the model is compiled using 32-bit compiler, running too large of a map can cause an integer overflow error
-    * The LCL Model requires that all of the parent directories of output file locations already exist. Otherwise a :code:`FileDoesNotExist` error or something similar will be raised.
+---------
+* Make sure required programs are added to the Path, this will likely need to be manually performed in Windows
+* If the model is compiled using 32-bit compiler, running too large of a map can cause an integer overflow error
+* The LCL Model requires that all of the parent directories of output file locations already exist. Otherwise a :code:`FileDoesNotExist` error or something similar will be raised.
 
 
 
