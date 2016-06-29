@@ -60,7 +60,6 @@ class ArgInput(object):
                         self.line_arr.append(self.value)
                         self.line = ' '.join(self.line_arr)
 
-
     def update_value(self, new_value, uncomment=True):
         r"""
         Updates the line with the new value and uncomments the line by default
