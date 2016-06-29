@@ -8,6 +8,7 @@ Last Modifed: 2016/06/16
 """
 import os
 import re
+from subprocess import PIPE
 from subprocess import Popen
 from time import sleep
 from ApertureMapModelTools.__core__ import DataField
@@ -282,9 +283,10 @@ def run_model(input_file_obj, synchronous=False):
     Returns a Popen object
     """
     input_file_obj.write_inp_file()
-    cmd = (input_file_obj['EXE-FILE'].value, input_file_obj.outfile_name)
+    exe_file = os.path.abspath(input_file_obj['EXE-FILE'].value)
+    cmd = (exe_file, input_file_obj.outfile_name)
     #
-    proc = Popen(cmd)
+    proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
     while True:
         if proc.poll() is not None:
             return proc
