@@ -320,18 +320,20 @@ The run_model function combines some higher level Python functionality for worki
 Argument - Type - Description
  * input_file_obj - InputFile - the input file object run with the model. Note: This file has to be written be careful to not overwrite existing files by accident
  * synchronous - boolean - If True the function will halt execution of the script until the model finishes running. The default is False.
- * pipe_output - boolean - If True then stdout and stderr will be stored on the Popen object returned using PIPE. **Warning this can cause a deadlock if stdout and stderr are not read**
+ * show_stdout - boolean - If True then stdout and stderr will be printed to the screen instead of being stored on the Popen object as stdout_content and stderr_content
 
  .. code-block:: python
 
    # running our current input file object
    # synchronous is True here because we need the process to have completed for
    # all of stdout to be seen.
-   proc = run_model(inp_file, synchronous=True, pipe_output=True)
+   proc = run_model(inp_file, synchronous=True, show_stdout=False)
 
    # proc is a Popen object and has several attributes here are a few useful ones
    print('PID: ', proc.pid) # could be useful for tracking progress of async runs
    print('Return Code: ', proc.returncode) # 0 means successful
+   print('Standard output generated:\n', proc.stdout_content)
+   print(Standard err generated:\n', proc.stderr_content)
 
 Another instance where running the model synchronously is helpful would be running data processing scripts after it completes.
 
