@@ -64,6 +64,7 @@ After you have the location of that directory you can either move the entire Ape
     py_site=$(python3 -m site --user-site)
    #
     mkdir -p "$py_site"
+    cd "$py_site"
     ln -s "$module_path"
     ls -l
     cd "$module_path"
