@@ -61,7 +61,9 @@ After you have the location of that directory you can either move the entire Ape
 
    # OSX/ Linux Only
     module_path=$(pwd)
-    cd $(python3 -m site --user-site)
+    py_site=$(python3 -m site --user-site)
+   #
+    mkdir -p "$py_site"
     ln -s "$module_path"
     ls -l
     cd "$module_path"
