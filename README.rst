@@ -49,7 +49,7 @@ Once you have gfortran and Python you will need to build the flow model from sou
 
 
 
-Making ApertureMapModuleTools globally visible to the Python install is optional but can simplfy usage of the module. Python stores all third party packages in a local directory, the location of that directory can be found using the following command. If needed substiute "python3" for which ever python executable you have or want to use.  
+Making ApertureMapModuleTools globally visible to the Python install is optional but can simplify usage of the module. Python stores all third party packages in a local directory, the location of that directory can be found using the following command. If needed substiute "python3" for which ever python executable you have or want to use.  
 
 .. code-block:: bash
 
