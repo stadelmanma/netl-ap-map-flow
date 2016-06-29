@@ -48,7 +48,7 @@ class ArgInput(object):
         #
         # if line has a colon the field after it will be used as the value
         # otherwise the whole line is considered the value
-        if re.search(r':\s', self.line):
+        if re.search(r':(:?\s|$)', self.line):
             for ifld, field in enumerate(line_arr):
                 if re.search(r':$', field):
                     try:
@@ -57,6 +57,9 @@ class ArgInput(object):
                     except IndexError:
                         self.value = 'NONE'
                         self.value_index = ifld+1
+                        self.line_arr.append(self.value)
+                        self.line = ' '.join(self.line_arr)
+
 
     def update_value(self, new_value, uncomment=True):
         r"""
@@ -266,7 +269,7 @@ def estimate_req_RAM(input_maps, avail_RAM, suppress=False, **kwargs):
             fmt += 'Map {} requires {} GBs of RAM only {} GBs was alloted.'
             print(fmt.format(fname, RAM, avail_RAM))
     if error and not suppress:
-        raise SystemExit
+        raise EnvironmentError
     #
     return RAM_per_map
 
