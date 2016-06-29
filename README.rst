@@ -73,7 +73,7 @@ Basic Usage of APM Model
 
 Running the Model in a terminal::
 
-    >> ./APM-MODEL.EXE  model_initialization_file
+    ./APM-MODEL.EXE  model_initialization_file
 
 Full usage instructions can be found in `<examples/running-the-flow-model.rst>`_.
 
