@@ -55,10 +55,11 @@ Making ApertureMapModuleTools globally visible to the Python install is optional
 
     python3 -m site --user-site
 
-After you have the location of that directory you can either move the entire ApertureMapModelTools directory there or symlink it using the command below in a terminal window from **inside the ApertureMapModelTools directory**. The command as written will probably not work for windows systems, with the full cygwin enviroment running :code:`bash` in a command prompt it may. The steps to symlink the module may also slightly differ if you are using the full Spyder environment. For Spyder users you will probably need to open a command prompt within spyder by right clicking the Console pane.
+After you have the location of that directory you can either move the entire ApertureMapModelTools directory there or symlink it using the command below in a terminal window from **inside the ApertureMapModelTools directory**. The command as written will only work on Linux and OSX. Windows users will need to manually symlink the module folder using the :code:`mklink` command after locating the directory. The steps to symlink the module will differ if you are using WinPython as well. You will need to run the above command in a command prompt opened from inside of Spyder because WinPython uses it's own installation of Python. After that you will need to manually symlink the module folder using the :code:`mklink` command. 
 
 .. code-block:: bash
 
+   # OSX/ Linux Only
     module_path=$(pwd)
     cd $(python3 -m site --user-site)
     ln -s "$module_path"
