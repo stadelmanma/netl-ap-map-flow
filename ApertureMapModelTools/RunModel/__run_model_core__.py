@@ -10,7 +10,7 @@ import os
 import re
 from subprocess import PIPE
 from subprocess import Popen
-from time import sleep
+from threading import Thread
 from ApertureMapModelTools.__core__ import DataField
 
 
@@ -85,6 +85,19 @@ class ArgInput(object):
         cmt = (';' if self.commented_out else '')
         line = cmt + self.line
         return line
+
+
+class AsyncCommunicate(Thread):
+    r"""
+    Handles asyncronous usage of Popen.communicate()
+    """
+    def __init__(self, popen_obj):
+        self.popen_obj = popen_obj
+        super().__init__()
+
+    def run(self):
+        out, err = self.popen_obj.communicate()
+        self.popen_obj.stdout_content, self.popen_obj.stderr_content = out, err
 
 
 class InputFile(dict):
@@ -274,27 +287,34 @@ def estimate_req_RAM(input_maps, avail_RAM, suppress=False, **kwargs):
     return RAM_per_map
 
 
-def run_model(input_file_obj, synchronous=False, pipe_output=None):
+def run_model(input_file_obj, synchronous=False, show_stdout=False):
     r"""
     Runs an instance of the aperture map model specified in the 'EXE-FILE' argument
     in the input file. If synhronous is True then a while loop is used to hold the
     program until the model finishes running.
     --
+    input_file_obj - InputFile class object to be written and run by the model
+    synchronous - Bool, default=False if True the script pauses until the model
+        finishes executing
+    show_stdout - Bool, default=False if True stdout and stderr are printed to
+        the screen instead of being stored on the Popen object as stdout_content
+        and stderr_content.
+
     Returns a Popen object
     """
     input_file_obj.write_inp_file()
     exe_file = os.path.abspath(input_file_obj['EXE-FILE'].value)
     cmd = (exe_file, input_file_obj.outfile_name)
     #
-    out = None
-    if pipe_output:
-        out = PIPE
+    out = PIPE
+    if show_stdout:
+        out = None
     #
     proc = Popen(cmd, stdout=out, stderr=out, universal_newlines=True)
-    while True:
-        if proc.poll() is not None:
-            return proc
-        if not synchronous:
-            return proc
-        # pausing the re-test of poll to avoid slamming the CPU in the loop
-        sleep(5)
+    async_comm = AsyncCommunicate(proc)
+    async_comm.start()
+    #
+    if synchronous:
+        async_comm.join()
+    #
+    return proc

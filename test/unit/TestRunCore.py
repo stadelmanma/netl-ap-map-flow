@@ -123,6 +123,5 @@ class TestRunCore:
         proc = RunModel.run_model(inp_file, synchronous=False)
         assert proc.poll() is None
         #
-        proc = RunModel.run_model(inp_file, synchronous=True, pipe_output=True)
+        proc = RunModel.run_model(inp_file, synchronous=True, show_stdout=True)
         assert proc.poll() == 0
-        assert proc.stdout.read()
