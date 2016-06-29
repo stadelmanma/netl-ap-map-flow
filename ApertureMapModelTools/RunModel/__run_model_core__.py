@@ -274,7 +274,7 @@ def estimate_req_RAM(input_maps, avail_RAM, suppress=False, **kwargs):
     return RAM_per_map
 
 
-def run_model(input_file_obj, synchronous=False):
+def run_model(input_file_obj, synchronous=False, pipe_output=None):
     r"""
     Runs an instance of the aperture map model specified in the 'EXE-FILE' argument
     in the input file. If synhronous is True then a while loop is used to hold the
@@ -286,7 +286,11 @@ def run_model(input_file_obj, synchronous=False):
     exe_file = os.path.abspath(input_file_obj['EXE-FILE'].value)
     cmd = (exe_file, input_file_obj.outfile_name)
     #
-    proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+    out = None
+    if pipe_output:
+        out = PIPE
+    #
+    proc = Popen(cmd, stdout=out, stderr=out, universal_newlines=True)
     while True:
         if proc.poll() is not None:
             return proc
