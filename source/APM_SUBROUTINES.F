@@ -248,6 +248,10 @@ C     READING IN FILE NAMES
           IFLD = 2
           IF (NFLD < 2) GOTO 905
           SUM_FILE = CFLD(IFLD)
+        ELSEIF (INDEX(CFLD(1),'SUMMARY-FILE') > 0) THEN
+          IFLD = 2
+          IF (NFLD < 2) GOTO 905
+          SUM_FILE = CFLD(IFLD)
         ELSEIF (INDEX(CFLD(1),'STAT-FILE') > 0) THEN
           IFLD = 3
           IF (NFLD < 3) GOTO 905
@@ -434,7 +438,16 @@ C
 C     READING IN MASTER INPUT FILE
       DO WHILE (NFLD > 0)
         ! READING INITAL FRACTURE PRESSURE
-        IF     (INDEX(CFLD(1),'FRAC-PRESS') > 0) THEN
+        IF (INDEX(CFLD(1),'FRAC-PRESS') > 0) THEN
+          CALL MESSAGE("NOTICE - KEYWORD 'FRAC-PRESS' IS DEPRECATED")
+          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          READ(CFLD(IFLD),"(F100.0)",ERR = 910) FPB
+          IFLD = 3
+          READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(1)
+          CALL CONVERT_VALUE('PRES',UNIT_IN(1),UNIT(1),FPB,BOK)
+        ! READING INLET PRESSURE
+        ELSEIF (INDEX(CFLD(1),'INLET-PRESS') > 0) THEN
           IF (NFLD < 3) GOTO 905
           IFLD = 2
           READ(CFLD(IFLD),"(F100.0)",ERR = 910) FPB
@@ -511,6 +524,12 @@ C     READING IN MASTER INPUT FILE
           CALL CONVERT_VALUE('PRES',UNIT_IN(1),UNIT(1),STD_PRES,BOK)
         ! READING OUTFLOW SIDE
         ELSEIF (INDEX(CFLD(1),'OUTFLOW-SIDE') > 0) THEN
+          CALL MESSAGE("NOTICE - KEYWORD 'OUTFLOW-SIDE' IS DEPRECATED")
+          IFLD = 2
+          IF (NFLD < IFLD) GOTO 905
+          OUTFLOW = CFLD(IFLD)
+        ! READING OUTLET SIDE
+        ELSEIF (INDEX(CFLD(1),'OUTLET-SIDE') > 0) THEN
           IFLD = 2
           IF (NFLD < IFLD) GOTO 905
           OUTFLOW = CFLD(IFLD)
@@ -518,7 +537,8 @@ C     READING IN MASTER INPUT FILE
         ELSEIF (INDEX(CFLD(1),'MANIFOLD') > 0) THEN
           IFLD = 2
           IF (NFLD < IFLD) GOTO 905
-          IF (INDEX(CFLD(IFLD),'TRUE') > 0) MANIFOLD = .TRUE.
+          IF (INDEX(CFLD(IFLD),'TRUE') > 0) THEN
+             CALL MESSAGE("MANIFOLDS HAVE BEEN DISABLED IN THE MODEL")
         ! READING VOXEL SIZE
         ELSEIF (INDEX(CFLD(1),'VOXEL') > 0) THEN
           IFLD = 3
@@ -591,7 +611,7 @@ C
 C     SETTING CONVERSION VALUES
       IF (.NOT. OUTPUT_UNIT) UNIT_OUT = UNIT_IN
       UNIT(:) = 'SI'
-      UNIT(3) = 'F'
+      UNIT(3) = 'K'
       UNIT(6) = 'PA*SEC'
       UNIT(7) = 'KG/M^3'
       CALL CALC_CONV_FACT('PRES',UNIT_IN(1),UNIT(1),PRES_CONV,BOK)
@@ -903,40 +923,6 @@ C     APPLYING THE HIGH AND LOW MASKS TO THE MAP
         END DO
       END DO
       AVG_APER = AVG_APER/(NZ*NX)
-C
-C     SETTING UP THE UNIFORM OUTFLOW
-      IF (.NOT. MANIFOLD) THEN
-        CALL MESSAGE("     MANIFOLD WAS DISABLED FOR THIS RUN")
-      ELSE IF (INDEX(OUTFLOW,'LEFT') > 0) THEN
-        DO IZ = 1,NZ
-          DO IX = NX,1,-1
-            AP_MAP(IZ,IX+1,0) = AP_MAP(IZ,IX,0)
-          END DO
-          AP_MAP(IZ,1,0) = AVG_APER
-        END DO
-        NX = NX + 1
-      ELSE IF (INDEX(OUTFLOW,'RIGHT') > 0) THEN
-        DO IZ = 1,NZ
-          AP_MAP(IZ,NX+1,0) = AVG_APER
-        END DO
-        NX = NX + 1
-      ELSE IF (INDEX(OUTFLOW,'TOP') > 0) THEN
-        DO IX = 1,NX
-          AP_MAP(NZ+1,IX,0) = AVG_APER
-        END DO
-        NZ = NZ + 1
-      ELSE IF (INDEX(OUTFLOW,'BOTTOM') > 0) THEN
-        DO IX = 1,NX
-          DO IZ = NZ,1,-1
-            AP_MAP(IZ+1,IX,0) = AP_MAP(IZ,IX,0)
-          END DO
-          AP_MAP(1,IX,0) = AVG_APER
-        END DO
-        NZ = NZ + 1
-      ELSE
-        CALL MESSAGE(" INVALID OUTFLOW SIDE ENTERED: "//TRIM(OUTFLOW))
-        GOTO 1000
-      END IF
 C
 C     GETTING ADDITIONAL STATS ON THE APERTURE MAP
       CALL MESSAGE("     CALCULATING ADDITIONAL MAP STATISTICS")
