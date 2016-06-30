@@ -6,7 +6,6 @@ C
       SUBROUTINE SOLVER
 C
 C     WRITTEN BY: MATTHEW STADELMAN
-C
 C     LAST MODIFIED: 2016/06/30
 C
 C     PROGRAM DESCRIPTION: CREATES THE COEFFICENT MATRIX AND SOLVES FOR THE
@@ -26,7 +25,8 @@ C
 C
       IMPLICIT NONE
       REAL(8), ALLOCATABLE :: RHS(:), X(:)
-      REAL(8) :: QRIGHT,QLEFT,QTOP,QBOT,ST,EN
+      !REAL(8) :: QRIGHT,QLEFT,QTOP,QBOT
+      REAL(8) :: ST,EN
       INTEGER :: I,IX,IZ
 C
 C     ALLOCATING VECTORS
@@ -47,18 +47,22 @@ C     SWEEPING GRID TO POPULATE COEFFICIENT ARRAYS
           TT(I,1)  = -TRX(IZ,IX-1)
           TT(I,2)  = -TRX(IZ,IX)
           TT(I,4)  = -TRZ(IZ,IX)
-          QLEFT  = -TRX(IZ,IX-1)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ,IX-1))
-          QRIGHT = -TRX(IZ,IX)*(FRAC_PS(IZ,IX+1) - FRAC_PS(IZ,IX))
-          QBOT   = -TRZ(IZ-1,IX)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ-1,IX))
-          QTOP   = -TRZ(IZ,IX)*(FRAC_PS(IZ+1,IX) - FRAC_PS(IZ,IX))
-          RHS(I) = (QLEFT - QRIGHT) + (QBOT - QTOP)
+          !QLEFT  = -TRX(IZ,IX-1)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ,IX-1))
+          !QRIGHT = -TRX(IZ,IX)*(FRAC_PS(IZ,IX+1) - FRAC_PS(IZ,IX))
+          !QBOT   = -TRZ(IZ-1,IX)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ-1,IX))
+          !QTOP   = -TRZ(IZ,IX)*(FRAC_PS(IZ+1,IX) - FRAC_PS(IZ,IX))
+          !RHS(I) = (QLEFT - QRIGHT) + (QBOT - QTOP)
         END DO
       END DO
+C
+C     SETTING UP THE GROUP BC ARRAYS
+      CALL DEFINE_BOUNDARY_CONDITIONS
 C
 C     CALLING THE SOLVER ALGORITHM
       CALL BLANK
       CALL MESSAGE('     USING D4 GAUSS SOLVER')
       CALL D4_REORDER
+C
       CALL CPU_TIME(ST)
       CALL D4_SOLVER(RHS,X)
       CALL CPU_TIME(EN)
@@ -72,6 +76,61 @@ C     UPDATING THE FRACTURE PRESSURE
           FRAC_PS(IZ,IX) = FRAC_PS(IZ,IX) + X(I)
         END DO
       END DO
+C
+      RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE DEFINE_BOUNDARY_CONDITIONS
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C     DATE WRITTEN: 06/30/2016
+C
+      USE APM_MODULE
+C
+      IMPLICIT NONE
+      REAL(8) GROUP_TRANS
+      INTEGER :: I
+C
+      INLET_ROW(:) = 0.0
+      OUTLET_ROW(:) = 0.0
+      INLET_COL(:) = 0.0
+      OUTLET_COL(:) = 0.0
+C
+C     SETTING ARTIFICIAL TRANS FOR GROUP BC CELL
+      GROUP_TRANS = (AVG_TRX + AVG_TRZ)/2000
+      INLET_CC = GROUP_TRANS * FLOAT(NC)
+      OUTLET_CC = GROUP_TRANS * FLOAT(NC)
+C
+C     SETTING ROW AND COLUMN VECTOR VALUES FOR INLET AND OUTLET
+      FORALL (I = 1:NC) INLET_ROW(INLET(I)) = GROUP_TRANS
+      FORALL (I = 1:NC) OUTLET_ROW(OUTLET(I)) = GROUP_TRANS
+      FORALL (I = 1:NC) INLET_COL(INLET(I)) = GROUP_TRANS
+      FORALL (I = 1:NC) OUTLET_COL(OUTLET(I)) = GROUP_TRANS
+C
+C     DEFINING BC TYPE LOGIC
+      IF (INJRATE .GT. 0.0) THEN !INLET FLOW RATE BC
+        INLET_RHS = INJRATE
+      END IF
+C
+      IF (OUTRATE .GT. 0.0) THEN !OUTLET FLOW RATE BC
+        OUTLET_RHS = OUTRATE
+      END IF
+C
+      IF (FPSB .GE. 0.0) THEN !INLET PRESSURE BC
+        INLET_CC = 1.0
+        INLET_ROW(:) = 0.0
+        INLET_RHS = FPSB
+      END IF
+C
+      IF (OUTPSB .GE. 0.0) THEN !OUTLET PRESSURE BC
+        OUTLET_CC = 1.0
+        OUTLET_ROW(:) = 0.0
+        OUTLET_RHS = OUTPSB
+      END IF
 C
       RETURN
       END SUBROUTINE
