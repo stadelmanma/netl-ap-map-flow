@@ -3,51 +3,79 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE D4_GAUSS(AD,AW,AC,AE,AU,RHS,X)
-C
-C     GAUSSIAN D4 ORDERED SOLVER
-C     CONTROLS THE TWO SUBROUTINES THAT SOLVE THE LINEAR SYSTEM
+      SUBROUTINE SOLVER
 C
 C     WRITTEN BY: MATTHEW STADELMAN
-C     DATE WRITTEN: 01/29/2016
+C
+C     LAST MODIFIED: 2016/06/30
+C
+C     PROGRAM DESCRIPTION: CREATES THE COEFFICENT MATRIX AND SOLVES FOR THE
+C         PRESSURE.
+C
+C     SUBROUTINE CALLS: D4_GAUSS
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       X - VECTOR THAT STORES THE CHANGE IN PRESSURE TO REACH STEADY-STATE CONDITIONS
+C       RHS - RHS OF THE SOLTUION MATRIX, NET FLOW CHANGE THAT IS SOLVED FOR
+C       QRIGHT,QLEFT,QTOP,QBOT - FLOW THROUGH A CELL IN THE GIVEN DIRECTION
+C
+C ----------------------------------------------------------------------
 C
       USE APM_MODULE
 C
       IMPLICIT NONE
-      REAL(8) :: AD(*), AW(*), AC(*), AE(*), AU(*), RHS(*), X(*)
-      REAL(8) :: ST,EN
-      INTEGER :: I, NXZ
-      CHARACTER(120) :: C120
+      REAL(8), ALLOCATABLE :: RHS(:), X(:)
+      REAL(8) :: QRIGHT,QLEFT,QTOP,QBOT,ST,EN
+      INTEGER :: I,IX,IZ
 C
-      !
-      IF (FIRST_RUN) THEN
-        !
-        CALL CPU_TIME(ST)
-        NXZ = NX*NZ
-        CALL ALLOCATE_COEF(NXZ)
-        !
-        ! POPULATING COEFFICIENT ARRAYS
-        FORALL (I = 1:NXZ) CC(I)   = AC(I)
-        FORALL (I = 1:NXZ) TT(I,1) = AW(I)
-        FORALL (I = 1:NXZ) TT(I,2) = AE(I)
-        FORALL (I = 1:NXZ) TT(I,3) = AD(I)
-        FORALL (I = 1:NXZ) TT(I,4) = AU(I)
-        !
-        CALL D4_REORDER
-        !
-        CALL CPU_TIME(EN)
-        WRITE(*,"(5X,'REQUIRED TIME TO REORDER:',F11.6)")(EN-ST)
-      END IF
-      !
+C     ALLOCATING VECTORS
+      CALL ALLOCATE_COEF(NX*NZ)
+C
+C     INITIALIZING  VECTORS
+      ALLOCATE(RHS(NX*NZ), X(NX*NZ))
+      RHS(:) = 0.0
+      X(:) = 0.0
+C
+C     SWEEPING GRID TO POPULATE COEFFICIENT ARRAYS
+      I = 0
+      DO IZ = 1,NZ
+        DO IX = 1,NX
+          I = (IZ-1)*NX + IX
+          CC(I)  =  TRX(IZ,IX-1)+TRX(IZ,IX)+TRZ(IZ-1,IX)+TRZ(IZ,IX)
+          TT(I,3)  = -TRZ(IZ-1,IX)
+          TT(I,1)  = -TRX(IZ,IX-1)
+          TT(I,2)  = -TRX(IZ,IX)
+          TT(I,4)  = -TRZ(IZ,IX)
+          QLEFT  = -TRX(IZ,IX-1)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ,IX-1))
+          QRIGHT = -TRX(IZ,IX)*(FRAC_PS(IZ,IX+1) - FRAC_PS(IZ,IX))
+          QBOT   = -TRZ(IZ-1,IX)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ-1,IX))
+          QTOP   = -TRZ(IZ,IX)*(FRAC_PS(IZ+1,IX) - FRAC_PS(IZ,IX))
+          RHS(I) = (QLEFT - QRIGHT) + (QBOT - QTOP)
+        END DO
+      END DO
+C
+C     CALLING THE SOLVER ALGORITHM
+      CALL BLANK
+      CALL MESSAGE('     USING D4 GAUSS SOLVER')
+      CALL D4_REORDER
       CALL CPU_TIME(ST)
-      !
       CALL D4_SOLVER(RHS,X)
-      !
       CALL CPU_TIME(EN)
-      WRITE(C120,"(5X,'REQUIRED TIME FOR SOLUTION: ',F13.6)")(EN-ST)
-      CALL MESSAGE(C120)
+      WRITE(CVAR,"(5X,'REQUIRED TIME FOR SOLUTION: ',F13.6)")(EN-ST)
+      CALL MESSAGE(CVAR)
+C
+C     UPDATING THE FRACTURE PRESSURE
+      DO IZ = 1,NZ
+        DO IX = 1,NX
+          I = (IZ-1)*NX + IX
+          FRAC_PS(IZ,IX) = FRAC_PS(IZ,IX) + X(I)
+        END DO
+      END DO
+C
 C
       RETURN
+C
 C
       END SUBROUTINE
 C

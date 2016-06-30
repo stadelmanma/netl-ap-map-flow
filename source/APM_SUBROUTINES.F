@@ -539,6 +539,7 @@ C     READING IN MASTER INPUT FILE
           IF (NFLD < IFLD) GOTO 905
           IF (INDEX(CFLD(IFLD),'TRUE') > 0) THEN
              CALL MESSAGE("MANIFOLDS HAVE BEEN DISABLED IN THE MODEL")
+          END IF
         ! READING VOXEL SIZE
         ELSEIF (INDEX(CFLD(1),'VOXEL') > 0) THEN
           IFLD = 3
@@ -1666,58 +1667,6 @@ C
 C
  1000 BOK = .FALSE.
       RETURN
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE SOLVER(AD,AW,AC,AE,AU,RES)
-C
-C     WRITTEN BY: MATTHEW STADELMAN
-C
-C     LAST MODIFIED: 2016/02/10
-C
-C     PROGRAM DESCRIPTION: ALLOWS FOR THE USE OF MULTIPLE LINEAR SOLVERS
-C
-C     SUBROUTINE CALLS: GAUSS, D4_GAUSS, JACOBI, CG
-C
-C ----------------------------------------------------------------------
-C     VARIABLE DESCRIPTION:
-C       DPS - VECTOR THAT STORES THE CHANGE IN PRESSURE TO REACH STEADY-STATE CONDITIONS
-C       AD,AW,AC,AE,AU - THE DIAGONALS THAT MAKE UP THE SOLUTION MATRIX
-C       RES - RHS OF THE SOLTUION MATRIX, NET FLOW CHANGE THAT IS SOLVED FOR
-C
-C ----------------------------------------------------------------------
-C
-      USE APM_MODULE
-C
-      IMPLICIT NONE
-      REAL(8), ALLOCATABLE :: DPS(:)
-      REAL(8) :: AD(*),AW(*),AC(*),AE(*),AU(*),RES(*)
-      INTEGER :: I,IX,IZ
-C
-C     INITIALIZING DPS VECTOR
-      ALLOCATE(DPS(NX*NZ))
-      DPS(:) = 0.0
-C
-C     CALLING THE SOLVER (ONLY GAUSS AND D4_GAUSS PRODUCE VALID RESULTS)
-      CALL BLANK
-      CALL MESSAGE('     USING D4 GAUSS SOLVER')
-      CALL D4_GAUSS(AD,AW,AC,AE,AU,RES,DPS)
-C
-C     UPDATING THE FRACTURE PRESSURE
-      DO IZ = 1,NZ
-        DO IX = 1,NX
-          I = (IZ-1)*NX + IX
-          FRAC_PS(IZ,IX) = FRAC_PS(IZ,IX) + DPS(I)
-        END DO
-      END DO
-C
-C
-      RETURN
-C
 C
       END SUBROUTINE
 C
