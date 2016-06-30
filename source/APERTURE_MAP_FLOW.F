@@ -59,7 +59,7 @@ C       FOR INHOMOGENEOUS APERTURE
 C
         FLOW = 0.0
         DO IC = 1,NC
-          I = PBCELLS(IC)
+          I = OUTLET(IC)
           IF (INDEX(OUTFLOW,'LEFT') > 0)   FLOW = FLOW + Q(1,I)
           IF (INDEX(OUTFLOW,'RIGHT') > 0)  FLOW = FLOW + Q(2,I)
           IF (INDEX(OUTFLOW,'BOTTOM') > 0) FLOW = FLOW + Q(3,I)

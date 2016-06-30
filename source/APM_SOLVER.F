@@ -73,10 +73,7 @@ C     UPDATING THE FRACTURE PRESSURE
         END DO
       END DO
 C
-C
       RETURN
-C
-C
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
