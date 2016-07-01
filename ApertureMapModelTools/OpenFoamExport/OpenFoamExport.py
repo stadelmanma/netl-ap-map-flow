@@ -52,6 +52,7 @@ class OpenFoamExport(dict):
         if export_params is not None:
             for key, value in export_params.items():
                 self[key] = value
+        self.point_data += 1E-6
         #
         # initializing required arrays
         num_verts = 2*(self.nx - 1)*(self.nz - 1) + 4*(self.nx + self.nz)
@@ -200,7 +201,7 @@ class OpenFoamExport(dict):
         # writing verticies
         file_content += 'vertices\n(\n'
         for val in self._verticies:
-            val = ['{:12.6F}'.format(v) for v in val]
+            val = ['{:12.9F}'.format(v) for v in val]
             val = ' '.join(val)
             file_content += '('+val+')\n'
         file_content += ');\n\n'
