@@ -47,28 +47,23 @@ C     SWEEPING GRID TO POPULATE COEFFICIENT ARRAYS
           TT(I,1)  = -TRX(IZ,IX-1) !LEFT
           TT(I,2)  = -TRX(IZ,IX) !RIGHT
           TT(I,4)  = -TRZ(IZ,IX) !TOP
-          !QLEFT  = -TRX(IZ,IX-1)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ,IX-1))
-          !QRIGHT = -TRX(IZ,IX)*(FRAC_PS(IZ,IX+1) - FRAC_PS(IZ,IX))
-          !QBOT   = -TRZ(IZ-1,IX)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ-1,IX))
-          !QTOP   = -TRZ(IZ,IX)*(FRAC_PS(IZ+1,IX) - FRAC_PS(IZ,IX))
-          !RHS(I) = (QLEFT - QRIGHT) + (QBOT - QTOP)
-          print *, i, CC(i), tt(i,:)
+          QLEFT  = -TRX(IZ,IX-1)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ,IX-1))
+          QRIGHT = -TRX(IZ,IX)*(FRAC_PS(IZ,IX+1) - FRAC_PS(IZ,IX))
+          QBOT   = -TRZ(IZ-1,IX)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ-1,IX))
+          QTOP   = -TRZ(IZ,IX)*(FRAC_PS(IZ+1,IX) - FRAC_PS(IZ,IX))
+          RHS(I) = (QLEFT - QRIGHT) + (QBOT - QTOP)
         END DO
       END DO
 C
 C     SETTING UP THE GROUP BC ARRAYS
       CALL DEFINE_BOUNDARY_CONDITIONS
-      ! HARD DIRICHLET BCs
-      !FORALL (I = 1:NC) RHS(INLET(I)) = FPSB
-      !FORALL (I = 1:NC) RHS(OUTLET(I)) = OUTPSB
-      !FORALL (I = 1:NC) CC(INLET(I)) = 1.0
-      !FORALL (I = 1:NC) CC(OUTLET(I)) = 1.0
-      !FORALL (I = 1:NC) TT(INLET(I),:) = 0.0
-      !FORALL (I = 1:NC) TT(OUTLET(I),:) = 0.0
-      !print *, '\n\n\n\n'
-      !print *, inlet_col
-      !print *, '\n\n\n\n'
-      !print *, outlet_col
+!
+      OPEN(FILE='COEFF-FILE.CSV', UNIT=99)
+      DO I = 1,NX*NZ
+      WRITE(99,"(*(E20.6,',',:))")CC(I),TT(I,:),
+     &                            INLET_COL(I),OUTLET_COL(I),RHS(I)
+      END DO
+      PRINT *, INLET_CC, OUTLET_CC, INLET_RHS, OUTLET_RHS
 C
 C     CALLING THE SOLVER ALGORITHM
       CALL BLANK
@@ -76,8 +71,8 @@ C     CALLING THE SOLVER ALGORITHM
       CALL D4_REORDER
 C
       CALL CPU_TIME(ST)
-      !CALL D4_SOLVER(RHS,X)
-      CALL GAUSS(RHS,X)
+      CALL D4_SOLVER(RHS,X)
+      !CALL GAUSS(RHS,X)
       CALL CPU_TIME(EN)
       WRITE(CVAR,"(5X,'REQUIRED TIME FOR SOLUTION: ',F13.6)")(EN-ST)
       CALL MESSAGE(CVAR)
@@ -86,7 +81,7 @@ C     UPDATING THE FRACTURE PRESSURE
       DO IZ = 1,NZ
         DO IX = 1,NX
           I = (IZ-1)*NX + IX
-          FRAC_PS(IZ,IX) = X(I)!FRAC_PS(IZ,IX) + X(I)
+          FRAC_PS(IZ,IX) = FRAC_PS(IZ,IX) + X(I)
         END DO
       END DO
 C
@@ -126,8 +121,8 @@ C     SETTING ROW AND COLUMN VECTOR VALUES FOR INLET AND OUTLET
       FORALL (I = 1:NC) OUTLET_ROW(OUTLET(I)) = -GROUP_TRANS
       FORALL (I = 1:NC) INLET_COL(INLET(I)) = -GROUP_TRANS
       FORALL (I = 1:NC) OUTLET_COL(OUTLET(I)) = -GROUP_TRANS
-      FORALL (I = 1:NC) CC(INLET(I)) = CC(INLET(I)) + GROUP_TRANS
-      FORALL (I = 1:NC) CC(OUTLET(I)) = CC(OUTLET(I))  + GROUP_TRANS
+      !FORALL (I = 1:NC) CC(INLET(I)) = CC(INLET(I)) + GROUP_TRANS
+      !FORALL (I = 1:NC) CC(OUTLET(I)) = CC(OUTLET(I))  + GROUP_TRANS
 C
 C     DEFINING BC TYPE LOGIC
       IF (INJRATE .GT. 0.0) THEN !INLET FLOW RATE BC
@@ -138,16 +133,17 @@ C
         OUTLET_RHS = OUTRATE
       END IF
 C
-      IF (FPSB .GE. 0.0) THEN !INLET PRESSURE BC
+C     IF PRESSURE CONTROLLED THEN GROUP BCs SHOULD NOT AFFECT SOLUTION
+      IF (PRESC) THEN
         INLET_CC = 1.0
+        INLET_COL(:) = 0.0
         INLET_ROW(:) = 0.0
-        INLET_RHS = FPSB
-      END IF
-C
-      IF (OUTPSB .GE. 0.0) THEN !OUTLET PRESSURE BC
+        INLET_RHS = 0.0
+        !
         OUTLET_CC = 1.0
+        OUTLET_COL(:) = 0.0
         OUTLET_ROW(:) = 0.0
-        OUTLET_RHS = OUTPSB
+        OUTLET_RHS = 0.0
       END IF
 C
       RETURN
@@ -388,8 +384,8 @@ C
           JBR = JBR + 1
           TEMP_RHS = TEMP_RHS - UPPER_D4(IUP)*X(INAT(JBR))
         END DO
-        TEMP_RHS = TEMP_RHS - INLET_D4COL(IB)*INLET_X
-        TEMP_RHS = TEMP_RHS - OUTLET_D4COL(IB)*OUTLET_X
+        !TEMP_RHS = TEMP_RHS - INLET_D4COL(IB)*INLET_X
+        !TEMP_RHS = TEMP_RHS - OUTLET_D4COL(IB)*OUTLET_X
         X(IB) = TEMP_RHS
       END DO
 !
@@ -402,8 +398,8 @@ C
           JBR = LINK_D4(IBR,ID)
           IF(JBR > 0) TEMP_RHS = TEMP_RHS - TT(IB,ID)*X(INAT(JBR))
         END DO
-        TEMP_RHS = TEMP_RHS - INLET_COL(IB)*INLET_X
-        TEMP_RHS = TEMP_RHS - OUTLET_COL(IB)*OUTLET_X
+        !TEMP_RHS = TEMP_RHS - INLET_COL(IB)*INLET_X
+        !TEMP_RHS = TEMP_RHS - OUTLET_COL(IB)*OUTLET_X
         X(IB) = TEMP_RHS/CC(IB)
       END DO
 !
