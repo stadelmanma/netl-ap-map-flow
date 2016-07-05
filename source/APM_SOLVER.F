@@ -25,7 +25,6 @@ C
 C
       IMPLICIT NONE
       REAL(8), ALLOCATABLE :: X(:)
-      REAL(8) :: QRIGHT,QLEFT,QTOP,QBOT
       REAL(8) :: ST,EN
       INTEGER :: I,IX,IZ
 C
@@ -49,10 +48,6 @@ C     SWEEPING GRID TO POPULATE COEFFICIENT ARRAYS
           TT(I,1)  = -TRX(IZ,IX-1) !LEFT
           TT(I,2)  = -TRX(IZ,IX) !RIGHT
           TT(I,4)  = -TRZ(IZ,IX) !TOP
-          QLEFT  = -TRX(IZ,IX-1)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ,IX-1))
-          QRIGHT = -TRX(IZ,IX)*(FRAC_PS(IZ,IX+1) - FRAC_PS(IZ,IX))
-          QBOT   = -TRZ(IZ-1,IX)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ-1,IX))
-          QTOP   = -TRZ(IZ,IX)*(FRAC_PS(IZ+1,IX) - FRAC_PS(IZ,IX))
         END DO
       END DO
 C
