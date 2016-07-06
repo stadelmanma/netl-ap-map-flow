@@ -45,79 +45,81 @@ C
 C     RUNNING SUBROUTINE TO SOLVE FOR FLOW
       CALL BLANK
       CALL MESSAGE(" CALCULATING FLOW THROUGH FRACTURE")
-      IF (RATEC) THEN
-        CALL FRAC_FLOW(BOK)
-        IF (.NOT. BOK) GOTO 1000
-        CALL BLANK
-        CALL MESSAGE("     INTERMEDIATE FRACTURE FLOWS CALCULATED")
-C
-C       CALCULATING INTERMEDIATE VALUES TO CORRECT BOUNDARY PRESSURE
-C       FOR INHOMOGENEOUS APERTURE
-        CALL BLANK
-        WRITE(CVAR,600)"INTERMEDIATE",OUTPB*PRES_CONV,TRIM(UNIT_OUT(1))
-        CALL MESSAGE(CVAR)
-C
-        FLOW = 0.0
-        DO IC = 1,NC
-          I = OUTLET(IC)
-          IF (INDEX(OUTFLOW,'LEFT') > 0)   FLOW = FLOW + Q(1,I)
-          IF (INDEX(OUTFLOW,'RIGHT') > 0)  FLOW = FLOW + Q(2,I)
-          IF (INDEX(OUTFLOW,'BOTTOM') > 0) FLOW = FLOW + Q(3,I)
-          IF (INDEX(OUTFLOW,'TOP') > 0)    FLOW = FLOW + Q(4,I)
-        END DO
-        FLOW = ABS(FLOW)
-        WRITE(CVAR,605)"INTERMEDIATE",FLOW*RATE_CONV*STD_CONV,
-     &                               TRIM(UNIT_OUT(5))
-        CALL MESSAGE(CVAR)
-C
-C       SETTING UP SECOND RUN
-        FRAC_PS(:,:) = FPSB
-        !
-        ! ADJUSTING PRESSURE BOUNDARY
-        IF (INDEX(OUTFLOW,'LEFT') > 0) THEN
-          FLOW_CF = ABS(FLOW/(FPSB-OUTPSB)/AVG_TRX)
-          OUTRATE = OUTRATE/FLOW_CF
-          OUTPSB = FPSB - OUTRATE/AVG_TRX
-          DO IZ = 1,NZ
-            FRAC_PS(IZ,0) = OUTPSB
-          END DO
-        ELSE IF (INDEX(OUTFLOW,'RIGHT') > 0) THEN
-          FLOW_CF = ABS(FLOW/(FPSB-OUTPSB)/AVG_TRX)
-          OUTRATE = OUTRATE/FLOW_CF
-          OUTPSB = FPSB - OUTRATE/AVG_TRX
-          DO IZ = 1,NZ
-            FRAC_PS(IZ,NX+1) = OUTPSB
-          END DO
-        ELSE IF (INDEX(OUTFLOW,'TOP') > 0) THEN
-          FLOW_CF = ABS(FLOW/(FPSB-OUTPSB)/AVG_TRZ)
-          OUTRATE = OUTRATE/FLOW_CF
-          OUTPSB = FPSB - OUTRATE/AVG_TRZ
-          DO IX = 1,NX
-            FRAC_PS(NZ+1,IX) = OUTPSB
-          END DO
-        ELSE IF (INDEX(OUTFLOW,'BOTTOM') > 0) THEN
-          FLOW_CF = ABS(FLOW/(FPSB-OUTPSB)/AVG_TRZ)
-          OUTRATE = OUTRATE/FLOW_CF
-          OUTPSB = FPSB - OUTRATE/AVG_TRZ
-          DO IX = 1,NX
-            FRAC_PS(0,IX) = OUTPSB
-          END DO
-        ELSE
-          GOTO 1000
-        END IF
-C
-C       LOGGING CORRECTION FACTOR AND MAXIMUM RESIDUAL TO SCREEN
-        WRITE(CVAR,620)FLOW_CF
-        CALL MESSAGE(CVAR)
-        WRITE(CVAR,640)Q(5,MAXLOC(ABS(Q(5,:))))
-        CALL MESSAGE(CVAR)
-C
-C       COVERTING PSUEDO-PRESSURE TO REAL PRESSURE IF FLUID IS GAS
-        OUTPB = OUTPSB
-        IF (IFLUID == 1) CALL PS_TO_PR(OUTPB,OUTPSB,BOK)
-        IF (.NOT. BOK) GOTO 1000
-C
-      END IF
+c==============================================================================
+c       IF (RATEC) THEN
+c         CALL FRAC_FLOW(BOK)
+c         IF (.NOT. BOK) GOTO 1000
+c         CALL BLANK
+c         CALL MESSAGE("     INTERMEDIATE FRACTURE FLOWS CALCULATED")
+c C
+c C       CALCULATING INTERMEDIATE VALUES TO CORRECT BOUNDARY PRESSURE
+c C       FOR INHOMOGENEOUS APERTURE
+c         CALL BLANK
+c         WRITE(CVAR,600)"INTERMEDIATE",OUTPB*PRES_CONV,TRIM(UNIT_OUT(1))
+c         CALL MESSAGE(CVAR)
+c C
+c         FLOW = 0.0
+c         DO IC = 1,NC
+c           I = OUTLET(IC)
+c           IF (INDEX(OUTFLOW,'LEFT') > 0)   FLOW = FLOW + Q(1,I)
+c           IF (INDEX(OUTFLOW,'RIGHT') > 0)  FLOW = FLOW + Q(2,I)
+c           IF (INDEX(OUTFLOW,'BOTTOM') > 0) FLOW = FLOW + Q(3,I)
+c           IF (INDEX(OUTFLOW,'TOP') > 0)    FLOW = FLOW + Q(4,I)
+c         END DO
+c         FLOW = ABS(FLOW)
+c         WRITE(CVAR,605)"INTERMEDIATE",FLOW*RATE_CONV*STD_CONV,
+c      &                               TRIM(UNIT_OUT(5))
+c         CALL MESSAGE(CVAR)
+c C
+c C       SETTING UP SECOND RUN
+c         FRAC_PS(:,:) = FPSB
+c         !
+c         ! ADJUSTING PRESSURE BOUNDARY
+c         IF (INDEX(OUTFLOW,'LEFT') > 0) THEN
+c           FLOW_CF = ABS(FLOW/(FPSB-OUTPSB)/AVG_TRX)
+c           OUTRATE = OUTRATE/FLOW_CF
+c           OUTPSB = FPSB - OUTRATE/AVG_TRX
+c           DO IZ = 1,NZ
+c             FRAC_PS(IZ,0) = OUTPSB
+c           END DO
+c         ELSE IF (INDEX(OUTFLOW,'RIGHT') > 0) THEN
+c           FLOW_CF = ABS(FLOW/(FPSB-OUTPSB)/AVG_TRX)
+c           OUTRATE = OUTRATE/FLOW_CF
+c           OUTPSB = FPSB - OUTRATE/AVG_TRX
+c           DO IZ = 1,NZ
+c             FRAC_PS(IZ,NX+1) = OUTPSB
+c           END DO
+c         ELSE IF (INDEX(OUTFLOW,'TOP') > 0) THEN
+c           FLOW_CF = ABS(FLOW/(FPSB-OUTPSB)/AVG_TRZ)
+c           OUTRATE = OUTRATE/FLOW_CF
+c           OUTPSB = FPSB - OUTRATE/AVG_TRZ
+c           DO IX = 1,NX
+c             FRAC_PS(NZ+1,IX) = OUTPSB
+c           END DO
+c         ELSE IF (INDEX(OUTFLOW,'BOTTOM') > 0) THEN
+c           FLOW_CF = ABS(FLOW/(FPSB-OUTPSB)/AVG_TRZ)
+c           OUTRATE = OUTRATE/FLOW_CF
+c           OUTPSB = FPSB - OUTRATE/AVG_TRZ
+c           DO IX = 1,NX
+c             FRAC_PS(0,IX) = OUTPSB
+c           END DO
+c         ELSE
+c           GOTO 1000
+c         END IF
+c C
+c C       LOGGING CORRECTION FACTOR AND MAXIMUM RESIDUAL TO SCREEN
+c         WRITE(CVAR,620)FLOW_CF
+c         CALL MESSAGE(CVAR)
+c         WRITE(CVAR,640)Q(5,MAXLOC(ABS(Q(5,:))))
+c         CALL MESSAGE(CVAR)
+c C
+c C       COVERTING PSUEDO-PRESSURE TO REAL PRESSURE IF FLUID IS GAS
+c         OUTPB = OUTPSB
+c         IF (IFLUID == 1) CALL PS_TO_PR(OUTPB,OUTPSB,BOK)
+c         IF (.NOT. BOK) GOTO 1000
+c C
+c       END IF
+c==============================================================================
 C
 C     SOLVING FOR FLOW THROUGH FRACTURE
       CALL FRAC_FLOW(BOK)

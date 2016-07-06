@@ -37,10 +37,10 @@ C     DEFAULT VALUES
       MANIFOLD   = .FALSE.
       ! DEFAULT TO PRESSURE BOUNDARY CONDITION
       RATEC  = .FALSE.
-      PRESC  = .TRUE.
-      FPB    = 1.0
+      PRESC  = .FALSE.
+      FPB    = -1.0
       FPSB   = -1.0
-      OUTPB  = 0.0
+      OUTPB  = -1.0
       OUTPSB = -1.0
       OUTRATE = -1.0
       INJRATE = -1.0
@@ -465,7 +465,6 @@ C     READING IN MASTER INPUT FILE
           READ(CFLD(IFLD),"(F100.0)",ERR = 910) OUTPB
           IFLD = 3
           READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(1)
-          PRESC = .TRUE.
           CALL MESSAGE("     FRACTURE FLOW IS PRESSURE CONTROLLED")
           CALL CONVERT_VALUE('PRES',UNIT_IN(1),UNIT(1),OUTPB,BOK)
         ! READING OUTLET FLOW RATE
@@ -478,6 +477,15 @@ C     READING IN MASTER INPUT FILE
           RATEC = .TRUE.
           CALL MESSAGE("     FRACTURE FLOW IS RATE CONTROLLED")
           CALL CONVERT_VALUE('RATE',UNIT_IN(5),UNIT(5),OUTRATE,BOK)
+        ELSEIF (INDEX(CFLD(1),'INLET-RATE') > 0) THEN
+          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          READ(CFLD(IFLD),"(F100.0)",ERR = 910) INJRATE
+          IFLD = 3
+          READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(5)
+          RATEC = .TRUE.
+          CALL MESSAGE("     FRACTURE FLOW IS RATE CONTROLLED")
+          CALL CONVERT_VALUE('RATE',UNIT_IN(5),UNIT(5),INJRATE,BOK)
         ! READING FLUID TYPE
         ELSEIF (INDEX(CFLD(1),'FLUID-TYPE') > 0) THEN
           IFLD = 2
@@ -613,6 +621,13 @@ C     READING IN MASTER INPUT FILE
         END IF
         CALL LNPROC(IINP,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
       END DO
+C
+C     CHECKING IF BOTH INLET AND OUTLET PRESSURE CONDITION WERE SUPPLIED
+      IF ((FPB .GE. 0) .AND. (OUTPB .GE. 0)) THEN
+        PRESC = .TRUE.
+      ELSE
+        PRESC = .FALSE.
+      END IF
 C
 C     SETTING CONVERSION VALUES
       IF (.NOT. OUTPUT_UNIT) UNIT_OUT = UNIT_IN
@@ -1488,18 +1503,20 @@ C
 C       INTERPOLATING FOR THE PSEUDO-PRESSURE OF THE OUTFLOW
         IF (PRESC) THEN
           CALL PR_TO_PS(OUTPB,OUTPSB,BOK)
-C
-C       CALCULATING INITIAL PRESSURE BOUND FOR RATE CONTROLLED FRACTURE
-        ELSEIF (RATEC) THEN
-          OUTRATE = OUTRATE/STD_CONV
-          IF ((INDEX(OUTFLOW,'RIGHT')+INDEX(OUTFLOW,'LEFT')) > 0) THEN
-            OUTPSB = FPSB - OUTRATE/AVG_TRX
-          ELSEIF ((INDEX(OUTFLOW,'TOP')+INDEX(OUTFLOW,'BOTTOM'))>0) THEN
-            OUTPSB = FPSB - OUTRATE/AVG_TRZ
-          END IF
-          CALL PS_TO_PR(OUTPB,OUTPSB,BOK)
-        ELSE
-          GOTO 900
+c==============================================================================
+c C
+c C       CALCULATING INITIAL PRESSURE BOUND FOR RATE CONTROLLED FRACTURE
+c         ELSEIF (RATEC) THEN
+c           OUTRATE = OUTRATE/STD_CONV
+c           IF ((INDEX(OUTFLOW,'RIGHT')+INDEX(OUTFLOW,'LEFT')) > 0) THEN
+c             OUTPSB = FPSB - OUTRATE/AVG_TRX
+c           ELSEIF ((INDEX(OUTFLOW,'TOP')+INDEX(OUTFLOW,'BOTTOM'))>0) THEN
+c             OUTPSB = FPSB - OUTRATE/AVG_TRZ
+c           END IF
+c           CALL PS_TO_PR(OUTPB,OUTPSB,BOK)
+c         ELSE
+c           GOTO 900
+c==============================================================================
         END IF
 C
       ELSEIF (IFLUID == 2) THEN  !LIQUID
@@ -1519,23 +1536,25 @@ C       ADUSTING TRANSIMISSIBILITY ARRAYS TO INCORPERATE VISCOSITY
         TRZ(:,:) = TRZ(:,:)/AVG_VISC
 C
 C       CALCULATING INITIAL PRESSURE BOUND FOR RATE CONTROLLED FRACTURE
-        IF (RATEC) THEN
-          IF ((INDEX(OUTFLOW,'RIGHT')+INDEX(OUTFLOW,'LEFT')) > 0) THEN
-            OUTPSB = FPSB - OUTRATE/AVG_TRX
-          ELSEIF ((INDEX(OUTFLOW,'TOP')+INDEX(OUTFLOW,'BOTTOM'))>0) THEN
-            FPSB = FPSB - OUTRATE/AVG_TRZ
-          END IF
-          IF (OUTPSB < 0) THEN
-            CALL BLANK
-            CALL MESSAGE(" ERROR NEGATIVE BOUNDARY PRESSURE CALCULATED")
-            CALL MESSAGE(" FLOW RATE TOO HIGH")
-            GOTO 1000
-          END IF
-          OUTPB = OUTPSB
-        ELSEIF (PRESC) THEN
+        IF (PRESC) THEN
           OUTPSB = OUTPB
-        ELSE
-          GOTO 900
+c==============================================================================
+c         ELSE IF (RATEC) THEN
+c           IF ((INDEX(OUTFLOW,'RIGHT')+INDEX(OUTFLOW,'LEFT')) > 0) THEN
+c             OUTPSB = FPSB - OUTRATE/AVG_TRX
+c           ELSEIF ((INDEX(OUTFLOW,'TOP')+INDEX(OUTFLOW,'BOTTOM'))>0) THEN
+c             FPSB = FPSB - OUTRATE/AVG_TRZ
+c           END IF
+c           IF (OUTPSB < 0) THEN
+c             CALL BLANK
+c             CALL MESSAGE(" ERROR NEGATIVE BOUNDARY PRESSURE CALCULATED")
+c             CALL MESSAGE(" FLOW RATE TOO HIGH")
+c             GOTO 1000
+c           END IF
+c           OUTPB = OUTPSB
+c         ELSE
+c           GOTO 900
+c==============================================================================
         END IF
       ELSE
         CALL MESSAGE("FLUID TYPE MUST BE SPECFIED AS LIQUID OR GAS")
