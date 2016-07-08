@@ -1,3 +1,8 @@
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
       SUBROUTINE FRAC_FLOW(BOK)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
@@ -49,22 +54,14 @@ C     HANDLING EACH OUTFLOW SIDE CASE TO SET BOUNDARY PRESSURES
         FRAC_PS(0,:) = OUTPSB !EXTRA BOTTOM ROW
         FRAC_PS(NZ+1,:) = FPSB !EXTRA TOP ROW
       END IF
-      !
-      PRINT *, 'TEMPORARILY DIRECTLY SETTING OUTPB = OUTSPB'
-      PRINT *, 'IN FILE APM_FLOW.F'
-      OUTPB = OUTPSB
-      FPB = FPSB
+C
+      CALL PS_TO_PR(OUTPB,OUTPSB,BOK)
+      CALL PS_TO_PR(FPB,FPSB,BOK)
 C
 C     UPDATING FRACTURE INTERIOR GRID WITH NEW PRESSURES
       DO IZ = 1,NZ
         DO IX = 1,NX
-          ! CONVERTING PSEDUO-PRESSURE TO PRESSURE FOR GAS SIMULATIONS
-          IF (IFLUID == 1) THEN
-            CALL PS_TO_PR(FRAC_PR(IZ,IX),FRAC_PS(IZ,IX),BOK)
-            IF (.NOT. BOK) GOTO 1000
-          ELSE
-            FRAC_PR(IZ,IX) = FRAC_PS(IZ,IX)
-          END IF
+          CALL PS_TO_PR(FRAC_PR(IZ,IX),FRAC_PS(IZ,IX),BOK)
         END DO
       END DO
       IF (.NOT. BOK) GOTO 1000
@@ -87,3 +84,8 @@ C
  1000 BOK = .FALSE.
       RETURN
       END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
