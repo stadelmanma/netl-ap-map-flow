@@ -13,7 +13,7 @@ C
 C     SUBROUTINE CALLS: ASSIGN_IO, READ_MASTER, READ_AP_MAP, INIT_PVT,
 C                       COEF, FLOW_BOUNDARY, INIT_OUTPUT
 C
-C     LAST MODIFIED: 2016/03/07
+C     LAST MODIFIED: 2016/07/08
 C
 C ---------------------------------------------------------------------
 C     VARIABLE DESCRIPTION:
