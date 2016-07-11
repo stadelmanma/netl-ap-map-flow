@@ -4,7 +4,7 @@
 .. image:: https://codecov.io/gh/stadelmanma/netl-AP_MAP_FLOW/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/stadelmanma/netl-AP_MAP_FLOW
 
-AP_MAP_FLOW
+AP MAP FLOW
 ===========
 
 .. contents::
