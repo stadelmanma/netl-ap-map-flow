@@ -21,9 +21,6 @@ class TestOpenFoamExport:
         pass
 
     def test_export(self, data_field_class):
-        #
-        map_file = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES',
-                                'PARALELL-PLATE-10VOX.TXT')
         self._field = data_field_class()
         #
         params = {
@@ -46,3 +43,10 @@ class TestOpenFoamExport:
         # attempting to rewrite mesh file to same location to test error handling
         with pytest.raises(FileExistsError):
             export.write_mesh_file(TEMP_DIR, overwrite=False)
+
+    def test_export_upper_surface(self, data_field_class):
+        #
+        self._field = data_field_class()
+        export = OpenFoamExport(self._field)
+        export.export_upper_surface(TEMP_DIR, overwrite=True)
+        #
