@@ -24,6 +24,126 @@ C     LNPROC PARAMETERS
       CHARACTER(MAXLEN),SAVE :: CFLD(MAXFLD)
 C
       CONTAINS
+C
+C     ------------------------------------------------------------------
+      SUBROUTINE LNPROC(IN,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
+        !
+        ! PURPOSE: THIS SUBROUTINE BREAKS A RECORD INTO IT'S SUBFIELDS.
+        !          THE SUBFIELDS ARE SEPARATED BY A COMMA OR ONE OR MORE
+        !          BLANKS. EACH EQUAL SIGN IS TREATED AS A SEPARATE SUBFIELD.
+        !          ALL INFORMATION AFTER A ; IS TREATED AS A COMMENT AND IS
+        !          IGNORED A RETURN WITH NFLD EQUAL ZERO INDICATES AN EOF.
+        !          IF A DOUBLE QUOTE (") IS ENCOUNTED ALL DATA BETWEEN THE
+        !          QUOTES IS TREATED AS IS WITH NO DELIMITERS UNTIL A SECOND
+        !          DOUBLE QUOTE.
+        !
+        !
+        ! SUBROUTINE CALLS :  NONE
+        !
+        ! DEFINITION OF ARGUMENTS:
+        ! IN     - UNIT NUMBER FOR READ
+        ! MAXFLD - MAXIMUM NUMBER OF FIELDS IN RECORD
+        ! MAXLEN - MAXIMUM LENGTH OF FIELDS IN RECORD
+        ! CVAR   - INPUT/OUTPUT DATA STRING
+        ! CFLD   - CHARACTER ARRAY CONTAINING SUBFIELDS
+        ! LFLD   - INTEGER ARRAY CONTAINING LENGTHS OF SUBFIELDS
+        ! NFLD   - NUMBER OF SUBFIELDS
+        !
+        ! WRITTEN BY:  W. NEAL SAMS
+        ! MODIFIED BY: MATTHEW A. STADELMAN
+        ! LAST MODIFIED: 03/14/2016
+        !
+        IMPLICIT NONE
+        INTEGER :: IN,MAXFLD,MAXLEN,NFLD,LENG,I,J
+        INTEGER :: LFLD(*)
+        LOGICAL :: QUOTED = .FALSE.
+        CHARACTER(*) :: CFLD(*),CVAR
+        CHARACTER(1) :: C1
+        !
+  100   NFLD = 0
+        IF(IN > 0) READ(IN,'(A)',END=950) CVAR
+        LENG = 0
+        DO I = 1,LEN(TRIM(CVAR))+1
+          C1 = CVAR(I:I)
+          !
+          IF (QUOTED) THEN
+            IF (C1 == '"') THEN
+              QUOTED = .FALSE.
+            ELSE
+              J = IACHAR(C1)
+              IF(J >= 97 .AND. J <= 122) J = J - 32
+              C1 = ACHAR(J)
+              !
+              IF(LENG <= 0) THEN
+                IF(NFLD == MAXFLD) GOTO 950
+                NFLD = NFLD + 1
+                LENG = 1
+                CFLD(NFLD) = C1
+              ELSEIF(LENG < MAXLEN) THEN
+                LENG = LENG + 1
+                CFLD(NFLD)(LENG:LENG) = C1
+              ENDIF
+            END IF
+          !
+          ELSEIF(C1 == ';') THEN
+            IF(LENG > 0) LFLD(NFLD) = LENG
+            GOTO 900
+          ELSEIF(C1 == '"') THEN
+              QUOTED = .TRUE.
+          ELSEIF(C1 == ' ') THEN
+            IF(LENG > 0) THEN
+              LFLD(NFLD) = LENG
+              LENG = -1
+            ENDIF
+          ELSEIF(C1 == ',') THEN
+            IF(LENG > 0) THEN
+              LFLD(NFLD) = LENG
+              LENG = 0
+            ELSEIF(LENG == 0) THEN
+              IF(NFLD == MAXFLD) GOTO 950
+              NFLD = NFLD + 1
+              LFLD(NFLD) = 0
+              CFLD(NFLD) = ' '
+            ELSE
+              LENG = 0
+            ENDIF
+          ELSEIF(C1 == CHAR(9)) THEN !TAB DELIMITER
+            IF(LENG > 0) THEN
+              LFLD(NFLD) = LENG
+              LENG = 0
+            ELSEIF(LENG == 0) THEN
+              IF(NFLD == MAXFLD) GOTO 950
+              NFLD = NFLD + 1
+              LFLD(NFLD) = 0
+              CFLD(NFLD) = ' '
+            ELSE
+              LENG = 0
+            ENDIF
+          ELSEIF(C1 == '=') THEN
+            IF(LENG > 0) LFLD(NFLD) = LENG
+            IF(NFLD == MAXFLD) GOTO 950
+            NFLD = NFLD + 1
+            LFLD(NFLD) = 1
+            CFLD(NFLD) = '='
+            LENG = -1
+          ELSE
+            !
+            IF(LENG <= 0) THEN
+              IF(NFLD == MAXFLD) GOTO 950
+              NFLD = NFLD + 1
+              LENG = 1
+              CFLD(NFLD) = C1
+            ELSEIF(LENG < MAXLEN) THEN
+              LENG = LENG + 1
+              CFLD(NFLD)(LENG:LENG) = C1
+            ENDIF
+          ENDIF !END CHAR TESTING LOOP
+        END DO
+        !
+  900   IF(IN > 0 .AND. NFLD == 0) GOTO 100
+        !
+  950   RETURN
+      END SUBROUTINE
 C     ------------------------------------------------------------------
       SUBROUTINE UPPER_CASE(C_IN,C_OUT)
         !
