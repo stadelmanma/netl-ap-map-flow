@@ -167,6 +167,7 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE STRING_MODULE
 C
       IMPLICIT NONE
       INTEGER :: I,IFLD,NFLD
@@ -463,6 +464,7 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE STRING_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
@@ -720,9 +722,10 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE STRING_MODULE
       USE UNIT_CONVERSION_MODULE
-      IMPLICIT NONE
 C
+      IMPLICIT NONE
       REAL(8) :: PH,PL,PR_CONV
       REAL(8),ALLOCATABLE :: PR2(:),ZF2(:),VI2(:)
       INTEGER :: I,J,IFLD,NFLD
@@ -891,6 +894,7 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE STRING_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
