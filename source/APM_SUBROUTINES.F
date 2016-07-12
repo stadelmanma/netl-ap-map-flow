@@ -1850,7 +1850,7 @@ C
       CALL MESSAGE(C_OUT)
 C
       RETURN
-      END
+      END SUBROUTINE
 C
 C ----------------------------------------------------------------------
 C ######################################################################
@@ -1874,7 +1874,7 @@ C
 C
  2900 FORMAT(5X,'**** THE FOLLOWING RECORD CONTAINS INSUFFICIENT '
      &            ,'DATA ****')
-      END
+      END SUBROUTINE
 C
 C ----------------------------------------------------------------------
 C ######################################################################
@@ -1899,7 +1899,7 @@ C
 C
  2900 FORMAT(5X,'**** FIELD ',I4,' ON THE FOLLOWING RECORD IS IN '
      &         ,'ERROR ****')
-      END
+      END SUBROUTINE
 C
 C ----------------------------------------------------------------------
 C ######################################################################
@@ -1930,11 +1930,12 @@ C     SETTING UP COMMAND
       WRITE(CMD,2000) '$(git rev-parse --show-toplevel)/source/'
 C
 C     PRINTING MESSAGE AND USING GREP TO SHOW WHERE IT WAS CALLED
-      CALL MESSAGE(' *** ALERT: QUIT SUBROUTINE CALLED ***')
+      WRITE(*,"(1X)")
+      WRITE(*,*)' *** ALERT: QUIT SUBROUTINE CALLED ***'
       CALL EXECUTE_COMMAND_LINE(CMD)
       STOP(1)
 C
- 2000 FORMAT('grep -rn "CALL QUIT" "',A,'"')
+ 2000 FORMAT('grep -rn -e "[[:space:]]CALL QUIT" "',A,'"')
 C
       RETURN
       END SUBROUTINE
