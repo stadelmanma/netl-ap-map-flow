@@ -6,9 +6,10 @@ C     PROGRAM DESCRIPTON: OUTPUTS THE DATA FROM THE LCL MODEL INTO
 C         INTO SEVERAL FILES FOR POST-PROCESSING AND VIEWING.
 C
 C     DATE WRITTEN:  2015/03/02
-C     LAST MODIFIED: 2016/02/17
+C     LAST MODIFIED: 2016/07/12
 C
-C     SUBROUTINE CALLS: CALC_PERCENTILE
+C     SUBROUTINE CALLS: INIT_OUTPUT, CALC_PERCENTILE, WRITE_PERCENTILE
+C         WRITE_STATS_FILE, WRITE_DATA_MAP
 C
 C ---------------------------------------------------------------------
 C     VARIABLE DESCRIPTION:
@@ -28,12 +29,11 @@ C
       REAL(8), ALLOCATABLE :: PQX_OUT(:),PQZ_OUT(:),PQM_OUT(:)
       REAL(8), ALLOCATABLE :: REN(:),RES(:)
       REAL(8) :: FLOW,X,Y,Z
-      INTEGER :: I,J,N,IX,IZ,IC,LB
+      INTEGER :: I,N,IX,IZ,IC,LB
       LOGICAL :: BOK
 C
 C     INITIALIZING VARIABLES
       LB = NX*NZ
-      N = 5 !NUMBER OF FLOW VALUES TO CALCULATE
       ALLOCATE(PQX_OUT(LB),PQZ_OUT(LB),PQM_OUT(LB))
       ALLOCATE(RES(LB),REN(LB))
 C
@@ -118,31 +118,13 @@ C     OUTPUTTING DATA TO STATS FILE
       CALL WRITE_STATS_FILE(FLOW)
 C
 C     OUTPUTTING THE WIDTH VECTOR USED IN THE SIMULATION
-      DO IZ = 0,NZ-1
-        I = IZ*NX+1
-        J = IZ*NX+NX
-        WRITE(IMAP,"(*(G15.8,',',:))") WIDTH(I:J)
-      END DO
+      CALL WRITE_DATA_MAP(IMAP, WIDTH, NX, NZ)
       CALL MESSAGE("     ADJUSTED APERTURE FILE COMPLETED")
 C
 C     OUTPUTTING QX, QZ AND FLOW MAGNITUDE VALUES
-      DO IZ = 0,NZ-1
-        I = IZ*NX+1
-        J = IZ*NX+NX
-        WRITE(IFLOX,"(*(G15.8,',',:))") PQX_OUT(I:J)
-      END DO
-C
-      DO IZ = 0,NZ-1
-        I = IZ*NX+1
-        J = IZ*NX+NX
-        WRITE(IFLOZ,"(*(G15.8,',',:))") PQZ_OUT(I:J)
-      END DO
-C
-      DO IZ = 0,NZ-1
-        I = IZ*NX+1
-        J = IZ*NX+NX
-        WRITE(IFLOM,"(*(G15.8,',',:))") PQM_OUT(I:J)
-      END DO
+      CALL WRITE_DATA_MAP(IFLOX, PQX_OUT, NX, NZ)
+      CALL WRITE_DATA_MAP(IFLOZ, PQZ_OUT, NX, NZ)
+      CALL WRITE_DATA_MAP(IFLOM, PQM_OUT, NX, NZ)
       CALL MESSAGE("     FLOW FILE COMPLETED")
 C
 C     OUTPUTTING THE FRACTURE PRESSURE DISTRIBUTION
@@ -195,7 +177,7 @@ C     OUTPUTTING SIMULATION DATA INTO THE VTK FILE
 C
 C     CREATING THE DATA TABLES
       WRITE(IVTK,"(' ')")
-      WRITE(IVTK,"('CELL_DATA ',I0)")NX*NZ*1
+      WRITE(IVTK,"('CELL_DATA ',I0)") NX*NZ*1
       WRITE(IVTK,"('SCALARS APERTURE[',A,'] float')")TRIM(UNIT_OUT(2))
       WRITE(IVTK,"('LOOKUP_TABLE default')")
       DO IZ = 1,NZ
@@ -277,7 +259,7 @@ C
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
-C     LAST MODIFIED: 2016/02/10
+C     LAST MODIFIED: 2016/07/12
 C
 C     PROGRAM DESCRIPTION: PREPARES OUTPUT FILES
 C
@@ -374,7 +356,7 @@ C
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
-C     LAST MODIFIED: 2016/02/10
+C     LAST MODIFIED: 2016/07/12
 C
 C     PROGRAM DESCRIPTION: SETS THE HEADER USED IN CERTAIN OUTPUT FILES
 C
@@ -493,7 +475,7 @@ C
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
-C     LAST MODIFIED: 2016/02/10
+C     LAST MODIFIED: 2016/07/12
 C
 C     PROGRAM DESCRIPTION: OUTPUTS A PERCENTILE IN STANDARD FORMAT
 C
@@ -545,6 +527,41 @@ C
 C
  2300 FORMAT(9X,'|',2X,F7.3,3X,'|',1X,F15.6,1X,'|')
 C
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE WRITE_DATA_MAP(IUNIT, DATA_VECTOR, NX, NZ)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     LAST MODIFIED: 2016/07/12
+C
+C     PROGRAM DESCRIPTION: OUTPUTS A VECTOR INTO A 2-D DATA MAP
+C
+C     SUBROUTINE CALLS: NONE
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       IUNIT - FILE UNIT NUMBER
+C       NX,NZ - DATA EXTENTS ALONG EACH AXIS
+C
+C ----------------------------------------------------------------------
+C
+      IMPLICIT NONE
+      REAL(8) :: DATA_VECTOR(*)
+      INTEGER :: IUNIT, NX ,NZ
+      INTEGER :: IZ, I, J
+C
+      DO IZ = 0,NZ-1
+        I = IZ*NX+1
+        J = IZ*NX+NX
+        WRITE(IUNIT,"(*(G0.8,',',:))") DATA_VECTOR(I:J)
+      END DO
+C
+      RETURN
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
