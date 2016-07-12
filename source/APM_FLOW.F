@@ -24,6 +24,7 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE PVT_MODULE, ONLY : PS_TO_PR
 C
       IMPLICIT NONE
       INTEGER :: I,IX,IZ

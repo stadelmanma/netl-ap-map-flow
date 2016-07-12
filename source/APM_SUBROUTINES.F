@@ -22,6 +22,7 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE PVT_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
@@ -464,6 +465,7 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE PVT_MODULE
       USE STRING_MODULE
       USE UNIT_CONVERSION_MODULE
 C
@@ -693,174 +695,6 @@ C
      &          ' DEVELOPED THERE COULD BE NUMERICAL ERRORS OR BUGS **')
 C
 
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE INIT_PVT(BOK)
-C
-C     WRITTEN BY: MATTHEW STADELMAN
-C
-C     PROGRAM DESCRIPTION: HANDLES READING AND CALCULATION OF PVT DATA
-C
-C     LAST MODIFIED: 2016/03/07
-C
-C     SUBROUTINE CALLS: LNPROC, CALC_CONV_FACT
-C
-C ---------------------------------------------------------------------
-C     VARIABLE DESCRIPTION:
-C       PR_CONV - LOCAL PRESSURE CONVERSION VARIABLE
-C       PH,PL - PRESSURE/PSEDUO-PRESSURE INTERPOATION VARIABLES
-C       PR2,ZF2,VI2 - TEMPORARY STORAGE OF THE EQUALLY SPACED VERSIONS OF INPUT PVT DATA
-C       NFLD - NUMBER OF FIELDS IN CFLD AND LFLD AFTER A PROCESSING A LINE
-C       PR_UNIT - LOCAL PRESSURE UNIT
-C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
-C
-C ---------------------------------------------------------------------
-C
-      USE APM_MODULE
-      USE STRING_MODULE
-      USE UNIT_CONVERSION_MODULE
-C
-      IMPLICIT NONE
-      REAL(8) :: PH,PL,PR_CONV
-      REAL(8),ALLOCATABLE :: PR2(:),ZF2(:),VI2(:)
-      INTEGER :: I,J,IFLD,NFLD
-      CHARACTER(MAXLEN) :: PR_UNIT
-      LOGICAL :: BOK
-C
-C
-      CALL BLANK
-      CALL MESSAGE(" READING PVT DATA")
-C
-C     PERFORMING  ALLOCATIONS
-      ALLOCATE(PR(1000),ZF(1000),VI(1000))
-      PR_CONV = 1.0
-C
-C     READING IN PVT DATA
-C
-C     READING DATA TEMPERTURE LINE
-      CALL LNPROC(IPVT,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
-      IFLD = 3
-      IF (NFLD < IFLD) GOTO 905
-      UNIT(3) = 'SI'
-      UNIT_IN(3) = TRIM(CFLD(2))
-      READ(CFLD(IFLD),"(F10.0)",ERR=910) TEMP
-      CALL CONVERT_VALUE('TEMP',UNIT_IN(3),UNIT(3),TEMP,BOK)
-C
-C     READING HEADER LINE AND GETTING UNITS
-C     UNITS ARE ASSUMED TO BE SEPERATED BY SOME DELIMETER
-C     AND THE NEXT FIELD IN LINE BEHIND THE VALUE
-      CALL LNPROC(IPVT,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
-      IF (NFLD < 5) GOTO 905
-      DO IFLD = 1,NFLD
-        IF (INDEX(CFLD(IFLD),'PRESSURE') > 0) THEN
-          IF (NFLD < IFLD + 1) GOTO 905
-          PR_UNIT = 'SI'
-          CALL CALC_CONV_FACT('PRES',CFLD(IFLD+1),PR_UNIT,PR_CONV,BOK)
-        ELSEIF (INDEX(CFLD(IFLD),'VISC') > 0) THEN
-          IF (NFLD < IFLD + 1) GOTO 905
-          UNIT(6) = 'SI'
-          UNIT_IN(6) = TRIM(CFLD(IFLD+1))
-          CALL CALC_CONV_FACT('VISC',UNIT_IN(6),UNIT(6),VISC_CONV,BOK)
-        END IF
-      END DO
-C
-      DO
-        CALL LNPROC(IPVT,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
-        IF (INDEX(CFLD(1),'END') > 0) EXIT
-        NVALS = NVALS + 1
-        IFLD = 1
-        READ(CFLD(IFLD),"(F100.0)",ERR=910) PR(NVALS)
-        PR(NVALS) = PR(NVALS)*PR_CONV
-        IFLD = 2
-        IF (NFLD < 2) GOTO 905
-        READ(CFLD(IFLD),"(F100.0)",ERR=910) ZF(NVALS)
-        IFLD = 3
-        IF (NFLD < 3) GOTO 905
-        READ(CFLD(IFLD),"(F100.0)",ERR=910) VI(NVALS)
-        VI(NVALS) = VI(NVALS)*VISC_CONV
-      END DO
-C
-C     GENERATING THE PVT AND RELATED VECTORS
-      VALS = MAX(101,NVALS+1)
-      ALLOCATE(PR2(VALS),ZF2(VALS),VI2(VALS))
-C
-C     CREATING THE NEW PR VECTOR THAT WILL ALWAYS HAVE UNIFORM SPACING
-      DPR = PR(NVALS)/(VALS-1)
-      DO I = 1,VALS
-        PR2(I) = DPR*(I-1)
-      END DO
-C
-C     CREATING THE Z AND VISCOSIY VECTORS
-      DO I = 1,VALS
-        DO J = 1,NVALS
-          IF (PR2(I) .LT. PR(J)) EXIT
-        END DO
-        IF (PR2(I) .LT. PR(1)) J = 2
-        PH = PR(J); PL = PR(J-1)
-        ZF2(I) = (PR2(I)-PL)*(ZF(J)-ZF(J-1))/(PH-PL)+ZF(J-1)
-        VI2(I) = (PR2(I)-PL)*(VI(J)-VI(J-1))/(PH-PL)+VI(J-1)
-      END DO
-C
-C     UPATING THEM TO THE EQUALLY SPACED VECTORS
-      DEALLOCATE(PR,ZF,VI)
-      ALLOCATE(PR(VALS),ZF(VALS),VI(VALS))
-      PR = PR2
-      ZF = ZF2
-      VI = VI2
-C
-C     PERFORMING FLUID TYPE SPECIFIC ACTIONS
-      IF (IFLUID == 1) THEN
-C
-        ALLOCATE(PS(VALS),SQPS(VALS),EQSPS(VALS),EQPR(VALS))
-C
-        STD_CONV = (TEMP/STD_TEMP)*(1/STD_PRES)
-C
-C       CREATING THE PSEUDO-PRESS (PHI) VECTOR
-        PS(1) = PR(1)**2/(2*VI(1)*ZF(1))
-        DO I = 2,VALS
-          PS(I) = DPR/2*(PR(I-1)/(VI(I-1)*ZF(I-1))+PR(I)/(VI(I)*ZF(I)))
-          PS(I) = PS(I)+PS(I-1)
-        END DO
-C
-C       DSPS IS DELTA PHI, EQSPS IS THE EQUALLY SPACED SQRT(PHI) VECTOR
-        SQPS = SQRT(PS)
-        DSPS = SQRT(PS(VALS))/(VALS-1)
-        EQSPS(1) = 0
-        DO I = 2,VALS
-          EQSPS(I) = (I-1)*DSPS
-        END DO
-C
-C       CREATING AN EQUALLY SPACED PRESSURE VECTOR FROM EQSPS
-        DO I = 1,VALS
-          DO J = 1,VALS-1
-            IF (EQSPS(I) .LT. SQPS(J)) EXIT
-          END DO
-          IF (EQSPS(I) .LT. SQPS(1)) J = 2
-          PH = SQPS(J); PL = SQPS(J-1)
-          EQPR(I) = (EQSPS(I)-PL)*(PR(J)-PR(J-1))/(PH-PL)+PR(J-1)
-        END DO
-      END IF
-C
-C     DEALLOCATING INTERMEDIATE PVT VECTORS
-      DEALLOCATE(PR2,ZF2,VI2)
-C
-      RETURN
-C
-  905 CALL INSUFFICIENT_ERROR("PVT")
-      CALL MESSAGE(CVAR)
-      GOTO 1000
-C
-  910 CALL FIELD_ERROR("PVT",IFLD)
-      CALL MESSAGE(CVAR)
-      GOTO 1000
-C
- 1000 BOK = .FALSE.
-      RETURN
 C
       END SUBROUTINE
 C
@@ -1433,6 +1267,7 @@ C
 C ----------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE PVT_MODULE
 C
       IMPLICIT NONE
       REAL(8) :: P,PH,PL,B,BF3,BP3,DBF,DBP,W3,THETA
@@ -1664,118 +1499,6 @@ C
       RETURN
 C
  1000 BOK = .FALSE.
-      RETURN
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE PR_TO_PS(P,PSEU,BOK)
-C
-C     WRITTEN BY: MATTHEW STADELMAN
-C
-C     LAST MODIFIED: 2016/07/08
-C
-C     PROGRAM DESCRIPTION: INTERPOLATES FOR THE PSEDUO-PRESSURE BASED ON THE PRESSURE
-C
-C     SUBROUTINE CALLS: NONE
-C
-C ----------------------------------------------------------------------
-C     VARIABLE DESCRIPTION:
-C       P - INPUT PRESSURE
-C       PSEU - OUTPUT PSEUDO-PRESSURE
-C       PH,PL - INTERPOLATION UPPER AND LOWER VALUES
-C       SPS - SQUARE-ROOT OF PSEDUO-PRESSURE RETURNED BY INTERPOLATION
-C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
-C
-C ----------------------------------------------------------------------
-C
-      USE APM_MODULE
-C
-      IMPLICIT NONE
-      REAL(8) :: P,PSEU
-      REAL(8) :: PH,PL,SPS
-      INTEGER :: I
-      LOGICAL :: BOK
-C
-      IF (IFLUID == 2) THEN
-          PSEU = P
-          RETURN
-      END IF
-C
-      IF ((P <= 0) .OR. (P /= P)) GOTO 900
-      I = INT(P/DPR)+1
-      IF (I > VALS) I = VALS - 1
-      PH = PR(I+1); PL = PR(I)
-C
-C     CALCULATING PSEUDO-PRESSURE
-      SPS = (P-PL)*(SQPS(I+1)-SQPS(I))/(PH-PL)+SQPS(I)
-      PSEU = SPS**2
-C
-      RETURN
-C
-  900 CALL BLANK
-      CALL MESSAGE(' **** ERROR NEGATIVE PRESSURE ****')
-      BOK = .FALSE.
-      RETURN
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE PS_TO_PR(P,PSEU,BOK)
-C
-C     WRITTEN BY: MATTHEW STADELMAN
-C
-C     LAST MODIFIED: 2016/07/08
-C
-C     PROGRAM DESCRIPTION: INTERPOLATES FOR THE PRESSURE BASED ON THE
-C         SQUARE-ROOT OF THE PSEUDO-PRESSURE
-C
-C     SUBROUTINE CALLS: NONE
-C
-C ----------------------------------------------------------------------
-C     VARIABLE DESCRIPTION:
-C       P - OUTPUT PRESSURE
-C       PSEU - INPUT PSEUDO-PRESSURE
-C       PH,PL - INTERPOLATION UPPER AND LOWER VALUES
-C       SPS - SQUARE-ROOT OF INPUT PSEDUO-PRESSURE
-C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
-C
-C ----------------------------------------------------------------------
-C
-      USE APM_MODULE
-      IMPLICIT NONE
-      REAL(8) :: P,PSEU
-      REAL(8) :: PH,PL,SPS
-      INTEGER :: I
-      LOGICAL :: BOK
-      CHARACTER(80) :: C80
-C
-      IF (IFLUID == 2) THEN
-          P = PSEU
-          RETURN
-      END IF
-C
-      IF ((PSEU <= 0) .OR. (PSEU /= PSEU)) GOTO 900
-      SPS = SQRT(PSEU)
-      I = INT(SPS/DSPS)+1
-      IF (I > VALS) I = VALS - 1
-      PH = EQSPS(I+1); PL = EQSPS(I)
-C
-C     INTERPOLATING FOR THE PRESSURE
-      P = (SPS-PL)*(EQPR(I+1)-EQPR(I))/(PH-PL)+EQPR(I)
-C
-      RETURN
-C
-  900 CALL BLANK
-      C80 = ' **** ERROR - ENCOUNTERED NEGATIVE PSEUDO-PRESSURE ****'
-      CALL MESSAGE(C80)
-      BOK = .FALSE.
       RETURN
 C
       END SUBROUTINE

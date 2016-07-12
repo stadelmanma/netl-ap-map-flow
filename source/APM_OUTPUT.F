@@ -27,6 +27,7 @@ C
 C ----------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE PVT_MODULE, ONLY : STD_CONV
 C
       IMPLICIT NONE
       REAL(8), ALLOCATABLE :: PQX_OUT(:),PQZ_OUT(:),PQM_OUT(:)
@@ -522,6 +523,7 @@ C
 C ----------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE PVT_MODULE, ONLY : TEMP
 C
       IMPLICIT NONE
       INTEGER :: IUNIT
