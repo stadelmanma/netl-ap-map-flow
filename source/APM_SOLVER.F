@@ -8,7 +8,7 @@ C
 C     WRITTEN BY: MATTHEW STADELMAN
 C     LAST MODIFIED: 2016/06/30
 C
-C     PROGRAM DESCRIPTION: CREATES THE COEFFICENT MATRIX AND SOLVES FOR THE
+C     SUBROUTINE DESCRIPTION: CREATES THE COEFFICENT MATRIX AND SOLVES FOR THE
 C         PRESSURE.
 C
 C     SUBROUTINE CALLS: ALLOCATE_COEF,DEFINE_BOUNDARY_CONDITINS, D4_REORDER,
@@ -25,7 +25,6 @@ C
       USE APM_SOLVER_MODULE
 C
       IMPLICIT NONE
-      REAL(8), ALLOCATABLE :: X(:)
       REAL(8) :: ST,EN
       INTEGER :: I,IX,IZ
 C
@@ -33,7 +32,6 @@ C     ALLOCATING VECTORS
       CALL ALLOCATE_COEF(NX*NZ)
 C
 C     INITIALIZING  VARIABLES
-      RHS(:) = 0.0
       SOLV_NX = NX
       SOLV_NZ = NZ
       X_OFFSET = 0
@@ -60,11 +58,8 @@ C     CALLING THE SOLVER ALGORITHM
       CALL MESSAGE('     USING D4 GAUSS SOLVER')
       CALL CPU_TIME(ST)
       !
-      ALLOCATE(X(SOLV_NX*SOLV_NZ))
-      X(:) = 0.0
-      !
       CALL D4_REORDER
-      CALL D4_SOLVER(X)
+      CALL D4_SOLVER
       CALL CPU_TIME(EN)
       WRITE(CVAR,"(5X,'REQUIRED TIME FOR SOLUTION: ',F13.6)")(EN-ST)
       CALL MESSAGE(CVAR)
@@ -89,7 +84,6 @@ C     SETTING FLOW RATE DETERMINED INLET OR OUTLET PRESSURE
       END IF
 C
       CALL DEALLOCATE_COEF
-      DEALLOCATE(X)
 C
       RETURN
       END SUBROUTINE
@@ -103,18 +97,29 @@ C
 C     WRITTEN BY: MATTHEW STADELMAN
 C     DATE WRITTEN: 06/30/2016
 C
+C     SUBROUTINE DESCRIPTION: SETS PRESSURE AND/OR FLOW RATE BOUNDARY
+C         CONDITIONS.
+C
+C     SUBROUTINE CALLS: ADD_DIRICHLET_BOUND_COND, ADD_NUEMANNG_BOUND_COND
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C
+C ----------------------------------------------------------------------
+C
       USE APM_MODULE
       USE APM_SOLVER_MODULE
-C
       IMPLICIT NONE
+C
+      RHS(:) = 0.0
 C
 C     SETTING PRESSURE BCs
       IF (OUTPSB .GE. 0) THEN
-        CALL ADD_BOUND_COND(OUTFLOW, OUTPSB)
+        CALL ADD_DIRICHLET_BOUND_COND(OUTFLOW, OUTPSB)
       END IF
       !
       IF (FPSB .GE. 0) THEN
-        CALL ADD_BOUND_COND(INLET_SIDE, FPSB)
+        CALL ADD_DIRICHLET_BOUND_COND(INLET_SIDE, FPSB)
       END IF
 C
 C     DEFINING GROUP FLOW BCs
@@ -122,11 +127,11 @@ C     DEFINING GROUP FLOW BCs
       ALLOCATE (NEUMANNG_COL(SOLV_NX*SOLV_NZ))
       !
       IF (INJRATE .GT. 0.0) THEN !INLET FLOW RATE BC
-        CALL ADD_NGBOUND_COND(INLET_SIDE, INJRATE)
+        CALL ADD_NUEMANNG_BOUND_COND(INLET_SIDE, INJRATE)
       END IF
       !
       IF (OUTRATE .GT. 0.0) THEN !OUTLET FLOW RATE BC
-        CALL ADD_NGBOUND_COND(OUTFLOW, -OUTRATE)
+        CALL ADD_NUEMANNG_BOUND_COND(OUTFLOW, -OUTRATE)
       END IF
 C
 C     IF PRESSURE CONTROLLED THEN GROUP BCs SHOULD NOT AFFECT SOLUTION
@@ -144,12 +149,25 @@ C ----------------------------------------------------------------------
 C @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE ADD_BOUND_COND(SIDE, BC_VALUE)
+      SUBROUTINE ADD_DIRICHLET_BOUND_COND(SIDE, BC_VALUE)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C     DATE WRITTEN: 07/05/2016
 C
-      !USE APM_MODULE
+C     SUBROUTINE DESCRIPTION: SETS A DIRICHLET BOUNDARY CONDITION ON A
+C         SPECFIED SIDE. CC, TT, RHS AND X ARRAYS ARE RESIZED IN THE PROCESS.
+C
+C     SUBROUTINE CALLS: NONE
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       SIDE - STRING REPRESENTING THE DESIRED SIDE TO ADD THE CONDTION
+C       BC_VALUE - NUMERIC VALUE OF THE BOUNDARY CONDITION
+C       BC_SLICE - STORES INCIDICES OF THE DIRICHLET CELLS ADDED
+C       MV_SLICE - STORES THE INDICIES NEEDED TO MAP OLD VALUES TO NEW ARRAY DIMENSIONS
+C
+C ----------------------------------------------------------------------
+C
       USE APM_SOLVER_MODULE
 C
       IMPLICIT NONE
@@ -209,12 +227,13 @@ C     POPULATING TEMP ARRAYS
       NEW_RHS(MV_SLICE) = RHS(:)
 C
 C     RESIZING OLD ARRAYS
-      DEALLOCATE(CC,TT,RHS)
-      ALLOCATE(CC(NXZ),TT(NXZ, 4),RHS(NXZ))
+      DEALLOCATE(CC,TT,RHS,X)
+      ALLOCATE(CC(NXZ),TT(NXZ, 4),RHS(NXZ),X(NXZ))
       !
       CC(:) = NEW_CC(:)
       TT(:,:) = NEW_TT(:,:)
       RHS(:) = NEW_RHS(:)
+      X(:) = 0.0
 C
       RETURN
       END SUBROUTINE
@@ -223,12 +242,25 @@ C ----------------------------------------------------------------------
 C @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE ADD_NGBOUND_COND(SIDE, BC_VALUE)
+      SUBROUTINE ADD_NUEMANNG_BOUND_COND(SIDE, BC_VALUE)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C     DATE WRITTEN: 07/06/2016
 C
-      !USE APM_MODULE
+C     SUBROUTINE DESCRIPTION: SETS A NUEMANN GROUP BOUNDARY CONDITION ON A
+C         SPECFIED SIDE. THE NUEMANN_COL AND NUEMANN_ROW VECTORS ARE POPULATED
+C         TO CONNECT TO ALL CELLS ON DESIRED SIDE TO A 'GROUP NODE'.
+C
+C     SUBROUTINE CALLS: NONE
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       SIDE - STRING REPRESENTING THE DESIRED SIDE TO ADD THE GROUP NODE
+C       BC_VALUE - NUMERIC VALUE OF THE BOUNDARY CONDITION
+C       BC_SLICE - STORES THE INDICIES OF CELLS THAT CONNECT TO THE GROUP NODE
+C
+C ----------------------------------------------------------------------
+C
       USE APM_SOLVER_MODULE
 C
       IMPLICIT NONE
@@ -238,7 +270,7 @@ C
       CHARACTER(*) :: SIDE
 
 C
-C     DETERMINING INDICIES TO MODIFY
+C     DETERMINING INDICIES TO CONNECT TO
       IF (INDEX(SIDE,'BOTTOM') > 0) THEN
         ALLOCATE(BC_SLICE(SOLV_NX))
         ID = 3
@@ -260,7 +292,7 @@ C     DETERMINING INDICIES TO MODIFY
         RETURN
       END IF
 C
-C     UPDATING COEFF VECTORS
+C     SETTING CONNECTIONS TO GROUP NODE AND UPDATING THE TT ARRAY
       NEUMANNG_ROW(:) = 0.0
       NEUMANNG_COL(:) = 0.0
       DO I = 1,SIZE(BC_SLICE)
@@ -273,6 +305,7 @@ C     UPDATING COEFF VECTORS
       NEUMANNG_RHS = BC_VALUE
 C
       DEALLOCATE(BC_SLICE)
+C
       RETURN
       END SUBROUTINE
 C
@@ -285,18 +318,25 @@ C
 C     WRITTEN BY: W. NEAL SAMS
 C     DATE WRITTEN: 02/29/2016
 C
-      !USE APM_MODULE
+C     SUBROUTINE DESCRIPTION: CREATES ARRAYS TO MAP LEXOGRAPHICAL ORDER TO THE
+C         D4 (RED-BLACK) ORDERING SCHEME.
+C
+C     SUBROUTINE CALLS: NONE
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C
+C ----------------------------------------------------------------------
+C
       USE APM_SOLVER_MODULE
 C
       IMPLICIT NONE
-      INTEGER :: NXZ
-      INTEGER :: IBR,IB,IPASS,IDIAG,I,J
+      INTEGER :: IBR_MAX(2),IBR,IB,IPASS,IDIAG,I,J
       INTEGER :: ID,JD,IL,IR,IBRU,JBR
 C
-      NXZ = SOLV_NX*SOLV_NZ
-      ALLOCATE (INAT(NXZ),INO(NXZ))
-      ALLOCATE (LINK_D4(NXZ,4))
-      FORALL (IB = 1:NXZ) INO(IB) = 0
+      ALLOCATE (INAT(SOLV_NX*SOLV_NZ), INO(SOLV_NX*SOLV_NZ))
+      ALLOCATE (LINK_D4(SOLV_NX*SOLV_NZ,4))
+      FORALL (IB = 1:SOLV_NX*SOLV_NZ) INO(IB) = 0
 C
 C     REORDER CELL NUMBERING
 C
@@ -376,48 +416,57 @@ C
         IBASE_UPPER(IBR+1) = IBASE_UPPER(IBR) + IR - IBR
       END DO
 C
-      ALLOCATE (ROW(-MAX_BAND:MAX_BAND))
       ALLOCATE (UPPER_D4(IBASE_UPPER(NUM_TOTAL+1)))
 C
       RETURN
-C
       END SUBROUTINE
-!
-! ----------------------------------------------------------------------
-! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-! ----------------------------------------------------------------------
-!
-      SUBROUTINE D4_SOLVER(X)
-!
-!     WRITTEN BY: W. NEAL SAMS
-!     DATE WRITTEN: 02/29/2016
-!
-!     MODIFIED BY: MATTHEW STADELMAN
-!     MODFIED ON: 07/08/2016 TO IMPLEMENT GROUP BCs
-!
-      !USE APM_MODULE
+C
+C ----------------------------------------------------------------------
+C @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE D4_SOLVER
+C
+C     WRITTEN BY: W. NEAL SAMS
+C     DATE WRITTEN: 02/29/2016
+C
+C     MODIFIED BY: MATTHEW STADELMAN
+C     MODFIED ON: 07/08/2016 TO IMPLEMENT GROUP BCs
+C
+C     SUBROUTINE DESCRIPTION: SOLVES THE LINEAR SYSTEM IN D4 ORDER.
+C
+C     SUBROUTINE CALLS: NONE
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       NG_D4COL - STORES D4 ORDER NUEMANN GROUP NODE COLUMN COEFFICENTS
+C       NG_D4ROW - STORES D4 ORDER NUEMANN GROUP NODE ROW COEFFICENTS
+C       ROW - STORES THE CURRENT VALUES DURING ELIMINATION OF A ROW
+C
+C ----------------------------------------------------------------------
+C
       USE APM_SOLVER_MODULE
-!
+C
       IMPLICIT NONE
-      REAL(8),ALLOCATABLE :: NG_D4COL(:),NG_D4ROW(:)
-      REAL(8) :: X(*)
+      REAL(8),ALLOCATABLE :: NG_D4COL(:),NG_D4ROW(:),ROW(:)
       REAL(8) :: TEMP_RHS,TEMP_NGCOL,FACTOR
       INTEGER :: IBR,IBRU,JBR,IB,IBU,NXZ
       INTEGER :: ICOL,JCOL,IL,ID,JD,IUP
-!
+C
       NXZ = SOLV_NX * SOLV_NZ
       ALLOCATE(NG_D4COL(NXZ), NG_D4ROW(NXZ))
-!
-!     ELIMINATION ON THE LOWER HALF OF THE MATRIX ROW BY ROW
-!
+      ALLOCATE (ROW(-MAX_BAND:MAX_BAND))
+C
+C     ELIMINATION ON THE LOWER HALF OF THE MATRIX ROW BY ROW
+C
       DO IBR = NUM_TOP+1,NUM_TOTAL
         IB = INAT(IBR) !INAT MAPS D4 ORDER TO LEXI ORDER
         TEMP_RHS = RHS(IB)
         TEMP_NGCOL = NEUMANNG_COL(IB)
-!
-!     ELIMINATE THE LOWER LEFT QUADRANT OF THE MATRIX AND FILL IN
-!     THE LOWER RIGHT QUADRANT OF THE MATRIX.
-!
+C
+C     ELIMINATE THE LOWER LEFT QUADRANT OF THE MATRIX AND FILL IN
+C     THE LOWER RIGHT QUADRANT OF THE MATRIX.
+C
         ROW(:) = 0.0
         ROW(0) = CC(IB)
         IL = 0
@@ -438,9 +487,9 @@ C
             TEMP_RHS = TEMP_RHS - FACTOR*RHS(IBU)
           END IF
         END DO
-!
-!     ELIMINATE ELEMENTS TO THE LEFT OF THE DIAGONAL
-!
+C
+C     ELIMINATE ELEMENTS TO THE LEFT OF THE DIAGONAL
+C
         DO ICOL = IL,-1
           FACTOR = ROW(ICOL)
           JBR = IBR + ICOL
@@ -452,9 +501,9 @@ C
           TEMP_NGCOL = TEMP_NGCOL - FACTOR*NG_D4COL(JBR)
           TEMP_RHS = TEMP_RHS - FACTOR*X(INAT(JBR))
         END DO
-!
-!     NORMALIZE AND STORE UPPER TRIANGLE
-!
+C
+C     NORMALIZE AND STORE UPPER TRIANGLE
+C
         FACTOR = 1.0/ROW(0)
         ICOL = 0
         DO IUP = IBASE_UPPER(IBR)+1,IBASE_UPPER(IBR+1)
@@ -464,9 +513,9 @@ C
         NG_D4COL(IBR) = FACTOR*TEMP_NGCOL
         X(IB) = FACTOR*TEMP_RHS
       END DO
-!
-!     ELIMINATING THE NEUMANN GROUP ROW
-!
+C
+C     ELIMINATING THE NEUMANN GROUP ROW
+C
       FORALL (IB = 1:NXZ) NG_D4ROW(INO(IB)) = NEUMANNG_ROW(IB)
       ! HANDLING UPPER HALF
       DO IBR = 1,NUM_TOP
@@ -494,9 +543,9 @@ C
         NEUMANNG_RHS = NEUMANNG_RHS - FACTOR*X(INAT(IBR))
       END DO
       NEUMANNG_X = NEUMANNG_RHS/NEUMANNG_CC
-!
-!     BACK SUBSTITUTION ON LOWER HALF
-!
+C
+C     BACK SUBSTITUTION ON LOWER HALF
+C
       X(INAT(NXZ)) = X(INAT(NXZ)) - NG_D4COL(NXZ)*NEUMANNG_X
       DO IBR = NUM_TOTAL-1,NUM_TOP+1,-1
         IB = INAT(IBR)
@@ -509,9 +558,9 @@ C
         END DO
         X(IB) = TEMP_RHS
       END DO
-!
-!     BACK SUBSTITUTION ON UPPER HALF
-!
+C
+C     BACK SUBSTITUTION ON UPPER HALF
+C
       DO IBR = 1,NUM_TOP
         IB = INAT(IBR)
         TEMP_RHS = RHS(IB)
@@ -522,11 +571,11 @@ C
         END DO
         X(IB) = TEMP_RHS/CC(IB)
       END DO
-!
+C
       RETURN
       END SUBROUTINE
-!
-! ----------------------------------------------------------------------
-! @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
-! ----------------------------------------------------------------------
-!
+C
+C ----------------------------------------------------------------------
+C @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+C ----------------------------------------------------------------------
+C

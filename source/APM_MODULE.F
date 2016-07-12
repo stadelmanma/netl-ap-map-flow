@@ -4,7 +4,7 @@ C     WRITTEN BY: MATTHEW STADELMAN
 C     FILE DESCRIPTION: STORES THE NEEDED VARIABLES AND CONSTANTS FOR
 C     2-D LOCAL CUBIC LAW MODEL.
 C
-C     LAST MODIFIED: 2016/06/27
+C     LAST MODIFIED: 2016/07/12
 C ----------------------------------------------------------------------
 C               ---- VARIABLE DESCRIPTIONS ----
 C
