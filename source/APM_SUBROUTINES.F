@@ -123,6 +123,10 @@ C     CREATING FLOW AND PRESSURE BOUNDARIES
       CALL FLOW_BOUNDARY(BOK)
       IF (.NOT. BOK) GOTO 1000
 C
+C     INITIALIZING OUTPUT FILES
+      CALL INIT_OUTPUT(BOK)
+      IF (.NOT. BOK) GOTO 1000
+C
 C     CLOSING INPUT FILES
       CLOSE(IINP)
       CLOSE(IPVT)
@@ -132,14 +136,13 @@ C     CLOSING INPUT FILES
 C
       RETURN
 C
-C     FORMATTING AND ERROR HANDLING
+C
+ 1000 BOK = .FALSE.
+      RETURN
 C
  2000 FORMAT(5X,'USING AVERAGE LIQUID VISCOSITY IN INP FILE ',F8.6,1X,A)
 C
  2010 FORMAT(1X,' ERROR - NONE OR INVAILD VISCOSITY PROVIDED ',F8.6)
-C
- 1000 BOK = .FALSE.
-      RETURN
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
@@ -168,7 +171,6 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
-      USE STRING_MODULE
 C
       IMPLICIT NONE
       INTEGER :: I,IFLD,NFLD
@@ -234,8 +236,7 @@ C
 C
 C     READING IN FILE NAMES
       DO
-        CALL LNPROC(IINP,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD,'SAME')
-        CALL UPPER_CASE(CFLD(1),CFLD(1))
+        CALL LNPROC(IINP,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
         IF (NFLD == 0) EXIT
         IF (INDEX(CFLD(1),'PVT-PATH') > 0) THEN
           IFLD = 2
@@ -466,7 +467,6 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
-      USE STRING_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
@@ -694,6 +694,8 @@ C
  1100 FORMAT(5X,'** WARNING: GAS FLOW CODE IS NOT BE ACTIVELY ',
      &          ' DEVELOPED THERE COULD BE NUMERICAL ERRORS OR BUGS **')
 C
+
+C
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
@@ -722,7 +724,6 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
-      USE STRING_MODULE
       USE UNIT_CONVERSION_MODULE
       IMPLICIT NONE
 C
@@ -894,7 +895,6 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
-      USE STRING_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
@@ -1784,6 +1784,348 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
+      SUBROUTINE INIT_OUTPUT(BOK)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     LAST MODIFIED: 2016/02/10
+C
+C     PROGRAM DESCRIPTION: PREPARES OUTPUT FILES
+C
+C     SUBROUTINE CALLS: CALC_CONV_FACT, SET_HEADER
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       CONV - STORES THE VALUE OF EACH UNIT CONVERSION TO PRINT TO SCREEN
+C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
+C
+C ----------------------------------------------------------------------
+C
+      USE APM_MODULE
+      USE UNIT_CONVERSION_MODULE
+C
+      IMPLICIT NONE
+      REAL(8) :: CONV(7)
+      INTEGER :: I
+      LOGICAL :: BOK
+C
+      CONV(1) = PRES_CONV
+      CONV(2) = DIM_CONV
+      CONV(4) = TIME_CONV
+      CONV(5) = RATE_CONV
+      CONV(6) = VISC_CONV
+      CONV(7) = RHO_CONV
+      UNIT_OUT(6) = UNIT_IN(6)
+      UNIT_OUT(7) = UNIT_IN(7)
+C
+      CALL BLANK
+      CALL MESSAGE(" INITIALIZING OUTPUT FILES")
+      CALL MESSAGE("     INPUT CONVERSIONS APPLIED")
+      CALL CALC_CONV_FACT('PRES',UNIT(1),UNIT_OUT(1),PRES_CONV,BOK)
+      CALL CALC_CONV_FACT('DIST',UNIT(2),UNIT_OUT(2),DIM_CONV,BOK)
+      CALL CALC_CONV_FACT('TIME',UNIT(4),UNIT_OUT(4),TIME_CONV,BOK)
+      CALL CALC_CONV_FACT('RATE',UNIT(5),UNIT_OUT(5),RATE_CONV,BOK)
+      CALL CALC_CONV_FACT('VISC',UNIT(6),UNIT_OUT(6),VISC_CONV,BOK)
+      CALL CALC_CONV_FACT('DENS',UNIT(7),UNIT_OUT(7),RHO_CONV,BOK)
+      IF (.NOT. BOK) GOTO 1000
+C
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,1980)'UNIT IN','UNIT OUT','CONVERSION'
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+      DO I = 1,7
+        IF (I == 3) CYCLE
+        WRITE(CVAR,2000)UNIT_IN(I),UNIT(I),CONV(I)
+      CALL MESSAGE(CVAR)
+      END DO
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+C
+      CONV(1) = PRES_CONV
+      CONV(2) = DIM_CONV
+      CONV(4) = TIME_CONV
+      CONV(5) = RATE_CONV
+      CONV(6) = VISC_CONV
+      CONV(7) = RHO_CONV
+C
+      CALL BLANK
+      CALL MESSAGE("     OUTPUT CONVERSIONS APPLIED")
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,1980)'UNIT IN','UNIT OUT','CONVERSION'
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+      DO I = 1,7
+        IF (I == 3) CYCLE
+        WRITE(CVAR,2000)UNIT(I),UNIT_OUT(I),CONV(I)
+      CALL MESSAGE(CVAR)
+      END DO
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+C
+C     SETTING HEADERS FOR STATISTICS OUTPUT FILE
+      CALL SET_HEADER(ISTAT)
+C
+      RETURN
+C
+ 1000 BOK = .FALSE.
+      RETURN
+C
+ 1980 FORMAT(5X,A10,4X,A10,2X,A15)
+ 1990 FORMAT(5X,41('-'))
+ 2000 FORMAT(5X,A10,' -> ',A10,': ',G15.6)
+C
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE SET_HEADER(IUNIT)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     LAST MODIFIED: 2016/02/10
+C
+C     PROGRAM DESCRIPTION: SETS THE HEADER USED IN CERTAIN OUTPUT FILES
+C
+C     SUBROUTINE CALLS: NONE
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       IUNIT - UNIT NUMBER OF FILE TO WRITE TO
+C
+C ----------------------------------------------------------------------
+C
+      USE APM_MODULE
+C
+      IMPLICIT NONE
+      INTEGER :: IUNIT
+C
+      WRITE(IUNIT,*)"APERTURE MAP INPUT FILE:    "//TRIM(APM_FILE)
+      WRITE(IUNIT,*)"PVT DATA INPUT FILE:    "//TRIM(PVT_FILE)
+      WRITE(IUNIT,*)"NX,NZ"
+      WRITE(IUNIT,"(I6,',',I6)") NX,NZ
+      WRITE(IUNIT,2000) TRIM(UNIT_OUT(2)),TRIM(UNIT_OUT(2)),
+     &                  TRIM(UNIT_OUT(2))
+      WRITE(IUNIT,2010) LENG*DIM_CONV,DIAM*DIM_CONV,AVG_APER*DIM_CONV
+      WRITE(IUNIT,2040) TRIM(UNIT_OUT(6)),TRIM(UNIT_OUT(7)),
+     &                  TRIM(UNIT_OUT(3))
+      WRITE(IUNIT,2045) AVG_VISC*VISC_CONV,RHO*RHO_CONV,TEMP
+C
+      RETURN
+C
+ 2000 FORMAT('LENGTH [',A,'],DIAMETER [',A,'],MEAN APER [',A,'],')
+C
+ 2010 FORMAT(4(F20.6,',',:))
+C
+ 2040 FORMAT('AVG VISC [',A,'],DENSITY [',A,'],TEMP [',A,']')
+C
+ 2045 FORMAT(F10.7,',',F10.4,',',F10.4)
+C
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+
+      SUBROUTINE LNPROC(IN,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
+C
+C     PURPOSE: THIS SUBROUTINE BREAKS A RECORD INTO IT'S SUBFIELDS.
+C              THE SUBFIELDS ARE SEPARATED BY A COMMA OR ONE OR MORE
+C              BLANKS. EACH EQUAL SIGN IS TREATED AS A SEPARATE SUBFIELD.
+C              ALL INFORMATION AFTER A ; IS TREATED AS A COMMENT AND IS
+C              IGNORED A RETURN WITH NFLD EQUAL ZERO INDICATES AN EOF.
+C              IF A DOUBLE QUOTE (") IS ENCOUNTED ALL DATA BETWEEN THE
+C              QUOTES IS TREATED AS IS WITH NO DELIMITERS UNTIL A SECOND
+C              DOUBLE QUOTE.
+C
+C
+C     SUBROUTINE CALLS :  NONE
+C
+C     DEFINITION OF ARGUMENTS:
+C       IN     - UNIT NUMBER FOR READ
+C       MAXFLD - MAXIMUM NUMBER OF FIELDS IN RECORD
+C       MAXLEN - MAXIMUM LENGTH OF FIELDS IN RECORD
+C       CVAR   - INPUT/OUTPUT DATA STRING
+C       CFLD   - CHARACTER ARRAY CONTAINING SUBFIELDS
+C       LFLD   - INTEGER ARRAY CONTAINING LENGTHS OF SUBFIELDS
+C       NFLD   - NUMBER OF SUBFIELDS
+C
+C     WRITTEN BY:  W. NEAL SAMS
+C     MODIFIED BY: MATTHEW A. STADELMAN
+C     LAST MODIFIED: 03/14/2016
+C
+      IMPLICIT NONE
+      INTEGER :: IN,MAXFLD,MAXLEN,NFLD,LENG,I,J
+      INTEGER :: LFLD(*)
+      LOGICAL :: QUOTED = .FALSE.
+      CHARACTER(*) :: CFLD(*),CVAR
+      CHARACTER(1) :: C1
+C
+  100 NFLD = 0
+      IF(IN > 0) READ(IN,'(A)',END=950) CVAR
+      LENG = 0
+      DO I = 1,LEN(TRIM(CVAR))+1
+        C1 = CVAR(I:I)
+        !
+        IF (QUOTED) THEN
+          IF (C1 == '"') THEN
+            QUOTED = .FALSE.
+          ELSE
+            J = IACHAR(C1)
+            IF(J >= 97 .AND. J <= 122) J = J - 32
+            C1 = ACHAR(J)
+            !
+            IF(LENG <= 0) THEN
+              IF(NFLD == MAXFLD) GOTO 950
+              NFLD = NFLD + 1
+              LENG = 1
+              CFLD(NFLD) = C1
+            ELSEIF(LENG < MAXLEN) THEN
+              LENG = LENG + 1
+              CFLD(NFLD)(LENG:LENG) = C1
+            ENDIF
+          END IF
+        !
+        ELSEIF(C1 == ';') THEN
+          IF(LENG > 0) LFLD(NFLD) = LENG
+          GOTO 900
+        ELSEIF(C1 == '"') THEN
+            QUOTED = .TRUE.
+        ELSEIF(C1 == ' ') THEN
+          IF(LENG > 0) THEN
+            LFLD(NFLD) = LENG
+            LENG = -1
+          ENDIF
+        ELSEIF(C1 == ',') THEN
+          IF(LENG > 0) THEN
+            LFLD(NFLD) = LENG
+            LENG = 0
+          ELSEIF(LENG == 0) THEN
+            IF(NFLD == MAXFLD) GOTO 950
+            NFLD = NFLD + 1
+            LFLD(NFLD) = 0
+            CFLD(NFLD) = ' '
+          ELSE
+            LENG = 0
+          ENDIF
+        ELSEIF(C1 == CHAR(9)) THEN !TAB DELIMITER
+          IF(LENG > 0) THEN
+            LFLD(NFLD) = LENG
+            LENG = 0
+          ELSEIF(LENG == 0) THEN
+            IF(NFLD == MAXFLD) GOTO 950
+            NFLD = NFLD + 1
+            LFLD(NFLD) = 0
+            CFLD(NFLD) = ' '
+          ELSE
+            LENG = 0
+          ENDIF
+        ELSEIF(C1 == '=') THEN
+          IF(LENG > 0) LFLD(NFLD) = LENG
+          IF(NFLD == MAXFLD) GOTO 950
+          NFLD = NFLD + 1
+          LFLD(NFLD) = 1
+          CFLD(NFLD) = '='
+          LENG = -1
+        ELSE
+          J = IACHAR(C1)
+          !IF(J >= 97 .AND. J <= 122) J = J - 32
+          !C1 = ACHAR(J)
+C
+          IF(LENG <= 0) THEN
+            IF(NFLD == MAXFLD) GOTO 950
+            NFLD = NFLD + 1
+            LENG = 1
+            CFLD(NFLD) = C1
+          ELSEIF(LENG < MAXLEN) THEN
+            LENG = LENG + 1
+            CFLD(NFLD)(LENG:LENG) = C1
+          ENDIF
+        ENDIF !END CHAR TESTING LOOP
+      END DO
+C
+  900 IF(IN > 0 .AND. NFLD == 0) GOTO 100
+C
+  950 RETURN
+C
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE UPPER_CASE(C_IN,C_OUT)
+C
+C     WRITTEN BY: W. NEAL SAMS
+C     DATE WRITTEN: 10/04/2013
+C
+      IMPLICIT NONE
+      INTEGER :: I,NC
+      CHARACTER(*) :: C_IN,C_OUT
+C
+      DO I = 1,LEN_TRIM(C_IN)
+       NC = ICHAR(C_IN(I:I))
+       IF(97 <= NC .AND. NC <=122) NC = NC - 32
+       C_OUT(I:I) = CHAR(NC)
+      ENDDO
+C
+      RETURN
+      END
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE LOWER_CASE(C_IN,C_OUT)
+C
+C     WRITTEN BY: W. NEAL SAMS
+C     DATE WRITTEN: 10/04/2013
+C
+      IMPLICIT NONE
+      INTEGER :: I,NC
+      CHARACTER(*) :: C_IN,C_OUT
+C
+      DO I = 1,LEN_TRIM(C_IN)
+       NC = ICHAR(C_IN(I:I))
+       IF(65 <= NC .AND. NC <=90) NC = NC + 32
+       C_OUT(I:I) = CHAR(NC)
+      ENDDO
+C
+      RETURN
+      END
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE R_JUST(C_IN,C_OUT,NC)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C     DATE WRITTEN: 2015/09/17
+C
+      IMPLICIT NONE
+      INTEGER :: I,NC,NW
+      CHARACTER(NC) :: C_IN,C_OUT,CVAR
+C
+      NW = NC - LEN_TRIM(C_IN)
+      DO I = 1,NW
+        CVAR(I:I) = ' '
+      END DO
+      C_OUT = CVAR(1:NW)//TRIM(C_IN)
+C
+      RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
       SUBROUTINE MESSAGE(C_OUT)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
@@ -1899,6 +2241,29 @@ C
 C
  2900 FORMAT(5X,'**** FIELD ',I4,' ON THE FOLLOWING RECORD IS IN '
      &         ,'ERROR ****')
+      END
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE EOD_ERROR(CHAR_IN)
+C
+C     WRITTEN BY: W. NEAL SAMS
+C     DATE WRITTEN: 03/08/2014
+C
+      USE APM_MODULE
+C
+      IMPLICIT NONE
+      CHARACTER(*) :: CHAR_IN
+      CHARACTER(MAXLEN) :: C_OUT
+C
+      CALL BLANK
+      C_OUT = '     **** END OF DATA WHILE READING '//TRIM(CHAR_IN)//
+     &       ' DATA ****'
+      CALL MESSAGE(C_OUT)
+C
+      RETURN
       END
 C
 C ----------------------------------------------------------------------
