@@ -79,7 +79,7 @@ C     DEFAULT VALUES
       UNIT_OUT(7) = 'KG/M^3'
 C
 C     INITIALIZING IO
-      CALL ASSIGN_IO(BOK)
+      CALL OPEN_IO(BOK)
       IF (.NOT. BOK) GOTO 1000
 C
 C     READING INPUT FILE
@@ -149,7 +149,7 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE ASSIGN_IO(BOK)
+      SUBROUTINE OPEN_IO(BOK)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
@@ -337,6 +337,42 @@ C
  2000 FORMAT('RM "',A,'"')
 C
       END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+     SUBROUTINE CLOSE_IO
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     PROGRAM DESCRIPTION: CLOSES ALL OUTPUT FILES
+C
+C     LAST MODIFIED: 2016/07/12
+C
+C     SUBROUTINE CALLS: NONE
+C ---------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C
+C ---------------------------------------------------------------------
+C
+      USE APM_MODULE
+      IMPLICIT NONE
+C
+      CLOSE(ISTAT)
+      CLOSE(IMAP)
+      CLOSE(IFLOX)
+      CLOSE(IFLOZ)
+      CLOSE(IFLOM)
+      CLOSE(IPRES)
+      CLOSE(IVTK)
+      !
+      CALL BLANK
+      CALL MESSAGE(" OUTPUT FILES CLOSED")
+      CLOSE(IOUT)
+C
+      END SUBROUTINE
+      RETURN
 C
 C ----------------------------------------------------------------------
 C ######################################################################
