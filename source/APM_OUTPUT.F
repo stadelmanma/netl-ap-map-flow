@@ -1,4 +1,4 @@
-      SUBROUTINE OUTPUT_DATA
+      SUBROUTINE OUTPUT_DATA(BOK)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
@@ -34,6 +34,7 @@ C
       REAL(8) :: FLOW,NFQ,AVG_CORR,BULK_REN,HOM_TRANS
       REAL(8) :: X,Y,Z
       INTEGER :: I,J,N,IX,IZ,IC,LB
+      LOGICAL :: BOK
 C
 C     INITIALIZING VARIABLES
       LB = NX*NZ
@@ -41,7 +42,9 @@ C     INITIALIZING VARIABLES
       ALLOCATE(PQX_OUT(LB),PQZ_OUT(LB),PQM_OUT(LB))
       ALLOCATE(RES(LB),REN(LB))
 C
-C     CALCULATION OF OUTPUT DATA
+C     INITIALIZING OUTPUT FILES
+      CALL INIT_OUTPUT(BOK)
+      IF (.NOT. BOK) GOTO 1000
 C
 C     CALCULATING FLOW RATE FROM FRACTURE
       NFQ = 0.0
@@ -363,6 +366,9 @@ C
 C
       RETURN
 C
+ 1000 BOK = .FALSE.
+      RETURN
+C
   600 FORMAT(5X,A,' BOUNDARY PRESSURE: ',3X,G20.9,1X,A)
 C
   605 FORMAT(5X,A,' FLOW RATE CALCULATED: ',G20.9,1X,A)
@@ -394,5 +400,157 @@ C
  2230 FORMAT(9X,'|',2X,F7.3,3X,'|',1X,F15.6,1X,'|')
 C
       END SUBROUTINE
-
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE INIT_OUTPUT(BOK)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     LAST MODIFIED: 2016/02/10
+C
+C     PROGRAM DESCRIPTION: PREPARES OUTPUT FILES
+C
+C     SUBROUTINE CALLS: CALC_CONV_FACT, SET_HEADER
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       CONV - STORES THE VALUE OF EACH UNIT CONVERSION TO PRINT TO SCREEN
+C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
+C
+C ----------------------------------------------------------------------
+C
+      USE APM_MODULE
+      USE UNIT_CONVERSION_MODULE
+C
+      IMPLICIT NONE
+      REAL(8) :: CONV(7)
+      INTEGER :: I
+      LOGICAL :: BOK
+C
+      CONV(1) = PRES_CONV
+      CONV(2) = DIM_CONV
+      CONV(4) = TIME_CONV
+      CONV(5) = RATE_CONV
+      CONV(6) = VISC_CONV
+      CONV(7) = RHO_CONV
+      UNIT_OUT(6) = UNIT_IN(6)
+      UNIT_OUT(7) = UNIT_IN(7)
+C
+      CALL BLANK
+      CALL MESSAGE(" INITIALIZING OUTPUT FILES")
+      CALL MESSAGE("     INPUT CONVERSIONS APPLIED")
+      CALL CALC_CONV_FACT('PRES',UNIT(1),UNIT_OUT(1),PRES_CONV,BOK)
+      CALL CALC_CONV_FACT('DIST',UNIT(2),UNIT_OUT(2),DIM_CONV,BOK)
+      CALL CALC_CONV_FACT('TIME',UNIT(4),UNIT_OUT(4),TIME_CONV,BOK)
+      CALL CALC_CONV_FACT('RATE',UNIT(5),UNIT_OUT(5),RATE_CONV,BOK)
+      CALL CALC_CONV_FACT('VISC',UNIT(6),UNIT_OUT(6),VISC_CONV,BOK)
+      CALL CALC_CONV_FACT('DENS',UNIT(7),UNIT_OUT(7),RHO_CONV,BOK)
+      IF (.NOT. BOK) GOTO 1000
+C
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,1980)'UNIT IN','UNIT OUT','CONVERSION'
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+      DO I = 1,7
+        IF (I == 3) CYCLE
+        WRITE(CVAR,2000)UNIT_IN(I),UNIT(I),CONV(I)
+      CALL MESSAGE(CVAR)
+      END DO
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+C
+      CONV(1) = PRES_CONV
+      CONV(2) = DIM_CONV
+      CONV(4) = TIME_CONV
+      CONV(5) = RATE_CONV
+      CONV(6) = VISC_CONV
+      CONV(7) = RHO_CONV
+C
+      CALL BLANK
+      CALL MESSAGE("     OUTPUT CONVERSIONS APPLIED")
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,1980)'UNIT IN','UNIT OUT','CONVERSION'
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+      DO I = 1,7
+        IF (I == 3) CYCLE
+        WRITE(CVAR,2000)UNIT(I),UNIT_OUT(I),CONV(I)
+      CALL MESSAGE(CVAR)
+      END DO
+      WRITE(CVAR,1990)
+      CALL MESSAGE(CVAR)
+C
+C     SETTING HEADERS FOR STATISTICS OUTPUT FILE
+      CALL SET_HEADER(ISTAT)
+C
+      RETURN
+C
+ 1000 BOK = .FALSE.
+      RETURN
+C
+ 1980 FORMAT(5X,A10,4X,A10,2X,A15)
+ 1990 FORMAT(5X,41('-'))
+ 2000 FORMAT(5X,A10,' -> ',A10,': ',G15.6)
+C
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE SET_HEADER(IUNIT)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     LAST MODIFIED: 2016/02/10
+C
+C     PROGRAM DESCRIPTION: SETS THE HEADER USED IN CERTAIN OUTPUT FILES
+C
+C     SUBROUTINE CALLS: NONE
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       IUNIT - UNIT NUMBER OF FILE TO WRITE TO
+C
+C ----------------------------------------------------------------------
+C
+      USE APM_MODULE
+C
+      IMPLICIT NONE
+      INTEGER :: IUNIT
+C
+      WRITE(IUNIT,*)"APERTURE MAP INPUT FILE:    "//TRIM(APM_FILE)
+      WRITE(IUNIT,*)"PVT DATA INPUT FILE:    "//TRIM(PVT_FILE)
+      WRITE(IUNIT,*)"NX,NZ"
+      WRITE(IUNIT,"(I6,',',I6)") NX,NZ
+      WRITE(IUNIT,2000) TRIM(UNIT_OUT(2)),TRIM(UNIT_OUT(2)),
+     &                  TRIM(UNIT_OUT(2))
+      WRITE(IUNIT,2010) LENG*DIM_CONV,DIAM*DIM_CONV,AVG_APER*DIM_CONV
+      WRITE(IUNIT,2040) TRIM(UNIT_OUT(6)),TRIM(UNIT_OUT(7)),
+     &                  TRIM(UNIT_OUT(3))
+      WRITE(IUNIT,2045) AVG_VISC*VISC_CONV,RHO*RHO_CONV,TEMP
+C
+      RETURN
+C
+ 2000 FORMAT('LENGTH [',A,'],DIAMETER [',A,'],MEAN APER [',A,'],')
+C
+ 2010 FORMAT(4(F20.6,',',:))
+C
+ 2040 FORMAT('AVG VISC [',A,'],DENSITY [',A,'],TEMP [',A,']')
+C
+ 2045 FORMAT(F10.7,',',F10.4,',',F10.4)
+C
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
 
