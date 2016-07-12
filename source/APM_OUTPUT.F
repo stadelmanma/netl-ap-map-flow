@@ -2,13 +2,13 @@
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
-C     SUBROUTINE DESCRIPTON: OUTPUTS THE DATA FROM THE LCL MODEL INTO
+C     PROGRAM DESCRIPTON: OUTPUTS THE DATA FROM THE LCL MODEL INTO
 C         INTO SEVERAL FILES FOR POST-PROCESSING AND VIEWING.
 C
 C     DATE WRITTEN:  2015/03/02
-C     LAST MODIFIED: 2016/07/12
+C     LAST MODIFIED: 2016/02/17
 C
-C     SUBROUTINE CALLS: INIT_OUTPUT, CALC_PERCENTILE
+C     SUBROUTINE CALLS: CALC_PERCENTILE
 C
 C ---------------------------------------------------------------------
 C     VARIABLE DESCRIPTION:
@@ -539,8 +539,6 @@ C
 C
       RETURN
 C
-C     FORMATTING
-C
  2000 FORMAT('LENGTH [',A,'],DIAMETER [',A,'],MEAN APER [',A,'],')
 C
  2010 FORMAT(4(F20.6,',',:))
@@ -555,3 +553,4 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
+

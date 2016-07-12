@@ -24,9 +24,62 @@ C     LNPROC PARAMETERS
       CHARACTER(MAXLEN),SAVE :: CFLD(MAXFLD)
 C
       CONTAINS
-      !
-      ! ----------------------------------------------------------------
-      !
+C
+C     ------------------------------------------------------------------
+      SUBROUTINE UPPER_CASE(C_IN,C_OUT)
+        !
+        ! WRITTEN BY: W. NEAL SAMS
+        ! DATE WRITTEN: 10/04/2013
+        !
+        IMPLICIT NONE
+        INTEGER :: I,NC
+        CHARACTER(*) :: C_IN,C_OUT
+        !
+        DO I = 1,LEN_TRIM(C_IN)
+         NC = ICHAR(C_IN(I:I))
+         IF(97 <= NC .AND. NC <=122) NC = NC - 32
+         C_OUT(I:I) = CHAR(NC)
+        ENDDO
+        !
+        RETURN
+      END SUBROUTINE
+C     ------------------------------------------------------------------
+      SUBROUTINE LOWER_CASE(C_IN,C_OUT)
+        !
+        ! WRITTEN BY: W. NEAL SAMS
+        ! DATE WRITTEN: 10/04/2013
+        !
+        IMPLICIT NONE
+        INTEGER :: I,NC
+        CHARACTER(*) :: C_IN,C_OUT
+        !
+        DO I = 1,LEN_TRIM(C_IN)
+         NC = ICHAR(C_IN(I:I))
+         IF(65 <= NC .AND. NC <=90) NC = NC + 32
+         C_OUT(I:I) = CHAR(NC)
+        ENDDO
+        !
+        RETURN
+      END SUBROUTINE
+C     ------------------------------------------------------------------
+      SUBROUTINE R_JUST(C_IN,C_OUT,NC)
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! DATE WRITTEN: 2015/09/17
+        !
+        IMPLICIT NONE
+        INTEGER :: I,NC,NW
+        CHARACTER(NC) :: C_IN,C_OUT,CVAR
+       !
+        NW = NC - LEN_TRIM(C_IN)
+        DO I = 1,NW
+          CVAR(I:I) = ' '
+        END DO
+        C_OUT = CVAR(1:NW)//TRIM(C_IN)
+        !
+        RETURN
+      END SUBROUTINE
+C     ------------------------------------------------------------------
       SUBROUTINE LNPROC(IN,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD,CASE)
         !
         ! PURPOSE: THIS SUBROUTINE BREAKS A RECORD INTO IT'S SUBFIELDS.
@@ -42,13 +95,13 @@ C
         ! SUBROUTINE CALLS :  NONE
         !
         ! DEFINITION OF ARGUMENTS:
-        !   IN     - UNIT NUMBER FOR READ
-        !   MAXFLD - MAXIMUM NUMBER OF FIELDS IN RECORD
-        !   MAXLEN - MAXIMUM LENGTH OF FIELDS IN RECORD
-        !   CVAR   - INPUT/OUTPUT DATA STRING
-        !   CFLD   - CHARACTER ARRAY CONTAINING SUBFIELDS
-        !   LFLD   - INTEGER ARRAY CONTAINING LENGTHS OF SUBFIELDS
-        !   NFLD   - NUMBER OF SUBFIELDS
+        ! IN     - UNIT NUMBER FOR READ
+        ! MAXFLD - MAXIMUM NUMBER OF FIELDS IN RECORD
+        ! MAXLEN - MAXIMUM LENGTH OF FIELDS IN RECORD
+        ! CVAR   - INPUT/OUTPUT DATA STRING
+        ! CFLD   - CHARACTER ARRAY CONTAINING SUBFIELDS
+        ! LFLD   - INTEGER ARRAY CONTAINING LENGTHS OF SUBFIELDS
+        ! NFLD   - NUMBER OF SUBFIELDS
         !
         ! WRITTEN BY:  W. NEAL SAMS
         ! MODIFIED BY: MATTHEW A. STADELMAN
@@ -58,22 +111,21 @@ C
         INTEGER :: IN,MAXFLD,MAXLEN,NFLD,LENG,I,J
         INTEGER :: LFLD(*)
         LOGICAL :: QUOTED = .FALSE.
-        CHARACTER(MAXLEN) :: SET_CASE = 'UPPER'
+        CHARACTER(80) :: SET_CASE = 'UPPER'
+        CHARACTER(*),INTENT(IN),OPTIONAL :: CASE
         CHARACTER(*) :: CFLD(*),CVAR
-        CHARACTER(*),OPTIONAL :: CASE
         CHARACTER(1) :: C1
         !
-        ! DETERMINING CASE TO SET LINE TO
-        IF (PRESENT(CASE)) CALL UPPER_CASE(CASE,SET_CASE)
+        IF (PRESENT(CASE)) SET_CASE = TRIM(CASE)
+        CALL UPPER_CASE(SET_CASE,SET_CASE)
         !
   100   NFLD = 0
         !
-        ! READING AND SETTING CASE OF INPUT LINE
+        ! READING AND SETTING CASE OF LINE
         IF(IN > 0) READ(IN,'(A)',END=950) CVAR
         IF (INDEX(SET_CASE,'UP') > 0) CALL UPPER_CASE(CVAR,CVAR)
         IF (INDEX(SET_CASE,'LO') > 0) CALL LOWER_CASE(CVAR,CVAR)
         !
-        ! PROCESSING LINE INTO FIELDS
         LENG = 0
         DO I = 1,LEN(TRIM(CVAR))+1
           C1 = CVAR(I:I)
@@ -139,7 +191,7 @@ C
             CFLD(NFLD) = '='
             LENG = -1
           ELSE
-            ! OUTPUTTING CHARACTER INTO A FIELD
+            !
             IF(LENG <= 0) THEN
               IF(NFLD == MAXFLD) GOTO 950
               NFLD = NFLD + 1
@@ -156,67 +208,5 @@ C
         !
   950   RETURN
       END SUBROUTINE
-      !
-      ! ----------------------------------------------------------------
-      !
-      SUBROUTINE UPPER_CASE(C_IN,C_OUT)
-        !
-        ! WRITTEN BY: W. NEAL SAMS
-        ! DATE WRITTEN: 10/04/2013
-        !
-        IMPLICIT NONE
-        INTEGER :: I,NC
-        CHARACTER(*) :: C_IN,C_OUT
-        !
-        DO I = 1,LEN_TRIM(C_IN)
-         NC = ICHAR(C_IN(I:I))
-         IF(97 <= NC .AND. NC <=122) NC = NC - 32
-         C_OUT(I:I) = CHAR(NC)
-        ENDDO
-        !
-        RETURN
-      END SUBROUTINE
-      !
-      ! ----------------------------------------------------------------
-      !
-      SUBROUTINE LOWER_CASE(C_IN,C_OUT)
-        !
-        ! WRITTEN BY: W. NEAL SAMS
-        ! DATE WRITTEN: 10/04/2013
-        !
-        IMPLICIT NONE
-        INTEGER :: I,NC
-        CHARACTER(*) :: C_IN,C_OUT
-        !
-        DO I = 1,LEN_TRIM(C_IN)
-         NC = ICHAR(C_IN(I:I))
-         IF(65 <= NC .AND. NC <=90) NC = NC + 32
-         C_OUT(I:I) = CHAR(NC)
-        ENDDO
-        !
-        RETURN
-      END SUBROUTINE
-      !
-      ! ----------------------------------------------------------------
-      !
-      SUBROUTINE R_JUST(C_IN,C_OUT,NC)
-        !
-        ! WRITTEN BY: MATTHEW STADELMAN
-        ! DATE WRITTEN: 2015/09/17
-        !
-        IMPLICIT NONE
-        INTEGER :: I,NC,NW
-        CHARACTER(NC) :: C_IN,C_OUT,CVAR
-        !
-        NW = NC - LEN_TRIM(C_IN)
-        DO I = 1,NW
-          CVAR(I:I) = ' '
-        END DO
-        C_OUT = CVAR(1:NW)//TRIM(C_IN)
-        !
-        RETURN
-      END SUBROUTINE
-      !
-      ! ----------------------------------------------------------------
-      !
+C     ------------------------------------------------------------------
       END MODULE

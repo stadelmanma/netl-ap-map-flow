@@ -132,14 +132,13 @@ C     CLOSING INPUT FILES
 C
       RETURN
 C
-C     FORMATTING AND ERROR HANDLING
+C
+ 1000 BOK = .FALSE.
+      RETURN
 C
  2000 FORMAT(5X,'USING AVERAGE LIQUID VISCOSITY IN INP FILE ',F8.6,1X,A)
 C
  2010 FORMAT(1X,' ERROR - NONE OR INVAILD VISCOSITY PROVIDED ',F8.6)
-C
- 1000 BOK = .FALSE.
-      RETURN
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
@@ -235,7 +234,6 @@ C
 C     READING IN FILE NAMES
       DO
         CALL LNPROC(IINP,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD,'SAME')
-        CALL UPPER_CASE(CFLD(1),CFLD(1))
         IF (NFLD == 0) EXIT
         IF (INDEX(CFLD(1),'PVT-PATH') > 0) THEN
           IFLD = 2
@@ -694,6 +692,8 @@ C
  1100 FORMAT(5X,'** WARNING: GAS FLOW CODE IS NOT BE ACTIVELY ',
      &          ' DEVELOPED THERE COULD BE NUMERICAL ERRORS OR BUGS **')
 C
+
+C
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
@@ -724,8 +724,8 @@ C
       USE APM_MODULE
       USE STRING_MODULE
       USE UNIT_CONVERSION_MODULE
-      IMPLICIT NONE
 C
+      IMPLICIT NONE
       REAL(8) :: PH,PL,PR_CONV
       REAL(8),ALLOCATABLE :: PR2(:),ZF2(:),VI2(:)
       INTEGER :: I,J,IFLD,NFLD
