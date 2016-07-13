@@ -9,6 +9,7 @@ MODELFILES = APERTURE_MAP_FLOW.F APM_FLOW.F APM_OUTPUT.F
 #
 WFLAGS = -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter
 FFLAGS = -fimplicit-none -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace -cpp
+TEST  = -fprofile-arcs -ftest-coverage
 #
 ifdef SystemRoot
 	RM = del /Q
@@ -39,10 +40,19 @@ model: modules
 	$(COMPILER) -o $(MODELNAME) $(SHAREDFILES) $(MODELFILES) $(OPTIMIZE) $(FFLAGS) $(OS) $(WFLAGS)
 	mv $(MODELNAME) ..
 
+test: clean modules
+	$(COMPILER) -o $(MODELNAME) $(SHAREDFILES) $(MODELFILES) $(FFLAGS) $(OS) $(WFLAGS) -coverage
+
+coverage:
+	gcov *.F
+
 clean:
 	$(RM) *.o
 	$(RM) *.mod
 	$(RM) *.EXE
+	$(RM) *.gcno
+	$(RM) *.gcda
+	$(RM) *.gcov
 	#
 	cd ..; $(RM) *.EXE
 
