@@ -16,6 +16,7 @@ C     VARIABLE DESCRIPTION:
 C       PQX_OUT - X FLOW DATA USED FOR VECTOR PLOTTING
 C       PQZ_OUT - Z FLOW DATA USED FOR VECTOR PLOTTING
 C       PQZ_OUT - FLOW MAGNITUDE DATA USED FOR FLOW MAP AND REYNOLDS CALCULATION
+C       PRES - FLATTENED VERSION OF FRAC_PR, WITHOUT BOUNDARY CELLS
 C       REN - ARRAY THAT STORES THE ESTIMATED REYNOLDS NUMBER FOR A CELL
 C       RES - ARRAY THAT STORES NORMALIZED MASS/GAIN LOSSES FOR A CELL
 C       X,Y,Z - POINT COORDINATES USED TO CREATE VTK MESH
@@ -26,7 +27,7 @@ C
       USE PVT_MODULE, ONLY : STD_CONV
 C
       IMPLICIT NONE
-      REAL(8), ALLOCATABLE :: PQX_OUT(:),PQZ_OUT(:),PQM_OUT(:)
+      REAL(8), ALLOCATABLE :: PQX_OUT(:),PQZ_OUT(:),PQM_OUT(:),PRES(:)
       REAL(8), ALLOCATABLE :: REN(:),RES(:)
       REAL(8) :: FLOW,X,Y,Z
       INTEGER :: I,N,IX,IZ,IC,LB
@@ -34,7 +35,7 @@ C
 C
 C     INITIALIZING VARIABLES
       LB = NX*NZ
-      ALLOCATE(PQX_OUT(LB),PQZ_OUT(LB),PQM_OUT(LB))
+      ALLOCATE(PQX_OUT(LB),PQZ_OUT(LB),PQM_OUT(LB),PRES(LB))
       ALLOCATE(RES(LB),REN(LB))
 C
 C     INITIALIZING OUTPUT FILES
@@ -74,9 +75,17 @@ C     CALCULATING FLOW MAGNITUDE AND APPROXIMATE REYNOLDS NUMBER
         REN(I) = (RHO*PQM_OUT(I))/(AVG_VISC*WIDTH(I))
       END DO
 C
+C     CREATING FLATTENED PRESSURE ARRAY
+      DO IZ =1,NZ
+        DO IX = 1,NX
+          I = (IZ - 1)*NX + IX
+          PRES(I) = FRAC_PR(IZ,IX)
+        END DO
+      END DO
+C
 C     CONVERTING VALUES IN INTERNAL UNITS TO OUTPUT UNITS
       AP_MAP = AP_MAP*DIM_CONV
-      FRAC_PR = FRAC_PR*PRES_CONV
+      PRES = PRES*PRES_CONV
       FPB = FPB*PRES_CONV
       OUTPB = OUTPB*PRES_CONV
       DX = DX*DIM_CONV
@@ -118,19 +127,17 @@ C     OUTPUTTING DATA TO STATS FILE
       CALL WRITE_STATS_FILE(FLOW)
 C
 C     OUTPUTTING THE WIDTH VECTOR USED IN THE SIMULATION
-      CALL WRITE_DATA_MAP(IMAP, WIDTH, NX, NZ)
+      CALL WRITE_ONED_ARRAY(IMAP, WIDTH, NX, NZ, "(*(G15.8,',',:))")
       CALL MESSAGE("     ADJUSTED APERTURE FILE COMPLETED")
 C
 C     OUTPUTTING QX, QZ AND FLOW MAGNITUDE VALUES
-      CALL WRITE_DATA_MAP(IFLOX, PQX_OUT, NX, NZ)
-      CALL WRITE_DATA_MAP(IFLOZ, PQZ_OUT, NX, NZ)
-      CALL WRITE_DATA_MAP(IFLOM, PQM_OUT, NX, NZ)
+      CALL WRITE_ONED_ARRAY(IFLOX, PQX_OUT, NX, NZ, "(*(G15.8,',',:))")
+      CALL WRITE_ONED_ARRAY(IFLOZ, PQZ_OUT, NX, NZ, "(*(G15.8,',',:))")
+      CALL WRITE_ONED_ARRAY(IFLOM, PQM_OUT, NX, NZ, "(*(G15.8,',',:))")
       CALL MESSAGE("     FLOW FILE COMPLETED")
 C
 C     OUTPUTTING THE FRACTURE PRESSURE DISTRIBUTION
-      DO IZ = 1,NZ
-        WRITE(IPRES,"(*(G15.8,',',:))") FRAC_PR(IZ,1:NX)
-      END DO
+      CALL WRITE_ONED_ARRAY(IPRES, PRES, NX, NZ, "(*(G15.8,',',:))")
       CALL MESSAGE("     PRESSURE FILE COMPLETED")
 C
 C     CREATING THE VTK FILE'S HEADERS FOR PARAVIEW EXPORT
@@ -149,24 +156,24 @@ C     OUTPUTTING BOTTOM AND TOP SURFACE POINTS FOR THE GRID
         DO IZ = 1,NZ
           X = 0.0
           Y = N*AP_MAP(IZ,1,1)/2.0
-          WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+          WRITE(IVTK,"(3(E14.6,' ',:))")X,Y,Z
           DO IX = 1,NX
             I = (IZ - 1)*NX + IX
             X = X + DX(I)
             Y = N*AP_MAP(IZ,IX,2)/2.0
-            WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+            WRITE(IVTK,"(3(E14.6,' ',:))")X,Y,Z
           END DO
           Z = Z + DZ(I)
         END DO
         !
         X = 0.0
         Y = N*AP_MAP(NZ,1,4)/2.0
-        WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+        WRITE(IVTK,"(3(E14.6,' ',:))")X,Y,Z
         DO IX = 1,NX
           I = (NZ - 1)*NX + IX
           X = X + DX(I)
           Y = N*AP_MAP(NZ,IX,3)/2.0
-          WRITE(IVTK,"(3(F0.6,' ',:))")X,Y,Z
+          WRITE(IVTK,"(3(E14.6,' ',:))")X,Y,Z
         END DO
       END DO
       CALL MESSAGE("         VTK POINTS OUTPUT TO FILE")
@@ -175,65 +182,27 @@ C     OUTPUTTING SIMULATION DATA INTO THE VTK FILE
       CALL BLANK
       CALL MESSAGE("     OUTPUTTING DATA TO THE VTK FILE...")
 C
-C     CREATING THE DATA TABLES
+C     CREATING THE CELL DATA TABLES
       WRITE(IVTK,"(' ')")
       WRITE(IVTK,"('CELL_DATA ',I0)") NX*NZ*1
-      WRITE(IVTK,"('SCALARS APERTURE[',A,'] float')")TRIM(UNIT_OUT(2))
-      WRITE(IVTK,"('LOOKUP_TABLE default')")
-      DO IZ = 1,NZ
-        DO IX = 1,NX
-          I = (IZ - 1)*NX + IX
-          WRITE(IVTK,"(3(F0.6,' ',:))")WIDTH(I)
-        END DO
-      END DO
-      CALL MESSAGE("         APERTURE DATA OUTPUT TO VTK FILE")
-C
-      WRITE(IVTK,"(' ')")
-      WRITE(IVTK,"('SCALARS PRESSURE[',A,'] float')")TRIM(UNIT_OUT(1))
-      WRITE(IVTK,"('LOOKUP_TABLE default')")
-      DO IZ = 1,NZ
-        DO IX = 1,NX
-          WRITE(IVTK,"(3(F0.6,' ',:))")FRAC_PR(IZ,IX)
-        END DO
-      END DO
-      CALL MESSAGE("         PRESSURE DATA OUTPUT TO VTK FILE")
-C
-      WRITE(IVTK,"(' ')")
-      WRITE(IVTK,"('SCALARS REYNOLDS_NUMBER[] float')")
-      WRITE(IVTK,"('LOOKUP_TABLE default')")
-      DO IZ = 1,NZ
-        DO IX = 1,NX
-          I = (IZ - 1)*NX + IX
-          WRITE(IVTK,"(3(F0.6,' ',:))")REN(I)
-        END DO
-      END DO
-      CALL MESSAGE("         REYNOLDS NUMBER OUTPUT TO VTK FILE")
-C
-      WRITE(IVTK,"(' ')")
-      WRITE(IVTK,"('SCALARS NORMALIZED_RESIDUALS[] float')")
-      WRITE(IVTK,"('LOOKUP_TABLE default')")
-      DO IZ = 1,NZ
-        DO IX = 1,NX
-          I = (IZ - 1)*NX + IX
-          WRITE(IVTK,"(3(F0.6,' ',:))")RES(I)
-        END DO
-      END DO
-      CALL MESSAGE("         NORMALIZED RESIDUALS OUTPUT TO VTK FILE")
+      CALL WRITE_VTK_DATA('APERTURE',UNIT_OUT(2),'float',WIDTH)
+      CALL WRITE_VTK_DATA('PRESSURE',UNIT_OUT(1),'float',PRES)
+      CALL WRITE_VTK_DATA('REYNOLDS_NUMBER','-','float',REN)
+      CALL WRITE_VTK_DATA('NORMALIZED_RESIDUALS','-','float',RES)
 C
       WRITE(IVTK,"(' ')")
       WRITE(IVTK,"('VECTORS FLOW[',A,'] float')")TRIM(UNIT_OUT(5))
       DO IZ = 1,NZ
         DO IX = 1,NX
           I = (IZ - 1)*NX + IX
-          WRITE(IVTK,"(3(F0.6,' ',:))")PQX_OUT(I),0.0,PQZ_OUT(I)
+          WRITE(IVTK,"(3(E14.6,' ',:))")PQX_OUT(I),0.0,PQZ_OUT(I)
         END DO
       END DO
       CALL MESSAGE("         VECTOR FLOW DATA OUTPUT TO VTK FILE")
 C
-C     DEALLOCATING FRACTURE PROPERTY VECTORS
-      DEALLOCATE(INLET,OUTLET,FRAC_PR,TRX,TRZ)
-C     DEALLOCATING FLOW VECTORS
-      DEALLOCATE(PQX_OUT,PQZ_OUT,WIDTH,DX,DZ)
+C     DEALLOCATING ARRAYS
+      DEALLOCATE(PQX_OUT,PQZ_OUT,PQM_OUT,PRES,REN,RES)
+      CALL DEALLOCATE_FRAC
 C
       CALL BLANK
       CALL MESSAGE(" DEALLOCATED ALL ARRAYS")
@@ -449,7 +418,7 @@ C
 C
  2045 FORMAT(F10.7,',',F10.4,',',F10.4)
 C
-  650 FORMAT(1X,'CONFINING PRES [',A,'],OUTLET PRES [',A,']')
+  650 FORMAT(1X,'INLET PRES [',A,'],OUTLET PRES [',A,']')
 C
   655 FORMAT(1X,'APERTURE RMS [',A,'],APERTURE STD DEV [',A,
      &'],X - CORRELATION LENGTH [',A,'],Z - CORRELATION LENGTH [',A,
@@ -533,13 +502,13 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE WRITE_DATA_MAP(IUNIT, DATA_VECTOR, NX, NZ)
+      SUBROUTINE WRITE_ONED_ARRAY(IUNIT, DATA_ARRAY, NX, NZ, FMT_STR)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
 C     LAST MODIFIED: 2016/07/12
 C
-C     PROGRAM DESCRIPTION: OUTPUTS A VECTOR INTO A 2-D DATA MAP
+C     SUBROUTINE DESCRIPTION: OUTPUTS A VECTOR INTO A 2-D DATA MAP
 C
 C     SUBROUTINE CALLS: NONE
 C
@@ -551,17 +520,61 @@ C
 C ----------------------------------------------------------------------
 C
       IMPLICIT NONE
-      REAL(8) :: DATA_VECTOR(*)
-      INTEGER :: IUNIT, NX ,NZ
+      REAL(8) :: DATA_ARRAY(*)
+      INTEGER :: IUNIT, NX, NZ
       INTEGER :: IZ, I, J
-C
+      CHARACTER(*) :: FMT_STR
+      !
       DO IZ = 0,NZ-1
         I = IZ*NX+1
         J = IZ*NX+NX
-        WRITE(IUNIT,"(*(G0.8,',',:))") DATA_VECTOR(I:J)
+        WRITE(IUNIT,FMT_STR) DATA_ARRAY(I:J)
       END DO
+      !
+      RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE WRITE_VTK_DATA(FNAME,UNIT,DTYPE,DATA_ARRAY)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     LAST MODIFIED: 2016/07/12
+C
+C     SUBROUTINE DESCRIPTION: OUTPUTS A DATA VECTOR INTO THE VTK FILE
+C
+C     SUBROUTINE CALLS: WRITE_ONED_ARRAY
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       FNAME - FIELD NAME
+C       UNIT - PHYSICAL UNITS OF DATA
+C       DTYPE - PARAVEW DATA TYPE
+C
+C ----------------------------------------------------------------------
+C
+      USE APM_MODULE, ONLY : IVTK, NX, NZ
+C
+      IMPLICIT NONE
+      REAL(8) :: DATA_ARRAY(*)
+      CHARACTER(*) :: FNAME, UNIT, DTYPE
+      CHARACTER(80) :: FMT_STR = "(*(1(E14.6,' ',:), /, :))"
+C
+C     CREATING THE DATA TABLE
+      WRITE(IVTK,"(' ')")
+      WRITE(IVTK,2000) TRIM(FNAME),TRIM(UNIT),TRIM(DTYPE)
+      WRITE(IVTK,"('LOOKUP_TABLE default')")
+C
+      CALL WRITE_ONED_ARRAY(IVTK,DATA_ARRAY,NX,NZ,FMT_STR)
+      CALL MESSAGE("         "//TRIM(FNAME)//" DATA OUTPUT TO VTK FILE")
 C
       RETURN
+C
+ 2000 FORMAT('SCALARS ',A,'[',A,'] ',A)
+C
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
