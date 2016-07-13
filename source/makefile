@@ -4,7 +4,8 @@ COMPILER = gfortran
 OPTIMIZE = -O2
 MODELNAME = APM-MODEL.EXE
 #
-SHAREDFILES = APM_MODULE.F UNIT_CONVERSION_MODULE.F APM_SUBROUTINES.F APM_SOLVER.F
+MODULES = STRING_MODULE.F APM_MODULE.F APM_SOLVER_MODULE.F UNIT_CONVERSION_MODULE.F PVT_MODULE.F
+SHAREDFILES = APM_SUBROUTINES.F APM_SOLVER.F
 MODELFILES = APERTURE_MAP_FLOW.F APM_FLOW.F APM_OUTPUT.F
 #
 WFLAGS = -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter
@@ -24,7 +25,7 @@ else
 	OS = -DWIN64=0
 endif
 #
-# hardcoding for now it since make cant seem to access windows commands only it's shell commands
+# hardcoding for now it since make cant seem to access windows commands only bash commands
 RM = rm -f
 RM_TEMP = find . -type f -name "*~" -delete
 #
@@ -32,11 +33,10 @@ RM_TEMP = find . -type f -name "*~" -delete
 all: modules model
 
 modules:
-	$(COMPILER) -c APM_MODULE.F
-	$(COMPILER) -c UNIT_CONVERSION_MODULE.F
+	$(COMPILER) -c $(MODULES)
 
 model: modules
-	$(COMPILER) -o $(MODELNAME) $(SHAREDFILES) $(MODELFILES) $(OPTIMIZE) $(FFLAGS) $(OS) $(WFLAGS)
+	$(COMPILER) -o $(MODELNAME) $(MODULES) $(SHAREDFILES) $(MODELFILES) $(OPTIMIZE) $(FFLAGS) $(OS) $(WFLAGS)
 	mv $(MODELNAME) ..
 
 clean:
@@ -44,8 +44,4 @@ clean:
 	$(RM) *.mod
 	$(RM) *.EXE
 	#
-	cd ..; $(RM) *.EXE
-
-rm_temp:
 	cd ..; $(RM_TEMP)
-
