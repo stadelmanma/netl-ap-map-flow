@@ -29,6 +29,7 @@ before_script:
 
 script:
   - ./bin/test pep8 cov
+  - ./bin/run_model_coverage_test
 
 after_success:
   - codecov

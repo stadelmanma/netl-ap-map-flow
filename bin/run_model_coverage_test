@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# Building the flow model from source with coverage flags
+cd "$(git rev-parse --show-toplevel)/source"
+cp *.F ../test/fortran
+cp makefile ../test/fortran
+#
+# creating directory and building model with coverage
+cd ../test/fortran
+mkdir gcov_reports
+make test
+#
+# executing test script
+MAIN_DIR="$(git rev-parse --show-toplevel)"
+$MAIN_DIR/bin/test_model_code_coverage

@@ -41,7 +41,7 @@ model: modules
 	mv $(MODELNAME) ..
 
 test: clean modules
-	$(COMPILER) -o $(MODELNAME) $(SHAREDFILES) $(MODELFILES) $(FFLAGS) $(OS) $(WFLAGS) -coverage
+	$(COMPILER) -o $(MODELNAME) $(MODULES)  $(SHAREDFILES) $(MODELFILES) $(FFLAGS) $(OS) $(WFLAGS) -coverage
 
 coverage:
 	gcov *.F
