@@ -8,7 +8,9 @@ cp makefile ../test/fortran
 #
 # creating directory and building model with coverage
 cd ../test/fortran
+set +e
 mkdir gcov_reports
+set -e
 make test
 #
 # executing test script

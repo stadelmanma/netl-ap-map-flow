@@ -229,7 +229,7 @@ C
           RETURN
       END IF
 C
-      IF ((P <= 0) .OR. (P /= P)) GOTO 900
+      IF ((P < 0) .OR. (P /= P)) GOTO 900
       I = INT(P/DPR)+1
       IF (I > VALS) I = VALS - 1
       PH = PR(I+1); PL = PR(I)
@@ -282,7 +282,7 @@ C
           RETURN
       END IF
 C
-      IF ((PSEU <= 0) .OR. (PSEU /= PSEU)) GOTO 900
+      IF ((PSEU < 0) .OR. (PSEU /= PSEU)) GOTO 900
       SPS = SQRT(PSEU)
       I = INT(SPS/DSPS)+1
       IF (I > VALS) I = VALS - 1
