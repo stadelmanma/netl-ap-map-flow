@@ -1,7 +1,6 @@
 #!/bin/bash
 #
 # clearing all code from test/fortran
-cd "$(git rev-parse --show-toplevel)/test/fortran"
-git clean -i -d -x
+git clean -i -d -x "$(git rev-parse --show-toplevel)/test/fortran"
 
 
