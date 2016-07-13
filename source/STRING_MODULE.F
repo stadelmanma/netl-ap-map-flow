@@ -108,7 +108,7 @@ C     ------------------------------------------------------------------
         ! LAST MODIFIED: 07/12/2016
         !
         IMPLICIT NONE
-        INTEGER :: IN,MAXFLD,MAXLEN,NFLD,LENG,I,J
+        INTEGER :: IN,MAXFLD,MAXLEN,NFLD,LENG,I
         INTEGER :: LFLD(*)
         LOGICAL :: QUOTED = .FALSE.
         CHARACTER(80) :: SET_CASE = 'UPPER'
@@ -134,10 +134,6 @@ C     ------------------------------------------------------------------
             IF (C1 == '"') THEN
               QUOTED = .FALSE.
             ELSE
-              J = IACHAR(C1)
-              IF(J >= 97 .AND. J <= 122) J = J - 32
-              C1 = ACHAR(J)
-              !
               IF(LENG <= 0) THEN
                 IF(NFLD == MAXFLD) GOTO 950
                 NFLD = NFLD + 1
