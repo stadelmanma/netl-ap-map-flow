@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 import os
+import sys
+#
+# setting path to
+sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))
 from ApertureMapModelTools.RunModel import InputFile, run_model
-#from ApertureMapModelTools.RunModel import BulkRun
+from ApertureMapModelTools.RunModel import BulkRun
 #
 os.makedirs('inp_files')
 FIXTURE_DIR = os.path.join('..', 'fixtures')
@@ -22,7 +26,7 @@ for key in files:
     inp_file[key].update_value('',False)
     inp_file[key].commented_out = True
 #
-# setting aperture map
+# setting parameters
 map_path = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT')
 inp_file['APER-MAP'].update_value(map_path)
 #
