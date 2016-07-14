@@ -4,9 +4,13 @@ COMPILER = gfortran
 OPTIMIZE = -O2
 MODELNAME = APM-MODEL.EXE
 #
+# normal compilation variables
 MODULES = STRING_MODULE.F APM_MODULE.F APM_SOLVER_MODULE.F UNIT_CONVERSION_MODULE.F PVT_MODULE.F
 SHAREDFILES = APM_SUBROUTINES.F APM_SOLVER.F
 MODELFILES = APERTURE_MAP_FLOW.F APM_FLOW.F APM_OUTPUT.F
+#
+# testing variables
+STRING_MOD_TEST = TEST_STRING_MOD.EXE UNIT_TEST_MODULE.F STRING_MODULE.F STRING_MODULE_UNIT_TEST.F
 #
 WFLAGS = -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter
 FFLAGS = -fimplicit-none -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace -cpp
@@ -41,9 +45,13 @@ model: modules
 	mv $(MODELNAME) ..
 
 test: clean modules
+	# test is only meant to be used when called by the run_model_coverage_test script
+	$(COMPILER) -c UNIT_TEST_MODULE.F
 	$(COMPILER) -o $(MODELNAME) $(MODULES)  $(SHAREDFILES) $(MODELFILES) $(FFLAGS) $(OS) $(WFLAGS) -coverage
+	$(COMPILER) -o $(STRING_MOD_TEST)  $(FFLAGS) $(OS) $(WFLAGS) -coverage
 
 coverage:
+	$(RM) *UNIT_TEST*
 	gcov *.F
 
 clean:

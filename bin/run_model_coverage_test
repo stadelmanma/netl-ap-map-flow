@@ -9,7 +9,12 @@ cp makefile ../test/fortran
 #
 # creating directory and building model with coverage
 cd ../test/fortran
+cp ./source/* .
 make test
 #
-# executing test script
+# executing test scripts
+set +e
 ./integration/test_model_code_coverage
+./TEST_STRING_MOD.EXE
+#
+make coverage

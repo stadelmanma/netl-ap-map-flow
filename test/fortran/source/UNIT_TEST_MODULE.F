@@ -19,7 +19,8 @@ C
       PUBLIC
 C
       INTERFACE ASSERT_EQUALS
-        MODULE PROCEDURE ASSERT_EQUALS_CHAR
+        MODULE PROCEDURE ASSERT_EQUALS_CHAR, ASSERT_EQUALS_CHAR_ARRAY
+        MODULE PROCEDURE ASSERT_EQUALS_INT
       END INTERFACE
 C
       INTEGER,SAVE :: IOUT, IERR, MAX_MES_LEN
@@ -96,13 +97,107 @@ C
           WRITE(CVAR,PASS_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
           CALL STO_MESSAGE(CVAR)
         ELSE
+          PASSING = .FALSE.
           WRITE(CVAR,FAIL_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
           CALL STE_MESSAGE(CVAR)
-          WRITE(CVAR,1000)TRIM(VAL1),TRIM(VAL2)
+          PRINT *, VAL1, '-' ,VAL2
+          WRITE(CVAR,"(8X,A,' != ',A)")TRIM(VAL1), TRIM(VAL2)
           CALL STE_MESSAGE(CVAR)
         END IF
         !
- 1000   FORMAT("8X,A,' /= ',A")
+        RETURN
+      END SUBROUTINE
+C
+      SUBROUTINE ASSERT_EQUALS_CHAR_ARRAY(ARR1, ARR2, TESTEE)
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/14
+        !
+        ! PURPOSE: TESTS IF TWO CHARACTER ARRAYS ARE EQUAL
+        !
+        IMPLICIT NONE
+        INTEGER :: I
+        LOGICAL :: LEN_FAIL, VAL_FAIL
+        CHARACTER(*) :: ARR1(:), ARR2(:), TESTEE
+        CHARACTER(80) :: LEN_FMT, VAL_FMT
+        CHARACTER(MAX_MES_LEN) :: CVAR, LENM, VALM, PRO
+        !
+        LEN_FMT = "(8X,'ARRAY LENGTH DIFFERS: ',I0,' != ',I0)"
+        VAL_FMT = "(8X,'ARRAY VALUES DIFFER:')"
+        PRO = PROSECUTOR
+        WRITE(CVAR,PASS_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
+        !
+        ! TESTING ARRAY LENGTH
+        IF (SIZE(ARR1) /= SIZE(ARR2)) THEN
+          PASSING = .FALSE.
+          LEN_FAIL = .TRUE.
+          WRITE(LENM,LEN_FMT)SIZE(ARR1),SIZE(ARR2)
+        END IF
+        !
+        ! TESTING ARRAY VALUES
+        DO I = 1, MIN(SIZE(ARR1),SIZE(ARR2))
+          IF (TRIM(ARR1(I)) /= TRIM(ARR2(I))) THEN
+            PASSING = .FALSE.
+            VAL_FAIL = .TRUE.
+            WRITE(VALM,VAL_FMT)
+          END IF
+        END DO
+        !
+        ! ERROR MESSAGES
+        IF (LEN_FAIL .OR. VAL_FAIL) THEN
+          WRITE(CVAR,FAIL_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
+          CALL STE_MESSAGE(CVAR)
+        ELSE
+          WRITE(CVAR,PASS_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
+          CALL STO_MESSAGE(CVAR)
+        END IF
+        !
+        IF (LEN_FAIL) THEN
+          CALL STE_MESSAGE(LENM)
+        END IF
+        !
+        IF (VAL_FAIL) THEN
+          CALL STE_MESSAGE(VALM)
+          WRITE(IERR,*)'ARR1',' ARR2'
+          DO I = 1, MAX(SIZE(ARR1),SIZE(ARR2))
+            IF (I <= SIZE(ARR1) .AND. I <= SIZE(ARR2)) THEN
+              WRITE(IERR,*)TRIM(ARR1(I)),', ',TRIM(ARR2(I))
+            END IF
+            IF (I < SIZE(ARR1) .AND. I >= SIZE(ARR2)) THEN
+              WRITE(IERR,*) TRIM(ARR1(I)), ',  ? '
+            END IF
+            IF (I >= SIZE(ARR1) .AND. I < SIZE(ARR2)) THEN
+              WRITE(IERR,*) ' ?  , ',TRIM(ARR2(I))
+            END IF
+          END DO
+        END IF
+        !
+        RETURN
+      END SUBROUTINE
+C
+      SUBROUTINE ASSERT_EQUALS_INT(VAL1, VAL2, TESTEE)
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/14
+        !
+        ! PURPOSE: TESTS IF TWO INTEGERS ARE EQUAL
+        !
+        IMPLICIT NONE
+        INTEGER :: VAL1, VAL2
+        CHARACTER(*) :: TESTEE
+        CHARACTER(MAX_MES_LEN) :: CVAR, PRO
+        !
+        PRO = PROSECUTOR
+        IF (VAL1 == VAL2) THEN
+          WRITE(CVAR,PASS_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
+          CALL STO_MESSAGE(CVAR)
+        ELSE
+          PASSING = .FALSE.
+          WRITE(CVAR,FAIL_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
+          CALL STE_MESSAGE(CVAR)
+          WRITE(CVAR,"(8X,I0,' != ',I0)")VAL1, VAL2
+          CALL STE_MESSAGE(CVAR)
+        END IF
         !
         RETURN
       END SUBROUTINE

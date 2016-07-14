@@ -80,6 +80,4 @@ for side in ['TOP', 'BOTTOM', 'LEFT', 'RIGHT']:
     inp_file['OUTLET-SIDE'].update_value(side)
     run_model_wrapper(inp_file)
 #
-# outputting final integration test stats
-os.system('gcov *.F')
 sys.exit(RETURN_CODE)
