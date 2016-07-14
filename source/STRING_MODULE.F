@@ -180,12 +180,17 @@ C     ------------------------------------------------------------------
               LENG = 0
             ENDIF
           ELSEIF(C1 == '=') THEN
-            IF(LENG > 0) LFLD(NFLD) = LENG
-            IF(NFLD == MAXFLD) GOTO 950
-            NFLD = NFLD + 1
-            LFLD(NFLD) = 1
-            CFLD(NFLD) = '='
-            LENG = -1
+            IF(LENG > 0) THEN
+              LFLD(NFLD) = LENG
+              LENG = 0
+            ELSEIF(LENG == 0) THEN
+              IF(NFLD == MAXFLD) GOTO 950
+              NFLD = NFLD + 1
+              LFLD(NFLD) = 0
+              CFLD(NFLD) = ' '
+            ELSE
+              LENG = 0
+            ENDIF
           ELSE
             !
             IF(LENG <= 0) THEN
