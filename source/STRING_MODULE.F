@@ -111,11 +111,12 @@ C     ------------------------------------------------------------------
         INTEGER :: IN,MAXFLD,MAXLEN,NFLD,LENG,I
         INTEGER :: LFLD(*)
         LOGICAL :: QUOTED = .FALSE.
-        CHARACTER(80) :: SET_CASE = 'UPPER'
+        CHARACTER(80) :: SET_CASE
         CHARACTER(*),INTENT(IN),OPTIONAL :: CASE
         CHARACTER(*) :: CFLD(*),CVAR
         CHARACTER(1) :: C1
         !
+        SET_CASE = 'UPPER'
         IF (PRESENT(CASE)) SET_CASE = TRIM(CASE)
         CALL UPPER_CASE(SET_CASE,SET_CASE)
         !
@@ -182,14 +183,7 @@ C     ------------------------------------------------------------------
           ELSEIF(C1 == '=') THEN
             IF(LENG > 0) THEN
               LFLD(NFLD) = LENG
-              LENG = 0
-            ELSEIF(LENG == 0) THEN
-              IF(NFLD == MAXFLD) GOTO 950
-              NFLD = NFLD + 1
-              LFLD(NFLD) = 0
-              CFLD(NFLD) = ' '
-            ELSE
-              LENG = 0
+              LENG = -1
             ENDIF
           ELSE
             !
