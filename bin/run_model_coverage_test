@@ -12,9 +12,24 @@ cd ../test/fortran
 cp ./source/* .
 make test
 #
-# executing test scripts
+# executing test scripts amd capturing return codes
 set +e
 ./integration/test_model_code_coverage
+MODEL_TEST=$?
 ./TEST_STRING_MOD.EXE
+STRING_TEST=$?
+#./TEST_UNIT_CONV_MOD.EXE
 #
+# building the coverage report
 make coverage
+#
+# exiting with proper exit code
+if [ $((MODEL_TEST+STRING_TEST)) -eq 0 ]
+then
+    echo "We have lift off!"
+    exit 0
+else
+    echo "Houston, we've had a problem here."
+    exit 1
+fi
+

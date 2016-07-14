@@ -50,7 +50,7 @@ run_model_wrapper(inp_file)
 #
 # commenting/ uncommenting some inputs so they don't cause issue
 inp_file['SUMMARY-PATH'].commented_out = True
-inp_file['OVERWRITE'].commented_out = True#False
+inp_file['OVERWRITE'].commented_out = False
 inp_file['FRAC-PRESS'].commented_out = True
 inp_file['OUTFLOW-SIDE'].commented_out = True
 inp_file['MANIFOLD'].commented_out = True
