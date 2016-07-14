@@ -5,6 +5,7 @@
 ;PVT-PATH:        "(PATH/TO/PVT-DATA.*)"
 ;APER-MAP PATH:   "(PATH/TO/FILE.*)"
 SUMMARY-PATH:    ./coverage_test_log.txt
+SUMMARY-FILE:    ./coverage_test_log.txt
 STAT-FILE PATH:  ./coverage_test_stats.csv
 APER-FILE PATH:  ./coverage_test_map.csv
 FLOW-FILE PATH:  ./coverage_test_flow.csv
@@ -28,7 +29,7 @@ FLUID-VISCOSITY: 1.0 PA*SEC
 MAXIMUM MAP DIMENSION: 250
 STD-TEMP:      273.15 K
 STD-PRESS:       1.00 ATM
-MANIFOLD: FALSE ;DEPRECATED 
+MANIFOLD: TRUE ;DEPRECATED 
 SOLVER TYPE: D4-GAUSS ;DEPRECATED
 ;
 ; OTHER PARAMETERS

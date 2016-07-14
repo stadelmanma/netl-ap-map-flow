@@ -6,16 +6,19 @@ from subprocess import Popen, PIPE
 # setting path to
 sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))
 from ApertureMapModelTools.RunModel import InputFile, run_model
-from ApertureMapModelTools.RunModel import BulkRun
 # -----------------------------------------------------------------------------
 #
 # global constants
 GCCR_TEMPLATE = '../../bin/gccr.pl -n -c {0} raw {1} merged'
 FIXTURE_DIR = os.path.realpath('fixtures')
 # -----------------------------------------------------------------------------
-#
-# function defintions
-def merge_gcov_files():
+
+
+def merge_gcov_files_r():
+    r"""
+    Merges a set of gcov coverage files using the gccr.pl tool developed
+    at Portlan State. https://gcc.gnu.org/ml/gcc-patches/2005-09/msg00562.html
+    """
     #
     # generating fresh set of coverage files and finding them
     os.system('gcov *.F')
@@ -28,8 +31,8 @@ def merge_gcov_files():
     #
     # looping through files to merge them
     for f in files:
-        merged_file = os.path.join('.','gcov_reports',f)
-        cmd = GCCR_TEMPLATE.format(f,merged_file)
+        merged_file = os.path.join('.', 'gcov_reports', f)
+        cmd = GCCR_TEMPLATE.format(f, merged_file)
         gccr = Popen(cmd.split(), stdout=PIPE, universal_newlines=True)
         out, err = gccr.communicate()
         #
@@ -43,9 +46,10 @@ def merge_gcov_files():
 #
 # building test input file
 file_formats = {
-    'input_file': os.path.join('inp_files','test_model_coverage.inp')
+    'input_file': os.path.join('inp_files', 'test_model_coverage.inp')
 }
-inp_file = InputFile(os.path.join(FIXTURE_DIR, 'coverage_test.inp'),file_formats)
+inp_file = InputFile(os.path.join(FIXTURE_DIR, 'coverage_test.inp'), file_formats)
+#
 # updating exe-file path so it is absolute
 exe_path = os.path.realpath(os.path.join('.', inp_file['EXE-FILE'].value))
 inp_file['EXE-FILE'].update_value(exe_path, False)
@@ -53,15 +57,16 @@ inp_file['EXE-FILE'].update_value(exe_path, False)
 # setting parameters
 pvt_path = os.path.join(FIXTURE_DIR, 'H2O_TEMP_058F.CSV')
 inp_file['PVT-PATH'].update_value(pvt_path)
-map_path = os.path.join(FIXTURE_DIR, 'PARALELL-PLATE-01VOX.TXT')
+map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
 inp_file['APER-MAP'].update_value(map_path)
+inp_file['OVERWRITE'].commented_out = False
 #
-# running initial liquid sim with PVT and AVG_VISC
+# running initial liquid sim with everything to set up base
 run_model(inp_file, synchronous=True, show_stdout=True)
-os.system('gcov *.F')
-os.system('mv *.gcov gcov_reports')
 #
-# commenting out deprecated inputs so they don't cause issue
+# commenting/ uncommenting some inputs so they don't cause issue
+inp_file['SUMMARY-PATH'].commented_out = True
+inp_file['OVERWRITE'].commented_out = False
 inp_file['FRAC-PRESS'].commented_out = True
 inp_file['OUTFLOW-SIDE'].commented_out = True
 inp_file['MANIFOLD'].commented_out = True
@@ -71,30 +76,25 @@ inp_file['SOLVER'].commented_out = True
 inp_file['FLUID-VISCOSITY'].commented_out = True
 inp_file['FLUID-TYPE'].update_value('GAS')
 run_model(inp_file, synchronous=True, show_stdout=True)
-merge_gcov_files()
 #
-# running left flow with no PVT, AVG_VISC and inlet rate control
+# running liquid sim with no PVT, AVG_VISC and outlet rate control
 inp_file['PVT-PATH'].commented_out = True
 inp_file['FLUID-VISCOSITY'].commented_out = False
-inp_file['INLET-PRESS'].commented_out = True
-inp_file['FLUID-TYPE'].update_value('LIQUID')
-inp_file['OUTLET-SIDE'].update_value('LEFT')
-inp_file['INLET-RATE'].update_value('1.0')
-run_model(inp_file, synchronous=True, show_stdout=True)
-merge_gcov_files()
-#
-# running right flow with outlet rate control
 inp_file['INLET-RATE'].commented_out = True
 inp_file['OUTLET-PRESS'].commented_out = True
+inp_file['FLUID-TYPE'].update_value('LIQUID')
 inp_file['INLET-PRESS'].update_value('2000000')
-inp_file['OUTLET-SIDE'].update_value('RIGHT')
 inp_file['OUTLET-RATE'].update_value('1.0')
 run_model(inp_file, synchronous=True, show_stdout=True)
-merge_gcov_files()
 #
-# running bottom flow
-inp_file['OUTLET-SIDE'].update_value('BOTTOM')
-run_model(inp_file, synchronous=True, show_stdout=True)
-merge_gcov_files()
-
-
+# running all four boundary sides with inlet rate control
+inp_file['INLET-PRESS'].commented_out = True
+inp_file['OUTLET-RATE'].commented_out = True
+inp_file['INLET-RATE'].update_value('1.0')
+inp_file['OUTLET-PRESS'].update_value('0.0')
+for side in ['TOP', 'BOTTOM', 'LEFT', 'RIGHT']:
+    inp_file['OUTLET-SIDE'].update_value(side)
+    run_model(inp_file, synchronous=True, show_stdout=True)
+#
+# outputting final integration test stats
+os.system('gcov *.F')
