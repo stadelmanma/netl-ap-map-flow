@@ -30,7 +30,7 @@ def run_model_wrapper(inp_file):
 #
 # building test input file
 file_formats = {
-    'input_file': os.path.join('inp_files', 'test_model_coverage.inp')
+    'input_file': os.path.join('.', 'test_model_coverage.inp')
 }
 inp_file = InputFile(INIT_INP_FILE, file_formats)
 #
@@ -43,9 +43,9 @@ pvt_path = os.path.join(FIXTURE_DIR, 'H2O_TEMP_058F.CSV')
 inp_file['PVT-PATH'].update_value(pvt_path)
 map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
 inp_file['APER-MAP'].update_value(map_path)
-inp_file['OVERWRITE'].commented_out = False
+inp_file['OVERWRITE'].commented_out = True
 #
-# running initial liquid sim with everything to set up base
+# running initial liquid sim with everything to set up base coverage
 run_model_wrapper(inp_file)
 #
 # commenting/ uncommenting some inputs so they don't cause issue
@@ -82,5 +82,4 @@ for side in ['TOP', 'BOTTOM', 'LEFT', 'RIGHT']:
 #
 # outputting final integration test stats
 os.system('gcov *.F')
-print(RETURN_CODE)
 sys.exit(RETURN_CODE)
