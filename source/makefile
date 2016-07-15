@@ -50,7 +50,7 @@ test: clean modules
 	$(COMPILER) -c UNIT_TEST_MODULE.F
 	$(COMPILER) -o $(MODELNAME) $(MODULES)  $(SHAREDFILES) $(MODELFILES) $(FFLAGS) $(OS) $(WFLAGS) -coverage
 	$(COMPILER) -o $(STRING_MOD_TEST)  $(FFLAGS) $(OS) $(WFLAGS) -coverage
-	$(COMPILER) -o $(UNIT_CONV_MOD_TEST) $(FFLAGS) $(OS) $(WFLAGS) -coverage
+	$(COMPILER) -o $(UNIT_CONV_MOD_TEST) $(FFLAGS) $(OS) $(WFLAGS) -DUNITTESTING -coverage
 
 
 coverage:

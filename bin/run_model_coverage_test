@@ -1,35 +1,41 @@
 #!/bin/bash
 set -e
 REPO_TOP="$(git rev-parse --show-toplevel)"
-#
+
 # Building the flow model from source with coverage flags
 cd "$REPO_TOP/source"
 cp *.F ../test/fortran
 cp makefile ../test/fortran
-#
+
 # creating directory and building model with coverage
 cd ../test/fortran
 cp ./source/* .
 make test
-#
+
 # executing test scripts amd capturing return codes
 set +e
 
-
+echo ""
+echo "Running flow model integration tests."
 #./integration/test_model_code_coverage
 MODEL_TEST=$?
+
+echo ""
+echo "Running STRING_MODULE unit tests."
 ./TEST_STRING_MOD.EXE
 STRING_TEST=$?
-echo "STRING_TEST - $STRING_TEST"
+
+echo ""
+echo "Running UNIT_CONVERSION_MODULE unit tests."
 ./TEST_UNIT_CONV_MOD.EXE
+UNITCNV_TEST=$?
 
-
-#
 # building the coverage report
-make coverage
-#
+#make coverage
+
 # exiting with proper exit code
-if [ $((MODEL_TEST+STRING_TEST)) -eq 0 ]
+echo ""
+if [ $((MODEL_TEST + STRING_TEST + UNITCNV_TEST)) -eq 0 ]
 then
     echo "We have lift off!"
     exit 0

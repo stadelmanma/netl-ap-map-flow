@@ -28,10 +28,8 @@ C     CALLING TEST ROUTINES
       CALL TEST_LOWER_CASE
       CALL TEST_R_JUST
       CALL TEST_LNPROC
-      PRINT *, 'PASSING: ',PASSING
 C
-C
-C
+      PRINT *, 'PASSING? ',PASSING
       IF (.NOT. PASSING) STOP(1)
       END PROGRAM
 C
@@ -119,10 +117,7 @@ C-----------------------------------------------------------------------
         ! TESTING DELIMITERS
         WRITE(TEST_STR,*) 'F1 F2  F3   F4    '
         CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,TEST_ARR,LFLD,NFLD)
-        PRINT *, CORR_ARR
-        PRINT *, TEST_ARR
         CALL ASSERT_EQUALS(TEST_ARR, CORR_ARR, 'LNPROC-SPACE')
-        PRINT *, "PASSING: ",PASSING
         !
         WRITE(TEST_STR,*) 'F1,F2,F3,F4'
         CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,TEST_ARR,LFLD,NFLD)
