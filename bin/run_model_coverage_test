@@ -18,6 +18,7 @@ set +e
 MODEL_TEST=$?
 ./TEST_STRING_MOD.EXE
 STRING_TEST=$?
+echo "STRING_TEST - $STRING_TEST"
 #./TEST_UNIT_CONV_MOD.EXE
 #
 # building the coverage report
