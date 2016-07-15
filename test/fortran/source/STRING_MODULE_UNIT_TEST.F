@@ -122,6 +122,7 @@ C-----------------------------------------------------------------------
         PRINT *, CORR_ARR
         PRINT *, TEST_ARR
         CALL ASSERT_EQUALS(TEST_ARR, CORR_ARR, 'LNPROC-SPACE')
+        PRINT *, "PASSING: ",PASSING
         !
         WRITE(TEST_STR,*) 'F1,F2,F3,F4'
         CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,TEST_ARR,LFLD,NFLD)
