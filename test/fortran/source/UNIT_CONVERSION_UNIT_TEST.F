@@ -27,7 +27,15 @@ C     CALLING TEST ROUTINES
       CALL TEST_COVERT_VALUE
       CALL TEST_CALC_CONV_FACT
       CALL TEST_SET_TYPE_ID
+      CALL TEST_GET_CONV_FACT
+      CALL TEST_CONV_DIST
+      CALL TEST_CONV_MASS
       CALL TEST_CONV_TEMP
+      CALL TEST_CONV_TIME
+      CALL TEST_CONV_DENS
+      CALL TEST_CONV_RATE
+      CALL TEST_CONV_PRES
+      CALL TEST_CONV_VISC
 C
 C
 C
@@ -136,7 +144,6 @@ C ----------------------------------------------------------------------
         USE UNIT_CONVERSION_MODULE
         IMPLICIT NONE
         INTEGER :: I, TID
-        LOGICAL :: BOK
         CHARACTER(10) :: SI_CHK(100,2)
         CHARACTER(22) :: TEST1 = 'SET_TYPE_ID-INDEX_CHK-'
         CHARACTER(24) :: TEST2 = 'SET_TYPE_ID-SI_USTR_CHK-'
@@ -161,6 +168,118 @@ C ----------------------------------------------------------------------
         ! TESTING THE FAILING CASE
         CALL SET_TYPE_ID('BAD TYPE', TID)
         CALL ASSERT_EQUALS(TID, -1, 'SET_TYPE_ID-INDEX_CHK-BAD-TYPE')
+        !
+        RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+      SUBROUTINE TEST_GET_CONV_FACT
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/15
+        !
+        USE UNIT_TEST_MODULE
+        USE UNIT_CONVERSION_MODULE
+        IMPLICIT NONE
+        !
+        REAL(8) :: FACT
+        INTEGER :: I
+        CHARACTER(11) :: SI_CHK(100)
+        CHARACTER(23) :: TEST1 = 'GET_CONV_FACT-FACT_CHK-'
+        !
+        WRITE(SI_CHK(10),"(A)") 'M'
+        WRITE(SI_CHK(20),"(A)") 'KG'
+        WRITE(SI_CHK(30),"(A)") 'K'
+        WRITE(SI_CHK(40),"(A)") 'SEC'
+        WRITE(SI_CHK(50),"(A)") 'KG/M^3'
+        WRITE(SI_CHK(60),"(A)") 'M^3/SEC'
+        WRITE(SI_CHK(70),"(A)") 'PA'
+        WRITE(SI_CHK(80),"(A)") 'PA*SEC'
+        WRITE(SI_CHK(90),"(A)") 'BAD TYPE ID'
+        !
+        ! CHECKING ALL OF THE IDS AND THEIR RESPECTIVE CONVERSION FACTOR
+        DO I = 10,90,10
+          CALL GET_CONV_FACT(I, SI_CHK(I), FACT)
+          IF (I == 30 .OR. I == 90) THEN
+            CALL ASSERT_EQUALS(FACT, -1.0D0, TEST1//'FAIL-'//SI_CHK(I))
+          ELSE
+            CALL ASSERT_EQUALS(FACT, 1.0D0, TEST1//SI_CHK(I))
+          END IF
+        END DO
+
+        !
+        RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+      SUBROUTINE TEST_CONV_DIST
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/15
+        !
+        USE UNIT_TEST_MODULE
+        USE UNIT_CONVERSION_MODULE
+        IMPLICIT NONE
+        !
+        REAL(8) :: FACT
+        INTEGER :: I
+        REAL(8) ::        VALS(8)
+        CHARACTER(11) :: UNITS(8)
+        CHARACTER(20) :: TEST = 'CONV_DIST-FACT_CHK-'
+        VOX_MET = 20.0D-6
+        !
+        WRITE(UNITS(1),"(A)") 'MICR'; VALS(1)=1.0E-6
+        WRITE(UNITS(2),"(A)") 'MM';   VALS(2)=1.0D-3
+        WRITE(UNITS(3),"(A)") 'CM';   VALS(3)=1.0D-2
+        WRITE(UNITS(4),"(A)") 'IN';   VALS(4)=2.540D-2
+        WRITE(UNITS(5),"(A)") 'FT';   VALS(5)=3.0480D-1
+        WRITE(UNITS(6),"(A)") 'FEET'; VALS(6)=3.0480D-1
+        WRITE(UNITS(7),"(A)") 'VOX';  VALS(7)=20.0D-6
+        WRITE(UNITS(8),"(A)") 'M';    VALS(8)=1.0D0
+        !
+        ! CHECKING ALL OF THE UNITS AND THEIR RESPECTIVE TO SI CONVERSION
+        DO I = 1,SIZE(UNITS)
+          CALL CONV_DIST(UNITS(I), FACT)
+          CALL ASSERT_EQUALS(FACT, VALS(I), TEST//UNITS(I))
+        END DO
+        !
+        ! HITTING THE FAILING CASE
+        CALL CONV_DIST('BAD UNIT', FACT)
+        CALL ASSERT_EQUALS(FACT, -1.0D0, TEST//'BAD UNIT')
+        !
+        RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+      SUBROUTINE TEST_CONV_MASS
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/15
+        !
+        USE UNIT_TEST_MODULE
+        USE UNIT_CONVERSION_MODULE
+        IMPLICIT NONE
+        !
+        REAL(8) :: FACT
+        INTEGER :: I
+        REAL(8) ::        VALS(4)
+        CHARACTER(11) :: UNITS(4)
+        CHARACTER(20) :: TEST = 'CONV_MASS-FACT_CHK-'
+        !
+        WRITE(UNITS(1),"(A)") 'SLUG'; VALS(1)=1.459390D1
+        WRITE(UNITS(2),"(A)") 'LB';   VALS(2)=4.53592370D-1
+        WRITE(UNITS(3),"(A)") 'KG';   VALS(3)=1.0D0
+        WRITE(UNITS(4),"(A)") 'G';    VALS(4)=1.0D-3
+        !
+        ! CHECKING ALL OF THE UNITS AND THEIR RESPECTIVE TO SI CONVERSION
+        DO I = 1,SIZE(UNITS)
+          CALL CONV_MASS(UNITS(I), FACT)
+          CALL ASSERT_EQUALS(FACT, VALS(I), TEST//UNITS(I))
+        END DO
+        !
+        ! HITTING THE FAILING CASE
+        CALL CONV_MASS('BAD UNIT', FACT)
+        CALL ASSERT_EQUALS(FACT, -1.0D0, TEST//'BAD UNIT')
         !
         RETURN
       END SUBROUTINE
@@ -210,6 +329,174 @@ C ----------------------------------------------------------------------
         CALL CONV_TEMP('K','BAD UNIT',TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'CONV_TEMP-FAIL2')
         !
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+      SUBROUTINE TEST_CONV_TIME
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/15
+        !
+        USE UNIT_TEST_MODULE
+        USE UNIT_CONVERSION_MODULE
+        IMPLICIT NONE
+        !
+        REAL(8) :: FACT
+        INTEGER :: I
+        REAL(8) ::        VALS(5)
+        CHARACTER(11) :: UNITS(5)
+        CHARACTER(20) :: TEST = 'CONV_TIME-FACT_CHK-'
+        !
+        WRITE(UNITS(1),"(A)") 'DAY';  VALS(1)=8.6400D4
+        WRITE(UNITS(2),"(A)") 'HOUR'; VALS(2)=3.600D3
+        WRITE(UNITS(3),"(A)") 'HR';   VALS(3)=3.600D3
+        WRITE(UNITS(4),"(A)") 'MIN';  VALS(4)=6.0D1
+        WRITE(UNITS(5),"(A)") 'SEC';  VALS(5)=1.0D0
+        !
+        ! CHECKING ALL OF THE UNITS AND THEIR RESPECTIVE TO SI CONVERSION
+        DO I = 1,SIZE(UNITS)
+          CALL CONV_TIME(UNITS(I), FACT)
+          CALL ASSERT_EQUALS(FACT, VALS(I), TEST//UNITS(I))
+        END DO
+        !
+        ! HITTING THE FAILING CASE
+        CALL CONV_TIME('BAD UNIT', FACT)
+        CALL ASSERT_EQUALS(FACT, -1.0D0, TEST//'BAD UNIT')
+        !
+        RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+      SUBROUTINE TEST_CONV_DENS
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/15
+        !
+        USE UNIT_TEST_MODULE
+        USE UNIT_CONVERSION_MODULE
+        IMPLICIT NONE
+        !
+        REAL(8) :: FACT
+        INTEGER :: I
+        REAL(8) ::        VALS(3)
+        CHARACTER(11) :: UNITS(3)
+        CHARACTER(20) :: TEST = 'CONV_DENS-FACT_CHK-'
+        !
+        WRITE(UNITS(1),"(A)") 'G/CM^3';  VALS(1)=1.0D3
+        WRITE(UNITS(2),"(A)") 'LB/FT^3'; VALS(2)=LBS_KG/FT_MET**3
+        WRITE(UNITS(3),"(A)") 'KG/M^3';  VALS(3)=1.0D0
+        !
+        ! CHECKING ALL OF THE UNITS AND THEIR RESPECTIVE TO SI CONVERSION
+        DO I = 1,SIZE(UNITS)
+          CALL CONV_DENS(UNITS(I), FACT)
+          CALL ASSERT_EQUALS(FACT, VALS(I), TEST//UNITS(I))
+        END DO
+        !
+        ! HITTING THE FAILING CASE
+        CALL CONV_DENS('BAD/UNIT', FACT)
+        CALL ASSERT_EQUALS(FACT, 1.0D0, TEST//'BAD UNIT')
+        !
+        RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+      SUBROUTINE TEST_CONV_RATE
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/15
+        !
+        USE UNIT_TEST_MODULE
+        USE UNIT_CONVERSION_MODULE
+        IMPLICIT NONE
+        !
+        REAL(8) :: FACT
+        INTEGER :: I
+        REAL(8) ::        VALS(2)
+        CHARACTER(11) :: UNITS(2)
+        CHARACTER(20) :: TEST = 'CONV_RATE-FACT_CHK-'
+        !
+        WRITE(UNITS(1),"(A)") 'ML/SEC';  VALS(1)=1.0D-6
+        WRITE(UNITS(2),"(A)") 'M^3/SEC'; VALS(2)=1.0D0
+        !
+        ! CHECKING ALL OF THE UNITS AND THEIR RESPECTIVE TO SI CONVERSION
+        DO I = 1,SIZE(UNITS)
+          CALL CONV_RATE(UNITS(I), FACT)
+          CALL ASSERT_EQUALS(FACT, VALS(I), TEST//UNITS(I))
+        END DO
+        !
+        ! HITTING THE FAILING CASE
+        CALL CONV_RATE('BAD/UNIT', FACT)
+        CALL ASSERT_EQUALS(FACT, 1.0D0, TEST//'BAD UNIT')
+        !
+        RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+      SUBROUTINE TEST_CONV_PRES
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/15
+        !
+        USE UNIT_TEST_MODULE
+        USE UNIT_CONVERSION_MODULE
+        IMPLICIT NONE
+        !
+        REAL(8) :: FACT
+        INTEGER :: I
+        REAL(8) ::        VALS(5)
+        CHARACTER(11) :: UNITS(5)
+        CHARACTER(20) :: TEST = 'CONV_PRES-FACT_CHK-'
+        !
+        WRITE(UNITS(1),"(A)") 'PSI'; VALS(1)=6894.757293178D0
+        WRITE(UNITS(2),"(A)") 'BAR'; VALS(2)=1.0D5
+        WRITE(UNITS(3),"(A)") 'ATM'; VALS(3)=101325.0D0
+        WRITE(UNITS(4),"(A)") 'KPA'; VALS(4)=1.0D3
+        WRITE(UNITS(5),"(A)") 'PA';  VALS(5)=1.0D0
+        !
+        ! CHECKING ALL OF THE UNITS AND THEIR RESPECTIVE TO SI CONVERSION
+        DO I = 1,SIZE(UNITS)
+          CALL CONV_PRES(UNITS(I), FACT)
+          CALL ASSERT_EQUALS(FACT, VALS(I), TEST//UNITS(I))
+        END DO
+        !
+        ! HITTING THE FAILING CASE
+        CALL CONV_PRES('BAD UNIT', FACT)
+        CALL ASSERT_EQUALS(FACT, -1.0D0, TEST//'BAD UNIT')
+        !
+        RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+      SUBROUTINE TEST_CONV_VISC
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/15
+        !
+        USE UNIT_TEST_MODULE
+        USE UNIT_CONVERSION_MODULE
+        IMPLICIT NONE
+        !
+        REAL(8) :: FACT
+        INTEGER :: I
+        REAL(8) ::        VALS(3)
+        CHARACTER(11) :: UNITS(3)
+        CHARACTER(20) :: TEST = 'CONV_VISC-FACT_CHK-'
+        !
+        WRITE(UNITS(1),"(A)") 'CP';    VALS(1)=1.0D-3
+        WRITE(UNITS(2),"(A)") 'CENTI'; VALS(2)=1.0D-3
+        WRITE(UNITS(3),"(A)") 'PA*SEC';   VALS(3)=1.0D0
+        !
+        ! CHECKING ALL OF THE UNITS AND THEIR RESPECTIVE TO SI CONVERSION
+        DO I = 1,SIZE(UNITS)
+          CALL CONV_VISC(UNITS(I), FACT)
+          CALL ASSERT_EQUALS(FACT, VALS(I), TEST//UNITS(I))
+        END DO
+        !
+        ! HITTING THE FAILING CASE
+        CALL CONV_VISC('BAD UNIT', FACT)
+        CALL ASSERT_EQUALS(FACT, -1.0D0, TEST//'BAD UNIT')
+        !
+        RETURN
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------

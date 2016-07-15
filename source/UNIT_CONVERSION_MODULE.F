@@ -29,7 +29,7 @@ C     STATICALLY DEFINED UNIT TO SI CONVERSIONS
       !
       !MASS TO KILOGRAMS
       REAL(8) :: GM_KG,LBS_KG,SLG_KG
-      PARAMETER (GM_KG = 1.0D-3, LBS_KG = 0.4535924D0)
+      PARAMETER (GM_KG = 1.0D-3, LBS_KG = 0.45359237D0)
       PARAMETER (SLG_KG = 14.59390D0)
       !
       !TIME TO SECONDS
@@ -166,7 +166,7 @@ C     USES THE TYPE TO CALL THE PROPER UNIT CONVERTER
         INTEGER :: TYPE_ID
         CHARACTER(*) :: UNIT_IN
         !
-        CONV_FACT = 1.0
+        CONV_FACT = -1.0
         !
         IF      (TYPE_ID == 10) THEN
           CALL CONV_DIST(UNIT_IN,CONV_FACT)
@@ -248,31 +248,31 @@ C     CONVERTS TEMPERATURE VALUE TO VALUE IN UNIT_OUT UNITS
         CHARACTER(*) :: UNIT_IN,UNIT_OUT
         CHARACTER(80) :: UIN,UOUT
         !
+        IF (TRIM(UNIT_OUT) == 'SI') UNIT_OUT = 'K'
         UIN  = TRIM(UNIT_IN)
         UOUT = TRIM(UNIT_OUT)
-        IF (TRIM(UNIT_OUT) == 'SI') UNIT_OUT = 'K'
         !
         ! CONVERTING VALUE FROM UNIT_IN TO SI
-        IF      (UIN(1:1) == 'F') THEN
+        IF      (UIN(1:1) == 'F' .OR. INDEX(UIN,'FAHR') >  0) THEN
           VALUE = (VALUE + 459.67D0)*(5.0D0/9.0D0)
-        ELSE IF (UIN(1:1) == 'R') THEN
+        ELSE IF (UIN(1:1) == 'R' .OR. INDEX(UIN,'RANK') >  0) THEN
           VALUE = VALUE * (5.0D0/9.0D0)
-        ELSE IF (UIN(1:1) == 'C') THEN
+        ELSE IF (UIN(1:1) == 'C' .OR. INDEX(UIN,'CEL') >  0) THEN
           VALUE = VALUE + 273.15D0
-        ELSE IF (UIN(1:1) == 'K') THEN
+        ELSE IF (UIN(1:1) == 'K' .OR. INDEX(UIN,'KEL') >  0) THEN
           VALUE = VALUE
         ELSE
           GOTO 900
         END IF
         !
         ! CONVERTING VALUE FROM SI TO UNIT_OUT
-        IF      (UOUT(1:1) == 'F') THEN
+        IF      (UOUT(1:1) == 'F' .OR. INDEX(UOUT,'FAHR') >  0) THEN
           VALUE = VALUE*(9.0D0/5.0D0) - 459.67D0
-        ELSE IF (UOUT(1:1) == 'R') THEN
+        ELSE IF (UOUT(1:1) == 'R'  .OR. INDEX(UOUT,'RANK') >  0) THEN
           VALUE = VALUE * (9.0D0/5.0D0)
-        ELSE IF (UOUT(1:1) == 'C') THEN
+        ELSE IF (UOUT(1:1) == 'C'  .OR. INDEX(UOUT,'CEL') >  0) THEN
           VALUE = VALUE - 273.15D0
-        ELSE IF (UOUT(1:1) == 'K') THEN
+        ELSE IF (UOUT(1:1) == 'K'  .OR. INDEX(UOUT,'KEL') >  0) THEN
           VALUE = VALUE
         ELSE
           GOTO 910
