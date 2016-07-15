@@ -30,6 +30,7 @@ C
       INTEGER,SAVE :: IOUT, IERR, MAX_MES_LEN
       LOGICAL,SAVE :: PASSING
       CHARACTER(80), SAVE :: PROSECUTOR, DEFENDANT, PASS_FMT, FAIL_FMT
+      CHARACTER(80), SAVE :: ORIG_STD_OUT_LOC, STD_OUT_LOG
 C
 C
       CONTAINS
@@ -52,6 +53,8 @@ C
         PASS_FMT = "(2X,A,' - ',A,' : ',A,1X,'"//GR//"PASSED"//NC//"')"
         FAIL_FMT = "(2X,A,' - ',A,' : ',A,1X,'"//RD//"FAILED"//NC//"')"
         PASSING = .TRUE.
+        STD_OUT_LOG = 'STD-LOG-FILE.TXT'
+        INQUIRE(6, NAME=ORIG_STD_OUT_LOC)
         CALL STO_MESSAGE(' SUCESSFULLY INITIALIZED TESTING MODULE')
         CALL STO_MESSAGE(' ')
         !
@@ -84,6 +87,60 @@ C
         CHARACTER(*) :: COUT
         !
         WRITE(IERR,"(A)") TRIM(COUT)
+        !
+        RETURN
+      END SUBROUTINE
+C
+      SUBROUTINE CAPTURE_STD_OUT
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/14
+        !
+        ! PURPOSE: WRITES ALL STDOUT TO A LOG FILE
+        !
+        IMPLICIT NONE
+        OPEN(UNIT=6, FILE=STD_OUT_LOG)
+        !
+        RETURN
+      END SUBROUTINE
+C
+      SUBROUTINE PRINT_CAPTURED_STDOUT
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/14
+        !
+        ! PURPOSE: READS AND PRINTS CAPTURED STD OR CLOSES AN OPEN LOG FILE
+        !
+        IMPLICIT NONE
+        INTEGER :: IO
+        CHARACTER(MAX_MES_LEN) :: CVAR
+        !
+        OPEN(UNIT=10, FILE=STD_OUT_LOG, ACTION='READ')
+        WRITE(*,"(A)")'CAPTURED STANDARD OUT'
+        WRITE(*,"(A)")'------------------------------------------------'
+        DO
+          READ(10,'(A)', IOSTAT=IO) CVAR
+          IF (IO > 0) EXIT
+          WRITE(*,"(4X,A)") TRIM(CVAR)
+        END DO
+        WRITE(*,"(A)")'------------------------------------------------'
+        CLOSE(10)
+        !
+        RETURN
+      END SUBROUTINE
+C
+      SUBROUTINE RELEASE_STD_OUT
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/14
+        !
+        ! PURPOSE: READS AND PRINTS CAPTURED STD OR CLOSES AN OPEN LOG FILE
+        !
+        IMPLICIT NONE
+        !
+        ! CLOSING THE LOG FILE AND RE-ENABLING NORMAL OUTPUT
+        CLOSE(6)
+        OPEN(UNIT=6, FILE=ORIG_STD_OUT_LOC)
         !
         RETURN
       END SUBROUTINE

@@ -482,6 +482,8 @@ C ----------------------------------------------------------------------
         CHARACTER(11) :: UNITS(3)
         CHARACTER(20) :: TEST = 'CONV_VISC-FACT_CHK-'
         !
+        CALL CAPTURE_STD_OUT
+        !
         WRITE(UNITS(1),"(A)") 'CP';    VALS(1)=1.0D-3
         WRITE(UNITS(2),"(A)") 'CENTI'; VALS(2)=1.0D-3
         WRITE(UNITS(3),"(A)") 'PA*SEC';   VALS(3)=1.0D0
@@ -495,6 +497,9 @@ C ----------------------------------------------------------------------
         ! HITTING THE FAILING CASE
         CALL CONV_VISC('BAD UNIT', FACT)
         CALL ASSERT_EQUALS(FACT, -1.0D0, TEST//'BAD UNIT')
+        !
+        CALL RELEASE_STD_OUT
+        CALL PRINT_CAPTURED_STDOUT
         !
         RETURN
       END SUBROUTINE
