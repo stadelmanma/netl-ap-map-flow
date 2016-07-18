@@ -5,7 +5,7 @@ C
 C     PROGRAM DESCRIPTON: HANDLES UNIT TESTING OF THE UNIT CONVERSION MODULE.
 C
 C     DATE WRITTEN:  2016/07/14
-C     LAST MODIFIED: 2016/07/15
+C     LAST MODIFIED: 2016/07/18
 C
 C     SUBROUTINE CALLS:
 C
@@ -39,8 +39,8 @@ C     CALLING TEST ROUTINES
 C
 C
 C
-      PRINT *, 'PASSING? ',PASSING
-      IF (.NOT. PASSING) STOP(1)
+      PRINT *, 'ALL_PASS? ',ALL_PASS
+      IF (.NOT. ALL_PASS) STOP(1)
       END PROGRAM
 C
 C ----------------------------------------------------------------------
@@ -54,9 +54,12 @@ C
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
+        !
         IMPLICIT NONE
         REAL(8) :: TEST_VAL, CORR_VAL
         LOGICAL :: BOK
+        !
+        CALL INIT_TEST
         !
         ! REGULAR CONVERSION
         TEST_VAL = 1.0D0
@@ -81,6 +84,8 @@ C
         CALL CONVERT_VALUE('TEMP','K','BAD UNIT',TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'COVERT_VALUE-FAIL2')
         !
+        CALL END_TEST('TEST_COVERT_VALUE')
+        !
         RETURN
       END SUBROUTINE
 C
@@ -92,10 +97,13 @@ C ----------------------------------------------------------------------
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
+        !
         IMPLICIT NONE
         REAL(8) :: TEST_VAL, CORR_VAL
         LOGICAL :: BOK
         CHARACTER(20) :: UOUT
+        !
+        CALL INIT_TEST
         !
         ! CONVERSION FACTOR TO SI
         TEST_VAL = 1.0D0
@@ -131,6 +139,8 @@ C ----------------------------------------------------------------------
         CALL CALC_CONV_FACT('DIST','FT','BAD UNIT',TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'CALC_CONV_FACT-NONSI_FAIL2')
         !
+        CALL END_TEST('TEST_CALC_CONV_FACT')
+        !
         RETURN
       END SUBROUTINE
 C
@@ -142,11 +152,14 @@ C ----------------------------------------------------------------------
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
+        !
         IMPLICIT NONE
         INTEGER :: I, TID
         CHARACTER(10) :: SI_CHK(100,2)
         CHARACTER(22) :: TEST1 = 'SET_TYPE_ID-INDEX_CHK-'
         CHARACTER(24) :: TEST2 = 'SET_TYPE_ID-SI_USTR_CHK-'
+        !
+        CALL INIT_TEST
         !
         WRITE(SI_CHK(10,:),"(A)") 'DIST','M'
         WRITE(SI_CHK(20,:),"(A)") 'MASS','KG'
@@ -169,6 +182,8 @@ C ----------------------------------------------------------------------
         CALL SET_TYPE_ID('BAD TYPE', TID)
         CALL ASSERT_EQUALS(TID, -1, 'SET_TYPE_ID-INDEX_CHK-BAD-TYPE')
         !
+        CALL END_TEST('TEST_SET_TYPE_ID')
+        !
         RETURN
       END SUBROUTINE
 C
@@ -180,12 +195,14 @@ C ----------------------------------------------------------------------
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
-        IMPLICIT NONE
         !
+        IMPLICIT NONE
         REAL(8) :: FACT
         INTEGER :: I
         CHARACTER(11) :: SI_CHK(100)
         CHARACTER(23) :: TEST1 = 'GET_CONV_FACT-FACT_CHK-'
+        !
+        CALL INIT_TEST
         !
         WRITE(SI_CHK(10),"(A)") 'M'
         WRITE(SI_CHK(20),"(A)") 'KG'
@@ -206,7 +223,8 @@ C ----------------------------------------------------------------------
             CALL ASSERT_EQUALS(FACT, 1.0D0, TEST1//SI_CHK(I))
           END IF
         END DO
-
+        !
+        CALL END_TEST('TEST_GET_CONV_FACT')
         !
         RETURN
       END SUBROUTINE
@@ -219,14 +237,16 @@ C ----------------------------------------------------------------------
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
-        IMPLICIT NONE
         !
+        IMPLICIT NONE
         REAL(8) :: FACT
         INTEGER :: I
         REAL(8) ::        VALS(8)
         CHARACTER(11) :: UNITS(8)
         CHARACTER(20) :: TEST = 'CONV_DIST-FACT_CHK-'
         VOX_MET = 20.0D-6
+        !
+        CALL INIT_TEST
         !
         WRITE(UNITS(1),"(A)") 'MICR'; VALS(1)=1.0E-6
         WRITE(UNITS(2),"(A)") 'MM';   VALS(2)=1.0D-3
@@ -247,6 +267,8 @@ C ----------------------------------------------------------------------
         CALL CONV_DIST('BAD UNIT', FACT)
         CALL ASSERT_EQUALS(FACT, -1.0D0, TEST//'BAD UNIT')
         !
+        CALL END_TEST('TEST_CONV_DIST')
+        !
         RETURN
       END SUBROUTINE
 C
@@ -258,13 +280,15 @@ C ----------------------------------------------------------------------
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
-        IMPLICIT NONE
         !
+        IMPLICIT NONE
         REAL(8) :: FACT
         INTEGER :: I
         REAL(8) ::        VALS(4)
         CHARACTER(11) :: UNITS(4)
         CHARACTER(20) :: TEST = 'CONV_MASS-FACT_CHK-'
+        !
+        CALL INIT_TEST
         !
         WRITE(UNITS(1),"(A)") 'SLUG'; VALS(1)=1.459390D1
         WRITE(UNITS(2),"(A)") 'LB';   VALS(2)=4.53592370D-1
@@ -281,6 +305,8 @@ C ----------------------------------------------------------------------
         CALL CONV_MASS('BAD UNIT', FACT)
         CALL ASSERT_EQUALS(FACT, -1.0D0, TEST//'BAD UNIT')
         !
+        CALL END_TEST('TEST_CONV_MASS')
+        !
         RETURN
       END SUBROUTINE
 C
@@ -292,9 +318,12 @@ C ----------------------------------------------------------------------
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
+        !
         IMPLICIT NONE
         REAL(8) :: TEST_VAL, CORR_VAL
         LOGICAL :: BOK
+        !
+        CALL INIT_TEST
         !
         TEST_VAL = 0.0D0
         CORR_VAL = 459.67D0
@@ -329,6 +358,8 @@ C ----------------------------------------------------------------------
         CALL CONV_TEMP('K','BAD UNIT',TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'CONV_TEMP-FAIL2')
         !
+        CALL END_TEST('TEST_CONV_TEMP')
+        !
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
@@ -339,13 +370,15 @@ C ----------------------------------------------------------------------
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
-        IMPLICIT NONE
         !
+        IMPLICIT NONE
         REAL(8) :: FACT
         INTEGER :: I
         REAL(8) ::        VALS(5)
         CHARACTER(11) :: UNITS(5)
         CHARACTER(20) :: TEST = 'CONV_TIME-FACT_CHK-'
+        !
+        CALL INIT_TEST
         !
         WRITE(UNITS(1),"(A)") 'DAY';  VALS(1)=8.6400D4
         WRITE(UNITS(2),"(A)") 'HOUR'; VALS(2)=3.600D3
@@ -363,6 +396,8 @@ C ----------------------------------------------------------------------
         CALL CONV_TIME('BAD UNIT', FACT)
         CALL ASSERT_EQUALS(FACT, -1.0D0, TEST//'BAD UNIT')
         !
+        CALL END_TEST('TEST_CONV_TIME')
+        !
         RETURN
       END SUBROUTINE
 C
@@ -374,13 +409,15 @@ C ----------------------------------------------------------------------
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
-        IMPLICIT NONE
         !
+        IMPLICIT NONE
         REAL(8) :: FACT
         INTEGER :: I
         REAL(8) ::        VALS(3)
         CHARACTER(11) :: UNITS(3)
         CHARACTER(20) :: TEST = 'CONV_DENS-FACT_CHK-'
+        !
+        CALL INIT_TEST
         !
         WRITE(UNITS(1),"(A)") 'G/CM^3';  VALS(1)=1.0D3
         WRITE(UNITS(2),"(A)") 'LB/FT^3'; VALS(2)=LBS_KG/FT_MET**3
@@ -396,6 +433,8 @@ C ----------------------------------------------------------------------
         CALL CONV_DENS('BAD/UNIT', FACT)
         CALL ASSERT_EQUALS(FACT, 1.0D0, TEST//'BAD UNIT')
         !
+        CALL END_TEST('TEST_CONV_DENS')
+        !
         RETURN
       END SUBROUTINE
 C
@@ -407,13 +446,15 @@ C ----------------------------------------------------------------------
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
-        IMPLICIT NONE
         !
+        IMPLICIT NONE
         REAL(8) :: FACT
         INTEGER :: I
         REAL(8) ::        VALS(2)
         CHARACTER(11) :: UNITS(2)
         CHARACTER(20) :: TEST = 'CONV_RATE-FACT_CHK-'
+        !
+        CALL INIT_TEST
         !
         WRITE(UNITS(1),"(A)") 'ML/SEC';  VALS(1)=1.0D-6
         WRITE(UNITS(2),"(A)") 'M^3/SEC'; VALS(2)=1.0D0
@@ -428,6 +469,8 @@ C ----------------------------------------------------------------------
         CALL CONV_RATE('BAD/UNIT', FACT)
         CALL ASSERT_EQUALS(FACT, 1.0D0, TEST//'BAD UNIT')
         !
+        CALL END_TEST('TEST_CONV_RATE')
+        !
         RETURN
       END SUBROUTINE
 C
@@ -439,13 +482,15 @@ C ----------------------------------------------------------------------
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
-        IMPLICIT NONE
         !
+        IMPLICIT NONE
         REAL(8) :: FACT
         INTEGER :: I
         REAL(8) ::        VALS(5)
         CHARACTER(11) :: UNITS(5)
         CHARACTER(20) :: TEST = 'CONV_PRES-FACT_CHK-'
+        !
+        CALL INIT_TEST
         !
         WRITE(UNITS(1),"(A)") 'PSI'; VALS(1)=6894.757293178D0
         WRITE(UNITS(2),"(A)") 'BAR'; VALS(2)=1.0D5
@@ -463,6 +508,8 @@ C ----------------------------------------------------------------------
         CALL CONV_PRES('BAD UNIT', FACT)
         CALL ASSERT_EQUALS(FACT, -1.0D0, TEST//'BAD UNIT')
         !
+        CALL END_TEST('TEST_CONV_PRES')
+        !
         RETURN
       END SUBROUTINE
 C
@@ -474,15 +521,15 @@ C ----------------------------------------------------------------------
         !
         USE UNIT_TEST_MODULE
         USE UNIT_CONVERSION_MODULE
-        IMPLICIT NONE
         !
+        IMPLICIT NONE
         REAL(8) :: FACT
         INTEGER :: I
         REAL(8) ::        VALS(3)
         CHARACTER(11) :: UNITS(3)
         CHARACTER(20) :: TEST = 'CONV_VISC-FACT_CHK-'
         !
-        CALL CAPTURE_STD_OUT
+        CALL INIT_TEST
         !
         WRITE(UNITS(1),"(A)") 'CP';    VALS(1)=1.0D-3
         WRITE(UNITS(2),"(A)") 'CENTI'; VALS(2)=1.0D-3
@@ -498,8 +545,7 @@ C ----------------------------------------------------------------------
         CALL CONV_VISC('BAD UNIT', FACT)
         CALL ASSERT_EQUALS(FACT, -1.0D0, TEST//'BAD UNIT')
         !
-        CALL RELEASE_STD_OUT
-        CALL PRINT_CAPTURED_STDOUT
+        CALL END_TEST('TEST_CONV_VISC')
         !
         RETURN
       END SUBROUTINE

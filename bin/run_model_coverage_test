@@ -9,7 +9,6 @@ cp makefile ../test/fortran
 
 # creating directory and building model with coverage
 cd ../test/fortran
-cp ./source/* .
 make test
 
 # executing test scripts amd capturing return codes
@@ -17,7 +16,7 @@ set +e
 
 echo ""
 echo "Running flow model integration tests."
-./integration/test_model_code_coverage
+./test_model_code_coverage
 MODEL_TEST=$?
 
 echo ""
@@ -31,7 +30,7 @@ echo "Running UNIT_CONVERSION_MODULE unit tests."
 UNITCNV_TEST=$?
 
 # building the coverage report
-make coverage
+#make coverage
 
 # exiting with proper exit code
 echo ""

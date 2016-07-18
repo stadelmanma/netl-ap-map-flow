@@ -9,7 +9,7 @@ C               ---- VARIABLE DESCRIPTIONS ----
 C
 C  EPS - VALUE OF EPSILON TO USE WHEN COMPARING FLOATS
 C  IOUT - UNIT NUMBER TO WRITE STANDARD OUTPUT
-C  IERR - UNIT NUMBER TO WRITE STANDARD ERROR
+C  IOUT - UNIT NUMBER TO WRITE STANDARD ERROR
 C  MAX_MES_LEN - MAXIMUM NUMBER OF CHARACTERS A LOG MESSAGE CAN BE
 C  PASSING - .TRUE. IF ALL TESTS HAVE PASSED
 C  PROSECUTOR - THE FILE HOLDING THE TEST SUBROUTINES
@@ -27,10 +27,14 @@ C
       END INTERFACE
 C
       REAL(8), SAVE :: EPS = EPSILON(1.0D0)/EPSILON(1.0)
-      INTEGER,SAVE :: IOUT, IERR, MAX_MES_LEN
-      LOGICAL,SAVE :: PASSING
+      INTEGER,SAVE :: IOUT, MAX_MES_LEN
+      LOGICAL,SAVE :: ALL_PASS, PASSING
       CHARACTER(80), SAVE :: PROSECUTOR, DEFENDANT, PASS_FMT, FAIL_FMT
       CHARACTER(80), SAVE :: ORIG_STD_OUT_LOC, STD_OUT_LOG
+      ! COLORS
+      CHARACTER(5) :: NC = achar(27)//'[00m' ! RESET COLOR
+      CHARACTER(7) :: GR = achar(27)//'[0;32m' ! GREEN
+      CHARACTER(7) :: RD = achar(27)//'[1;31m' ! RED
 C
 C
       CONTAINS
@@ -43,20 +47,57 @@ C
         ! PURPOSE: INITIALIZES TESTING VARIABLES
         !
         IMPLICIT NONE
-        CHARACTER(5) :: NC = achar(27)//'[00m'
-        CHARACTER(7) :: GR = achar(27)//'[0;32m'
-        CHARACTER(7) :: RD = achar(27)//'[0;31m'
         !
-        IERR = 0
         IOUT = 6
         MAX_MES_LEN = 256
         PASS_FMT = "(2X,A,' - ',A,' : ',A,1X,'"//GR//"PASSED"//NC//"')"
         FAIL_FMT = "(2X,A,' - ',A,' : ',A,1X,'"//RD//"FAILED"//NC//"')"
-        PASSING = .TRUE.
+        ALL_PASS = .TRUE.
         STD_OUT_LOG = 'STD-LOG-FILE.TXT'
         INQUIRE(6, NAME=ORIG_STD_OUT_LOC)
         CALL STO_MESSAGE(' SUCESSFULLY INITIALIZED TESTING MODULE')
         CALL STO_MESSAGE(' ')
+        !
+        RETURN
+      END SUBROUTINE
+C
+      SUBROUTINE INIT_TEST
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/18
+        !
+        ! PURPOSE: INITIALIZES AN INDIVIDUAL TEST
+        !
+        IMPLICIT NONE
+        CALL CAPTURE_STD_OUT
+        PASSING = .TRUE.
+        !
+        RETURN
+      END SUBROUTINE
+C
+      SUBROUTINE END_TEST(TEST_NAME)
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/18
+        !
+        ! PURPOSE: HANDLES ENDING AN INDIVIDUAL TEST
+        !
+        IMPLICIT NONE
+        CHARACTER(*) :: TEST_NAME
+        CHARACTER(MAX_MES_LEN) :: CVAR, PRO
+        PRO = PROSECUTOR
+        !
+        ! RELEASING STD_OUT AND PRINTING IT TO THE SCREEN IF NEEEDED
+        CALL RELEASE_STD_OUT
+        IF (PASSING) THEN
+          WRITE(CVAR,PASS_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TEST_NAME)
+          CALL STO_MESSAGE(CVAR)
+        ELSE
+          WRITE(CVAR,FAIL_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TEST_NAME)
+          CALL STO_MESSAGE(CVAR)
+          CALL PRINT_CAPTURED_STDOUT
+          ALL_PASS = .FALSE.
+        END IF
         !
         RETURN
       END SUBROUTINE
@@ -72,21 +113,6 @@ C
         CHARACTER(*) :: COUT
         !
         WRITE(IOUT,"(A)") TRIM(COUT)
-        !
-        RETURN
-      END SUBROUTINE
-C
-      SUBROUTINE STE_MESSAGE(COUT)
-        !
-        ! WRITTEN BY: MATTHEW STADELMAN
-        ! LAST MODIFIED: 2016/07/14
-        !
-        ! PURPOSE: WRITES A MESSAGE TO STDERR OR EQUIVALENT LOG FILE
-        !
-        IMPLICIT NONE
-        CHARACTER(*) :: COUT
-        !
-        WRITE(IERR,"(A)") TRIM(COUT)
         !
         RETURN
       END SUBROUTINE
@@ -116,14 +142,14 @@ C
         CHARACTER(MAX_MES_LEN) :: CVAR
         !
         OPEN(UNIT=10, FILE=STD_OUT_LOG, ACTION='READ')
+        WRITE(*,"(A,80('='),A)")RD,NC
         WRITE(*,"(A)")'CAPTURED STANDARD OUT'
-        WRITE(*,"(A)")'------------------------------------------------'
         DO
           READ(10,'(A)', IOSTAT=IO) CVAR
           IF (IO > 0) EXIT
           WRITE(*,"(4X,A)") TRIM(CVAR)
         END DO
-        WRITE(*,"(A)")'------------------------------------------------'
+        WRITE(*,"(A,80('='),A)")RD,NC
         CLOSE(10)
         !
         RETURN
@@ -163,9 +189,9 @@ C
         ELSE
           PASSING = .FALSE.
           WRITE(CVAR,FAIL_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
-          CALL STE_MESSAGE(CVAR)
+          CALL STO_MESSAGE(CVAR)
           WRITE(CVAR,"(8X,A,' != ',A)")TRIM(VAL1), TRIM(VAL2)
-          CALL STE_MESSAGE(CVAR)
+          CALL STO_MESSAGE(CVAR)
         END IF
         !
         RETURN
@@ -209,28 +235,28 @@ C
         ! ERROR MESSAGES
         IF (LEN_FAIL .OR. VAL_FAIL) THEN
           WRITE(CVAR,FAIL_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
-          CALL STE_MESSAGE(CVAR)
+          CALL STO_MESSAGE(CVAR)
         ELSE
           WRITE(CVAR,PASS_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
           CALL STO_MESSAGE(CVAR)
         END IF
         !
         IF (LEN_FAIL) THEN
-          CALL STE_MESSAGE(LENM)
+          CALL STO_MESSAGE(LENM)
         END IF
         !
         IF (VAL_FAIL) THEN
-          CALL STE_MESSAGE(VALM)
-          WRITE(IERR,*)'ARR1',' ARR2'
+          CALL STO_MESSAGE(VALM)
+          WRITE(IOUT,*)'ARR1',' ARR2'
           DO I = 1, MAX(SIZE(ARR1),SIZE(ARR2))
             IF (I <= SIZE(ARR1) .AND. I <= SIZE(ARR2)) THEN
-              WRITE(IERR,*)TRIM(ARR1(I)),', ',TRIM(ARR2(I))
+              WRITE(IOUT,*)TRIM(ARR1(I)),', ',TRIM(ARR2(I))
             END IF
             IF (I < SIZE(ARR1) .AND. I >= SIZE(ARR2)) THEN
-              WRITE(IERR,*) TRIM(ARR1(I)), ',  ? '
+              WRITE(IOUT,*) TRIM(ARR1(I)), ',  ? '
             END IF
             IF (I >= SIZE(ARR1) .AND. I < SIZE(ARR2)) THEN
-              WRITE(IERR,*) ' ?  , ',TRIM(ARR2(I))
+              WRITE(IOUT,*) ' ?  , ',TRIM(ARR2(I))
             END IF
           END DO
         END IF
@@ -257,9 +283,9 @@ C
         ELSE
           PASSING = .FALSE.
           WRITE(CVAR,FAIL_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
-          CALL STE_MESSAGE(CVAR)
+          CALL STO_MESSAGE(CVAR)
           WRITE(CVAR,"(8X,I0,' != ',I0)")VAL1, VAL2
-          CALL STE_MESSAGE(CVAR)
+          CALL STO_MESSAGE(CVAR)
         END IF
         !
         RETURN
@@ -285,9 +311,9 @@ C
         ELSE
           PASSING = .FALSE.
           WRITE(CVAR,FAIL_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
-          CALL STE_MESSAGE(CVAR)
+          CALL STO_MESSAGE(CVAR)
           WRITE(CVAR,MFMT)VAL1,VAL2,VAL1-VAL2
-          CALL STE_MESSAGE(CVAR)
+          CALL STO_MESSAGE(CVAR)
         END IF
         !
         RETURN
@@ -312,9 +338,9 @@ C
         ELSE
           PASSING = .FALSE.
           WRITE(CVAR,FAIL_FMT)TRIM(PRO),TRIM(DEFENDANT),TRIM(TESTEE)
-          CALL STE_MESSAGE(CVAR)
+          CALL STO_MESSAGE(CVAR)
           WRITE(CVAR,"(8X,G0.6,' != ',G0.6)")VAL1, VAL2
-          CALL STE_MESSAGE(CVAR)
+          CALL STO_MESSAGE(CVAR)
         END IF
         !
         RETURN

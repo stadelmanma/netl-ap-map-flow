@@ -52,7 +52,6 @@ test: clean modules
 	$(COMPILER) -o $(STRING_MOD_TEST)  $(FFLAGS) $(OS) $(WFLAGS) -coverage
 	$(COMPILER) -o $(UNIT_CONV_MOD_TEST) $(FFLAGS) $(OS) $(WFLAGS) -DUNITTESTING -coverage
 
-
 coverage:
 	$(RM) *UNIT_TEST*
 	gcov *.F

@@ -29,8 +29,8 @@ C     CALLING TEST ROUTINES
       CALL TEST_R_JUST
       CALL TEST_LNPROC
 C
-      PRINT *, 'PASSING? ',PASSING
-      IF (.NOT. PASSING) STOP(1)
+      PRINT *, 'ALL_PASS? ',ALL_PASS
+      IF (.NOT. ALL_PASS) STOP(1)
       END PROGRAM
 C
 C ----------------------------------------------------------------------
@@ -47,11 +47,15 @@ C
         IMPLICIT NONE
         CHARACTER(80) :: TEST_STR, CORR_STR
         !
+        CALL INIT_TEST
+        !
         WRITE(TEST_STR,*) 'all uppercase'
         WRITE(CORR_STR,*) 'ALL UPPERCASE'
         CALL UPPER_CASE(TEST_STR, TEST_STR)
         !
         CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'UPPER_CASE')
+        !
+        CALL END_TEST('TEST_UPPER_CASE')
         !
         RETURN
       END SUBROUTINE
@@ -67,11 +71,15 @@ C-----------------------------------------------------------------------
         IMPLICIT NONE
         CHARACTER(80) :: TEST_STR, CORR_STR
         !
+        CALL INIT_TEST
+        !
         WRITE(TEST_STR,*) 'ALL LOWERCASE'
         WRITE(CORR_STR,*) 'all lowercase'
         CALL LOWER_CASE(TEST_STR, TEST_STR)
         !
         CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'LOWER_CASE')
+        !
+        CALL END_TEST('TEST_LOWER_CASE')
         !
         RETURN
       END SUBROUTINE
@@ -87,11 +95,15 @@ C-----------------------------------------------------------------------
         IMPLICIT NONE
         CHARACTER(10) :: TEST_STR, CORR_STR
         !
+        CALL INIT_TEST
+        !
         WRITE(TEST_STR,*) 'RIGHT    '
         WRITE(CORR_STR,*) '    RIGHT'
         CALL R_JUST(TEST_STR, TEST_STR, 10)
         !
         CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'R_JUST')
+        !
+        CALL END_TEST('TEST_R_JUST')
         !
         RETURN
       END SUBROUTINE
@@ -107,6 +119,8 @@ C-----------------------------------------------------------------------
         IMPLICIT NONE
         INTEGER :: I, NFLD, STRLEN
         CHARACTER(80) :: TEST_STR, TEST_ARR(4), CORR_ARR(4)
+        !
+        CALL INIT_TEST
         !
         STRLEN = 80
         DO I = 1,4
@@ -175,6 +189,8 @@ C-----------------------------------------------------------------------
         WRITE(TEST_STR,*) 'F1 	F2'
         CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,CFLD,LFLD,NFLD)
         CALL ASSERT_EQUALS(CFLD(1:2),(/'F1','F2'/),'LNPROC-SPACE&TAB')
+        !
+        CALL END_TEST('TEST_LNPROC')
         !
         RETURN
       END SUBROUTINE
