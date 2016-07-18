@@ -30,7 +30,7 @@ echo "Running UNIT_CONVERSION_MODULE unit tests."
 UNITCNV_TEST=$?
 
 # building the coverage report
-#make coverage
+make coverage
 
 # exiting with proper exit code
 echo ""
