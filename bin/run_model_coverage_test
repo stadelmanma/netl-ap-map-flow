@@ -18,30 +18,29 @@ set +e
 echo ""
 echo "Running flow model integration tests."
 #./test_model_code_coverage
-EXIT_CODE=$((EXIT_CODE+$?))
+EXIT_CODE=$((EXIT_CODE + $?))
 
 echo ""
 echo "Running STRING_MODULE unit tests."
-#./TEST_STRING_MOD.EXE
-EXIT_CODE=$((MODEL_TEST+$?))
-STRING_TEST=$?
+./TEST_STRING_MOD.EXE
+EXIT_CODE=$((EXIT_CODE + $?))
 
 echo ""
 echo "Running UNIT_CONVERSION_MODULE unit tests."
-#./TEST_UNIT_CONV_MOD.EXE
-EXIT_CODE=$((EXIT_CODE+$?))
+./TEST_UNIT_CONV_MOD.EXE
+EXIT_CODE=$((EXIT_CODE + $?))
 
 echo ""
 echo "Running APM_SUBROUTINES unit tests."
-#./TEST_APM_SUBROUTINES.EXE
-EXIT_CODE=$((EXIT_CODE+$?))
+./TEST_APM_SUBROUTINES.EXE
+EXIT_CODE=$((EXIT_CODE + $?))
 
 # building the coverage report
 make coverage
 
 # exiting with proper exit code
 echo ""
-if [ EXIT_CODE -eq 0 ]
+if [ $EXIT_CODE -eq 0 ]
 then
     echo "We have lift off!"
     exit 0
