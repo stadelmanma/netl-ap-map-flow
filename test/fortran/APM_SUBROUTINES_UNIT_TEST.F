@@ -23,7 +23,7 @@ C
       CALL INITIALIZE_TEST_MODULE
 C
 C     CALLING TEST ROUTINES
-      !
+      CALL TEST_ERROR_ROUTINES
 C
 C
       PRINT *, 'ALL_PASS? ',ALL_PASS
@@ -34,3 +34,24 @@ C ----------------------------------------------------------------------
 C     TESTING SUBROUTINES
 C-----------------------------------------------------------------------
 C
+      SUBROUTINE TEST_ERROR_ROUTINES
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/14
+        !
+        USE APM_MODULE, ONLY : APM_IOUT => IOUT
+        USE UNIT_TEST_MODULE
+        !
+        IMPLICIT NONE
+        !
+        CALL INIT_TEST
+        APM_IOUT = 6
+        !
+        CALL ERROR_WHERE('TEST RECORD')
+        CALL INSUFFICIENT_ERROR('TEST RECORD')
+        CALL FIELD_ERROR('TEST RECORD', -1)
+        !
+        CALL END_TEST('TEST_ERROR_ROUTINES')
+        !
+        RETURN
+      END SUBROUTINE

@@ -17,7 +17,7 @@ set +e
 
 echo ""
 echo "Running flow model integration tests."
-#./test_model_code_coverage
+./test_model_code_coverage
 EXIT_CODE=$((EXIT_CODE + $?))
 
 echo ""
@@ -36,6 +36,7 @@ echo "Running APM_SUBROUTINES unit tests."
 EXIT_CODE=$((EXIT_CODE + $?))
 
 # building the coverage report
+echo ""
 make coverage
 
 # exiting with proper exit code
