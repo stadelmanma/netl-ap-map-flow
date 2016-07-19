@@ -76,8 +76,10 @@ class DataField:
             with open(self.infile, 'r') as file:
                 line = file.readline()
                 #
-                match = re.search(r'[0-9.]+(\D+)[0-9.]+', line)
-                delim = match.group(1)
+                pat = r'[-0-9.+eE]+([^-0-9.+eE]+)[-0-9.+eE]+'
+                match = re.search(pat, line)
+                delim = match.group(1).strip()
+                delim = None if not delim else delim
         #
         self.data_map = sp.loadtxt(self.infile, delimiter=delim)
         self.data_vector = sp.ravel(self.data_map)
