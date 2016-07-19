@@ -4,7 +4,7 @@ r"""
  the creation of the inital input list for the requirements of thier bulk run.
 """
 import re
-from ApertureMapModelTools.BulkRun import process_input_tuples, bulk_run, dry_run
+from ApertureMapModelTools.RunModel import BulkRun
 #
 # !!! IMPORTANT NOTES: !!!
 #
@@ -115,12 +115,18 @@ del input_params
 ########################################################################
 ########################################################################
 #
+
 # Run Parameters
-max_CPUs_to_use = 4
-max_RAM_to_use = 8.0
+args = {
+    'start_delay': 20.0,
+    'spawn_delay': 5.0,
+    'retest_delay': 5.0,
+    'sys_RAM': 8.0,
+    'num_CPUs': 4
+    }
 base_inp_file = 'FRACTURE_INITIALIZATION.INP'
-#
-#
+
+# Input Parameters
 global_file_formats = {}
 global_run_params = {}
 input_params = []
@@ -129,18 +135,20 @@ input_params = []
 #
 ########################################################################
 #
-#
-# pre processing the input params list of tuples
-simulation_inputs = process_input_tuples(input_params,
-                                         global_params=global_run_params,
-                                         global_name_format=global_file_formats)
-#
+
+# Creating class with given parameters
+bulk_run = BulkRun(base_inp_file, **args)
+
+# pre processing the input parameters tuples
+bulk_run.process_input_tuples(input_params,
+                              default_params=global_run_params,
+                              default_name_format=global_file_formats)
+
 # testing simulations (replace 'dry_run' with 'bulk_run' to actually run sims)
-dry_run(simulation_inputs,
-        num_CPUs=max_CPUs_to_use,
-        sys_RAM=max_RAM_to_use,
-        delim='auto',
-        init_infile=base_inp_file)
+bulk_run.dry_run()
+
+# the start() method actually begins the simulations
+# bulk_run.start()
 
 
 
