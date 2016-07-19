@@ -24,7 +24,7 @@ class TestRunCore:
         Testing various inputs to the argument parser
         """
         # regular input line
-        line = 'FRAC-PRESS:   100  KPA'
+        line = 'INLET-PRESS:   100  KPA'
         arg = ArgInput(line)
         assert arg.value == '100'
         arg.update_value('200')
@@ -37,7 +37,7 @@ class TestRunCore:
         line = arg.output_line()
         assert line == 'OVERWRITE'
         # line with colon but no following value
-        line = 'FRAC-PRESS: '
+        line = 'INLET-PRESS: '
         arg = ArgInput(line)
         # empty line
         line = ''
@@ -57,13 +57,11 @@ class TestRunCore:
         inp_file2 = RunModel.InputFile(inp_file)
         #
         new_args = {
-            'FRAC-PRESS': '300',
-            'MANIFOLD': 'TRUE',
+            'INLET-PRESS': '300',
             'BAD-ARG': 'IN FORMATS'
         }
         inp_file.update_args(new_args)
-        assert inp_file['FRAC-PRESS'].value == new_args['FRAC-PRESS']
-        assert inp_file['MANIFOLD'].value == new_args['MANIFOLD']
+        assert inp_file['INLET-PRESS'].value == new_args['INLET-PRESS']
         assert inp_file.filename_format_args['BAD-ARG'] == new_args['BAD-ARG']
         #
         # testing __repr__ function with an undefined file in formats
@@ -102,9 +100,7 @@ class TestRunCore:
         # updating paths so they are absolute
         files = ['SUMMARY-PATH', 'STAT-FILE', 'APER-FILE', 'FLOW-FILE', 'PRESS-FILE', 'VTK-FILE']
         for file in files:
-            dirs = os.path.split(inp_file[file].value)
-            new_path = os.path.join(TEMP_DIR, dirs[-1])
-            inp_file[file].update_value(new_path)
+            inp_file[file].commened_out = True
         inp_file.filename_formats['input_file'] = os.path.join(TEMP_DIR, 'TEST_INIT.INP')
         #
         dirs = os.path.split(inp_file['PVT-PATH'].value)

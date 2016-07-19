@@ -1,12 +1,5 @@
 #!/bin/bash
 #
-# testing if the script was called from the bin folder
-loc=${PWD##*/}
-if [ "bin" = "$loc" ]; then
-    cd ..
-fi
-#
 # Building the flow model from source
-cd ./source/
+cd "$(git rev-parse --show-toplevel)/source"
 make
-cd ..

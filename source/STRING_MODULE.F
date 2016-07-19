@@ -108,14 +108,15 @@ C     ------------------------------------------------------------------
         ! LAST MODIFIED: 07/12/2016
         !
         IMPLICIT NONE
-        INTEGER :: IN,MAXFLD,MAXLEN,NFLD,LENG,I,J
+        INTEGER :: IN,MAXFLD,MAXLEN,NFLD,LENG,I
         INTEGER :: LFLD(*)
         LOGICAL :: QUOTED = .FALSE.
-        CHARACTER(80) :: SET_CASE = 'UPPER'
+        CHARACTER(80) :: SET_CASE
         CHARACTER(*),INTENT(IN),OPTIONAL :: CASE
         CHARACTER(*) :: CFLD(*),CVAR
         CHARACTER(1) :: C1
         !
+        SET_CASE = 'UPPER'
         IF (PRESENT(CASE)) SET_CASE = TRIM(CASE)
         CALL UPPER_CASE(SET_CASE,SET_CASE)
         !
@@ -134,10 +135,6 @@ C     ------------------------------------------------------------------
             IF (C1 == '"') THEN
               QUOTED = .FALSE.
             ELSE
-              J = IACHAR(C1)
-              IF(J >= 97 .AND. J <= 122) J = J - 32
-              C1 = ACHAR(J)
-              !
               IF(LENG <= 0) THEN
                 IF(NFLD == MAXFLD) GOTO 950
                 NFLD = NFLD + 1
@@ -184,12 +181,10 @@ C     ------------------------------------------------------------------
               LENG = 0
             ENDIF
           ELSEIF(C1 == '=') THEN
-            IF(LENG > 0) LFLD(NFLD) = LENG
-            IF(NFLD == MAXFLD) GOTO 950
-            NFLD = NFLD + 1
-            LFLD(NFLD) = 1
-            CFLD(NFLD) = '='
-            LENG = -1
+            IF(LENG > 0) THEN
+              LFLD(NFLD) = LENG
+              LENG = -1
+            ENDIF
           ELSE
             !
             IF(LENG <= 0) THEN
