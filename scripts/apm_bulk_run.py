@@ -1,16 +1,16 @@
 r"""
  This script allows the user to set input parameters for the aperture map
- bulk parallel run program. The user updates the parameters and sets up
+ bulk run program. The user updates the parameters and sets up
  the creation of the inital input list for the requirements of thier bulk run.
 """
-import re
 from ApertureMapModelTools.RunModel import BulkRun
 #
 # !!! IMPORTANT NOTES: !!!
 #
-# 1. This script will not uncomment lines in a .INP file
+# 1. You should look at the source code in  __BulkRun__.py to
+#    have at least general understanding of the internal workflow
 # 2. This script will not change the current units in use.
-# 3. Stuff that is suppose to be lists needs to be in a list even if it is a single value
+# 3. Inputs that are suppose to be lists needs to be in a list even if it is a single value
 # 4. The program limits itself to 90% of the maximum supplied RAM because each
 #     simulation requires slightly more than the method I use to estimate
 #     the RAM required.
@@ -31,15 +31,15 @@ from ApertureMapModelTools.RunModel import BulkRun
 # i.e. ROUGHNESS: [0.0, 0.1, 0.2] where the key is the first "field" on an
 # input line. A field qualifies as a continuous string of characters not separated by a delimiter.
 # Input file delimeters are one or more spaces. For example on the input line
-# 'OUTFLOW-SIDE: TOP', 'OUTFLOW-SIDE' is the key and 'TOP' is the value.
-# To vary the outflow side you would use, 'OUTFLOW-SIDE': ['TOP', 'LEFT', 'RIGHT', 'BOTTOM']
+# 'OUTLET-SIDE: TOP', 'OUTLET-SIDE' is the key and 'TOP' is the value.
+# To vary the outlet side you would use, 'OUTLET-SIDE': ['TOP', 'LEFT', 'RIGHT', 'BOTTOM']
 #
 # file_name_format_dict follows similar logic as above in respect to keys.
 # Filename formats have form of './STATIC_PORTION_OF_NAME-%param_key%-STUFF.EXT'
 # The '%param_key%' portion of the name is replaced by the value of that parameter.
 # This allows the user to vary a range of parameters and ensure no files are over written.
 #
-# For convenience a global_run_params nad global_file_formats dict
+# For convenience a global_run_params and global_file_formats dict
 # can be an input to the preprocessing routine. This is used to apply a set
 # of params to the entire bulk simulation run. An empty dict can be used in the input
 # tuple if only global params are required. Any params specified in an
@@ -48,7 +48,7 @@ from ApertureMapModelTools.RunModel import BulkRun
 # The user can use any method in the python world to create the list of input
 # tuples. I personally use a combination of string formatting, list and dict generation.
 #
-# A small example is show below:
+# A small example of setting up a set of input tuples is show below:
 #
 #
 # Input tuple setup demo
@@ -58,7 +58,7 @@ map_format_str = r'.\{0}\{1}_ApertureMapCropped.txt'
 test_8_maps = [map_format_str.format(dir_8, pf) for pf in prefix_8]
 #
 global_file_formats = {
-    'SUMMARY-PATH': r'.\{0}\FULL_MAPS\{1}\{1}-FULL-OUTLET_PRESS_%OUTLET-PRESS%-LOG.TXT',
+    'SUMMARY-FILE': r'.\{0}\FULL_MAPS\{1}\{1}-FULL-OUTLET_PRESS_%OUTLET-PRESS%-LOG.TXT',
     'STAT-FILE': r'.\{0}\FULL_MAPS\{1}\{1}-FULL-OUTLET_PRESS_%OUTLET-PRESS%-STAT.CSV',
     'APER-FILE': r'.\{0}\FULL_MAPS\{1}\{1}-FULL-OUTLET_PRESS_%OUTLET-PRESS%-APER.CSV',
     'FLOW-FILE': r'.\{0}\FULL_MAPS\{1}\{1}-FULL-OUTLET_PRESS_%OUTLET-PRESS%-FLOW.CSV',
