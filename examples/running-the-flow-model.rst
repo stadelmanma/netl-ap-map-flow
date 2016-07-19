@@ -155,7 +155,7 @@ Open model-input-params.inp with your favorite text editor and copy and paste th
 	;EXE-FILE: APM-MODEL.EXE
 	;
 	; FILE PATHS AND NAMES
-	APER-MAP PATH: ../examples/AVERAGED-FRACTURES/Fracture1ApertureMap-10avg.txt
+	APER-MAP PATH: ../examples/Fractures/Fracture1ApertureMap-10avg.txt
 	;SUMMARY-PATH:
 	;STAT-FILE PATH:
 	;APER-FILE PATH:
@@ -206,8 +206,8 @@ The core components of the `RunModule <../ApertureMapModelTools/RunModel/__run_m
     import os
     import sys
     # this allows examples to work for those who didn't add the module to site-packages
-    sys.path.insert(0, os.path.abspath(os.pardir))    
-    
+    sys.path.insert(0, os.path.abspath(os.pardir))
+
     from ApertureMapModelTools.RunModel import InputFile
     from ApertureMapModelTools.RunModel import estimate_req_RAM, run_model
 
@@ -298,10 +298,10 @@ Returns a list of required RAM per map.
 
     # setting the maps list
     maps = [
-        os.path.join('..', 'examples', 'AVERAGED-FRACTURES', 'Fracture1ApertureMap-10avg.txt'),
-        os.path.join('..', 'examples', 'AVERAGED-FRACTURES', 'Fracture2ApertureMap-10avg.txt'),
-        os.path.join('..', 'examples', 'FULL-FRACTURES', 'Fracture1ApertureMap.txt'),
-        os.path.join('..', 'examples', 'FULL-FRACTURES', 'Fracture2ApertureMap.txt'),
+        os.path.join('..', 'examples', 'Fractures', 'Fracture1ApertureMap-10avg.txt'),
+        os.path.join('..', 'examples', 'Fractures', 'Fracture2ApertureMap-10avg.txt'),
+        os.path.join('..', 'examples', 'Fractures', 'Fracture1ApertureMap.txt'),
+        os.path.join('..', 'examples', 'Fractures', 'Fracture2ApertureMap.txt'),
     ]
 
     #checking RAM required for each
