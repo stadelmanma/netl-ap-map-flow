@@ -1,16 +1,17 @@
+#!/usr/bin/env python3
 ########################################################################
 #
 # Description: This program reads the provided data file(s) and
 #     generates output based on the arguments provided on the command line.
 #     Output types are a full histogram, range histogram, log-binned histogram,
 #     percentiles, data profiles along an axis and channelization data.
-#     Flags are prefereed to preceed any other type of argument.
+#     Flags are prefered to preceed any other type of argument.
 #     Action type is required next, followed by its parameters and
 #     then input file(s) are provided.
 #
 # Written By: Matthew stadelman
 # Date Written: 2015/10/01
-# Last Modfied: 2016/03/07
+# Last Modfied: 2016/07/19
 #
 ########################################################################
 #

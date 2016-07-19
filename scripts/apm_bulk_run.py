@@ -1,9 +1,5 @@
-r"""
- This script allows the user to set input parameters for the aperture map
- bulk run program. The user updates the parameters and sets up
- the creation of the inital input list for the requirements of thier bulk run.
-"""
-from ApertureMapModelTools.RunModel import BulkRun
+#!/usr/bin/env python3
+########################################################################
 #
 # !!! IMPORTANT NOTES: !!!
 #
@@ -50,6 +46,10 @@ from ApertureMapModelTools.RunModel import BulkRun
 #
 # A small example of setting up a set of input tuples is show below:
 #
+########################################################################
+#
+from ApertureMapModelTools.RunModel import BulkRun
+
 #
 # Input tuple setup demo
 dir_8 = 'SHEARING_FRAC_TEST7-8'
