@@ -52,6 +52,7 @@ class OpenFoamExport(dict):
         if export_params is not None:
             for key, value in export_params.items():
                 self[key] = value
+        self.point_data += 1E-6
         #
         # initializing required arrays
         num_verts = 2*(self.nx - 1)*(self.nz - 1) + 4*(self.nx + self.nz)
@@ -165,6 +166,24 @@ class OpenFoamExport(dict):
                 self['boundary.back'][i] = True
                 i += 1
 
+    def export_upper_surface(self, path='.', create_dirs=True, overwrite=False):
+        r"""
+        Exports the upper half of the mesh flattening out everything below 0 on
+        the Y axis
+        """
+        #
+        # storing orginial verticies
+        old_verts = sp.copy(self._verticies)
+        self._verticies[sp.where(self._verticies[:, 1] < 0.0), 1] = -1.0E-6
+        #
+        # outputting mesh
+        self.write_mesh_file(path=path,
+                             create_dirs=create_dirs,
+                             overwrite=overwrite)
+        #
+        # restoring original verts
+        self._verticies = sp.copy(old_verts)
+
     def write_mesh_file(self, path='.', create_dirs=True, overwrite=False):
         r"""
         Creates the directories and the blockMeshDict file.
@@ -200,7 +219,7 @@ class OpenFoamExport(dict):
         # writing verticies
         file_content += 'vertices\n(\n'
         for val in self._verticies:
-            val = ['{:12.6F}'.format(v) for v in val]
+            val = ['{:12.9F}'.format(v) for v in val]
             val = ' '.join(val)
             file_content += '('+val+')\n'
         file_content += ');\n\n'

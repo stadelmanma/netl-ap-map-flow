@@ -1,0 +1,196 @@
+      PROGRAM STRING_MODULE_UNIT_TEST
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     PROGRAM DESCRIPTON: HANDLES UNIT TESTING OF THE STRING MODULE.
+C
+C     DATE WRITTEN:  2016/07/14
+C     LAST MODIFIED: 2016/07/15
+C
+C     SUBROUTINE CALLS:
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C
+C ----------------------------------------------------------------------
+C
+      USE UNIT_TEST_MODULE
+      USE STRING_MODULE
+C
+      IMPLICIT NONE
+C
+      PROSECUTOR = 'STRING_MODULE_UNIT_TEST.F'
+      DEFENDANT = 'STRING_MODULE.F'
+      CALL INITIALIZE_TEST_MODULE
+C
+C     CALLING TEST ROUTINES
+      CALL TEST_UPPER_CASE
+      CALL TEST_LOWER_CASE
+      CALL TEST_R_JUST
+      CALL TEST_LNPROC
+C
+      PRINT *, 'ALL_PASS? ',ALL_PASS
+      IF (.NOT. ALL_PASS) STOP(1)
+      END PROGRAM
+C
+C ----------------------------------------------------------------------
+C     TESTING SUBROUTINES
+C-----------------------------------------------------------------------
+C
+      SUBROUTINE TEST_UPPER_CASE
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/14
+        !
+        USE UNIT_TEST_MODULE
+        USE STRING_MODULE
+        IMPLICIT NONE
+        CHARACTER(80) :: TEST_STR, CORR_STR
+        !
+        CALL INIT_TEST
+        !
+        WRITE(TEST_STR,*) 'all uppercase'
+        WRITE(CORR_STR,*) 'ALL UPPERCASE'
+        CALL UPPER_CASE(TEST_STR, TEST_STR)
+        !
+        CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'UPPER_CASE')
+        !
+        CALL END_TEST('TEST_UPPER_CASE')
+        !
+        RETURN
+      END SUBROUTINE
+C
+C-----------------------------------------------------------------------
+      SUBROUTINE TEST_LOWER_CASE
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/14
+        !
+        USE UNIT_TEST_MODULE
+        USE STRING_MODULE
+        IMPLICIT NONE
+        CHARACTER(80) :: TEST_STR, CORR_STR
+        !
+        CALL INIT_TEST
+        !
+        WRITE(TEST_STR,*) 'ALL LOWERCASE'
+        WRITE(CORR_STR,*) 'all lowercase'
+        CALL LOWER_CASE(TEST_STR, TEST_STR)
+        !
+        CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'LOWER_CASE')
+        !
+        CALL END_TEST('TEST_LOWER_CASE')
+        !
+        RETURN
+      END SUBROUTINE
+C
+C-----------------------------------------------------------------------
+      SUBROUTINE TEST_R_JUST
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/14
+        !
+        USE UNIT_TEST_MODULE
+        USE STRING_MODULE
+        IMPLICIT NONE
+        CHARACTER(10) :: TEST_STR, CORR_STR
+        !
+        CALL INIT_TEST
+        !
+        WRITE(TEST_STR,*) 'RIGHT    '
+        WRITE(CORR_STR,*) '    RIGHT'
+        CALL R_JUST(TEST_STR, TEST_STR, 10)
+        !
+        CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'R_JUST')
+        !
+        CALL END_TEST('TEST_R_JUST')
+        !
+        RETURN
+      END SUBROUTINE
+C
+C-----------------------------------------------------------------------
+      SUBROUTINE TEST_LNPROC
+        !
+        ! WRITTEN BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 2016/07/14
+        !
+        USE UNIT_TEST_MODULE
+        USE STRING_MODULE
+        IMPLICIT NONE
+        INTEGER :: I, NFLD, STRLEN
+        CHARACTER(80) :: TEST_STR, TEST_ARR(4), CORR_ARR(4)
+        !
+        CALL INIT_TEST
+        !
+        STRLEN = 80
+        DO I = 1,4
+          WRITE(CORR_ARR(I),"('F',I0)")I
+          WRITE(TEST_ARR(I),"(1X)")
+        END DO
+        !
+        ! TESTING DELIMITERS
+        WRITE(TEST_STR,*) 'F1 F2  F3   F4    '
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,TEST_ARR,LFLD,NFLD)
+        CALL ASSERT_EQUALS(TEST_ARR, CORR_ARR, 'LNPROC-SPACE')
+        !
+        WRITE(TEST_STR,*) 'F1,F2,F3,F4'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,TEST_ARR,LFLD,NFLD)
+        CALL ASSERT_EQUALS(TEST_ARR, CORR_ARR, 'LNPROC-COMMA')
+        !
+        WRITE(TEST_STR,*) 'F1	F2	F3	F4'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,TEST_ARR,LFLD,NFLD)
+        CALL ASSERT_EQUALS(TEST_ARR, CORR_ARR, 'LNPROC-TAB')
+        !
+        WRITE(TEST_STR,*) 'F1=F2'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,TEST_ARR,LFLD,NFLD)
+        CALL ASSERT_EQUALS(TEST_ARR, CORR_ARR, 'LNPROC-EQUALS')
+        !
+        ! TESTING QUOTED
+        WRITE(TEST_STR,*) '"F1,F2","F3,F4"'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,TEST_ARR,LFLD,NFLD)
+        CALL ASSERT_EQUALS(TEST_ARR(2), 'F3,F4', 'LNPROC-QUOTED')
+        !
+        ! TESTING COMMENT
+        WRITE(TEST_STR,*) 'F1 F2 ;F3,F4'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,TEST_ARR,LFLD,NFLD)
+        CALL ASSERT_EQUALS(NFLD, 2, 'LNPROC-COMMENT')
+        !
+        WRITE(TEST_STR,*) 'F1,F2,;F3,F4'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,TEST_ARR,LFLD,NFLD)
+        CALL ASSERT_EQUALS(NFLD, 2, 'LNPROC-COMMENT2')
+        !
+        ! TESTING CASE
+        WRITE(TEST_STR,*) 'F1,f2,F3,f4'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,CFLD,LFLD,NFLD,'SAME')
+        CALL ASSERT_EQUALS(CFLD(1:2), (/'F1','f2'/), 'LNPROC-CASE-SAME')
+        !
+        WRITE(TEST_STR,*) 'f1,f2,f3,f4'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,CFLD,LFLD,NFLD,'UPPER')
+        CALL ASSERT_EQUALS(CFLD(1:2), (/'F1','F2'/), 'LNPROC-CASE-UP')
+        !
+        WRITE(TEST_STR,*) 'F1,F2,F3,F4'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,CFLD,LFLD,NFLD,'LOWER')
+        CALL ASSERT_EQUALS(CFLD(1:2), (/'f1','f2'/), 'LNPROC-CASE-LOW')
+        !
+        ! HITTING SPECIAL CASES AND CHECKING FOR EXPECTED BEHAVOIR
+        !
+        WRITE(TEST_STR,*) 'F1,,F2'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,CFLD,LFLD,NFLD)
+        CALL ASSERT_EQUALS(CFLD(1:3),(/'F1','  ','F2'/),'LNPROC-DCOMMA')
+        !
+        WRITE(TEST_STR,*) 'F1 ,F2'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,CFLD,LFLD,NFLD)
+        CALL ASSERT_EQUALS(CFLD(1:2),(/'F1','F2'/),'LNPROC-SPACE&COMMA')
+        !
+        WRITE(TEST_STR,*) 'F1		F2'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,CFLD,LFLD,NFLD)
+        CALL ASSERT_EQUALS(CFLD(1:3),(/'F1','  ','F2'/),'LNPROC-DBLTAB')
+        !
+        WRITE(TEST_STR,*) 'F1 	F2'
+        CALL LNPROC(0,MAXFLD,STRLEN,TEST_STR,CFLD,LFLD,NFLD)
+        CALL ASSERT_EQUALS(CFLD(1:2),(/'F1','F2'/),'LNPROC-SPACE&TAB')
+        !
+        CALL END_TEST('TEST_LNPROC')
+        !
+        RETURN
+      END SUBROUTINE

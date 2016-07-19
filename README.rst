@@ -38,7 +38,7 @@ Setting up the Modeling Package
 
 Getting the model and module up and running is a very straight forward process. After either cloning or downloading the repository into your chosen location you will need to download gfortran and `Python <https://www.python.org/>`_ if you do not already have them. If you are running Windows you will need to download `Cygwin <https://www.cygwin.com/>`_ or something similar to have access to gfortran and other unix commands. The module uses scipy for many operations and the simplest method to install the scipy stack is through Anaconda from `Continuum Analytics <http://continuum.io/downloads#all?>`_ on both Mac and Linux. Windows users can install the `WinPython <http://winpython.github.io/>`_ package, both provide the Spyder IDE and many other useful modules. The alternative is to manually install the required packages into your version of Python; `requirements.txt <https://github.com/stadelmanma/netl-AP_MAP_FLOW/blob/master/requirements.tx/>`_ lists out the minimum requirements however scipy may require additional packages on its own.
 
-Once you have gfortran and Python you will need to build the flow model from source, the easiest way is by running :code:`./bin/build_model` from the main directory. That script uses the make file in the `source` directory which sets proper OS flags. Cygwin users can open a command prompt and run the :code:`bash` command to use the script. If that is not an option the following command should work for all systems assuming gfortran is installed. If the flag :code:`-DWIN64=1` is added default file paths will be set to the windows convention. You will need to be in the `source` directory for the following command to work.
+Once you have gfortran and Python you will need to build the flow model from source, the easiest way is by running :code:`./bin/build_model` from the main directory or running :code:`make` in the source directory. That script uses the make file in the `source` directory which sets proper OS flags. Cygwin users can open a command prompt and run the :code:`bash` command to use the script. If the script and make are not an option the following command should work for all systems assuming gfortran is installed and visible on the system path. If the flag :code:`-DWIN64=1` is added default file paths will be set to the windows convention. You will need to be in the `source` directory for the following command to work.
 
 .. code-block:: bash
 
@@ -49,18 +49,22 @@ Once you have gfortran and Python you will need to build the flow model from sou
 
 
 
-Making ApertureMapModuleTools globally visible to the Python install is optional but can simplfy usage of the module. Python stores all third party packages in a local directory, the location of that directory can be found using the following command. If needed substiute "python3" for which ever python executable you have or want to use.  
+Making ApertureMapModuleTools globally visible to the Python install is optional but can simplify usage of the module. Python stores all third party packages in a local directory, the location of that directory can be found using the following command. If needed substiute "python3" for which ever python executable you have or want to use.  
 
 .. code-block:: bash
 
     python3 -m site --user-site
 
-After you have the location of that directory you can either move the entire ApertureMapModelTools directory there or symlink it using the command below in a terminal window from **inside the ApertureMapModelTools directory**. The command as written will probably not work for windows systems, with the full cygwin enviroment running :code:`bash` in a command prompt it may. The steps to symlink the module may also slightly differ if you are using the full Spyder environment. For Spyder users you will probably need to open a command prompt within spyder by right clicking the Console pane.
+After you have the location of that directory you can either move the entire ApertureMapModelTools directory there or symlink it using the command below in a terminal window from **inside the ApertureMapModelTools directory**. The command as written will only work on Linux and OSX. Windows users will need to manually symlink the module folder using the :code:`mklink` command after locating the directory. The steps to symlink the module will differ if you are using WinPython as well. You will need to run the above command in a command prompt opened from inside of Spyder because WinPython uses it's own installation of Python. After that you will need to manually symlink the module folder using the :code:`mklink` command. 
 
 .. code-block:: bash
 
+   # OSX/ Linux Only
     module_path=$(pwd)
-    cd $(python3 -m site --user-site)
+    py_site=$(python3 -m site --user-site)
+   #
+    mkdir -p "$py_site"
+    cd "$py_site"
     ln -s "$module_path"
     ls -l
     cd "$module_path"
@@ -73,13 +77,15 @@ Basic Usage of APM Model
 
 Running the Model in a terminal::
 
-    >> ./APM-MODEL.EXE  model_initialization_file
+    ./APM-MODEL.EXE  model_initialization_file
 
 Full usage instructions can be found in `<examples/running-the-flow-model.rst>`_.
 
 Pitfalls:
-    * If the model is compiled using 32-bit compiler, running too large of a map can cause an integer overflow error
-    * The LCL Model requires that all of the parent directories of output file locations already exist. Otherwise a :code:`FileDoesNotExist` error or something similar will be raised.
+---------
+* Make sure required programs are added to the Path, this will likely need to be manually performed in Windows
+* If the model is compiled using 32-bit compiler, running too large of a map can cause an integer overflow error
+* The LCL Model requires that all of the parent directories of output file locations already exist. Otherwise a :code:`FileDoesNotExist` error or something similar will be raised.
 
 
 

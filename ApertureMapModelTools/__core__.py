@@ -212,27 +212,23 @@ def files_from_directory(directory='.', pattern='.', deep=True):
     while dirs:
         #
         directory = dirs.pop(0)
-        if (re.search(r'(?:[\\|/])$', directory)):
-            directory = directory[:-1]
-        #
         cmd_arr = ['ls', directory]
-        list_dir = subprocess.Popen(cmd_arr, stdout=subprocess.PIPE, shell=True)
-        contents = list_dir.stdout.read()
-        contents = contents.decode()
-        content_arr = contents.split('\n')
+        ls = subprocess.Popen(cmd_arr,
+                              stdout=subprocess.PIPE,
+                              stderr=subprocess.PIPE,
+                              universal_newlines=True)
+        std_out, std_err = ls.communicate()
+        content_arr = std_out.split('\n')
         content_arr = [c.strip() for c in content_arr]
         content_arr = filter(None, content_arr)
         for path in content_arr:
             pth = os.path.join(directory, path)
             pth = os.path.realpath(pth)
-            try:
-                if os.path.isdir(pth) and deep:
-                    dirs.append(str(pth))
-                else:
-                    if (pattern.search(pth)):
-                        files.append(pth)
-            except (FileNotFoundError, OSError) as err:
-                print('An Error occured on file: '+path, err)
+            if os.path.isdir(pth) and deep:
+                dirs.append(str(pth))
+            else:
+                if (pattern.search(pth)):
+                    files.append(pth)
     return files
 
 

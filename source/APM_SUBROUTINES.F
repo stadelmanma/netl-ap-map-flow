@@ -13,7 +13,7 @@ C
 C     SUBROUTINE CALLS: ASSIGN_IO, READ_MASTER, READ_AP_MAP, INIT_PVT,
 C                       COEF, FLOW_BOUNDARY, INIT_OUTPUT
 C
-C     LAST MODIFIED: 2016/03/07
+C     LAST MODIFIED: 2016/07/08
 C
 C ---------------------------------------------------------------------
 C     VARIABLE DESCRIPTION:
@@ -22,12 +22,14 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE PVT_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
       LOGICAL :: BOK
 C
 C     DEFAULT VALUES
+      IOUT = 6 !SETTING TO STDOUT INITIALLY
       ! DEFAULT PERCENTILE SETTINGS
       PERCENTILE = .FALSE.
       ALLOCATE(PERC_ARR(2,9))
@@ -37,9 +39,13 @@ C     DEFAULT VALUES
       MANIFOLD   = .FALSE.
       ! DEFAULT TO PRESSURE BOUNDARY CONDITION
       RATEC  = .FALSE.
-      PRESC  = .TRUE.
-      FPB    = 1.0
-      OUTPB  = 0.0
+      PRESC  = .FALSE.
+      INLPB    = -1.0
+      INLPSB   = -1.0
+      OUTPB  = -1.0
+      OUTPSB = -1.0
+      OUTRATE = -1.0
+      INJRATE = -1.0
       ! DEFAULT LIQUID PROPERIES
       IFLUID = 2
       RHO    = 1.0
@@ -51,7 +57,7 @@ C     DEFAULT VALUES
       VOX_MET   = 1.0
       HIGH_MASK = 10000.0
       LOW_MASK  = 1E-6
-      OUTFLOW   = 'TOP'
+      OUTLET_SIDE   = 'TOP'
       ! DEFAULT PVT PROPERITIES
       VISC_CONV   = 1.0
       TEMP        = 273.15
@@ -75,11 +81,31 @@ C     DEFAULT VALUES
       UNIT_OUT(7) = 'KG/M^3'
 C
 C     INITIALIZING IO
-      CALL ASSIGN_IO(BOK)
+      CALL OPEN_IO(BOK)
       IF (.NOT. BOK) GOTO 1000
 C
 C     READING INPUT FILE
       CALL READ_MASTER(BOK)
+      IF (.NOT. BOK) GOTO 1000
+C
+C     CHECKING IF BOTH INLET AND OUTLET PRESSURE CONDITION WERE SUPPLIED
+      IF ((INLPB .GE. 0) .AND. (OUTPB .GE. 0)) THEN
+        PRESC = .TRUE.
+        CALL MESSAGE("     FRACTURE FLOW IS PRESSURE CONTROLLED")
+      ELSE
+        PRESC = .FALSE.
+        CALL MESSAGE("     FRACTURE FLOW IS RATE CONTROLLED")
+      END IF
+C
+C     SETTING CONVERSION VALUES
+      UNIT(:) = 'SI'
+      CALL CALC_CONV_FACT('PRES',UNIT_IN(1),UNIT(1),PRES_CONV,BOK)
+      CALL CALC_CONV_FACT('DIST',UNIT_IN(2),UNIT(2),DIM_CONV,BOK)
+      CALL CONVERT_VALUE('TEMP',UNIT_IN(3),UNIT(3),TEMP,BOK)
+      CALL CALC_CONV_FACT('TIME',UNIT_IN(4),UNIT(4),TIME_CONV,BOK)
+      CALL CALC_CONV_FACT('RATE',UNIT_IN(5),UNIT(5),RATE_CONV,BOK)
+      CALL CALC_CONV_FACT('VISC',UNIT_IN(6),UNIT(6),VISC_CONV,BOK)
+      CALL CALC_CONV_FACT('DENS',UNIT_IN(7),UNIT(7),RHO_CONV,BOK)
       IF (.NOT. BOK) GOTO 1000
 C
 C     READING APERTURE MAP
@@ -119,10 +145,6 @@ C     CREATING FLOW AND PRESSURE BOUNDARIES
       CALL FLOW_BOUNDARY(BOK)
       IF (.NOT. BOK) GOTO 1000
 C
-C     INITIALIZING OUTPUT FILES
-      CALL INIT_OUTPUT(BOK)
-      IF (.NOT. BOK) GOTO 1000
-C
 C     CLOSING INPUT FILES
       CLOSE(IINP)
       CLOSE(IPVT)
@@ -145,7 +167,7 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE ASSIGN_IO(BOK)
+      SUBROUTINE OPEN_IO(BOK)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
@@ -167,6 +189,7 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE STRING_MODULE
 C
       IMPLICIT NONE
       INTEGER :: I,IFLD,NFLD
@@ -183,8 +206,7 @@ C     VARIABLE INITIALIZATIONS
       IPVT  = 11
       IAPM  = 12
       ! OUTPUT UNIT NUMBERS
-      IOUT  = IAPM  + 2
-      ISTAT = IOUT  + 1
+      ISTAT = IAPM  + 3
       IMAP  = ISTAT + 1
       IFLOX = IMAP  + 1
       IFLOZ = IFLOX + 1
@@ -194,29 +216,17 @@ C     VARIABLE INITIALIZATIONS
       !
       ALLOCATE(OPENED_FILES(IVTK))
       OPENED_FILES(:) = ''
-      !
-      ! DEFAULT FILE NAMES
-      PVT_FILE = 'NONE PROVIDED'
-      APM_FILE = 'NONE PROVIDED'
-      IF (INDEX(SYS_OS,'WINDOWS') > 0) THEN
-        WRITE(*,"(A)")" SETTING DEFAULT FILE PATHS TO WINDOWS STYLE"
-        MASTER     = ".\FRACTURE_INITIALIZATION.INP"
-        SUM_FILE   = ".\FRACTURE_LOG.TXT"
-        STAT_FILE  = ".\FRACTURE_STAT.CSV"
-        MAP_FILE   = ".\FRACTURE_APERTURE.CSV"
-        FLOW_FILE  = ".\FRACTURE_FLOW.CSV"
-        PRESS_FILE = ".\FRACTURE_PRESS.CSV"
-        VTK_FILE   = ".\FRACTURE_VTK.vtk"
-      ELSE
-        WRITE(*,"(A)")" SETTING DEFAULT FILE PATHS TO UNIX STYLE"
-        MASTER     = "./FRACTURE_INITIALIZATION.INP"
-        SUM_FILE   = "./FRACTURE_LOG.TXT"
-        STAT_FILE  = "./FRACTURE_STAT.CSV"
-        MAP_FILE   = "./FRACTURE_APERTURE.CSV"
-        FLOW_FILE  = "./FRACTURE_FLOW.CSV"
-        PRESS_FILE = "./FRACTURE_PRESS.CSV"
-        VTK_FILE   = "./FRACTURE_VTK.vtk"
-      END IF
+C
+C     DEFAULT FILE NAMES
+      MASTER     = "FRACTURE_INITIALIZATION.INP"
+      PVT_FILE   = 'NONE PROVIDED'
+      APM_FILE   = 'NONE PROVIDED'
+      SUM_FILE   = "FRACTURE_LOG.TXT"
+      STAT_FILE  = "FRACTURE_STAT.CSV"
+      MAP_FILE   = "FRACTURE_APERTURE.CSV"
+      FLOW_FILE  = "FRACTURE_FLOW.CSV"
+      PRESS_FILE = "FRACTURE_PRESS.CSV"
+      VTK_FILE   = "FRACTURE_VTK.vtk"
 C
 C     CHECKING FOR A COMMAND LINE INP FILE TO PARSE
       NFLD = COMMAND_ARGUMENT_COUNT()
@@ -232,7 +242,7 @@ C
 C
 C     READING IN FILE NAMES
       DO
-        CALL LNPROC(IINP,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
+        CALL LNPROC(IINP,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD,'SAME')
         IF (NFLD == 0) EXIT
         IF (INDEX(CFLD(1),'PVT-PATH') > 0) THEN
           IFLD = 2
@@ -245,6 +255,10 @@ C     READING IN FILE NAMES
           APM_FILE = CFLD(IFLD)
           APM = .TRUE.
         ELSEIF (INDEX(CFLD(1),'SUMMARY-PATH') > 0) THEN
+          IFLD = 2
+          IF (NFLD < 2) GOTO 905
+          SUM_FILE = CFLD(IFLD)
+        ELSEIF (INDEX(CFLD(1),'SUMMARY-FILE') > 0) THEN
           IFLD = 2
           IF (NFLD < 2) GOTO 905
           SUM_FILE = CFLD(IFLD)
@@ -297,7 +311,8 @@ C     CREATING ADDITIONAL FLOW FILES USING ROOT NAME
       FLOM_FILE = FLOW_FILE(1:I-1)//'-M'//FLOW_FILE(I:)
 C
 C     OPENING OUTPUT FILES
-      CALL OPEN_FILE(IOUT,SUM_FILE,OVERWRITE,OPENED_FILES,BOK)
+      CALL OPEN_FILE(IAPM+2,SUM_FILE,OVERWRITE,OPENED_FILES,BOK)
+      IOUT  = IAPM + 2 !UPDATING IOUT IF LOG FILE WAS SUCCESSFULLY OPENED
       CALL OPEN_FILE(ISTAT,STAT_FILE,OVERWRITE,OPENED_FILES,BOK)
       CALL OPEN_FILE(IMAP,MAP_FILE,OVERWRITE,OPENED_FILES,BOK)
       CALL OPEN_FILE(IFLOX,FLOX_FILE,OVERWRITE,OPENED_FILES,BOK)
@@ -328,6 +343,42 @@ C
 C
  2000 FORMAT('RM "',A,'"')
 C
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE CLOSE_IO
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     PROGRAM DESCRIPTION: CLOSES ALL OUTPUT FILES
+C
+C     LAST MODIFIED: 2016/07/12
+C
+C     SUBROUTINE CALLS: NONE
+C ---------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C
+C ---------------------------------------------------------------------
+C
+      USE APM_MODULE
+      IMPLICIT NONE
+C
+      CLOSE(ISTAT)
+      CLOSE(IMAP)
+      CLOSE(IFLOX)
+      CLOSE(IFLOZ)
+      CLOSE(IFLOM)
+      CLOSE(IPRES)
+      CLOSE(IVTK)
+      !
+      CALL BLANK
+      CALL MESSAGE(" OUTPUT FILES CLOSED")
+      CLOSE(IOUT)
+C
+      RETURN
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
@@ -423,24 +474,35 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE PVT_MODULE
+      USE STRING_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
       INTEGER :: IFLD,NFLD
-      LOGICAL :: BOK,OUTPUT_UNIT = .FALSE.
+      LOGICAL :: BOK, OUTPUT_UNIT = .FALSE.
 C
       NFLD = SIZE(CFLD)
 C
 C     READING IN MASTER INPUT FILE
       DO WHILE (NFLD > 0)
         ! READING INITAL FRACTURE PRESSURE
-        IF     (INDEX(CFLD(1),'FRAC-PRESS') > 0) THEN
+        IF (INDEX(CFLD(1),'FRAC-PRESS') > 0) THEN
+          CALL MESSAGE("NOTICE - KEYWORD 'FRAC-PRESS' IS DEPRECATED")
           IF (NFLD < 3) GOTO 905
           IFLD = 2
-          READ(CFLD(IFLD),"(F100.0)",ERR = 910) FPB
+          READ(CFLD(IFLD),"(F100.0)",ERR = 910) INLPB
           IFLD = 3
           READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(1)
-          CALL CONVERT_VALUE('PRES',UNIT_IN(1),UNIT(1),FPB,BOK)
+          CALL CONVERT_VALUE('PRES',UNIT_IN(1),UNIT(1),INLPB,BOK)
+        ! READING INLET PRESSURE
+        ELSEIF (INDEX(CFLD(1),'INLET-PRESS') > 0) THEN
+          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          READ(CFLD(IFLD),"(F100.0)",ERR = 910) INLPB
+          IFLD = 3
+          READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(1)
+          CALL CONVERT_VALUE('PRES',UNIT_IN(1),UNIT(1),INLPB,BOK)
         ! READING OUTLET PRESSURE
         ELSEIF (INDEX(CFLD(1),'OUTLET-PRES') > 0) THEN
           IF (NFLD < 3) GOTO 905
@@ -448,8 +510,6 @@ C     READING IN MASTER INPUT FILE
           READ(CFLD(IFLD),"(F100.0)",ERR = 910) OUTPB
           IFLD = 3
           READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(1)
-          PRESC = .TRUE.
-          CALL MESSAGE("     FRACTURE FLOW IS PRESSURE CONTROLLED")
           CALL CONVERT_VALUE('PRES',UNIT_IN(1),UNIT(1),OUTPB,BOK)
         ! READING OUTLET FLOW RATE
         ELSEIF (INDEX(CFLD(1),'OUTLET-RATE') > 0) THEN
@@ -459,8 +519,15 @@ C     READING IN MASTER INPUT FILE
           IFLD = 3
           READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(5)
           RATEC = .TRUE.
-          CALL MESSAGE("     FRACTURE FLOW IS RATE CONTROLLED")
           CALL CONVERT_VALUE('RATE',UNIT_IN(5),UNIT(5),OUTRATE,BOK)
+        ELSEIF (INDEX(CFLD(1),'INLET-RATE') > 0) THEN
+          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          READ(CFLD(IFLD),"(F100.0)",ERR = 910) INJRATE
+          IFLD = 3
+          READ(CFLD(IFLD),"(A)",ERR = 910) UNIT_IN(5)
+          RATEC = .TRUE.
+          CALL CONVERT_VALUE('RATE',UNIT_IN(5),UNIT(5),INJRATE,BOK)
         ! READING FLUID TYPE
         ELSEIF (INDEX(CFLD(1),'FLUID-TYPE') > 0) THEN
           IFLD = 2
@@ -511,14 +578,22 @@ C     READING IN MASTER INPUT FILE
           CALL CONVERT_VALUE('PRES',UNIT_IN(1),UNIT(1),STD_PRES,BOK)
         ! READING OUTFLOW SIDE
         ELSEIF (INDEX(CFLD(1),'OUTFLOW-SIDE') > 0) THEN
+          CALL MESSAGE("NOTICE - KEYWORD 'OUTFLOW-SIDE' IS DEPRECATED")
           IFLD = 2
           IF (NFLD < IFLD) GOTO 905
-          OUTFLOW = CFLD(IFLD)
+          OUTLET_SIDE = CFLD(IFLD)
+        ! READING OUTLET SIDE
+        ELSEIF (INDEX(CFLD(1),'OUTLET-SIDE') > 0) THEN
+          IFLD = 2
+          IF (NFLD < IFLD) GOTO 905
+          OUTLET_SIDE = CFLD(IFLD)
         ! READING IF TO USE AN OUTFLOW MANIFOLD
         ELSEIF (INDEX(CFLD(1),'MANIFOLD') > 0) THEN
           IFLD = 2
           IF (NFLD < IFLD) GOTO 905
-          IF (INDEX(CFLD(IFLD),'TRUE') > 0) MANIFOLD = .TRUE.
+          IF (INDEX(CFLD(IFLD),'TRUE') > 0) THEN
+             CALL MESSAGE("MANIFOLDS HAVE BEEN DISABLED IN THE MODEL")
+          END IF
         ! READING VOXEL SIZE
         ELSEIF (INDEX(CFLD(1),'VOXEL') > 0) THEN
           IFLD = 3
@@ -569,7 +644,8 @@ C     READING IN MASTER INPUT FILE
           READ(CFLD(IFLD),"(I4)",ERR = 910) MAXDIM
         ! READING SOLVER TYPE
         ELSEIF (INDEX(CFLD(1),'SOLVER') > 0) THEN
-          SOLVER_TYPE = TRIM(CFLD(2))
+          CFLD(2) = TRIM(CFLD(2))
+          CALL MESSAGE("ONLY AVAILABLE SOLVER IS D4-GAUSS")
         ! READING OUTPUT UNIT TO CONVERT TO
         ELSEIF (INDEX(CFLD(1),'OUTPUT-UNITS') > 0) THEN
           IF (NFLD < 4) GOTO 905
@@ -588,19 +664,8 @@ C     READING IN MASTER INPUT FILE
         CALL LNPROC(IINP,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
       END DO
 C
-C     SETTING CONVERSION VALUES
+C     SETTING OUTPUT UNITS IF NONE PROVIDED
       IF (.NOT. OUTPUT_UNIT) UNIT_OUT = UNIT_IN
-      UNIT(:) = 'SI'
-      UNIT(3) = 'F'
-      UNIT(6) = 'PA*SEC'
-      UNIT(7) = 'KG/M^3'
-      CALL CALC_CONV_FACT('PRES',UNIT_IN(1),UNIT(1),PRES_CONV,BOK)
-      CALL CALC_CONV_FACT('DIST',UNIT_IN(2),UNIT(2),DIM_CONV,BOK)
-      CALL CALC_CONV_FACT('TIME',UNIT_IN(4),UNIT(4),TIME_CONV,BOK)
-      CALL CALC_CONV_FACT('RATE',UNIT_IN(5),UNIT(5),RATE_CONV,BOK)
-      CALL CALC_CONV_FACT('VISC',UNIT_IN(6),UNIT(6),VISC_CONV,BOK)
-      CALL CALC_CONV_FACT('DENS',UNIT_IN(7),UNIT(7),RHO_CONV,BOK)
-      IF (.NOT. BOK) GOTO 1000
 C
       RETURN
 C
@@ -617,175 +682,6 @@ C
 C
  1100 FORMAT(5X,'** WARNING: GAS FLOW CODE IS NOT BE ACTIVELY ',
      &          ' DEVELOPED THERE COULD BE NUMERICAL ERRORS OR BUGS **')
-C
-
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE INIT_PVT(BOK)
-C
-C     WRITTEN BY: MATTHEW STADELMAN
-C
-C     PROGRAM DESCRIPTION: HANDLES READING AND CALCULATION OF PVT DATA
-C
-C     LAST MODIFIED: 2016/03/07
-C
-C     SUBROUTINE CALLS: LNPROC, CALC_CONV_FACT
-C
-C ---------------------------------------------------------------------
-C     VARIABLE DESCRIPTION:
-C       PR_CONV - LOCAL PRESSURE CONVERSION VARIABLE
-C       PH,PL - PRESSURE/PSEDUO-PRESSURE INTERPOATION VARIABLES
-C       PR2,ZF2,VI2 - TEMPORARY STORAGE OF THE EQUALLY SPACED VERSIONS OF INPUT PVT DATA
-C       NFLD - NUMBER OF FIELDS IN CFLD AND LFLD AFTER A PROCESSING A LINE
-C       PR_UNIT - LOCAL PRESSURE UNIT
-C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
-C
-C ---------------------------------------------------------------------
-C
-      USE APM_MODULE
-      USE UNIT_CONVERSION_MODULE
-      IMPLICIT NONE
-C
-      REAL(8) :: PH,PL,PR_CONV
-      REAL(8),ALLOCATABLE :: PR2(:),ZF2(:),VI2(:)
-      INTEGER :: I,J,IFLD,NFLD
-      CHARACTER(120) :: PR_UNIT
-      LOGICAL :: BOK
-C
-C
-      CALL BLANK
-      CALL MESSAGE(" READING PVT DATA")
-C
-C     PERFORMING  ALLOCATIONS
-      ALLOCATE(PR(1000),ZF(1000),VI(1000))
-      PR_CONV     = 1.0
-C
-C     READING IN PVT DATA
-C
-C     READING DATA TEMPERTURE LINE
-      CALL LNPROC(IPVT,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
-      IFLD = 3
-      IF (NFLD < IFLD) GOTO 905
-      UNIT(3) = 'SI'
-      UNIT_IN(3) = TRIM(CFLD(2))
-      READ(CFLD(IFLD),"(F10.0)",ERR=910) TEMP
-      CALL CONVERT_VALUE('TEMP',UNIT_IN(3),UNIT(3),TEMP,BOK)
-C
-C     READING HEADER LINE AND GETTING UNITS
-C     UNITS ARE ASSUMED TO BE SEPERATED BY SOME DELIMETER
-C     AND THE NEXT FIELD IN LINE BEHIND THE VALUE
-      CALL LNPROC(IPVT,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
-      IF (NFLD < 5) GOTO 905
-      DO IFLD = 1,NFLD
-        IF (INDEX(CFLD(IFLD),'PRESSURE') > 0) THEN
-          IF (NFLD < IFLD + 1) GOTO 905
-          PR_UNIT = 'SI'
-          CALL CALC_CONV_FACT('PRES',CFLD(IFLD+1),PR_UNIT,PR_CONV,BOK)
-        ELSEIF (INDEX(CFLD(IFLD),'VISC') > 0) THEN
-          IF (NFLD < IFLD + 1) GOTO 905
-          UNIT(6) = 'SI'
-          UNIT_IN(6) = TRIM(CFLD(IFLD+1))
-          CALL CALC_CONV_FACT('VISC',UNIT_IN(6),UNIT(6),VISC_CONV,BOK)
-        END IF
-      END DO
-C
-      DO
-        CALL LNPROC(IPVT,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
-        IF (INDEX(CFLD(1),'END') > 0) EXIT
-        NVALS = NVALS + 1
-        IFLD = 1
-        READ(CFLD(IFLD),"(F100.0)",ERR=910) PR(NVALS)
-        PR(NVALS) = PR(NVALS)*PR_CONV
-        IFLD = 2
-        IF (NFLD < 2) GOTO 905
-        READ(CFLD(IFLD),"(F100.0)",ERR=910) ZF(NVALS)
-        IFLD = 3
-        IF (NFLD < 3) GOTO 905
-        READ(CFLD(IFLD),"(F100.0)",ERR=910) VI(NVALS)
-        VI(NVALS) = VI(NVALS)*VISC_CONV
-      END DO
-C
-C     GENERATING THE PVT AND RELATED VECTORS
-      VALS = MAX(101,NVALS+1)
-      ALLOCATE(PR2(VALS),ZF2(VALS),VI2(VALS))
-C
-C     CREATING THE NEW PR VECTOR THAT WILL ALWAYS HAVE UNIFORM SPACING
-      DPR = PR(NVALS)/(VALS-1)
-      DO I = 1,VALS
-        PR2(I) = DPR*(I-1)
-      END DO
-C
-C     CREATING THE Z AND VISCOSIY VECTORS
-      DO I = 1,VALS
-        DO J = 1,NVALS
-          IF (PR2(I) .LT. PR(J)) EXIT
-        END DO
-        IF (PR2(I) .LT. PR(1)) J = 2
-        PH = PR(J); PL = PR(J-1)
-        ZF2(I) = (PR2(I)-PL)*(ZF(J)-ZF(J-1))/(PH-PL)+ZF(J-1)
-        VI2(I) = (PR2(I)-PL)*(VI(J)-VI(J-1))/(PH-PL)+VI(J-1)
-      END DO
-C
-C     UPATING THEM TO THE EQUALLY SPACED VECTORS
-      DEALLOCATE(PR,ZF,VI)
-      ALLOCATE(PR(VALS),ZF(VALS),VI(VALS))
-      PR = PR2
-      ZF = ZF2
-      VI = VI2
-C
-C     PERFORMING FLUID TYPE SPECIFIC ACTIONS
-      IF (IFLUID == 1) THEN
-C
-        ALLOCATE(PS(VALS),SQPS(VALS),EQSPS(VALS),EQPR(VALS))
-C
-        STD_CONV = (TEMP/STD_TEMP)*(1/STD_PRES)
-C
-C       CREATING THE PSEUDO-PRESS (PHI) VECTOR
-        PS(1) = PR(1)**2/(2*VI(1)*ZF(1))
-        DO I = 2,VALS
-          PS(I) = DPR/2*(PR(I-1)/(VI(I-1)*ZF(I-1))+PR(I)/(VI(I)*ZF(I)))
-          PS(I) = PS(I)+PS(I-1)
-        END DO
-C
-C       DSPS IS DELTA PHI, EQSPS IS THE EQUALLY SPACED SQRT(PHI) VECTOR
-        SQPS = SQRT(PS)
-        DSPS = SQRT(PS(VALS))/(VALS-1)
-        EQSPS(1) = 0
-        DO I = 2,VALS
-          EQSPS(I) = (I-1)*DSPS
-        END DO
-C
-C       CREATING AN EQUALLY SPACED PRESSURE VECTOR FROM EQSPS
-        DO I = 1,VALS
-          DO J = 1,VALS-1
-            IF (EQSPS(I) .LT. SQPS(J)) EXIT
-          END DO
-          IF (EQSPS(I) .LT. SQPS(1)) J = 2
-          PH = SQPS(J); PL = SQPS(J-1)
-          EQPR(I) = (EQSPS(I)-PL)*(PR(J)-PR(J-1))/(PH-PL)+PR(J-1)
-        END DO
-      END IF
-C
-C     DEALLOCATING INTERMEDIATE PVT VECTORS
-      DEALLOCATE(PR2,ZF2,VI2)
-C
-      RETURN
-C
-  905 CALL INSUFFICIENT_ERROR("PVT")
-      CALL MESSAGE(CVAR)
-      GOTO 1000
-C
-  910 CALL FIELD_ERROR("PVT",IFLD)
-      CALL MESSAGE(CVAR)
-      GOTO 1000
-C
- 1000 BOK = .FALSE.
-      RETURN
 C
       END SUBROUTINE
 C
@@ -819,6 +715,7 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE STRING_MODULE
       USE UNIT_CONVERSION_MODULE
 C
       IMPLICIT NONE
@@ -903,40 +800,6 @@ C     APPLYING THE HIGH AND LOW MASKS TO THE MAP
         END DO
       END DO
       AVG_APER = AVG_APER/(NZ*NX)
-C
-C     SETTING UP THE UNIFORM OUTFLOW
-      IF (.NOT. MANIFOLD) THEN
-        CALL MESSAGE("     MANIFOLD WAS DISABLED FOR THIS RUN")
-      ELSE IF (INDEX(OUTFLOW,'LEFT') > 0) THEN
-        DO IZ = 1,NZ
-          DO IX = NX,1,-1
-            AP_MAP(IZ,IX+1,0) = AP_MAP(IZ,IX,0)
-          END DO
-          AP_MAP(IZ,1,0) = AVG_APER
-        END DO
-        NX = NX + 1
-      ELSE IF (INDEX(OUTFLOW,'RIGHT') > 0) THEN
-        DO IZ = 1,NZ
-          AP_MAP(IZ,NX+1,0) = AVG_APER
-        END DO
-        NX = NX + 1
-      ELSE IF (INDEX(OUTFLOW,'TOP') > 0) THEN
-        DO IX = 1,NX
-          AP_MAP(NZ+1,IX,0) = AVG_APER
-        END DO
-        NZ = NZ + 1
-      ELSE IF (INDEX(OUTFLOW,'BOTTOM') > 0) THEN
-        DO IX = 1,NX
-          DO IZ = NZ,1,-1
-            AP_MAP(IZ+1,IX,0) = AP_MAP(IZ,IX,0)
-          END DO
-          AP_MAP(1,IX,0) = AVG_APER
-        END DO
-        NZ = NZ + 1
-      ELSE
-        CALL MESSAGE(" INVALID OUTFLOW SIDE ENTERED: "//TRIM(OUTFLOW))
-        GOTO 1000
-      END IF
 C
 C     GETTING ADDITIONAL STATS ON THE APERTURE MAP
       CALL MESSAGE("     CALCULATING ADDITIONAL MAP STATISTICS")
@@ -1391,9 +1254,10 @@ C
 C ----------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE PVT_MODULE
 C
       IMPLICIT NONE
-      REAL(8) :: PH,PL,B,BF3,BP3,DBF,DBP,W3,THETA
+      REAL(8) :: P,PH,PL,B,BF3,BP3,DBF,DBP,W3,THETA
       INTEGER :: I,IX,IZ
       LOGICAL :: BOK
 C
@@ -1480,84 +1344,39 @@ C
       END DO
 C
 C     INITALIZING FRACTURE PRESSURE AND PSEUDO-PRESSURE
-      FPSB = FPB
-      FRAC_PR(:,:) = FPB
-      FRAC_PS(:,:) = FPSB
+      INLPSB = INLPB
       OUTPSB = OUTPB
-
+      P = INLPB
+      IF (INLPB .GE. 0)  THEN
+        CALL PR_TO_PS(INLPB,INLPSB,BOK)
+      END IF
+      !
+      IF (OUTPB .GE. 0)  THEN
+        P = OUTPB
+        CALL PR_TO_PS(OUTPB,OUTPSB,BOK)
+      END IF
+      ! USING AVERAGE PRESSURE FOR EST. VISC IF BOTH ARE DEFINED
+      IF (PRESC)  P = (INLPB + OUTPB)/2.0
+      IF (.NOT. BOK) GOTO 1000
 C
-C     CHECKING FLUID TYPE
-      IF (IFLUID == 1) THEN !GAS
+C     CALCULATING ESTIMATED AVERAGE VISCOSITY FOR THE FLUID
+      IF (AVG_VISC <= 0) THEN
+        I = INT(P/DPR)+1
+        IF (I > VALS) I = VALS - 1
+        PH = PR(I+1); PL = PR(I)
+        AVG_VISC=(P-PL)*(VI(I+1)-VI(I))/(PH-PL)+VI(I)
+      END IF
 C
-C       INITALIZING FRACTURE PSEUDO-PRESSURE
-        CALL PR_TO_PS(FPB,FPSB,BOK)
-        FRAC_PS(:,:) = FPSB
-C
-C       INTERPOLATING FOR THE PSEUDO-PRESSURE OF THE OUTFLOW
-        IF (PRESC) THEN
-          CALL PR_TO_PS(OUTPB,OUTPSB,BOK)
-C
-C       CALCULATING INITIAL PRESSURE BOUND FOR RATE CONTROLLED FRACTURE
-        ELSEIF (RATEC) THEN
-          OUTRATE = OUTRATE/STD_CONV
-          IF ((INDEX(OUTFLOW,'RIGHT')+INDEX(OUTFLOW,'LEFT')) > 0) THEN
-            OUTPSB = FPSB - OUTRATE/AVG_TRX
-          ELSEIF ((INDEX(OUTFLOW,'TOP')+INDEX(OUTFLOW,'BOTTOM'))>0) THEN
-            OUTPSB = FPSB - OUTRATE/AVG_TRZ
-          END IF
-          CALL PS_TO_PR(OUTPB,OUTPSB,BOK)
-        ELSE
-          GOTO 900
-        END IF
-C
-      ELSEIF (IFLUID == 2) THEN  !LIQUID
-C
-C       CALCULATING THE INITIAL VISCOSITY FOR THE LIQUID
-        IF (AVG_VISC <= 0) THEN
-          I = INT(FPB/DPR)+1
-          IF (I > VALS) I = VALS - 1
-          PH = PR(I+1); PL = PR(I)
-          AVG_VISC=(FPB-PL)*(VI(I+1)-VI(I))/(PH-PL)+VI(I)
-        END IF
-C
-C       ADUSTING TRANSIMISSIBILITY ARRAYS TO INCORPERATE VISCOSITY
+C     PERFORMING LIQUID SPECIFIC MODIFCATIONS TO TRANSMISSIVITY
+      IF (IFLUID == 2) THEN  !LIQUID
+        !ADJUSTING TRANSIMISSIBILITY ARRAYS TO FACTOR IN VISCOSITY
         AVG_TRZ = AVG_TRZ/AVG_VISC
         AVG_TRX = AVG_TRX/AVG_VISC
         TRX(:,:) = TRX(:,:)/AVG_VISC
         TRZ(:,:) = TRZ(:,:)/AVG_VISC
-C
-C       CALCULATING INITIAL PRESSURE BOUND FOR RATE CONTROLLED FRACTURE
-        IF (RATEC) THEN
-          IF ((INDEX(OUTFLOW,'RIGHT')+INDEX(OUTFLOW,'LEFT')) > 0) THEN
-            OUTPSB = FPSB - OUTRATE/AVG_TRX
-          ELSEIF (INDEX(OUTFLOW,'TOP') > 0) THEN
-            OUTPSB = FPSB - OUTRATE/AVG_TRZ
-            OUTPSB = FPSB - OUTRATE/AVG_TRZ
-          ELSEIF (INDEX(OUTFLOW,'BOTTOM') > 0) THEN
-            OUTPSB = FPSB - OUTRATE/AVG_TRZ
-            OUTPSB = FPSB - OUTRATE/AVG_TRZ
-          END IF
-          IF (OUTPSB < 0) THEN
-            CALL BLANK
-            CALL MESSAGE(" ERROR NEGATIVE BOUNDARY PRESSURE CALCULATED")
-            CALL MESSAGE(" FLOW RATE TOO HIGH")
-            GOTO 1000
-          END IF
-          OUTPB = OUTPSB
-        ELSEIF (PRESC) THEN
-          OUTPSB = OUTPB
-        ELSE
-          GOTO 900
-        END IF
-      ELSE
-        CALL MESSAGE("FLUID TYPE MUST BE SPECFIED AS LIQUID OR GAS")
-        GOTO 1000
       END IF
 C
       RETURN
-C
-  900 CALL MESSAGE("     ERROR - NO BOUNDARY CONDITION SPECIFIED.")
-      GOTO 1000
 C
  1000 BOK = .FALSE.
       RETURN
@@ -1573,7 +1392,7 @@ C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
 C     DATE WRITTEN:  2015/03/02
-C     LAST MODIFIED: 2016/02/10
+C     LAST MODIFIED: 2016/07/08
 C
 C     PROGRAM DESCRIPTION: DEFINES FLOW AND PRESSURE BOUNDARY CONIDITIONS
 C
@@ -1588,7 +1407,7 @@ C
       USE APM_MODULE
 C
       IMPLICIT NONE
-      INTEGER :: I,IX,IZ
+      INTEGER :: IX,IZ
       LOGICAL :: BOK
 C
 C
@@ -1596,588 +1415,76 @@ C
       CALL MESSAGE(" DEFINING BOUNDARY CELL TRANSMISSIBILIES")
 C
 C     HANDLING EACH OUTFLOW SIDE CASE
-      IF (INDEX(OUTFLOW,'LEFT') > 0) THEN
+      IF (INDEX(OUTLET_SIDE,'LEFT') > 0) THEN
 C
 C       DEFINING THE BOUNDARY CONDITIONS FOR EACH SIDE OF THE FRACTURE
-        TRX(1:NZ,0) = 2*TRX(1:NZ,1)
+        TRX(1:NZ,0) = 2*TRX(1:NZ,1) !LEFT SIDE BOUNDARY
         TRX(1:NZ,NX) = 2*TRX(1:NZ,NX) !RIGHT SIDE BOUNDARY
-        TRZ(0,1:NX) = 0.0 !BOTTOM ROW
-        TRZ(NZ,1:NX) = 0.0 !TOP ROW
-        !
-        FRAC_PS(:,0) = OUTPSB !EXTRA LEFT COUMN
-        FRAC_PS(:,NX+1) = FPSB !EXTRA RIGHT COLUMN
-        FRAC_PS(0,:) = FPSB !EXTRA BOTTOM ROW
-        FRAC_PS(NZ+1,:) = FPSB !EXTRA TOP ROW
+        TRZ(0,1:NX) = 0.0 !BOTTOM BOUNDARY
+        TRZ(NZ,1:NX) = 0.0 !EXTRA TOP ROW
 C
-C       DEFINING PBCELLS
+C       DEFINING INLET AND OUTLET
+        INLET_SIDE = 'RIGHT'
         NC = NZ
         DO IZ = 1,NZ
-          I = (IZ-1)*NX + 1
-          PBCELLS(IZ) = I
+          INLET(IZ) = (IZ-1)*NX + NX
+          OUTLET(IZ) = (IZ-1)*NX + 1
         END DO
-      ELSE IF (INDEX(OUTFLOW,'RIGHT') > 0) THEN
+      ELSE IF (INDEX(OUTLET_SIDE,'RIGHT') > 0) THEN
 C
 C       DEFINING THE BOUNDARY CONDITIONS FOR EACH SIDE OF THE FRACTURE
-        TRX(1:NZ,0) = 2*TRX(1:NZ,1)
+        TRX(1:NZ,0) = 2*TRX(1:NZ,1) !LEFT SIDE BOUNDARY
         TRX(1:NZ,NX) = 2*TRX(1:NZ,NX) !RIGHT SIDE BOUNDARY
-        TRZ(0,1:NX) = 0.0 !BOTTOM ROW
-        TRZ(NZ,1:NX) = 0.0 !TOP ROW
-        !
-        FRAC_PS(:,0) = FPSB !EXTRA LEFT COUMN
-        FRAC_PS(:,NX+1) = OUTPSB !EXTRA RIGHT COLUMN
-        FRAC_PS(0,:) = FPSB !EXTRA BOTTOM ROW
-        FRAC_PS(NZ+1,:) = FPSB !EXTRA TOP ROW
+        TRZ(0,1:NX) = 0.0 !BOTTOM BOUNDARY
+        TRZ(NZ,1:NX) = 0.0 !EXTRA TOP ROW
 C
-C       DEFINING PBCELLS
+C       DEFINING INLET AND OUTLET
+        INLET_SIDE = 'LEFT'
         NC = NZ
         DO IZ = 1,NZ
-          I = (IZ-1)*NX + NX
-          PBCELLS(IZ) = I
+          INLET(IZ) = (IZ-1)*NX + 1
+          OUTLET(IZ) = (IZ-1)*NX + NX
         END DO
-      ELSE IF (INDEX(OUTFLOW,'TOP') > 0) THEN
+      ELSE IF (INDEX(OUTLET_SIDE,'TOP') > 0) THEN
 C
 C       DEFINING THE BOUNDARY CONDITIONS FOR EACH SIDE OF THE FRACTURE
         TRX(1:NZ,0) = 0.0 !LEFT SIDE BOUNDARY
         TRX(1:NZ,NX) = 0.0 !RIGHT SIDE BOUNDARY
         TRZ(0,1:NX) = 2*TRZ(1,1:NX) !BOTTOM BOUNDARY
         TRZ(NZ,1:NX) = 2*TRZ(NZ,1:NX) !EXTRA TOP ROW
-        !
-        FRAC_PS(:,0) = FPSB !EXTRA LEFT COUMN
-        FRAC_PS(:,NX+1) = FPSB !EXTRA RIGHT COLUMN
-        FRAC_PS(0,:) = FPSB !EXTRA BOTTOM ROW
-        FRAC_PS(NZ+1,:) = OUTPSB !EXTRA TOP ROW
 C
-C       DEFINING PBCELLS
+C       DEFINING INLET AND OUTLET
+        INLET_SIDE = 'BOTTOM'
         NC = NX
         DO IX = 1,NX
-          I = (NZ-1)*NX + IX
-          PBCELLS(IX) = I
+          INLET(IX) = IX
+          OUTLET(IX) = (NZ-1)*NX + IX
         END DO
-      ELSE IF (INDEX(OUTFLOW,'BOTTOM') > 0) THEN
+      ELSE IF (INDEX(OUTLET_SIDE,'BOTTOM') > 0) THEN
 C
 C       DEFINING THE BOUNDARY CONDITIONS FOR EACH SIDE OF THE FRACTURE
         TRX(1:NZ,0) = 0.0 !LEFT SIDE BOUNDARY
         TRX(1:NZ,NX) = 0.0 !RIGHT SIDE BOUNDARY
         TRZ(0,1:NX) = 2*TRZ(1,1:NX) !BOTTOM BOUNDARY
         TRZ(NZ,1:NX) = 2*TRZ(NZ,1:NX) !EXTRA TOP ROW
-        !
-        FRAC_PS(:,0) = FPSB !EXTRA LEFT COUMN
-        FRAC_PS(:,NX+1) = FPSB !EXTRA RIGHT COLUMN
-        FRAC_PS(0,:) = OUTPSB !EXTRA BOTTOM ROW
-        FRAC_PS(NZ+1,:) = FPSB !EXTRA TOP ROW
 C
-C       DEFINING PBCELLS
+C       DEFINING INLET AND OUTLET
+        INLET_SIDE = 'TOP'
         NC = NX
         DO IX = 1,NX
-          PBCELLS(IX) = IX
+          INLET(IX) = (NZ-1)*NX + IX
+          OUTLET(IX) = IX
         END DO
       ELSE
-        CALL MESSAGE(" INVALID OUTFLOW SIDE ENTERED: "//TRIM(OUTFLOW))
         GOTO 1000
       END IF
 C
       RETURN
 C
  1000 BOK = .FALSE.
+      CALL MESSAGE(" INVALID OUTLET SIDE ENTERED: "//TRIM(OUTLET_SIDE))
       RETURN
 C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE SOLVER(AD,AW,AC,AE,AU,RES)
-C
-C     WRITTEN BY: MATTHEW STADELMAN
-C
-C     LAST MODIFIED: 2016/02/10
-C
-C     PROGRAM DESCRIPTION: ALLOWS FOR THE USE OF MULTIPLE LINEAR SOLVERS
-C
-C     SUBROUTINE CALLS: GAUSS, D4_GAUSS, JACOBI, CG
-C
-C ----------------------------------------------------------------------
-C     VARIABLE DESCRIPTION:
-C       DPS - VECTOR THAT STORES THE CHANGE IN PRESSURE TO REACH STEADY-STATE CONDITIONS
-C       AD,AW,AC,AE,AU - THE DIAGONALS THAT MAKE UP THE SOLUTION MATRIX
-C       RES - RHS OF THE SOLTUION MATRIX, NET FLOW CHANGE THAT IS SOLVED FOR
-C
-C ----------------------------------------------------------------------
-C
-      USE APM_MODULE
-C
-      IMPLICIT NONE
-      REAL(8), ALLOCATABLE :: DPS(:)
-      REAL(8) :: AD(*),AW(*),AC(*),AE(*),AU(*),RES(*)
-      INTEGER :: I,IX,IZ
-C
-C     INITIALIZING DPS VECTOR
-      ALLOCATE(DPS(NX*NZ))
-      DPS(:) = 0.0
-C
-C     CALLING THE SOLVER (ONLY GAUSS AND D4_GAUSS PRODUCE VALID RESULTS)
-      CALL BLANK
-      CALL MESSAGE('     USING D4 GAUSS SOLVER')
-      CALL D4_GAUSS(AD,AW,AC,AE,AU,RES,DPS)
-C
-C     UPDATING THE FRACTURE PRESSURE
-      DO IZ = 1,NZ
-        DO IX = 1,NX
-          I = (IZ-1)*NX + IX
-          FRAC_PS(IZ,IX) = FRAC_PS(IZ,IX) + DPS(I)
-        END DO
-      END DO
-C
-C
-      RETURN
-C
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE PR_TO_PS(P,PSEU,BOK)
-C
-C     WRITTEN BY: MATTHEW STADELMAN
-C
-C     LAST MODIFIED: 2016/02/10
-C
-C     PROGRAM DESCRIPTION: INTERPOLATES FOR THE PSEDUO-PRESSURE BASED ON THE PRESSURE
-C
-C     SUBROUTINE CALLS: NONE
-C
-C ----------------------------------------------------------------------
-C     VARIABLE DESCRIPTION:
-C       P - INPUT PRESSURE
-C       PSEU - OUTPUT PSEUDO-PRESSURE
-C       PH,PL - INTERPOLATION UPPER AND LOWER VALUES
-C       SPS - SQUARE-ROOT OF PSEDUO-PRESSURE RETURNED BY INTERPOLATION
-C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
-C
-C ----------------------------------------------------------------------
-C
-      USE APM_MODULE
-C
-      IMPLICIT NONE
-      REAL(8) :: P,PSEU
-      REAL(8) :: PH,PL,SPS
-      INTEGER :: I
-
-      LOGICAL :: BOK
-C
-      IF ((P <= 0) .OR. (P /= P)) GOTO 900
-      I = INT(P/DPR)+1
-      IF (I > VALS) I = VALS - 1
-      PH = PR(I+1); PL = PR(I)
-C
-C     CALCULATING PSEUDO-PRESSURE
-      SPS = (P-PL)*(SQPS(I+1)-SQPS(I))/(PH-PL)+SQPS(I)
-      PSEU = SPS**2
-C
-      RETURN
-C
-  900 CALL BLANK
-      CALL MESSAGE(' **** ERROR NEGATIVE PRESSURE ****')
-      BOK = .FALSE.
-      RETURN
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE PS_TO_PR(P,PSEU,BOK)
-C
-C     WRITTEN BY: MATTHEW STADELMAN
-C
-C     LAST MODIFIED: 2016/02/10
-C
-C     PROGRAM DESCRIPTION: INTERPOLATES FOR THE PRESSURE BASED ON THE
-C         SQUARE-ROOT OF THE PSEUDO-PRESSURE
-C
-C     SUBROUTINE CALLS: NONE
-C
-C ----------------------------------------------------------------------
-C     VARIABLE DESCRIPTION:
-C       P - OUTPUT PRESSURE
-C       PSEU - INPUT PSEUDO-PRESSURE
-C       PH,PL - INTERPOLATION UPPER AND LOWER VALUES
-C       SPS - SQUARE-ROOT OF INPUT PSEDUO-PRESSURE
-C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
-C
-C ----------------------------------------------------------------------
-C
-      USE APM_MODULE
-      IMPLICIT NONE
-      REAL(8) :: P,PSEU
-      REAL(8) :: PH,PL,SPS
-      INTEGER :: I
-      LOGICAL :: BOK
-      CHARACTER(80) :: C80
-C
-      IF ((PSEU <= 0) .OR. (PSEU /= PSEU)) GOTO 900
-      SPS = SQRT(PSEU)
-      I = INT(SPS/DSPS)+1
-      IF (I > VALS) I = VALS - 1
-      PH = EQSPS(I+1); PL = EQSPS(I)
-C
-C     INTERPOLATING FOR THE PRESSURE
-      P = (SPS-PL)*(EQPR(I+1)-EQPR(I))/(PH-PL)+EQPR(I)
-C
-      RETURN
-C
-  900 CALL BLANK
-      C80 = ' **** ERROR - ENCOUNTERED NEGATIVE PSEUDO-PRESSURE ****'
-      CALL MESSAGE(C80)
-      BOK = .FALSE.
-      RETURN
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE INIT_OUTPUT(BOK)
-C
-C     WRITTEN BY: MATTHEW STADELMAN
-C
-C     LAST MODIFIED: 2016/02/10
-C
-C     PROGRAM DESCRIPTION: PREPARES OUTPUT FILES
-C
-C     SUBROUTINE CALLS: CALC_CONV_FACT, SET_HEADER
-C
-C ----------------------------------------------------------------------
-C     VARIABLE DESCRIPTION:
-C       CONV - STORES THE VALUE OF EACH UNIT CONVERSION TO PRINT TO SCREEN
-C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
-C
-C ----------------------------------------------------------------------
-C
-      USE APM_MODULE
-      USE UNIT_CONVERSION_MODULE
-C
-      IMPLICIT NONE
-      REAL(8) :: CONV(7)
-      INTEGER :: I
-      LOGICAL :: BOK
-C
-      CONV(1) = PRES_CONV
-      CONV(2) = DIM_CONV
-      CONV(4) = TIME_CONV
-      CONV(5) = RATE_CONV
-      CONV(6) = VISC_CONV
-      CONV(7) = RHO_CONV
-      UNIT_OUT(6) = UNIT_IN(6)
-      UNIT_OUT(7) = UNIT_IN(7)
-C
-      CALL BLANK
-      CALL MESSAGE(" INITIALIZING OUTPUT FILES")
-      CALL MESSAGE("     INPUT CONVERSIONS APPLIED")
-      CALL CALC_CONV_FACT('PRES',UNIT(1),UNIT_OUT(1),PRES_CONV,BOK)
-      CALL CALC_CONV_FACT('DIST',UNIT(2),UNIT_OUT(2),DIM_CONV,BOK)
-      CALL CALC_CONV_FACT('TIME',UNIT(4),UNIT_OUT(4),TIME_CONV,BOK)
-      CALL CALC_CONV_FACT('RATE',UNIT(5),UNIT_OUT(5),RATE_CONV,BOK)
-      CALL CALC_CONV_FACT('VISC',UNIT(6),UNIT_OUT(6),VISC_CONV,BOK)
-      CALL CALC_CONV_FACT('DENS',UNIT(7),UNIT_OUT(7),RHO_CONV,BOK)
-      IF (.NOT. BOK) GOTO 1000
-C
-      WRITE(CVAR,1990)
-      CALL MESSAGE(CVAR)
-      WRITE(CVAR,1980)'UNIT IN','UNIT OUT','CONVERSION'
-      CALL MESSAGE(CVAR)
-      WRITE(CVAR,1990)
-      CALL MESSAGE(CVAR)
-      DO I = 1,7
-        IF (I == 3) CYCLE
-        WRITE(CVAR,2000)UNIT_IN(I),UNIT(I),CONV(I)
-      CALL MESSAGE(CVAR)
-      END DO
-      WRITE(CVAR,1990)
-      CALL MESSAGE(CVAR)
-C
-      CONV(1) = PRES_CONV
-      CONV(2) = DIM_CONV
-      CONV(4) = TIME_CONV
-      CONV(5) = RATE_CONV
-      CONV(6) = VISC_CONV
-      CONV(7) = RHO_CONV
-C
-      CALL BLANK
-      CALL MESSAGE("     OUTPUT CONVERSIONS APPLIED")
-      WRITE(CVAR,1990)
-      CALL MESSAGE(CVAR)
-      WRITE(CVAR,1980)'UNIT IN','UNIT OUT','CONVERSION'
-      CALL MESSAGE(CVAR)
-      WRITE(CVAR,1990)
-      CALL MESSAGE(CVAR)
-      DO I = 1,7
-        IF (I == 3) CYCLE
-        WRITE(CVAR,2000)UNIT(I),UNIT_OUT(I),CONV(I)
-      CALL MESSAGE(CVAR)
-      END DO
-      WRITE(CVAR,1990)
-      CALL MESSAGE(CVAR)
-C
-C     SETTING HEADERS FOR STATISTICS OUTPUT FILE
-      CALL SET_HEADER(ISTAT)
-C
-      RETURN
-C
- 1000 BOK = .FALSE.
-      RETURN
-C
- 1980 FORMAT(5X,A10,4X,A10,2X,A15)
- 1990 FORMAT(5X,41('-'))
- 2000 FORMAT(5X,A10,' -> ',A10,': ',G15.6)
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE SET_HEADER(IUNIT)
-C
-C     WRITTEN BY: MATTHEW STADELMAN
-C
-C     LAST MODIFIED: 2016/02/10
-C
-C     PROGRAM DESCRIPTION: SETS THE HEADER USED IN CERTAIN OUTPUT FILES
-C
-C     SUBROUTINE CALLS: NONE
-C
-C ----------------------------------------------------------------------
-C     VARIABLE DESCRIPTION:
-C       IUNIT - UNIT NUMBER OF FILE TO WRITE TO
-C
-C ----------------------------------------------------------------------
-C
-      USE APM_MODULE
-C
-      IMPLICIT NONE
-      INTEGER :: IUNIT
-C
-      WRITE(IUNIT,*)"APERTURE MAP INPUT FILE:    "//TRIM(APM_FILE)
-      WRITE(IUNIT,*)"PVT DATA INPUT FILE:    "//TRIM(PVT_FILE)
-      WRITE(IUNIT,*)"NX,NZ"
-      WRITE(IUNIT,"(I6,',',I6)") NX,NZ
-      WRITE(IUNIT,2000) TRIM(UNIT_OUT(2)),TRIM(UNIT_OUT(2)),
-     &                  TRIM(UNIT_OUT(2))
-      WRITE(IUNIT,2010) LENG*DIM_CONV,DIAM*DIM_CONV,AVG_APER*DIM_CONV
-      WRITE(IUNIT,2040) TRIM(UNIT_OUT(6)),TRIM(UNIT_OUT(7)),
-     &                  TRIM(UNIT_OUT(3))
-      WRITE(IUNIT,2045) AVG_VISC*VISC_CONV,RHO*RHO_CONV,TEMP
-C
-      RETURN
-C
- 2000 FORMAT('LENGTH [',A,'],DIAMETER [',A,'],MEAN APER [',A,'],')
-C
- 2010 FORMAT(4(F20.6,',',:))
-C
- 2040 FORMAT('AVG VISC [',A,'],DENSITY [',A,'],TEMP [',A,']')
-C
- 2045 FORMAT(F10.7,',',F10.4,',',F10.4)
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-
-      SUBROUTINE LNPROC(IN,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD)
-C
-C     PURPOSE: THIS SUBROUTINE BREAKS A RECORD INTO IT'S SUBFIELDS.
-C              THE SUBFIELDS ARE SEPARATED BY A COMMA OR ONE OR MORE
-C              BLANKS. EACH EQUAL SIGN IS TREATED AS A SEPARATE SUBFIELD.
-C              ALL INFORMATION AFTER A ; IS TREATED AS A COMMENT AND IS
-C              IGNORED A RETURN WITH NFLD EQUAL ZERO INDICATES AN EOF.
-C              IF A DOUBLE QUOTE (") IS ENCOUNTED ALL DATA BETWEEN THE
-C              QUOTES IS TREATED AS IS WITH NO DELIMITERS UNTIL A SECOND
-C              DOUBLE QUOTE.
-C
-C
-C     SUBROUTINE CALLS :  NONE
-C
-C     DEFINITION OF ARGUMENTS:
-C       IN     - UNIT NUMBER FOR READ
-C       MAXFLD - MAXIMUM NUMBER OF FIELDS IN RECORD
-C       MAXLEN - MAXIMUM LENGTH OF FIELDS IN RECORD
-C       CVAR   - INPUT/OUTPUT DATA STRING
-C       CFLD   - CHARACTER ARRAY CONTAINING SUBFIELDS
-C       LFLD   - INTEGER ARRAY CONTAINING LENGTHS OF SUBFIELDS
-C       NFLD   - NUMBER OF SUBFIELDS
-C
-C     WRITTEN BY:  W. NEAL SAMS
-C     MODIFIED BY: MATTHEW A. STADELMAN
-C     LAST MODIFIED: 03/14/2016
-C
-      IMPLICIT NONE
-      INTEGER :: IN,MAXFLD,MAXLEN,NFLD,LENG,I,J
-      INTEGER :: LFLD(*)
-      LOGICAL :: QUOTED = .FALSE.
-      CHARACTER(*) :: CFLD(*),CVAR
-      CHARACTER(1) :: C1
-C
-  100 NFLD = 0
-      IF(IN > 0) READ(IN,'(A)',END=950) CVAR
-      LENG = 0
-      DO I = 1,LEN(TRIM(CVAR))+1
-        C1 = CVAR(I:I)
-        !
-        IF (QUOTED) THEN
-          IF (C1 == '"') THEN
-            QUOTED = .FALSE.
-          ELSE
-            J = IACHAR(C1)
-            IF(J >= 97 .AND. J <= 122) J = J - 32
-            C1 = ACHAR(J)
-            !
-            IF(LENG <= 0) THEN
-              IF(NFLD == MAXFLD) GOTO 950
-              NFLD = NFLD + 1
-              LENG = 1
-              CFLD(NFLD) = C1
-            ELSEIF(LENG < MAXLEN) THEN
-              LENG = LENG + 1
-              CFLD(NFLD)(LENG:LENG) = C1
-            ENDIF
-          END IF
-        !
-        ELSEIF(C1 == ';') THEN
-          IF(LENG > 0) LFLD(NFLD) = LENG
-          GOTO 900
-        ELSEIF(C1 == '"') THEN
-            QUOTED = .TRUE.
-        ELSEIF(C1 == ' ') THEN
-          IF(LENG > 0) THEN
-            LFLD(NFLD) = LENG
-            LENG = -1
-          ENDIF
-        ELSEIF(C1 == ',') THEN
-          IF(LENG > 0) THEN
-            LFLD(NFLD) = LENG
-            LENG = 0
-          ELSEIF(LENG == 0) THEN
-            IF(NFLD == MAXFLD) GOTO 950
-            NFLD = NFLD + 1
-            LFLD(NFLD) = 0
-            CFLD(NFLD) = ' '
-          ELSE
-            LENG = 0
-          ENDIF
-        ELSEIF(C1 == CHAR(9)) THEN !TAB DELIMITER
-          IF(LENG > 0) THEN
-            LFLD(NFLD) = LENG
-            LENG = 0
-          ELSEIF(LENG == 0) THEN
-            IF(NFLD == MAXFLD) GOTO 950
-            NFLD = NFLD + 1
-            LFLD(NFLD) = 0
-            CFLD(NFLD) = ' '
-          ELSE
-            LENG = 0
-          ENDIF
-        ELSEIF(C1 == '=') THEN
-          IF(LENG > 0) LFLD(NFLD) = LENG
-          IF(NFLD == MAXFLD) GOTO 950
-          NFLD = NFLD + 1
-          LFLD(NFLD) = 1
-          CFLD(NFLD) = '='
-          LENG = -1
-        ELSE
-          J = IACHAR(C1)
-          !IF(J >= 97 .AND. J <= 122) J = J - 32
-          !C1 = ACHAR(J)
-C
-          IF(LENG <= 0) THEN
-            IF(NFLD == MAXFLD) GOTO 950
-            NFLD = NFLD + 1
-            LENG = 1
-            CFLD(NFLD) = C1
-          ELSEIF(LENG < MAXLEN) THEN
-            LENG = LENG + 1
-            CFLD(NFLD)(LENG:LENG) = C1
-          ENDIF
-        ENDIF !END CHAR TESTING LOOP
-      END DO
-C
-  900 IF(IN > 0 .AND. NFLD == 0) GOTO 100
-C
-  950 RETURN
-C
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE UPPER_CASE(C_IN,C_OUT)
-C
-C     WRITTEN BY: W. NEAL SAMS
-C     DATE WRITTEN: 10/04/2013
-C
-      IMPLICIT NONE
-      INTEGER :: I,NC
-      CHARACTER(*) :: C_IN,C_OUT
-C
-      DO I = 1,LEN_TRIM(C_IN)
-       NC = ICHAR(C_IN(I:I))
-       IF(97 <= NC .AND. NC <=122) NC = NC - 32
-       C_OUT(I:I) = CHAR(NC)
-      ENDDO
-C
-      RETURN
-      END
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE LOWER_CASE(C_IN,C_OUT)
-C
-C     WRITTEN BY: W. NEAL SAMS
-C     DATE WRITTEN: 10/04/2013
-C
-      IMPLICIT NONE
-      INTEGER :: I,NC
-      CHARACTER(*) :: C_IN,C_OUT
-C
-      DO I = 1,LEN_TRIM(C_IN)
-       NC = ICHAR(C_IN(I:I))
-       IF(65 <= NC .AND. NC <=90) NC = NC + 32
-       C_OUT(I:I) = CHAR(NC)
-      ENDDO
-C
-      RETURN
-      END
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE R_JUST(C_IN,C_OUT,NC)
-C
-C     WRITTEN BY: MATTHEW STADELMAN
-C     DATE WRITTEN: 2015/09/17
-C
-      IMPLICIT NONE
-      INTEGER :: I,NC,NW
-      CHARACTER(NC) :: C_IN,C_OUT,CVAR
-C
-      NW = NC - LEN_TRIM(C_IN)
-      DO I = 1,NW
-        CVAR(I:I) = ' '
-      END DO
-      C_OUT = CVAR(1:NW)//TRIM(C_IN)
-C
-      RETURN
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
@@ -2189,7 +1496,7 @@ C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
 C     DATE WRITTEN:  2015/03/02
-C     LAST MODIFIED: 2016/02/10
+C     LAST MODIFIED: 2016/07/14
 C
 C     PROGRAM DESCRIPTION: PRINTS MESSAGES TO SCREEN AND SCREEN LOG FILE
 C
@@ -2207,7 +1514,7 @@ C
       CHARACTER(*) :: C_OUT
 C
       WRITE(*,'(A)') TRIM(C_OUT)
-      WRITE(IOUT,'(A)') TRIM(C_OUT)
+      IF (IOUT /= 6) WRITE(IOUT,'(A)') TRIM(C_OUT)
 C
       RETURN
       END SUBROUTINE
@@ -2250,7 +1557,7 @@ C
       CALL MESSAGE(C_OUT)
 C
       RETURN
-      END
+      END SUBROUTINE
 C
 C ----------------------------------------------------------------------
 C ######################################################################
@@ -2274,7 +1581,7 @@ C
 C
  2900 FORMAT(5X,'**** THE FOLLOWING RECORD CONTAINS INSUFFICIENT '
      &            ,'DATA ****')
-      END
+      END SUBROUTINE
 C
 C ----------------------------------------------------------------------
 C ######################################################################
@@ -2299,69 +1606,46 @@ C
 C
  2900 FORMAT(5X,'**** FIELD ',I4,' ON THE FOLLOWING RECORD IS IN '
      &         ,'ERROR ****')
-      END
+      END SUBROUTINE
 C
 C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE EOD_ERROR(CHAR_IN)
-C
-C     WRITTEN BY: W. NEAL SAMS
-C     DATE WRITTEN: 03/08/2014
-C
-      USE APM_MODULE
-C
-      IMPLICIT NONE
-      CHARACTER(*) :: CHAR_IN
-      CHARACTER(MAXLEN) :: C_OUT
-C
-      CALL BLANK
-      C_OUT = '     **** END OF DATA WHILE READING '//TRIM(CHAR_IN)//
-     &       ' DATA ****'
-      CALL MESSAGE(C_OUT)
-C
-      RETURN
-      END
-C
-C ----------------------------------------------------------------------
-C ######################################################################
-C ----------------------------------------------------------------------
-C
-      SUBROUTINE QUIT(LN_NUM)
+      SUBROUTINE QUIT
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
 C     DATE WRITTEN:  2015/12/09
-C     LAST MODIFIED: 2016/02/10
+C     LAST MODIFIED: 2016/07/08
 C
-C     PROGRAM DESCRIPTION: QUITS THE PROGRAM PRINTING LINE NUMBER TO SCREEN
+C     PROGRAM DESCRIPTION: QUITS THE PROGRAM PRINTING THE LINE NUMBER TO SCREEN
 C         USED WHEN DEBUGGING CODE OR TESTING NEW FEATURES
 C
-C     SUBROUTINE CALLS: NONE
+C     SUBROUTINE CALLS: EXECUTE_COMMAND_LINE
 C
 C ----------------------------------------------------------------------
 C     VARIABLE DESCRIPTION:
-C       LN_NUM - LINE NUMBER
+C       CMD - COMMAND USED TO PRINT FILE AND LINE NUMBER TO THE SCREEN
 C
 C ----------------------------------------------------------------------
 C
       IMPLICIT NONE
-      INTEGER :: LN_NUM
-      CHARACTER(10) :: NUM
-      CHARACTER(120) :: C120
+      CHARACTER(120) :: CMD
 C
-C     CONVERTING LINE NUMBER TO STRING
-      WRITE(NUM,'(I10)')LN_NUM
+C     SETTING UP COMMAND
+      WRITE(CMD,2000) '$(git rev-parse --show-toplevel)/source/'
 C
-C     PRINTING MESSAGE
-      CALL BLANK
-      C120 = 'QUIT CALLED ON LINE '//TRIM(NUM)
-      CALL MESSAGE(C120)
-      STOP
+C     PRINTING MESSAGE AND USING GREP TO SHOW WHERE IT WAS CALLED
+      WRITE(*,"(1X)")
+      WRITE(*,*)' *** ALERT: QUIT SUBROUTINE CALLED ***'
+      CALL EXECUTE_COMMAND_LINE(CMD)
+      STOP(1)
+C
+ 2000 FORMAT('grep -rn -e "[[:space:]]CALL QUIT" "',A,'"')
 C
       RETURN
-      END
+      END SUBROUTINE
 C
 C ----------------------------------------------------------------------
 C ######################################################################

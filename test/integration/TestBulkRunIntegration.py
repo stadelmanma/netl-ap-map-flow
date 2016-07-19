@@ -25,7 +25,8 @@ class TestBulkRun:
         # setting inputs for a full test
         maps = [
             os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT'),
-            os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-10VOX.TXT')
+            os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-10VOX.TXT'),
+            os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'Fracture1ApertureMap-10avg.txt')
         ]
         #
         global_file_formats = {
@@ -47,13 +48,15 @@ class TestBulkRun:
         }
         #
         run_params = [
-            {'APERMAP': ['PARALELL-PLATE-01VOX'], 'OUTLET-PRESS': ['500', '400']},
-            {'APERMAP': ['PARALELL-PLATE-10VOX'], 'OUTLET-PRESS': ['800', '700']}
+            {'APERMAP': ['PARALELL-PLATE-01VOX'], 'OUTLET-PRESS': ['500', '400', '100']},
+            {'APERMAP': ['PARALELL-PLATE-10VOX'], 'OUTLET-PRESS': ['800', '700', '600']},
+            {'APERMAP': ['FRACTURE1-10AVG'], 'OUTLET-PRESS': ['200', '300']}
         ]
         #
         input_tuples = [
             (maps[0:1], run_params[0], {}),
-            (maps[1:2], run_params[1], {'SUMMARY-PATH': os.path.join(TEMP_DIR, '%APERMAP%-RF%ROUGHNESS%-%OUTLET-PRESS%PA-LOG2.TXT')})
+            (maps[1:2], run_params[1], {'SUMMARY-PATH': os.path.join(TEMP_DIR, '%APERMAP%-RF%ROUGHNESS%-%OUTLET-PRESS%PA-LOG2.TXT')}),
+            (maps[2:3], run_params[2], {})
         ]
         #
         inp_file = InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
@@ -61,7 +64,7 @@ class TestBulkRun:
         inp_file['EXE-FILE'].update_value(exe_path, False)
         #
         # creating the class and then building the inputs
-        args = {'start_delay': 1.0, 'spawn_delay': 1.0, 'retest_delay': 1.0}
+        args = {'start_delay': 1.0, 'spawn_delay': 1.0, 'retest_delay': 1.0, 'sys_RAM': 0.01, 'num_CPUs': 2}
         test_bulk_run = BulkRun(inp_file, **args)
         test_bulk_run.process_input_tuples(input_tuples,
                                            default_params=global_run_params,

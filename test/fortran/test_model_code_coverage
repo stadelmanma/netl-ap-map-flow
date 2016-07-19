@@ -1,0 +1,86 @@
+#!/usr/bin/env python3
+import os
+import sys
+#
+# setting path to
+sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))
+from ApertureMapModelTools.RunModel import InputFile, run_model
+from ApertureMapModelTools.RunModel.__run_model_core__ import ArgInput
+# -----------------------------------------------------------------------------
+#
+# global constants
+FIXTURE_DIR = os.path.realpath('fixtures')
+INIT_INP_FILE = os.path.join(FIXTURE_DIR, 'coverage_test.inp')
+RETURN_CODE = 0
+# -----------------------------------------------------------------------------
+
+
+def run_model_wrapper(inp_file):
+    global RETURN_CODE
+    proc = run_model(inp_file, synchronous=True, show_stdout=False)
+    #
+    if proc.returncode != 0:
+        print(proc.stdout_content)
+        RETURN_CODE = proc.returncode
+    #
+    if proc.stderr_content:
+        print('')
+        print(proc.stderr_content)
+
+# -----------------------------------------------------------------------------
+#
+# building test input file
+file_formats = {
+    'input_file': os.path.join('.', 'test_model_coverage.inp')
+}
+inp_file = InputFile(INIT_INP_FILE, file_formats)
+#
+# updating exe-file path so it is absolute
+exe_path = os.path.realpath(os.path.join('.', inp_file['EXE-FILE'].value))
+inp_file['EXE-FILE'].update_value(exe_path, False)
+#
+# setting parameters
+pvt_path = os.path.join(FIXTURE_DIR, 'H2O_TEMP_058F.CSV')
+inp_file['PVT-PATH'].update_value(pvt_path)
+map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
+inp_file['APER-MAP'].update_value(map_path)
+inp_file['OVERWRITE'].commented_out = True
+inp_file['BAD-INPUT'] = ArgInput('BAD-INPUT: VALUE')
+inp_file.arg_order.append('BAD-INPUT')
+#
+# running initial liquid sim with everything to set up base coverage
+run_model_wrapper(inp_file)
+#
+# commenting/ uncommenting some inputs so they don't cause issue
+inp_file['SUMMARY-PATH'].commented_out = True
+inp_file['OVERWRITE'].commented_out = False
+inp_file['FRAC-PRESS'].commented_out = True
+inp_file['OUTFLOW-SIDE'].commented_out = True
+inp_file['MANIFOLD'].commented_out = True
+inp_file['SOLVER'].commented_out = True
+#
+# running gas sim with PVT and no AVG_VISC
+inp_file['FLUID-VISCOSITY'].commented_out = True
+inp_file['FLUID-TYPE'].update_value('GAS')
+run_model_wrapper(inp_file)
+#
+# running liquid sim with no PVT, AVG_VISC and outlet rate control
+inp_file['PVT-PATH'].commented_out = True
+inp_file['FLUID-VISCOSITY'].commented_out = False
+inp_file['INLET-RATE'].commented_out = True
+inp_file['OUTLET-PRESS'].commented_out = True
+inp_file['FLUID-TYPE'].update_value('LIQUID')
+inp_file['INLET-PRESS'].update_value('2000000')
+inp_file['OUTLET-RATE'].update_value('1.0')
+run_model_wrapper(inp_file)
+#
+# running all four boundary sides with inlet rate control
+inp_file['INLET-PRESS'].commented_out = True
+inp_file['OUTLET-RATE'].commented_out = True
+inp_file['INLET-RATE'].update_value('1.0')
+inp_file['OUTLET-PRESS'].update_value('0.0')
+for side in ['TOP', 'BOTTOM', 'LEFT', 'RIGHT']:
+    inp_file['OUTLET-SIDE'].update_value(side)
+    run_model_wrapper(inp_file)
+#
+sys.exit(RETURN_CODE)

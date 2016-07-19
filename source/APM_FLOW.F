@@ -1,3 +1,8 @@
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
       SUBROUTINE FRAC_FLOW(BOK)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
@@ -12,68 +17,52 @@ C     SUBROUTINE CALLS: SOLVER, PS_TO_PR
 C
 C ---------------------------------------------------------------------
 C     VARIABLE DESCRIPTION:
-C       AD,AW,AC,AE,AU - THE DIAGONALS THAT MAKE UP THE SOLUTION MATRIX
-C       RES - RHS OF THE SOLTUION MATRIX, NET FLOW CHANGE THAT IS SOLVED FOR
 C       Q(1:4,:) - STORES THE STEADY STATE FLOW THROUGH A CELL IN ORDER OF LEFT,RIGHT,BOTTON,TOP
 C       Q(5,:) - STORES THE FINAL NET MASS GAIN/LOSS FOR A CELL
-C       QRIGHT,QLEFT,QTOP,QBOT - FLOW THROUGH A CELL IN THE GIVEN DIRECTION
 C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
 C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE PVT_MODULE, ONLY : PS_TO_PR
 C
       IMPLICIT NONE
-      REAL(8), ALLOCATABLE :: RES(:)
-      REAL(8), ALLOCATABLE :: AD(:),AW(:),AC(:),AE(:),AU(:)
-      REAL(8) :: QRIGHT,QLEFT,QTOP,QBOT
-      INTEGER :: I,IX,IZ,LB
+      INTEGER :: I,IX,IZ
       LOGICAL :: BOK
 C
-C     DEFINING VARIABLES
-      LB = NX*NZ
-C
-C     ALLOCATING VECTORS
-      ALLOCATE(AD(LB),AW(LB),AC(LB),AE(LB),AU(LB),RES(LB))
-C
-C     INITIALIZING COEFFICIENT DIAGONALS AND RHS VECTORS
-      AU(:)=0.0; AW(:)=0.0; AC(:)=0.0; AE(:)=0.0; AD(:)=0.0; RES(:)=0.0
-C
-C     SWEEPING GRID TO POPULATE COEFFICIENT DIAGONALS
-      I = 0
-      DO IZ = 1,NZ
-        DO IX = 1,NX
-          I = (IZ-1)*NX + IX
-          AC(I)  =  TRX(IZ,IX-1)+TRX(IZ,IX)+TRZ(IZ-1,IX)+TRZ(IZ,IX)
-          IF (AC(I) == 0.0) THEN
-            WRITE(CVAR,2000) I
-            CYCLE
-          END IF
-          AD(I)  = -TRZ(IZ-1,IX)
-          AW(I)  = -TRX(IZ,IX-1)
-          AE(I)  = -TRX(IZ,IX)
-          AU(I)  = -TRZ(IZ,IX)
-          QLEFT  = -TRX(IZ,IX-1)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ,IX-1))
-          QRIGHT = -TRX(IZ,IX)*(FRAC_PS(IZ,IX+1) - FRAC_PS(IZ,IX))
-          QBOT   = -TRZ(IZ-1,IX)*(FRAC_PS(IZ,IX) - FRAC_PS(IZ-1,IX))
-          QTOP   = -TRZ(IZ,IX)*(FRAC_PS(IZ+1,IX) - FRAC_PS(IZ,IX))
-          RES(I) = (QLEFT - QRIGHT) + (QBOT - QTOP)
-        END DO
-      END DO
-C
 C     SOLVING FOR STEADY STATE FLOW PRESSURE DISTRIBUTION
-      CALL SOLVER(AD,AW,AC,AE,AU,RES)
+      CALL SOLVER
 C
-C     UPDATING FRACTURE PRESSURE GRID WITH NEW PRESSURES
+C     HANDLING EACH OUTFLOW SIDE CASE TO SET BOUNDARY PRESSURES
+      IF (INDEX(OUTLET_SIDE,'LEFT') > 0) THEN
+        FRAC_PS(:,0) = OUTPSB !EXTRA LEFT COUMN
+        FRAC_PS(:,NX+1) = INLPSB !EXTRA RIGHT COLUMN
+        FRAC_PS(0,:) = INLPSB !EXTRA BOTTOM ROW
+        FRAC_PS(NZ+1,:) = INLPSB !EXTRA TOP ROW
+      ELSE IF (INDEX(OUTLET_SIDE,'RIGHT') > 0) THEN
+        FRAC_PS(:,0) = INLPSB !EXTRA LEFT COUMN
+        FRAC_PS(:,NX+1) = OUTPSB !EXTRA RIGHT COLUMN
+        FRAC_PS(0,:) = INLPSB !EXTRA BOTTOM ROW
+        FRAC_PS(NZ+1,:) = INLPSB !EXTRA TOP ROW
+      ELSE IF (INDEX(OUTLET_SIDE,'TOP') > 0) THEN
+        FRAC_PS(:,0) = INLPSB !EXTRA LEFT COUMN
+        FRAC_PS(:,NX+1) = INLPSB !EXTRA RIGHT COLUMN
+        FRAC_PS(0,:) = INLPSB !EXTRA BOTTOM ROW
+        FRAC_PS(NZ+1,:) = OUTPSB !EXTRA TOP ROW
+      ELSE IF (INDEX(OUTLET_SIDE,'BOTTOM') > 0) THEN
+        FRAC_PS(:,0) = INLPSB !EXTRA LEFT COUMN
+        FRAC_PS(:,NX+1) = INLPSB !EXTRA RIGHT COLUMN
+        FRAC_PS(0,:) = OUTPSB !EXTRA BOTTOM ROW
+        FRAC_PS(NZ+1,:) = INLPSB !EXTRA TOP ROW
+      END IF
+C
+      CALL PS_TO_PR(OUTPB,OUTPSB,BOK)
+      CALL PS_TO_PR(INLPB,INLPSB,BOK)
+C
+C     UPDATING FRACTURE INTERIOR GRID WITH NEW PRESSURES
       DO IZ = 1,NZ
         DO IX = 1,NX
-          ! CONVERTING PSEDUO-PRESSURE TO PRESSURE FOR GAS SIMULATIONS
-          IF (IFLUID == 1) THEN
-            CALL PS_TO_PR(FRAC_PR(IZ,IX),FRAC_PS(IZ,IX),BOK)
-            IF (.NOT. BOK) GOTO 1000
-          ELSE
-            FRAC_PR(IZ,IX) = FRAC_PS(IZ,IX)
-          END IF
+          CALL PS_TO_PR(FRAC_PR(IZ,IX),FRAC_PS(IZ,IX),BOK)
         END DO
       END DO
       IF (.NOT. BOK) GOTO 1000
@@ -95,7 +84,9 @@ C
 C
  1000 BOK = .FALSE.
       RETURN
-C
- 2000 FORMAT(2X,'ERROR - DIAGONAL ELEMENT ',I0,' IS EQUAL TO 0')
-C
       END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C

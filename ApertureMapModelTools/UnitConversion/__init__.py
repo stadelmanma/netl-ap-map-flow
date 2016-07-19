@@ -12,5 +12,5 @@ from .__UnitDecomposition__ import UnitDecomposition
 from .__converter_core__ import convert_value, get_conversion_factor
 from .__converter_core__ import convert_temperature
 #
-print('Notice - Unit conversion is largely case sensitive and conforms to' +
+print('Notice - Unit conversion is largely case sensitive and conforms to ' +
       'standard abbreviations and SI prefixes.')
