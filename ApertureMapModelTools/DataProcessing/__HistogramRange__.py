@@ -35,6 +35,7 @@ class HistogramRange(Histogram):
 
     """.format(usage)
     help_message += '-'*80+'\n'
+
     def __init__(self, field, **kwargs):
         super().__init__(field, **kwargs)
         self.output_key = 'hist'
