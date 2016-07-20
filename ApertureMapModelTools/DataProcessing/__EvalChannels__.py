@@ -17,6 +17,23 @@ class EvalChannels(BaseProcessor):
     of channels. More work needs to be done on this class to make it
     not dependent on a specfic direction.
     """
+    usage = 'eval_chans [flags] thresh=## dir=(x or z) files=file1,file2,..'
+    help_message = __doc__+'\n    '+'-'*80
+    help_message += r"""
+    Usage:
+        apm_process_data_map.py {}
+
+    Arguments:
+        thresh - minimum numeric value considered to be part of a flow channel
+        dir- (x or z) specifies which axis to export along
+        files- comma separated list of filenames
+
+    Outputs:
+        A file saved as (input_file)+'-channel_data-'+(dir)+'-axis'+(extension)
+
+    """.format(usage)
+    help_message += '-'*80+'\n'
+
     def __init__(self, field, **kwargs):
         super().__init__(field, **kwargs)
         self.output_key = 'eval_chan'
@@ -110,7 +127,9 @@ class EvalChannels(BaseProcessor):
         ldot = filename.rfind('.')
         #
         # naming ouput file
-        self.outfile_name = filename[:ldot]+'-channel_data'+filename[ldot:]
+        dir_ = self.args['dir'].upper()
+        name = filename[:ldot]+'-channel_data-'+dir_+'-axis'+filename[ldot:]
+        self.outfile_name = name
         #
         # outputting data
         content = 'Channelization data from file: '+self.infile+'\n'

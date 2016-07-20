@@ -12,7 +12,29 @@ from .__Histogram__ import Histogram
 
 
 class HistogramRange(Histogram):
+    r"""
+    Performs a histogram where the minimum and maximum bin limits are set
+    by percentiles and all values outside of that range are excluded. The
+    interior values are handled the same as a basic histogram with bin sizes
+    evenly spaced between the min and max percentiles given.
+    """
+    usage = 'hist_range [flags] num_bins=## range=##,## files=file1,file2,..'
+    help_message = __doc__+'\n    '+'-'*80
+    help_message += r"""
+    Usage:
+        apm_process_data_map.py {}
 
+    Arguments:
+        num_bins - integer value for the total number of bins
+        range - two numeric values to define the minimum and maximum
+            data percentiles.
+        files- comma separated list of filenames
+
+    Outputs:
+        A file saved as (input_file)+'-histogram_range'+(extension)
+
+    """.format(usage)
+    help_message += '-'*80+'\n'
     def __init__(self, field, **kwargs):
         super().__init__(field, **kwargs)
         self.output_key = 'hist'
@@ -28,7 +50,7 @@ class HistogramRange(Histogram):
                                   map_func=lambda x: float(x),
                                   min_num_vals=2,
                                   out_type='list',
-                                  expected='##, ##',
+                                  expected='##,##',
                                   err_desc_str='to have two numeric values')
         }
 

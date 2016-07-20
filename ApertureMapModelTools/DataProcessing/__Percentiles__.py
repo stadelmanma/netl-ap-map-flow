@@ -12,8 +12,24 @@ from .__BaseProcessor__ import BaseProcessor
 
 class Percentiles(BaseProcessor):
     r"""
-    Automatica method to calculate and nicely output a list of data precentiles
+    Automatic method to calculate and output a list of data percentiles
     """
+    usage = 'pctle [flags] perc=##,##,..,## files=file1,file2,..'
+    help_message = __doc__+'\n    '+'-'*80
+    help_message += r"""
+    Usage:
+        apm_process_data_map.py {}
+
+    Arguments:
+        perc - comma separated list of numbers, ex: perc=10,25,50,75,90
+        files- comma separated list of filenames
+
+    Outputs:
+        A file saved as (input_file)+'-percentiles'+(extension)
+
+    """.format(usage)
+    help_message += '-'*80+'\n'
+
     def __init__(self, field, **kwargs):
         super().__init__(field, **kwargs)
         self.output_key = 'perc'

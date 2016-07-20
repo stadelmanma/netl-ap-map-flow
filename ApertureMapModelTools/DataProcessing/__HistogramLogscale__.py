@@ -12,7 +12,28 @@ from .__Histogram__ import Histogram
 
 
 class HistogramLogscale(Histogram):
+    r"""
+    Performs a histogram where the bin limits are logarithmically spaced
+    based on the supplied scale factor. If there are negative values then
+    the first bin contains everything below 0, the next bin will contain
+    everything between 0 and 1.
+    """
+    usage = 'hist_logscale [flags] scale_fact=## files=file1,file2,..'
+    help_message = __doc__+'\n    '+'-'*80
+    help_message += r"""
+    Usage:
+        apm_process_data_map.py {}
 
+    Arguments:
+        scale_fact - numeric value to generate axis scale for bins. A
+            scale fact of 10 creates bins: 0-1, 1-10, 10-100, etc.
+        files- comma separated list of filenames
+
+    Outputs:
+        A file saved as (input_file)+'-histogram_logscale'+(extension)
+
+    """.format(usage)
+    help_message += '-'*80+'\n'
     def __init__(self, field, **kwargs):
         super().__init__(field, **kwargs)
         self.output_key = 'hist_logscale'
