@@ -6,8 +6,6 @@ import ApertureMapModelTools as apm
 #
 ########################################################################
 #
-dash_line = '-'*80
-
 desc_str = r"""
 Description: This program calls the desired class in the DataProcessing
           module and processes input files based on supplied parameters.
@@ -26,25 +24,10 @@ usage:
     apm_process_data_map [command] --help
 """
 
-flag_str = r"""
-flags:
-
-    -v or --verbose: "verbose mode", data and messages are printed to the screen
-
-    -w or --write: "write output", (default), ouputs data csv file(s)
-
-    -W or --no-write: "no-write", does not write data to an output file
-
-    -f or --force: "force/overwrite mode", allows program to overwrite an existing file
-
-    --help, prints this message and exits, use --help after a command to
-            get detailed information about that command.
-"""
-
 cmd_str = r"""
 commands:
-    eval_chans: "EvalChannels", processes the data to
-        the number and widths of channels present.
+    eval_chans: "EvalChannels", processes the data to determine
+        the number and widths of any channels present.
         (only really useful for flow data)
 
     hist: "Histogram", does a full min -> max val histogram of
@@ -53,28 +36,43 @@ commands:
     hist_range: "HistogramRange", does a histrogram for the
         provided percentile range, i.e. 10th - 90th percentile
 
-    hist_logscale: "HistogramLogscale" full range of data
+    hist_logscale: "HistogramLogscale" full range of data with logarithmic
+        bin sizes
 
-    profile: "Profile", outputs a vector of cells
-        in either the x or z direction straight from the data file. Location
-        is based on percentage from the bottom or left sides. i.e.
-        locs=10 will output a profile at 1cm if the axis is 10cm long.
+    profile: "Profile", outputs a vector of cells in either the x or z
+        direction straight from the data file. Location is based on percentage
+        from the bottom or left sides. i.e. locs=10,90 will output a profile
+        at 1cm and 9cm if the axis is 10cm long.
 
     pctle: "Percentiles", outputs one or more percentiles from the data map
 """
 
-sample_str = r"""
-sample inputs:
-    process_data_map.py hist -sw num_bins=100 file=test_file.csv
+flag_str = r"""
+flags:
 
-    process_data_map.py pctle -so perc=25,50,75 files=test_file1.csv,test_file2.txt
+    -v or --verbose: "verbose mode", data and messages are printed to the
+        screen
+
+    -w or --write: "write output", (default), ouputs data csv file(s)
+
+    -W or --no-write: "no-write", does not write data to an output file
+
+    -f or --force: "force/overwrite mode", allows program to overwrite an
+        existing file
+
+    --help, prints this message and exits, use --help after a command to
+            get detailed information about that command.
 """
 
-help_str = dash_line + desc_str
-help_str += dash_line + usage_str
-help_str += dash_line + flag_str
-help_str += dash_line + cmd_str
-help_str += dash_line + sample_str + dash_line
+sample_str = r"""
+sample inputs:
+    process_data_map.py hist num_bins=100 file=test_file.csv
+
+    process_data_map.py pctle -vW perc=25,50,75 files=test_file1.csv
+"""
+
+dash_line = '-'*80
+help_str = dash_line.join([desc_str, usage_str, cmd_str, flag_str, sample_str])
 #
 # dictionary to hold classes
 COMMANDS = {
@@ -91,7 +89,7 @@ FLAGS = {
     'v': False,
     'w': True,
     'W': False,
-    'help' : False
+    'help': False
 }
 # dictionary for handling extended flags in argument list
 EXT_FLAGS = {
@@ -99,7 +97,7 @@ EXT_FLAGS = {
     'verbose': 'v',
     'write': 'w',
     'no-write': 'W',
-    'help' : 'help'
+    'help': 'help'
 }
 #
 ########################################################################
@@ -109,8 +107,6 @@ def process_cargs(arg_dict):
     r"""
     Handles parsing of command line arguments
     """
-    #
-    global COMMANDS
     #
     # checking number of args to ensure something was given on the command line
     if (len(sys.argv) <= 1):
@@ -128,6 +124,7 @@ def process_cargs(arg_dict):
             dat_proc = COMMANDS[command]
         except KeyError:
             print('Invalid command provided: '+command)
+            print(usage_str)
             print(cmd_str)
             exit(1)
     #
@@ -160,9 +157,6 @@ def process_flags(flags_in, arg_dict):
     Handles setting flags given on the command line
     """
     #
-    global FLAGS
-    global EXT_FLAGS
-    #
     # turning flags_in into a list of flags
     if re.match('--', flags_in):
         flag_list = [re.match('--(.+)', flags_in).group(1)]
@@ -177,7 +171,8 @@ def process_flags(flags_in, arg_dict):
             arg_dict['flags'][EXT_FLAGS[flag]] = True
         else:
             print('Error - invalid flag: "'+flag+'" provided.')
-            print('Vald Flags are:\n'+flag_str)
+            print(usage_str)
+            print(flag_str)
             exit(1)
 
 #

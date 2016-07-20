@@ -26,9 +26,9 @@ class HistogramRange(Histogram):
 
     Arguments:
         num_bins - integer value for the total number of bins
-        range - two numeric values to define the minimum and maximum
+        range    - two numeric values to define the minimum and maximum
             data percentiles.
-        files- comma separated list of filenames
+        files    - comma separated list of filenames
 
     Outputs:
         A file saved as (input_file)+'-histogram_range'+(extension)

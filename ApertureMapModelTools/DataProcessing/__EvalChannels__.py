@@ -25,8 +25,8 @@ class EvalChannels(BaseProcessor):
 
     Arguments:
         thresh - minimum numeric value considered to be part of a flow channel
-        dir- (x or z) specifies which axis to export along
-        files- comma separated list of filenames
+        dir    - (x or z) specifies which axis to export along
+        files  - comma separated list of filenames
 
     Outputs:
         A file saved as (input_file)+'-channel_data-'+(dir)+'-axis'+(extension)

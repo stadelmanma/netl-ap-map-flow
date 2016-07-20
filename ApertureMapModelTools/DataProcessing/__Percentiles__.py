@@ -21,8 +21,8 @@ class Percentiles(BaseProcessor):
         apm_process_data_map.py {}
 
     Arguments:
-        perc - comma separated list of numbers, ex: perc=10,25,50,75,90
-        files- comma separated list of filenames
+        perc  - comma separated list of numbers, ex: perc=10,25,50,75,90
+        files - comma separated list of filenames
 
     Outputs:
         A file saved as (input_file)+'-percentiles'+(extension)

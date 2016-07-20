@@ -27,7 +27,7 @@ class HistogramLogscale(Histogram):
     Arguments:
         scale_fact - numeric value to generate axis scale for bins. A
             scale fact of 10 creates bins: 0-1, 1-10, 10-100, etc.
-        files- comma separated list of filenames
+        files      - comma separated list of filenames
 
     Outputs:
         A file saved as (input_file)+'-histogram_logscale'+(extension)

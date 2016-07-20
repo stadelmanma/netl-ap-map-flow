@@ -23,9 +23,9 @@ class Profile(BaseProcessor):
         apm_process_data_map.py {}
 
     Arguments:
-        locs - comma separated list of numbers, ex: locs=10,25,50,75,90
-        dir- (x or z) specifies which axis to export along
-        files- comma separated list of filenames
+        locs  - comma separated list of numbers, ex: locs=10,25,50,75,90
+        dir   - (x or z) specifies which axis to export along
+        files - comma separated list of filenames
 
     Outputs:
         A file saved as (input_file)+'-profiles-'+(dir)+'-axis'+(extension)
