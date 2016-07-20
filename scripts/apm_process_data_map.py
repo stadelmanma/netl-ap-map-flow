@@ -1,32 +1,47 @@
 #!/usr/bin/env python3
+import os
 import re
 import sys
 import ApertureMapModelTools as apm
 #
 ########################################################################
 #
-help_str = r"""
-------------------------------------------------------------------------
+dash_line = '-'*80
+
+desc_str = r"""
 Description: This program calls the desired class in the DataProcessing
           module and processes input files based on supplied parameters.
 
 Written By: Matthew stadelman
 Date Written: 2015/10/01
 Last Modfied: 2016/07/19
+"""
 
-------------------------------------------------------------------------
+usage_str = r"""
 usage:
     apm_process_data_map [command] [flags] [args] files=<file1,file2,...>
+  OR
+    apm_process_data_map --help
+  OR
+    apm_process_data_map [command] --help
+"""
 
+flag_str = r"""
 flags:
-    -so: "screen only output", instead of writing file(s) the data
-          will be output to the screen, in csv files commas become tabs
 
-    -sw: "screen and write output", prints data to screen and
-          ouptuts csv file(s)
+    -v or --verbose: "verbose mode", data and messages are printed to the screen
 
-    -ow: "overwrite", allows program to overwrite an existing file
+    -w or --write: "write output", (default), ouputs data csv file(s)
 
+    -W or --no-write: "no-write", does not write data to an output file
+
+    -f or --force: "force/overwrite mode", allows program to overwrite an existing file
+
+    --help, prints this message and exits, use --help after a command to
+            get detailed information about that command.
+"""
+
+cmd_str = r"""
 commands:
     eval_chans: "EvalChannels", processes the data to
         the number and widths of channels present.
@@ -46,37 +61,23 @@ commands:
         locs=10 will output a profile at 1cm if the axis is 10cm long.
 
     pctle: "Percentiles", outputs one or more percentiles from the data map
-
-command args:
-    eval_chans: thresh=## dir=(x or z)
-
-    hist: num_bins=###
-
-    hist_range: num_bins=### range=##,##
-
-    hist_logscale: num_bins=###
-
-    profile: locs=##1,##2,##3,...,##n dir=(x or z)
-
-    pctle: perc=##1,##2,##3,...,##n
-
-
-------------------------------------------------------------------------
-sample inputs:
-
-    process_data_map.py hist num_bins=100 file=test_file.csv
-
-    process_data_map.py pctle perc=25,50,75 files=test_file1.csv,test_file2.csv
-
-------------------------------------------------------------------------
 """
-#
-########################################################################
-#
-file_error = False
+
+sample_str = r"""
+sample inputs:
+    process_data_map.py hist -sw num_bins=100 file=test_file.csv
+
+    process_data_map.py pctle -so perc=25,50,75 files=test_file1.csv,test_file2.txt
+"""
+
+help_str = dash_line + desc_str
+help_str += dash_line + usage_str
+help_str += dash_line + flag_str
+help_str += dash_line + cmd_str
+help_str += dash_line + sample_str + dash_line
 #
 # dictionary to hold classes
-action_dict = {
+COMMANDS = {
     'eval_chans': apm.DataProcessing.EvalChannels,
     'hist': apm.DataProcessing.Histogram,
     'hist_logscale': apm.DataProcessing.HistogramLogscale,
@@ -85,62 +86,115 @@ action_dict = {
     'pctle': apm.DataProcessing.Percentiles
 }
 # dictionary for handling flags in argument list
-flag_dict = {
-    '-so': False,
-    '-sw': False,
+FLAGS = {
+    'f': False,
+    'v': False,
+    'w': True,
+    'W': False,
+    'help' : False
 }
+# dictionary for handling extended flags in argument list
+EXT_FLAGS = {
+    'force': 'f',
+    'verbose': 'v',
+    'write': 'w',
+    'no-write': 'W',
+    'help' : 'help'
+}
+#
+########################################################################
+
+
+def process_cargs(arg_dict):
+    r"""
+    Handles parsing of command line arguments
+    """
+    #
+    global COMMANDS
+    #
+    # checking number of args to ensure something was given on the command line
+    if (len(sys.argv) <= 1):
+        print('Error: This program requires command line arguments')
+        print(usage_str)
+        exit(1)
+    #
+    # getting command
+    command = sys.argv[1]
+    if command == '--help':
+        print(help_str)
+        exit(0)
+    else:
+        try:
+            dat_proc = COMMANDS[command]
+        except KeyError:
+            print('Invalid command provided: '+command)
+            print(cmd_str)
+            exit(1)
+    #
+    # processing remaining commandline arguments
+    for i in range(2, len(sys.argv)):
+        arg = sys.argv[i]
+        if (re.match('^--?\w', arg)):
+            process_flags(arg, arg_dict)
+        else:
+            # splitting arg into a key,value pair
+            kv_pair = arg.split('=')
+            if (len(kv_pair) < 2):
+                msg = 'Error - invalid argument: "'+arg+'" provided. '
+                msg += 'Required to have form of arg=values\n'
+                print(msg)
+                exit(1)
+            arg_dict[kv_pair[0]] = kv_pair[1]
+    #
+    # checking if a help argument was passed
+    if arg_dict['flags']['help']:
+        print('')
+        print(dat_proc.help_message)
+        exit(0)
+    #
+    return dat_proc
+
+
+def process_flags(flags_in, arg_dict):
+    r"""
+    Handles setting flags given on the command line
+    """
+    #
+    global FLAGS
+    global EXT_FLAGS
+    #
+    # turning flags_in into a list of flags
+    if re.match('--', flags_in):
+        flag_list = [re.match('--(.+)', flags_in).group(1)]
+    else:
+        flag_list = re.findall(r'\w', flags_in)
+    #
+    # checking flags existance
+    for flag in flag_list:
+        if (flag in FLAGS.keys()):
+            arg_dict['flags'][flag] = True
+        elif (flag in EXT_FLAGS.keys()):
+            arg_dict['flags'][EXT_FLAGS[flag]] = True
+        else:
+            print('Error - invalid flag: "'+flag+'" provided.')
+            print('Vald Flags are:\n'+flag_str)
+            exit(1)
+
+#
+########################################################################
+#
 # dictionary storing command line arguments
 arg_dict = {
     'delim': None,
-    'flag_list': []
+    'flags': {flag: val for flag, val in FLAGS.items()}
 }
-# list holding DataField objects
-data_fields = []
 #
-# checking number of args to ensure something was given on the command line
-if (len(sys.argv) <= 1):
-    print('Error: This program requires command line arguments')
-    print(r"""usage:
-    apm_process_data_map.py [command] [flags] [args] files=<file1,file2,...
-
-    use apm_process_data_map.py --help for more information""")
-    exit(1)
-#
-# getting command
-command = sys.argv[1]
-if command == '--help':
-    print(help_str)
-    exit(0)
-else:
-    try:
-        dat_proc = action_dict[command]
-    except KeyError:
-        action_error = True
-        print('Error - Invalid command provided. Valid commands are: ')
-        print('\t'+', '.join(action_dict.keys())+'\n')
-        exit(1)
-#
-# processing remaining commandline arguments
-for i in range(2, len(sys.argv)):
-    arg = sys.argv[i]
-    if (re.match('^-', arg)):
-        if (arg in flag_dict.keys()):
-            flag_dict[arg] = True
-            arg_dict['flag_list'].append(arg)
-        else:
-            print('Error - invalid flag: "'+arg+'" provided.')
-            exit(1)
-    else:
-        # splitting arg into a key,value pair
-        kv_pair = arg.split('=')
-        if (len(kv_pair) < 2):
-            msg = 'Error - invalid argument: "'+arg+'" provided. '
-            msg += 'Required to have form of arg=values\n'
-            print(msg)
-            exit(1)
-        arg_dict[kv_pair[0]] = kv_pair[1]
+# parsing the command line arguments
+dat_proc = process_cargs(arg_dict)
+print(arg_dict)
 #
 # checking files value
+file_error = False
 try:
     files = re.split(',', arg_dict['files'])
     files = [f for f in files if f]
@@ -150,14 +204,13 @@ except KeyError:
     file_error = True
     msg = 'Error - No input files provided. '
     msg += 'Final argument needs to be files=file1,file2,...,file_n\n'
-    print(msg)
 except IndexError:
     file_error = True
     msg = 'Error - file argument specified but no files listed. '
     msg += 'Check for spaces, valid format is: files=file1,file2,...,file_n\n'
-    print(msg)
 #
 if file_error:
+    print(msg)
     exit(1)
 #
 # processing data fields
@@ -166,6 +219,8 @@ data_processors = [dat_proc(field) for field in data_fields]
 print('')
 #
 for dat_proc in data_processors:
+    #
+    # checking if args passed validation test
     dat_proc.set_args(arg_dict)
     if not dat_proc.validated:
         print('')
@@ -173,18 +228,20 @@ for dat_proc in data_processors:
     #
     dat_proc.process()
     #
-    if (flag_dict['-so']):
-        # printing to screen only
+    # printing to screen
+    if (arg_dict['flags']['v']):
         dat_proc.gen_output(delim='\t')
         dat_proc.print_data()
-    elif (flag_dict['-sw']):
-        # printing and then writting data
-        dat_proc.gen_output(delim='\t')
-        dat_proc.print_data()
+    #
+    # writting data
+    if (arg_dict['flags']['w'] and not arg_dict['flags']['W']):
+        dat_proc.gen_output(delim=',')
+        exists = os.path.isfile(dat_proc.outfile_name)
+        if (exists and not arg_dict['flags']['f']):
+            msg = 'Error: Outfile - '+dat_proc.outfile_name+' already exists. '
+            msg += 'The -f or --force flags need to be added to allow'
+            msg += ' overwritting of an existing file.'
+            print(msg)
+            continue
         #
-        dat_proc.gen_output(delim=',')
-        dat_proc.write_data()
-    else:
-        # only writting data
-        dat_proc.gen_output(delim=',')
         dat_proc.write_data()
