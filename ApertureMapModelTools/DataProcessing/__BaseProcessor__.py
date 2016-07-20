@@ -14,6 +14,7 @@ class BaseProcessor:
     Only required parameter is a data field object, initializes properties
     defined by subclassses.
     """
+    help_message = 'Help message needs to be implemented by subclasses.'
 
     def __init__(self, field, **kwargs):
         field.copy_data(self)
