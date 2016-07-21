@@ -103,19 +103,48 @@ EXT_FLAGS = {
 ########################################################################
 
 
-def process_cargs(arg_dict):
+def eprint(*args, **kwargs):
     r"""
-    Handles parsing of command line arguments
+    Prints messages to stderr instead of stdout
+    """
+    print(*args, file=sys.stderr, **kwargs)
+
+
+def apm_process_data(carg_list):
+    r"""
+    Driver function to run the requried functions to process supplied files
+    using the requested DataProcessor class.
+    """
+    #
+    # dictionary storing command line arguments
+    arg_dict = {
+        'delim': None,
+        'flags': {flag: val for flag, val in FLAGS.items()}
+    }
+    #
+    # parsing the command line arguments
+    data_proc_cls = process_cargs(carg_list, arg_dict)
+    #
+    # checking files value
+    files = check_files_arg(arg_dict)
+    #
+    # processing data fields
+    process_files(arg_dict, data_proc_cls, files)
+
+
+def process_cargs(carg_list, arg_dict):
+    r"""
+    Handles parsing of the command line arguments
     """
     #
     # checking number of args to ensure something was given on the command line
-    if (len(sys.argv) <= 1):
-        print('Error: This program requires command line arguments')
-        print(usage_str)
+    if (len(carg_list) <= 1):
+        eprint('Error: This program requires command line arguments')
+        eprint(usage_str)
         exit(1)
     #
     # getting command
-    command = sys.argv[1]
+    command = carg_list[1]
     if command == '--help':
         print(help_str)
         exit(0)
@@ -123,14 +152,14 @@ def process_cargs(arg_dict):
         try:
             dat_proc = COMMANDS[command]
         except KeyError:
-            print('Invalid command provided: '+command)
-            print(usage_str)
-            print(cmd_str)
+            eprint('Invalid command provided: '+command)
+            eprint(usage_str)
+            eprint(cmd_str)
             exit(1)
     #
     # processing remaining commandline arguments
-    for i in range(2, len(sys.argv)):
-        arg = sys.argv[i]
+    for i in range(2, len(carg_list)):
+        arg = carg_list[i]
         if (re.match('^--?\w', arg)):
             process_flags(arg, arg_dict)
         else:
@@ -139,11 +168,11 @@ def process_cargs(arg_dict):
             if (len(kv_pair) < 2):
                 msg = 'Error - invalid argument: "'+arg+'" provided. '
                 msg += 'Required to have form of arg=values\n'
-                print(msg)
+                eprint(msg)
                 exit(1)
             arg_dict[kv_pair[0]] = kv_pair[1]
     #
-    # checking if a help argument was passed
+    # checking if a help argument was passedacts as a module otherwise.
     if arg_dict['flags']['help']:
         print('')
         print(dat_proc.help_message)
@@ -170,73 +199,77 @@ def process_flags(flags_in, arg_dict):
         elif (flag in EXT_FLAGS.keys()):
             arg_dict['flags'][EXT_FLAGS[flag]] = True
         else:
-            print('Error - invalid flag: "'+flag+'" provided.')
-            print(usage_str)
-            print(flag_str)
+            eprint('Error - invalid flag: "'+flag+'" provided.')
+            eprint(usage_str)
+            eprint(flag_str)
             exit(1)
 
+
+def check_files_arg(arg_dict):
+    r"""
+    Checks if files have been supplied and returns a list of them
+    """
+    file_error = False
+    try:
+        files = re.split(',', arg_dict['files'])
+        files = [f for f in files if f]
+        if (len(files) == 0):
+            raise IndexError
+    except KeyError:
+        file_error = True
+        msg = 'Error - No input files provided. '
+        msg += 'Final argument needs to be files=file1,file2,...,file_n\n'
+    except IndexError:
+        file_error = True
+        msg = 'Error - file argument specified but no files listed. '
+        msg += 'Check for spaces, valid format is: files=file1,file2,...,file_n\n'
+    #
+    if file_error:
+        eprint(msg)
+        exit(1)
+    #
+    return files
+
+
+def process_files(arg_dict, data_proc_cls, files):
+    r"""
+    Reads in each file into a DataField object and then passes it off
+    to the specified data processor class
+    """
+    data_fields = apm.load_infile_list(files)
+    data_processors = [data_proc_cls(field) for field in data_fields]
+    print('')
+    #
+    for data_proc in data_processors:
+        #
+        # checking if args passed validation test
+        data_proc.set_args(arg_dict)
+        if not data_proc.validated:
+            print('')
+            continue
+        #
+        data_proc.process()
+        #
+        # printing to screen
+        if (arg_dict['flags']['v']):
+            data_proc.gen_output(delim='\t')
+            data_proc.print_data()
+        #
+        # writting data
+        if (arg_dict['flags']['w'] and not arg_dict['flags']['W']):
+            data_proc.gen_output(delim=',')
+            exists = os.path.isfile(data_proc.outfile_name)
+            if (exists and not arg_dict['flags']['f']):
+                msg = 'Error: Outfile - {} already exists. '
+                msg += 'The -f or --force flags need to be added to allow'
+                msg += ' overwritting of an existing file.'
+                eprint(msg.format(data_proc.outfile_name))
+                continue
+            #
+            data_proc.write_data()
 #
 ########################################################################
 #
-# dictionary storing command line arguments
-arg_dict = {
-    'delim': None,
-    'flags': {flag: val for flag, val in FLAGS.items()}
-}
-#
-# parsing the command line arguments
-dat_proc = process_cargs(arg_dict)
-print(arg_dict)
-#
-# checking files value
-file_error = False
-try:
-    files = re.split(',', arg_dict['files'])
-    files = [f for f in files if f]
-    if (len(files) == 0):
-        raise IndexError
-except KeyError:
-    file_error = True
-    msg = 'Error - No input files provided. '
-    msg += 'Final argument needs to be files=file1,file2,...,file_n\n'
-except IndexError:
-    file_error = True
-    msg = 'Error - file argument specified but no files listed. '
-    msg += 'Check for spaces, valid format is: files=file1,file2,...,file_n\n'
-#
-if file_error:
-    print(msg)
-    exit(1)
-#
-# processing data fields
-data_fields = apm.load_infile_list(files)
-data_processors = [dat_proc(field) for field in data_fields]
-print('')
-#
-for dat_proc in data_processors:
-    #
-    # checking if args passed validation test
-    dat_proc.set_args(arg_dict)
-    if not dat_proc.validated:
-        print('')
-        continue
-    #
-    dat_proc.process()
-    #
-    # printing to screen
-    if (arg_dict['flags']['v']):
-        dat_proc.gen_output(delim='\t')
-        dat_proc.print_data()
-    #
-    # writting data
-    if (arg_dict['flags']['w'] and not arg_dict['flags']['W']):
-        dat_proc.gen_output(delim=',')
-        exists = os.path.isfile(dat_proc.outfile_name)
-        if (exists and not arg_dict['flags']['f']):
-            msg = 'Error: Outfile - '+dat_proc.outfile_name+' already exists. '
-            msg += 'The -f or --force flags need to be added to allow'
-            msg += ' overwritting of an existing file.'
-            print(msg)
-            continue
-        #
-        dat_proc.write_data()
+# Runs the function if being invoked directly, acts as a module otherwise.
+if __name__ == '__main__':
+    apm_process_data(sys.argv)
