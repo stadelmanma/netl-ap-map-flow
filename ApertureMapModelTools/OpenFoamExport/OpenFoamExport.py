@@ -3,17 +3,125 @@ This stores the basic classes and functions needed for the openFOAM export scrip
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/22
-Last Modifed: 2016/06/10
+Last Modifed: 2016/07/20
 #
 """
 #
+from collections import OrderedDict
 import os
 import re
 import scipy as sp
 #
 ########################################################################
 #
-# Class Definitions
+
+
+class OpenFoamDict(OrderedDict):
+    r"""
+    Class used to build the dictionary style OpenFoam input blocks
+    """
+    def __init__(self, dict_name, values=None):
+        r"""
+        Creates a FoamDict:
+          name - string printed at top of dictionary in files
+          values - any valid iterable that can be used to initialize
+              a dictionary
+        """
+        init_vals = {}
+        if values:
+            init_vals = values
+        #
+        super().__init__(init_vals)
+        self.name = dict_name
+
+    def __str__(self, indent=0):
+        r"""
+        Prints a formatted output readable by OpenFoam
+        """
+        fmt_str = '\t{}\t{};\n'
+        #
+        str_rep = ('\t'*indent) + self.name + '\n'
+        str_rep += ('\t'*indent) + '{\n'
+        #
+        for key, val in self.items():
+            if isinstance(val, OpenFoamDict):
+                str_rep += '\n'
+                str_rep += val.__str__(indent=(indent+1))
+            else:
+                val = str(val).replace(',',' ')
+                str_rep += ('\t'*indent) + fmt_str.format(key, val)
+        #
+        str_rep += ('\t'*indent) + '}\n'
+        #
+        return str_rep
+
+
+class OpenFoamFile(OrderedDict):
+    r"""
+    Class used to build OpenFoam input files
+    """
+    FOAM_HEADER = r"""
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  4.0                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+"""
+    FOAM_SPACER = r"""
+// ************************************************************************* //
+"""
+    HEAD_DICT = OpenFoamDict('FoamFile', [
+        ('version', 2.0),
+        ('format', 'ascii'),
+        ('class', 'dictionary'),
+        ('location', None),
+        ('object', None)
+    ])
+    # trimming off leading newlines
+    FOAM_HEADER = FOAM_HEADER[1:]
+    FOAM_SPACER = FOAM_SPACER[1:]
+
+    def __init__(self, location, object_name, class_name=None, values=None):
+        init_vals = {}
+        if values:
+            init_vals = values
+        #
+        # initializing head dict
+        super().__init__(init_vals)
+        self.head_dict = OpenFoamDict(OpenFoamFile.HEAD_DICT.name,
+                                      OpenFoamFile.HEAD_DICT.items())
+        #
+        # setting head dict values
+        if class_name:
+            self.head_dict['class'] = class_name
+        self.head_dict['location'] = '"' + location + '"'
+        self.head_dict['object'] = object_name
+
+    def __str__(self):
+        r"""
+        Prints a formatted OpenFoam input file
+        """
+        fmt_str = '{}\t{};\n\n'
+        #
+        str_rep = OpenFoamFile.FOAM_HEADER
+        str_rep += str(self.head_dict)
+        str_rep += OpenFoamFile.FOAM_SPACER
+        str_rep += '\n'
+        #
+        for key, val in self.items():
+            if isinstance(val, OpenFoamDict):
+                str_rep += '\n'
+                str_rep += str(val)
+            else:
+                val = str(val).replace(',', ' ')
+                str_rep += fmt_str.format(key, val)
+        #
+        str_rep += '\n'
+        str_rep += OpenFoamFile.FOAM_SPACER
+        #
+        return(str_rep)
 
 
 class OpenFoamExport(dict):
