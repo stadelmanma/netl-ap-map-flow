@@ -11,6 +11,27 @@ from .__BaseProcessor__ import BaseProcessor
 
 
 class Profile(BaseProcessor):
+    r"""
+    Automatic method to export data vectors for a range of distances
+    along a specified axis. Locations are given as percentages from the
+    bottom or left sides of the 2-D data map
+    """
+    usage = 'profile [flags] locs=##,##,..,## dir=(x or z) files=file1,file2,..'
+    help_message = __doc__+'\n    '+'-'*80
+    help_message += r"""
+    Usage:
+        apm_process_data_map.py {}
+
+    Arguments:
+        locs  - comma separated list of numbers, ex: locs=10,25,50,75,90
+        dir   - (x or z) specifies which axis to export along
+        files - comma separated list of filenames
+
+    Outputs:
+        A file saved as (input_file)+'-profiles-'+(dir)+'-axis'+(extension)
+
+    """.format(usage)
+    help_message += '-'*80+'\n'
 
     def __init__(self, field, **kwargs):
         super().__init__(field, **kwargs)

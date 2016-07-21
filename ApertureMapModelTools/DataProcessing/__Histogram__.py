@@ -12,6 +12,27 @@ from .__BaseProcessor__ import BaseProcessor
 
 
 class Histogram(BaseProcessor):
+    r"""
+    Performs a basic histogram of the data based on the number of bins
+    desired. The first bin contains all values below the 1st percentile
+    and the last bin contains all values above the 99th percentile to keep
+    axis scales from being bloated by extrema.
+    """
+    usage = 'hist [flags] num_bins=## files=file1,file2'
+    help_message = __doc__+'\n    '+'-'*80
+    help_message += r"""
+    Usage:
+        apm_process_data_map.py {}
+
+    Arguments:
+        num_bins - integer value for the total number of bins
+        files    - comma separated list of filenames
+
+    Outputs:
+        A file saved as (input_file)+'-histogram'+(extension)
+
+    """.format(usage)
+    help_message += '-'*80+'\n'
 
     def __init__(self, field, **kwargs):
         super().__init__(field, **kwargs)
