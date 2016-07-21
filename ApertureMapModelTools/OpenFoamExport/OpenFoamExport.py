@@ -1,5 +1,6 @@
 """
-This stores the basic classes and functions needed for the openFOAM export script
+This stores the basic classes and functions needed to generate an OpenFoam
+blockMeshDict and other associated files.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/22
@@ -22,7 +23,7 @@ class OpenFoamDict(OrderedDict):
     """
     def __init__(self, dict_name, values=None):
         r"""
-        Creates a FoamDict:
+        Creates an OpenFoamDict:
           name - string printed at top of dictionary in files
           values - any valid iterable that can be used to initialize
               a dictionary
@@ -44,14 +45,56 @@ class OpenFoamDict(OrderedDict):
         str_rep += ('\t'*indent) + '{\n'
         #
         for key, val in self.items():
-            if isinstance(val, OpenFoamDict):
+            if isinstance(val, (OpenFoamDict, OpenFoamTuple)):
                 str_rep += '\n'
                 str_rep += val.__str__(indent=(indent+1))
             else:
-                val = str(val).replace(',',' ')
+                val = str(val).replace(',', ' ')
                 str_rep += ('\t'*indent) + fmt_str.format(key, val)
         #
         str_rep += ('\t'*indent) + '}\n'
+        #
+        return str_rep
+
+
+class OpenFoamTuple(list):
+    r"""
+    Class used to build the output tuples used in blockMeshDict. ***Inherits
+    from a list instead so it is mutable.***
+
+    """
+    def __init__(self, tup_name, values=None):
+        r"""
+        Creates an OpenFoamTuple:
+          name - string printed at top of dictionary in files
+          values - any valid iterable that can be used to initialize
+              a list
+        """
+        init_vals = []
+        if values:
+            init_vals = values
+        #
+        super().__init__(init_vals)
+        self.name = tup_name
+
+    def __str__(self, indent=0):
+        r"""
+        Prints a formatted output readable by OpenFoam
+        """
+        fmt_str = '\t{}\n'
+        #
+        str_rep = ('\t'*indent) + self.name + '\n'
+        str_rep += ('\t'*indent) + '(\n'
+        #
+        for val in self:
+            if isinstance(val, (OpenFoamDict, OpenFoamTuple)):
+                str_rep += '\n'
+                str_rep += val.__str__(indent=(indent+1))
+            else:
+                val = str(val).replace(',', ' ')
+                str_rep += ('\t'*indent) + fmt_str.format(val)
+        #
+        str_rep += ('\t'*indent) + ');\n'
         #
         return str_rep
 
@@ -111,7 +154,7 @@ class OpenFoamFile(OrderedDict):
         str_rep += '\n'
         #
         for key, val in self.items():
-            if isinstance(val, OpenFoamDict):
+            if isinstance(val, (OpenFoamDict, OpenFoamTuple)):
                 str_rep += '\n'
                 str_rep += str(val)
             else:
@@ -294,7 +337,7 @@ class OpenFoamExport(dict):
 
     def write_mesh_file(self, path='.', create_dirs=True, overwrite=False):
         r"""
-        Creates the directories and the blockMeshDict file.
+        Writes a full blockMeshDict file based on stored geometry data
         """
         #
         # if create dirs then appending the required openFOAM directories
@@ -313,43 +356,32 @@ class OpenFoamExport(dict):
             msg += ' Specify "overwrite=True" to replace it'
             raise FileExistsError(msg)
         #
-        # creating file header
-        file_header = 'FoamFile\n{\n'
-        file_header += '    version     2.0;\n'
-        file_header += '    format      ascii;\n'
-        file_header += '    class       dictionary;\n'
-        file_header += '    object      blockMeshDict;\n}\n'
-        file_header += '// * * * * * * * * * * * * * * * * * * * * * * * * * *//\n\n'
-        file_header += 'convertToMeters '+(self['convertToMeters'] or '1.0')+';\n\n'
-        #
-        file_content = ''
+        # initializing the mesh file
+        mesh_file = OpenFoamFile('polyMesh', 'blockMeshDict')
+        mesh_file['convertToMeters '] = self['convertToMeters']
         #
         # writing verticies
-        file_content += 'vertices\n(\n'
+        oftup = OpenFoamTuple('vertices')
         for val in self._verticies:
             val = ['{:12.9F}'.format(v) for v in val]
-            val = ' '.join(val)
-            file_content += '('+val+')\n'
-        file_content += ');\n\n'
+            oftup.append('(' + ' '.join(val) + ')')
+        mesh_file[oftup.name] = oftup
         #
         # writing blocks
-        file_content += 'blocks\n(\n'
+        oftup = OpenFoamTuple('blocks')
         for val in self._blocks:
             val = ['{:7d}'.format(v) for v in val]
             val = ' '.join(val)
             val = 'hex ({0}) {1} {2}\n'.format(val, self['numbersOfCells'],
                                                self['cellExpansionRatios'])
-            file_content += val
-        file_content += ');\n\n'
+            oftup.append(val)
+        mesh_file[oftup.name] = oftup
         #
         # writing edges
-        file_content += 'edges\n(\n'
-        for val in self._edges:
-            pass
-        file_content += ');\n\n'
+        oftup = OpenFoamTuple('edges')
+        mesh_file[oftup.name] = oftup
         #
         # getting unique list of boundary faces defined
-        file_content += 'boundary\n(\n'
         bounds = []
         for key in self.keys():
             mat = re.match(r'boundary.(\w+)[.]?', key)
@@ -357,29 +389,26 @@ class OpenFoamExport(dict):
         bounds = set(bounds)
         #
         # writing boundaries
+        oftup = OpenFoamTuple('boundary')
         for side in bounds:
-            file_content += '    '+side+'\n    {\n'
-            file_content += '        type '+self['boundary.'+side+'.type']+';\n'
-            file_content += '        faces\n        (\n'
+            ofdict = OpenFoamDict(side)
+            ofdict['type'] = self['boundary.'+side+'.type']
+            ofdict['faces'] = OpenFoamTuple('faces')
             #
             for val in self._faces[self['boundary.'+side]]:
                 val = ['{:7d}'.format(v) for v in val]
-                val = ' '.join(val)
-                file_content += '            ('+val+')\n'
+                ofdict['faces'].append('(' + ' '.join(val) + ')')
             #
-            file_content += '        );\n'
-            file_content += '    }\n'
-        file_content += ');\n\n'
+            oftup.append(ofdict)
+        mesh_file[oftup.name] = oftup
         #
         # writing mergePatchPairs
-        file_content += 'mergePatchPairs\n(\n'
-        for val in self._mergePatchPairs:
-            pass
-        file_content += ');\n\n'
+        oftup = OpenFoamTuple('mergePatchPairs')
+        mesh_file[oftup.name] = oftup
         #
         # saving file
-        with open(fname, 'w') as mesh_file:
-            mesh_file.write(file_header)
-            mesh_file.write(file_content)
+        file_content = str(mesh_file)
+        with open(fname, 'w') as block_mesh_file:
+            block_mesh_file.write(file_content)
         #
         print('Mesh file saved as: '+fname)
