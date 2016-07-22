@@ -218,8 +218,6 @@ class OpenFoamFile(OrderedDict):
         foam_file_params = OrderedDict()
         while content:
             content = add_param(content, foam_file_params)
-            print(content)
-            print('\n\n')
         #
         # generating OpenFoamFile
         head_dict = foam_file_params.pop('FoamFile')
