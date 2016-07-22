@@ -7,9 +7,7 @@ Last Modifed: 2016/06/10
 #
 """
 #
-import os
 import pytest
-from ApertureMapModelTools.__core__ import DataField
 from ApertureMapModelTools.OpenFoamExport import OpenFoamExport
 
 
@@ -35,7 +33,7 @@ class TestOpenFoamExport:
             'boundary.front.type': 'wall',
             'boundary.back.type': 'wall'
         }
-        export = OpenFoamExport(self._field, avg_fact=10.0, export_params=params)
+        export = OpenFoamExport(self._field, avg_fact=10.0, mesh_params=params)
         export._edges = ['placeholder']
         export._mergePatchPairs = ['placeholder']
         export.write_mesh_file(TEMP_DIR, overwrite=True)
@@ -44,9 +42,9 @@ class TestOpenFoamExport:
         with pytest.raises(FileExistsError):
             export.write_mesh_file(TEMP_DIR, overwrite=False)
 
-    def test_export_upper_surface(self, data_field_class):
+    def test_write_symmetry_plane(self, data_field_class):
         #
         self._field = data_field_class()
         export = OpenFoamExport(self._field)
-        export.export_upper_surface(TEMP_DIR, overwrite=True)
+        export.write_symmetry_plane(TEMP_DIR, overwrite=True)
         #

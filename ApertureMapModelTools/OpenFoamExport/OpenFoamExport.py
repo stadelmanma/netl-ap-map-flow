@@ -479,7 +479,7 @@ class OpenFoamExport(dict):
         #
         print('Mesh file saved as: '+fname)
 
-    def generate_foam_files(self,*args):
+    def generate_foam_files(self, *args):
         r"""
         Generates open foam files and stores them on the export. Each argument
         must be an iterable acceptable to the dictionary constructor with
