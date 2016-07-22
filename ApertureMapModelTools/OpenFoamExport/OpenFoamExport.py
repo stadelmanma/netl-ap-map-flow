@@ -166,19 +166,83 @@ class OpenFoamFile(OrderedDict):
         #
         return(str_rep)
 
+    @staticmethod
+    def init_from_file(filename):
+        r"""
+        Reads an existing OpenFoam input file and returns an OpenFoamFile
+        instance. Comment lines are not retained.
+        """
+        #
+        def build_dict(content, match, out_obj):
+            r"""Recursive function used to build OpenFoamDicts"""
+            ofdict = OpenFoamDict(match.group(1))
+            content = content[match.end():]
+            #
+            while not re.match('^}', content):
+                content = add_param(content, ofdict)
+            #
+            content = re.sub('^}\n', '', content)
+            out_obj[ofdict.name] = ofdict
+            return content
+
+        def add_param(content, out_obj):
+            r"""Recursive function used to add params to dicts"""
+            dict_pat = re.compile(r'.*?(\w+)\s*\{\n')
+            match = dict_pat.match(content)
+            if match:
+                content = build_dict(content, match, out_obj)
+            else:
+                line = re.match('.*\n', content).group()
+                line = re.sub(';', '', line)
+                line = line.strip()
+                key, value = re.split('\s+', line, maxsplit=1)
+                #
+                # removing line from content
+                content = re.sub('^.*\n', '', content)
+                out_obj[key] = value
+            #
+            return content
+        #
+        # reading file
+        with open(filename, 'r') as file:
+            content = file.read()
+        #
+        # removing comments and other characters
+        comment = re.compile(r'(//.*?\n)|(/[*].*?[*]/)', flags=re.S)
+        content = comment.sub('', content)
+        content = re.sub('\n+', '\n', content)
+        content = re.sub('^\s*', '', content, flags=re.M)
+        content = re.sub('\n\s*$', '\n', content, flags=re.M)
+        #
+        # parsing content of file
+        foam_file_params = OrderedDict()
+        while content:
+            content = add_param(content, foam_file_params)
+            print(content)
+            print('\n\n')
+        #
+        # generating OpenFoamFile
+        head_dict = foam_file_params.pop('FoamFile')
+        foam_file = OpenFoamFile(re.sub('"', '', head_dict['location']),
+                                 head_dict['object'],
+                                 values=foam_file_params)
+        for key, value in head_dict.items():
+            foam_file.head_dict[key] = value
+        #
+        return foam_file
+
 
 class OpenFoamExport(dict):
     r"""
     A class to handle exporting an aperture map to an OpenFOAM blockMeshDict
     """
-    def __init__(self, field, avg_fact=1.0, export_params=None):
+    def __init__(self, field, avg_fact=1.0, mesh_params=None):
         r"""
         Takes a field object and a set of export params to set the
         properties of the blockMeshDict
         """
         #
-        # defining default parameters
-        super().__init__()
+        # defining default parameters and attributes
         default_params = {
             'convertToMeters': '1.0',
             'numbersOfCells': '(1 1 1)',
@@ -191,17 +255,19 @@ class OpenFoamExport(dict):
             'boundary.front.type': 'wall',
             'boundary.back.type': 'wall'
         }
-        for key, value in default_params.items():
-            self[key] = str(value)
+        super().__init__(default_params)
         #
+        self.foam_files = {}
         self.nx = None
         self.nz = None
         self.data_map = sp.array([])
         self.point_data = sp.array([])
+        #
+        # processing arguments
         field.create_point_data()
         field.copy_data(self)
-        if export_params is not None:
-            for key, value in export_params.items():
+        if mesh_params is not None:
+            for key, value in mesh_params.items():
                 self[key] = value
         self.point_data += 1E-6
         #
@@ -317,15 +383,15 @@ class OpenFoamExport(dict):
                 self['boundary.back'][i] = True
                 i += 1
 
-    def export_upper_surface(self, path='.', create_dirs=True, overwrite=False):
+    def write_symmetry_plane(self, path='.', create_dirs=True, overwrite=False):
         r"""
-        Exports the upper half of the mesh flattening out everything below 0 on
+        Exports the +Y half of the mesh flattening out everything below 0 on
         the Y axis
         """
         #
         # storing orginial verticies
         old_verts = sp.copy(self._verticies)
-        self._verticies[sp.where(self._verticies[:, 1] < 0.0), 1] = -1.0E-6
+        self._verticies[sp.where(self._verticies[:, 1] <= 0.0), 1] = 0.0
         #
         # outputting mesh
         self.write_mesh_file(path=path,
@@ -413,28 +479,65 @@ class OpenFoamExport(dict):
         #
         print('Mesh file saved as: '+fname)
 
-    def generate_constant_files(self,
-                                ras_props=None,
-                                trans_props=None,
-                                turb_props=None):
+    def generate_foam_files(self,*args):
         r"""
-        Generates three files and stores them on the export.
+        Generates open foam files and stores them on the export. Each argument
+        must be an iterable acceptable to the dictionary constructor with
+        two required keys - location and object, class_name is an optional
+        key. Those three keys are used to generate file header information.
 
-        Parameters:
-          ras_props - parameters for the RASProperties file
-          trans_props - parameters for the transportProperties file
-          turb_props - parameters for the turbulenceProperties file
+        The remaining entries in each arg are the desired parameters to put
+        in each file.
 
-        All three can be any valid iterable used to initialize a dictionary
+        Files are stored on the export object in a dictionary attribute called
+        'foam_files'. Keys in this dictionary have the format of
+        'location.object'.
         """
-        pass
+        #
+        # looping through args
+        for file in args:
+            # generating initial dict from iterable and getting required args
+            values = OrderedDict(file)
+            location = values.pop('location')
+            object_name = values.pop('object')
+            class_name = values.pop('class_name', None)
+            #
+            file = OpenFoamFile(location, object_name, class_name, values=values)
+            self.foam_files[location + '.' + object_name] = file
 
-    def write_constant_files(self, path='.', create_dirs=True, overwrite=False):
+    def write_foam_files(self, path='.', overwrite=False):
         r"""
         Writes the files generated by 'generate_constant_files' to a
         constants directory on the supplied path. If one doesn't exist then
         it is created
         """
-        pass
+        #
+        const_path = os.path.join(path, 'constant')
+        sys_path = os.path.join(path, 'system')
+        #
+        try:
+            os.makedirs(const_path)
+        except FileExistsError:
+            print('Using existing directories for provided path '+const_path)
+        #
+        try:
+            os.makedirs(sys_path)
+        except FileExistsError:
+            print('Using existing directories for provided path '+sys_path)
+        #
+        # writing files
+        for foam_file in self.foam_files.values():
+            fname = os.path.join(path,
+                                 re.sub('"', '', foam_file.head_dict['location']),
+                                 foam_file.head_dict['object'])
+            #
+            if not overwrite and os.path.exists(fname):
+                msg = 'Error - there is already a file at '+fname+'.'
+                msg += ' Specify "overwrite=True" to replace it'
+                raise FileExistsError(msg)
+            #
+            with open(fname, 'w') as file:
+                file.write(str(foam_file))
+            print(foam_file.head_dict['object']+' file saved as: '+fname)
 
 # I need to do the above for the system and 0 directory as well

@@ -7,4 +7,5 @@ Last Modifed: 2016/03/22
 #
 """
 #
-from .OpenFoamExport import OpenFoamExport
+from .OpenFoamExport import OpenFoamExport, OpenFoamFile, \
+                            OpenFoamDict, OpenFoamTuple
