@@ -152,7 +152,9 @@ class InputFile(OrderedDict):
         #
         if isinstance(infile, InputFile):
             content = infile.__repr__()
+            file_path = os.path.realpath(infile.outfile_name)
         else:
+            file_path = os.path.realpath(infile)
             with open(infile, 'r') as fname:
                 content = fname.read()
         #
@@ -164,8 +166,13 @@ class InputFile(OrderedDict):
             self[arg.keyword] = ArgInput(line)
         #
         try:
-            msg = 'Using executable defined in inital file header: '
-            print(msg + self['EXE-FILE'].value)
+            exe_path = self['EXE-FILE'].value
+            if not os.path.isabs(exe_path):
+                exe_path = os.path.join(os.path.split(file_path)[0], exe_path)
+                exe_path = os.path.realpath(exe_path)
+            if os.path.exists(exe_path):
+                self['EXE-FILE'].value = exe_path
+                # This is a good place for logger warning message if false
         except KeyError:
             msg = 'Fatal Error: '
             msg += 'No EXE-FILE specified in initialization file header.'
