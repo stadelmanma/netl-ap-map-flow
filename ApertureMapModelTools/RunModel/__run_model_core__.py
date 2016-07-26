@@ -6,6 +6,7 @@ Date Written: 2016/06/16
 Last Modifed: 2016/06/16
 #
 """
+from collections import OrderedDict
 import os
 import re
 from subprocess import PIPE
@@ -29,6 +30,7 @@ class ArgInput(object):
         self.keyword = ''
         self.value = line
         self.value_index = -1
+        self.unit = ''
         self.commented_out = False
         #
         # testing if line was commented out
@@ -55,6 +57,8 @@ class ArgInput(object):
                     try:
                         self.value = line_arr[ifld+1]
                         self.value_index = ifld+1
+                        if len(line_arr) > ifld + 2:
+                            self.unit = line_arr[ifld+2]
                     except IndexError:
                         self.value = 'NONE'
                         self.value_index = ifld+1
@@ -100,13 +104,12 @@ class AsyncCommunicate(Thread):
         self.popen_obj.stdout_content, self.popen_obj.stderr_content = out, err
 
 
-class InputFile(dict):
+class InputFile(OrderedDict):
     r"""
     Stores the data for an entire input file and methods to output one
     """
     def __init__(self, infile, filename_formats=None):
         self.filename_format_args = {}
-        self.arg_order = []
         self.RAM_req = 0.0
         self.outfile_name = 'FRACTURE_INITIALIZATION.INP'
         #
@@ -134,8 +137,8 @@ class InputFile(dict):
         #
         # builidng content from ArgInput class line attribute
         content = ''
-        for key in self.arg_order:
-            content += self[key].output_line()+'\n'
+        for value in self.values():
+            content += value.output_line()+'\n'
         #
         print('Input file would be saved as: '+self.outfile_name)
         #
@@ -158,7 +161,6 @@ class InputFile(dict):
         for line in content_arr:
             line = re.sub(r'^(;+)\s+', r'\1', line)
             arg = ArgInput(line)
-            self.arg_order.append(arg.keyword)
             self[arg.keyword] = ArgInput(line)
         #
         try:
@@ -249,8 +251,8 @@ class InputFile(dict):
         #
         # builidng content from ArgInput class line attribute
         content = ''
-        for key in self.arg_order:
-            content += self[key].output_line()+'\n'
+        for value in self.values():
+            content += value.output_line()+'\n'
         #
         file_name = self.outfile_name
         if alt_path:

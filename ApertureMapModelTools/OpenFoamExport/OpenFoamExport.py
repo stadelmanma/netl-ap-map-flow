@@ -193,7 +193,10 @@ class OpenFoamFile(OrderedDict):
                 line = re.match('.*\n', content).group()
                 line = re.sub(';', '', line)
                 line = line.strip()
-                key, value = re.split('\s+', line, maxsplit=1)
+                try:
+                    key, value = re.split('\s+', line, maxsplit=1)
+                except ValueError:
+                    key, value = line, ''
                 #
                 # removing line from content
                 content = re.sub('^.*\n', '', content)
@@ -204,6 +207,8 @@ class OpenFoamFile(OrderedDict):
         # reading file
         with open(filename, 'r') as file:
             content = file.read()
+            if not re.search('FoamFile', content):
+                raise ValueError('Invalid OpenFoam input file, no FoamFile dict')
         #
         # removing comments and other characters
         comment = re.compile(r'(//.*?\n)|(/[*].*?[*]/)', flags=re.S)
@@ -227,6 +232,13 @@ class OpenFoamFile(OrderedDict):
         return foam_file
 
 
+class BlockMeshDict(OpenFoamFile):
+    r"""
+    This is a special subclass of OpenFoamFile used to generate and output
+    a blockMeshDict for OpenFoam
+    """
+
+
 class OpenFoamExport(dict):
     r"""
     A class to handle exporting an aperture map to an OpenFOAM blockMeshDict
@@ -238,7 +250,7 @@ class OpenFoamExport(dict):
         """
         #
         # defining default parameters and attributes
-        default_params = {
+        default_mesh_params = {
             'convertToMeters': '1.0',
             'numbersOfCells': '(1 1 1)',
             'cellExpansionRatios': 'simpleGrading (1 1 1)',
@@ -250,7 +262,7 @@ class OpenFoamExport(dict):
             'boundary.front.type': 'wall',
             'boundary.back.type': 'wall'
         }
-        super().__init__(default_params)
+        super().__init__(default_mesh_params)
         #
         self.foam_files = {}
         self.nx = None
@@ -534,5 +546,3 @@ class OpenFoamExport(dict):
             with open(fname, 'w') as file:
                 file.write(str(foam_file))
             print(foam_file.head_dict['object']+' file saved as: '+fname)
-
-# I need to do the above for the system and 0 directory as well

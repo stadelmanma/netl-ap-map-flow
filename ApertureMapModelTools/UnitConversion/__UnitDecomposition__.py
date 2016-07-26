@@ -139,12 +139,24 @@ class UnitDecomposition(SI):
         #
         # processing the unit components
         for i, comp_str in enumerate(components):
+            # attempting initial string match
             try:
                 components[i], comp_factor = cls.parse_component_string(comp_str)
+                factor = factor * comp_factor
+                continue
             except (KeyError, ValueError):
+                pass
+            # converting string to lower case and re-attempting
+            try:
                 comp_str = comp_str.lower()
                 components[i], comp_factor = cls.parse_component_string(comp_str)
-            #
+                factor = factor * comp_factor
+                continue
+            except (KeyError, ValueError):
+                pass
+            # removing any plural suffixes in final attempt
+            comp_str = re.sub('es$|s$', '', comp_str)
+            components[i], comp_factor = cls.parse_component_string(comp_str)
             factor = factor * comp_factor
         #
         unit_list = []
