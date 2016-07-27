@@ -109,6 +109,8 @@ class InputFile(OrderedDict):
     Stores the data for an entire input file and methods to output one
     """
     def __init__(self, infile, filename_formats=None):
+        #
+        super().__init__()
         self.filename_format_args = {}
         self.RAM_req = 0.0
         self.outfile_name = 'FRACTURE_INITIALIZATION.INP'
