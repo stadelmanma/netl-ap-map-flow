@@ -46,7 +46,6 @@ map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
 inp_file['APER-MAP'].update_value(map_path)
 inp_file['OVERWRITE'].commented_out = True
 inp_file['BAD-INPUT'] = ArgInput('BAD-INPUT: VALUE')
-inp_file.arg_order.append('BAD-INPUT')
 #
 # running initial liquid sim with everything to set up base coverage
 run_model_wrapper(inp_file)
