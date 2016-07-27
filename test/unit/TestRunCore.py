@@ -46,12 +46,11 @@ class TestRunCore:
     def test_input_file(self):
         #
         inp_file = RunModel.InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
-        assert inp_file.arg_order
+        assert inp_file.keys()
         #
         # testing clone method
         inp_file2 = inp_file.clone()
-        assert [l for l in inp_file.arg_order if l] == [l for l in inp_file2.arg_order if l]
-        assert [inp_file[k].value for k in inp_file.arg_order if k] == [inp_file[k].value for k in inp_file2.arg_order if k]
+        assert [inp_file[k].value for k in inp_file.keys() if k] == [inp_file[k].value for k in inp_file2.keys() if k]
         #
         # creating instance of InputFil using an existing instance
         inp_file2 = RunModel.InputFile(inp_file)
@@ -71,7 +70,6 @@ class TestRunCore:
         del inp_file.filename_formats['NONEXISTANT-FILE']
         #
         # writing the output file to TEMP_DIR without an EXE-FILE and a directory needing created
-        del inp_file.arg_order[inp_file.arg_order.index('EXE-FILE')]
         del inp_file['EXE-FILE']
         inp_file.filename_formats['PVT-PATH'] = os.path.join(TEMP_DIR, 'new-dir', 'PVT/H2O_TEMP_058F.CSV')
         inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'

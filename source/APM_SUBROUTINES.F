@@ -254,6 +254,11 @@ C     READING IN FILE NAMES
           IF (NFLD < 2) GOTO 905
           PVT_FILE = CFLD(IFLD)
           PVT = .TRUE.
+        ELSE IF (INDEX(CFLD(1),'PVT-FILE') > 0) THEN
+          IFLD = 2
+          IF (NFLD < 2) GOTO 905
+          PVT_FILE = CFLD(IFLD)
+          PVT = .TRUE.
         ELSEIF (INDEX(CFLD(1),'APER-MAP') > 0) THEN
           IFLD = 3
           IF (NFLD < 3) GOTO 905

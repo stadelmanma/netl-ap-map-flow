@@ -32,7 +32,7 @@ With the DataField for the aperture map file created we can now instantiate the 
 
 .. code-block:: python
 
-    default_params = {
+    default_mesh_params = {
         'convertToMeters': '1.0',
         'numbersOfCells': '(1 1 1)',
         'cellExpansionRatios': 'simpleGrading (1 1 1)',
@@ -49,7 +49,7 @@ With the DataField for the aperture map file created we can now instantiate the 
 
 .. code-block:: python
 
-    my_params = {
+    my_mesh_params = {
         'convertToMeters': '2.680E-5',
         #
         'boundary.left.type': 'empty',
@@ -60,7 +60,7 @@ With the DataField for the aperture map file created we can now instantiate the 
         'boundary.back.type': 'wall'
     }
 
-    export = OpenFoamExport(aper_map_field, avg_fact=10.0, export_params=my_params)
+    export = OpenFoamExport(aper_map_field, avg_fact=10.0, mesh_params=my_mesh_params)
 
 The export stores the verticies, blocks, faces, edges and mergePatchPairs in scipy ndarrays as attributes of the class. They are accessible by typing :code:`export._verticies` or :code:`export._edges`, etc. The :code:`._edges` and :code:`._mergePatchPairs` arrays are not initialized by default and would need to be created. Face labels are stored as keys on the export class prefixed by 'boundary', for example :code:`export['boundary.bottom']` would return a boolean array and all indicies that are :code:`True` correspond to a 'bottom' face. If you need to add custom edges or mergePatchPairs then a valid list of strings representing them will need to be stored in the :code:`export._edges` and :code:`export._mergePatchPairs` arrays. The export does no additional processing on them so what you put is is exactly what will be output in those sections of the blockMeshDict file. For example to add in arc shaped edges you would need to store strings like this  :code:`'arc 1 5 (1.1 0.0 0.5)'` in the :code:`._edges` array. Each entry in the :code:`._edges` array should describe a single edge.
 
@@ -84,7 +84,7 @@ The template below can be used with some minor customization for simple exports.
     #
     # convertToMeters needs to be updated to match your data
     # numbersOfCells needs to be updated to match your desired internal block meshing
-    my_params = {
+    my_mesh_params = {
         'convertToMeters': '1.0',
         'numbersOfCells': '(1 1 1)',
         'cellExpansionRatios': 'simpleGrading (1 1 1)',
@@ -97,6 +97,6 @@ The template below can be used with some minor customization for simple exports.
         'boundary.back.type': 'wall'
     }
     #
-    export = OpenFoamExport(aper_map_field, avg_fact=1.0, export_params=my_params)
+    export = OpenFoamExport(aper_map_field, avg_fact=1.0, export_params=my_mesh_params)
     export.write_mesh_file(path='.', create_dirs=True, overwrite=False)
 
