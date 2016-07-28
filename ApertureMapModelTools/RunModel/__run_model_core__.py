@@ -9,6 +9,7 @@ Last Modifed: 2016/06/16
 from collections import OrderedDict
 import os
 import re
+from shlex import split as shlex_split
 from subprocess import PIPE
 from subprocess import Popen
 from threading import Thread
@@ -25,51 +26,70 @@ class ArgInput(object):
         Parses the line for the input key string and value
         """
         # inital values
-        self.line = line
         self.line_arr = []
         self.keyword = ''
-        self.value = line
         self.value_index = -1
         self.unit = ''
+        self.comment_msg = ''
         self.commented_out = False
         #
-        # testing if line was commented out
+        # removing semi-colon if whole line was commented out
+        line = line.strip()
         mat = re.match(r'^;(.*)', line)
         if mat:
+            line = mat.group(1)
             self.commented_out = True
-            self.line = mat.group(1)
-            self.value = mat.group(1)
         #
-        line_arr = re.split(r'\s', self.line)
-        line_arr = [l for l in line_arr if l]
-        if not line_arr:
-            line_arr = ['']
-        self.line_arr = line_arr
+        # removing any comments after occurring the value
+        mat = re.search(r';.*', line)
+        if mat:
+            self.comment_msg = line[mat.start():].strip()
+            line = line[:mat.start()]
         #
-        mat = re.match(r'[; ]*([a-zA-z, -]*)', line_arr[0])
-        self.keyword = mat.group(1)
+        self.line = line
+        self.value = line
+        try:
+            self.line_arr = shlex_split(line) or ['']
+        except ValueError:
+            # TODO: Add debug message here saying shlex failed
+            self.line_arr = re.split(r'\s+', line)
+            self.line_arr = [v for v in self.line_arr if v]
+        self.keyword = re.match(r'[a-zA-z_-]*', self.line).group()
         #
         # if line has a colon the field after it will be used as the value
         # otherwise the whole line is considered the value
-        if re.search(r':(:?\s|$)', self.line):
-            for ifld, field in enumerate(line_arr):
-                if re.search(r':$', field):
-                    try:
-                        self.value = line_arr[ifld+1]
-                        self.value_index = ifld+1
-                        if len(line_arr) > ifld + 2:
-                            self.unit = line_arr[ifld+2]
-                    except IndexError:
-                        self.value = 'NONE'
-                        self.value_index = ifld+1
-                        self.line_arr.append(self.value)
-                        self.line = ' '.join(self.line_arr)
+        if not re.search(r':(:?\s|$)', self.line):
+            return
+        #
+        for ifld, field in enumerate(self.line_arr):
+            if re.search(r':$', field):
+                try:
+                    self.value = self.line_arr[ifld+1]
+                    self.value_index = ifld+1
+                    if len(self.line_arr) > ifld + 2:
+                        self.unit = self.line_arr[ifld+2]
+                except IndexError:
+                    self.value = 'NONE'
+                    self.value_index = ifld+1
+                    self.line_arr.append(self.value)
+                    self.line = ' '.join(self.line_arr)
+
+    def __str__(self):
+        r"""
+        Returns an input line repsentation of the object
+        """
+        #
+        cmt = (';' if self.commented_out else '')
+        line = '{}{} {}'.format(cmt, self.line, self.comment_msg)
+        #
+        return line
 
     def update_value(self, new_value, uncomment=True):
         r"""
         Updates the line with the new value and uncomments the line by default
         """
         #
+        new_value = str(new_value)
         if uncomment:
             self.commented_out = False
         #
@@ -82,13 +102,7 @@ class ArgInput(object):
         self.value = new_value
 
     def output_line(self):
-        r"""
-        Returns and input line repsentation of the object
-        """
-        #
-        cmt = (';' if self.commented_out else '')
-        line = cmt + self.line
-        return line
+        return str(self)
 
 
 class AsyncCommunicate(Thread):
@@ -202,6 +216,19 @@ class InputFile(OrderedDict):
                 self[key].update_value(args[key])
             except KeyError:
                 self.filename_format_args[key] = args[key]
+
+    def get_uncommented_values(self):
+        r"""
+        Returns an OrderedDict of all args that are uncommented in
+        the input file. An ArgInput object is stored under each keyword.
+        """
+        #
+        arg_dict = OrderedDict()
+        for key, arg in self.items():
+            if not arg.commented_out:
+                arg_dict[key] = arg
+        #
+        return arg_dict
 
     def _construct_file_names(self, make_dirs=False):
         r"""

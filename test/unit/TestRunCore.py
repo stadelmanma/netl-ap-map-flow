@@ -35,7 +35,7 @@ class TestRunCore:
         arg = ArgInput(line)
         arg.update_value('OVERWRITE')
         line = arg.output_line()
-        assert line == 'OVERWRITE'
+        assert line.strip() == 'OVERWRITE'
         # line with colon but no following value
         line = 'INLET-PRESS: '
         arg = ArgInput(line)

@@ -161,8 +161,8 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
         #
         for key, val in self.items():
             if isinstance(val, OpenFoamObject):
-                str_rep += '\n'
                 str_rep += str(val)
+                str_rep += '\n'
             else:
                 val = str(val).replace(',', ' ')
                 str_rep += fmt_str.format(key, val)
@@ -243,6 +243,36 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
             foam_file.head_dict[key] = value
         #
         return foam_file
+
+    def write_foam_file(self, path='.', create_dirs=True, overwrite=False):
+        r"""
+        Writes out the foam file, adding proper location directory if
+        create_dirs is True
+        """
+        #
+        # if create_dirs then appending location directory to path
+        location = self.head_dict['location'].replace('"', '')
+        if create_dirs:
+            path = os.path.join(path, location)
+        #
+        try:
+            os.makedirs(path)
+        except FileExistsError:
+            pass
+        fname = os.path.join(path, self.head_dict['object'])
+        #
+        # checking if file exists
+        if not overwrite and os.path.exists(fname):
+            msg = 'Error - there is already a file at '+fname+'.'
+            msg += ' Specify "overwrite=True" to replace it'
+            raise FileExistsError(msg)
+        #
+        # saving file
+        file_content = str(self)
+        with open(fname, 'w') as foam_file:
+            foam_file.write(file_content)
+        #
+        print(self.head_dict['object'] + ' file saved as: '+fname)
 
 
 class BlockMeshDict(OpenFoamFile):
@@ -470,6 +500,12 @@ class BlockMeshDict(OpenFoamFile):
         oflist = OpenFoamList('mergePatchPairs')
         self[oflist.name] = oflist
 
+    def write_foam_file(self, path='.', create_dirs=True, overwrite=False):
+        r"""
+        Passes args off to write_mesh_file
+        """
+        self.write_mesh_file(path, create_dirs, overwrite)
+
     def write_mesh_file(self, path='.', create_dirs=True, overwrite=False):
         r"""
         Writes a full blockMeshDict file based on stored geometry data
@@ -482,7 +518,7 @@ class BlockMeshDict(OpenFoamFile):
         try:
             os.makedirs(path)
         except FileExistsError:
-            print('Using existing directory structure for provided path '+path)
+            pass
         fname = os.path.join(path, 'blockMeshDict')
         #
         # checking if file exists
@@ -567,18 +603,13 @@ class OpenFoamExport(dict):
         it is created
         """
         #
-        const_path = os.path.join(path, 'constant')
-        sys_path = os.path.join(path, 'system')
-        #
-        try:
-            os.makedirs(const_path)
-        except FileExistsError:
-            print('Using existing directories for provided path '+const_path)
-        #
-        try:
-            os.makedirs(sys_path)
-        except FileExistsError:
-            print('Using existing directories for provided path '+sys_path)
+        msg = 'Using existing directories for path {}'
+        for dir_ in ['constant', 'system', '0']:
+            dir_path = os.path.join(path, dir_)
+            try:
+                os.makedirs(dir_path)
+            except FileExistsError:
+                print(msg.format(dir_path))
         #
         # writing files
         for foam_file in self.foam_files.values():
