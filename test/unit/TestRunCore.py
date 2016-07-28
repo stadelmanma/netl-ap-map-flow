@@ -24,24 +24,37 @@ class TestRunCore:
         Testing various inputs to the argument parser
         """
         # regular input line
-        line = 'INLET-PRESS:   100  KPA'
+        line = 'INLET-PRESS:   100  KPA ;CMT-MSG'
         arg = ArgInput(line)
+        assert arg.keyword == 'INLET-PRESS'
         assert arg.value == '100'
+        assert arg.comment_msg == ';CMT-MSG'
         arg.update_value('200')
         assert arg.value == '200'
         #
         # commented regular line
         line = ';OVERWRITE EXISTING FILES'
         arg = ArgInput(line)
+        assert arg.commented_out is True
         arg.update_value('OVERWRITE')
+        assert arg.commented_out is False
         line = arg.output_line()
         assert line.strip() == 'OVERWRITE'
         # line with colon but no following value
         line = 'INLET-PRESS: '
         arg = ArgInput(line)
+        assert arg.value == 'NONE'
         # empty line
         line = ''
         arg = ArgInput(line)
+        # line with quote
+        line = 'KEYWORD: "VALUE1 + VALUE2"'
+        arg = ArgInput(line)
+        assert arg.value == 'VALUE1 + VALUE2'
+        # line with un-matched quote, causes shlex_split to fail
+        line = 'TEST: "UNMATCHED QUOTE'
+        arg = ArgInput(line)
+        assert arg.value == '"UNMATCHED'
 
     def test_input_file(self):
         #
@@ -62,6 +75,11 @@ class TestRunCore:
         inp_file.update_args(new_args)
         assert inp_file['INLET-PRESS'].value == new_args['INLET-PRESS']
         assert inp_file.filename_format_args['BAD-ARG'] == new_args['BAD-ARG']
+        #
+        # testing retrivial of uncommented values
+        uncmt_keys = [k for k, v in inp_file.items() if not v.commented_out]
+        uncmt_dict = inp_file.get_uncommented_values()
+        assert uncmt_keys == list(uncmt_dict.keys())
         #
         # testing __repr__ function with an undefined file in formats
         with pytest.raises(KeyError):

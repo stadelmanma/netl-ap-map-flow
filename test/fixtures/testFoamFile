@@ -10,82 +10,67 @@ FoamFile
     version     2.0;
     format      ascii;
     class       dictionary;
-    location    "system";
     object      testFoamFile;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     simpleFoam;
+keyword1     value1; //inline comment
 
-startFrom       latestTime;
+keyword2     value2;
 
-startTime       0;
+keyword3     value3;
 
-//
+// commented 1
 
-divSchemes
+
+toplevel_dict
 {
-    default         none;
-    div(phi,U)      bounded Gauss upwind;
-    div(phi,k)      bounded Gauss upwind;
-    div(phi,epsilon) bounded Gauss upwind;
-    div(phi,R)      bounded Gauss upwind;
-    div(R)          Gauss linear;
-    div(phi,nuTilda) bounded Gauss upwind;
-    div((nuEff*dev(T(grad(U))))) Gauss linear;
-    div((nuEff*dev2(T(grad(U))))) Gauss linear;
-}
-
-laplacianSchemes
-{
-    default         none;
-    laplacian(nuEff,U) Gauss linear corrected;
-    laplacian((1|A(U)),p) Gauss linear corrected;
-    laplacian(DkEff,k) Gauss linear corrected;
-    laplacian(DepsilonEff,epsilon) Gauss linear corrected;
-    laplacian(DREff,R) Gauss linear corrected;
-    laplacian(DnuTildaEff,nuTilda) Gauss linear corrected;
-}
-
-solvers
-{
-    p
+    nested_dict1
     {
-        solver                GAMG;
-        tolerance             1e-17;
-        relTol                0;
-        smoother              GaussSeidel;
-        nPreSweeps            2;
-        nPostSweeps           2;
-        cacheAgglomeration    on;
-        agglomerator          faceAreaPair;
-        nCellsInCoarsestLevel 10;
-        mergeLevels           1;
+        keyword1              value1;
+        keyword2             value2;
+        keyword3                value3;
     }
 
-    U
+    keyword2     value2
+
+    nest_dict3
     {
-        solver          smoothSolver;
-        tolerance       1e-17;
-        relTol          0;
-        smoother        GaussSeidel;
+        n3keyword1              n3value1;
+        n3keyword2             n3value2;
+        n3keyword3                n3value3;
     }
+
+    keyword4 value4
+    nested_list5
+    (
+        value1
+        value2
+        (v1 v2 v3)
+    );
+    keyword6 value5
 }
 
-SIMPLE
-{
-    nNonOrthogonalCorrectors 0;
-    pRefPoint                 (0 0 0);
-    pRefValue                3447380;
-
-    residualControl
+toplevel_list
+(
+    value1 [1,2,3] //inline comment 2
+    value2
+    nested_dict3
     {
-        p               1e-17;
-        U               1e-17;
+        keyword1 value1
     }
-}
+    nested_list4
+    (
+        n4value1
+        n4value2
+    );
+    value5
+);
 
-relaxationFactors
+// inline_cmt_keyword values
+
+/*
+toplevel_dict2
 {
     fields
     {
@@ -97,8 +82,8 @@ relaxationFactors
     }
 }
 
-distributed     no;
+blk_cmt_keyword     no;
 
 roots           ( );
-
+*/
 // ************************************************************************* //

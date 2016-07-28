@@ -223,10 +223,8 @@ class InputFile(OrderedDict):
         the input file. An ArgInput object is stored under each keyword.
         """
         #
-        arg_dict = OrderedDict()
-        for key, arg in self.items():
-            if not arg.commented_out:
-                arg_dict[key] = arg
+        args = [(key, arg) for key, arg in self.items() if not arg.commented_out]
+        arg_dict = OrderedDict(args)
         #
         return arg_dict
 

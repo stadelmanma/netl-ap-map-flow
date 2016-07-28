@@ -29,7 +29,7 @@ class OpenFoamDict(OpenFoamObject, OrderedDict):
     r"""
     Class used to build the dictionary style OpenFoam input blocks
     """
-    def __init__(self, dict_name, values=None):
+    def __init__(self, name, values=None):
         r"""
         Creates an OpenFoamDict:
           name - string printed at top of dictionary in files
@@ -41,7 +41,7 @@ class OpenFoamDict(OpenFoamObject, OrderedDict):
             init_vals = values
         #
         super().__init__(init_vals)
-        self.name = dict_name
+        self.name = name
 
     def __str__(self, indent=0):
         r"""
@@ -69,7 +69,7 @@ class OpenFoamList(OpenFoamObject, list):
     r"""
     Class used to build the output lists used in blockMeshDict.
     """
-    def __init__(self, tup_name, values=None):
+    def __init__(self, name, values=None):
         r"""
         Creates an OpenFoamList:
           name - string printed at top of dictionary in files
@@ -81,7 +81,7 @@ class OpenFoamList(OpenFoamObject, list):
             init_vals = values
         #
         super().__init__(init_vals)
-        self.name = tup_name
+        self.name = name
 
     def __str__(self, indent=0):
         r"""
@@ -188,15 +188,39 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
                 content = add_param(content, ofdict)
             #
             content = re.sub('^}\n', '', content)
-            out_obj[ofdict.name] = ofdict
+            if isinstance(out_obj, list):
+                out_obj.append(ofdict)
+            else:
+                out_obj[ofdict.name] = ofdict
+            #
+            return content
+
+        def build_list(content, match, out_obj):
+            r"""Recursive function used to build OpenFoamLists"""
+            oflist = OpenFoamList(match.group(1))
+            content = content[match.end():]
+            #
+            while not re.match('^\);', content):
+                content = add_param(content, oflist)
+            #
+            content = re.sub('^\);\n', '', content)
+            if isinstance(out_obj, list):
+                out_obj.append(oflist)
+            else:
+                out_obj[oflist.name] = oflist
+            #
             return content
 
         def add_param(content, out_obj):
-            r"""Recursive function used to add params to dicts"""
-            dict_pat = re.compile(r'.*?(\w+)\s*\{\n')
-            match = dict_pat.match(content)
-            if match:
-                content = build_dict(content, match, out_obj)
+            r"""Recursive function used to add params to OpenFoamObjects"""
+            dict_pat = re.compile(r'.*?(\w+)\n\{\n')
+            list_pat = re.compile(r'.*?(\w+)\n\(\n')
+            dict_match = dict_pat.match(content)
+            list_match = list_pat.match(content)
+            if dict_match:
+                content = build_dict(content, dict_match, out_obj)
+            elif list_match:
+                content = build_list(content, list_match, out_obj)
             else:
                 line = re.match('.*\n', content).group()
                 line = re.sub(';', '', line)
@@ -208,7 +232,10 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
                 #
                 # removing line from content
                 content = re.sub('^.*\n', '', content)
-                out_obj[key] = value
+                if isinstance(out_obj, list):
+                    out_obj.append(line)
+                else:
+                    out_obj[key] = value
             #
             return content
         #
@@ -219,8 +246,10 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
                 raise ValueError('Invalid OpenFoam input file, no FoamFile dict')
         #
         # removing comments and other characters
-        comment = re.compile(r'(//.*?\n)|(/[*].*?[*]/)', flags=re.S)
-        content = comment.sub('', content)
+        inline_comment = re.compile(r'(//.*)')
+        block_comment = re.compile(r'(/[*].*?[*]/)', flags=re.S)
+        content = inline_comment.sub('', content)
+        content = block_comment.sub('', content)
         content = re.sub('\s*$', '\n', content, flags=re.M)
         content = re.sub('^\s*', '', content, flags=re.M)
         #
@@ -603,24 +632,8 @@ class OpenFoamExport(dict):
         it is created
         """
         #
-        msg = 'Using existing directories for path {}'
-        for dir_ in ['constant', 'system', '0']:
-            dir_path = os.path.join(path, dir_)
-            try:
-                os.makedirs(dir_path)
-            except FileExistsError:
-                print(msg.format(dir_path))
-        #
         # writing files
         for foam_file in self.foam_files.values():
-            location = re.sub('"', '', foam_file.head_dict['location'])
-            fname = os.path.join(path, location, foam_file.head_dict['object'])
-            #
-            if not overwrite and os.path.exists(fname):
-                msg = 'Error - there is already a file at '+fname+'.'
-                msg += ' Specify "overwrite=True" to replace it'
-                raise FileExistsError(msg)
-            #
-            with open(fname, 'w') as file:
-                file.write(str(foam_file))
-            print(foam_file.head_dict['object']+' file saved as: '+fname)
+            foam_file.write_foam_file(path=path,
+                                      create_dirs=True,
+                                      overwrite=overwrite)
