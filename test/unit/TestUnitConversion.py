@@ -49,11 +49,11 @@ class TestUnitConversion:
             (0.0, 'C', 'F', 32.0),
             (459.67, 'R', 'F', 0.0),
             (1.0, 'psi', 'kN/m^2', 6.894755905511812),
-            (1.0, 'lbf', 'N', 4.44822072),
+            (1.0, 'LBF', 'N', 4.44822072),
             (1000.0, 'kilogram/meter^3', 'lbm/ft^3', 62.42795644724207),
             (1.0, 'cP', 'dyne*s/cm^2', 0.01),
             (10.0, 'P', 'pascal*second', 1.0),
-            (1000.0, 'micron', 'SI', 0.001)
+            (1000.0, 'MICRONS', 'SI', 0.001)
         ]
         #
         self._convertion_factor_test = [
@@ -117,7 +117,7 @@ class TestUnitConversion:
 
     def test_convert_all_units(self):
         r"""
-        Testing values returned bya general test of many conversions
+        Testing values returned by a general test of many conversions
         """
         for val_in, unit_in, unit_out, val_out in self.all_unit_test:
             val = UnitConversion.convert_value(val_in, unit_in, unit_out)

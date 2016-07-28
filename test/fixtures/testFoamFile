@@ -1,0 +1,89 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  2.2.2                                 |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      testFoamFile;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+keyword1     value1; //inline comment
+
+keyword2     value2;
+
+keyword3     value3;
+
+// commented 1
+
+
+toplevel_dict
+{
+    nested_dict1
+    {
+        keyword1              value1;
+        keyword2             value2;
+        keyword3                value3;
+    }
+
+    keyword2     value2
+
+    nest_dict3
+    {
+        n3keyword1              n3value1;
+        n3keyword2             n3value2;
+        n3keyword3                n3value3;
+    }
+
+    keyword4 value4
+    nested_list5
+    (
+        value1
+        value2
+        (v1 v2 v3)
+    );
+    keyword6 value5
+}
+
+toplevel_list
+(
+    value1 [1,2,3] //inline comment 2
+    value2
+    nested_dict3
+    {
+        keyword1 value1
+    }
+    nested_list4
+    (
+        n4value1
+        n4value2
+    );
+    value5
+);
+
+// inline_cmt_keyword values
+
+/*
+toplevel_dict2
+{
+    fields
+    {
+        p               0.3;
+    }
+    equations
+    {
+        U               0.7;
+    }
+}
+
+blk_cmt_keyword     no;
+
+roots           ( );
+*/
+// ************************************************************************* //

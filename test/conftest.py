@@ -1,6 +1,7 @@
-import pytest
+from collections import OrderedDict
 from os.path import join, dirname, realpath
 from os import mkdir
+import pytest
 from shutil import rmtree
 import scipy as sp
 
@@ -126,11 +127,12 @@ def input_file_class():
     the amount of data required for the real class this may not be applicable
     to use in all functions that require an InputFile object
     """
-    class PseudoInputFile(dict):
+    class PseudoInputFile(OrderedDict):
         r"""
         Setting up placeholder methods
         """
         def __init__(self):
+            super().__init__()
             self.filename_format_args = {}
             self.filename_formats = {
                 'input_file': 'FRACTURE_INITIALIZATION.INP'

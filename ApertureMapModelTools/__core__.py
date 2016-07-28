@@ -221,16 +221,16 @@ def files_from_directory(directory='.', pattern='.', deep=True):
                               universal_newlines=True)
         std_out, std_err = ls.communicate()
         content_arr = std_out.split('\n')
-        content_arr = [c.strip() for c in content_arr]
-        content_arr = filter(None, content_arr)
+        content_arr = [c.strip() for c in content_arr if c.strip()]
+        #
         for path in content_arr:
             pth = os.path.join(directory, path)
             pth = os.path.realpath(pth)
             if os.path.isdir(pth) and deep:
                 dirs.append(str(pth))
-            else:
-                if (pattern.search(pth)):
-                    files.append(pth)
+            elif os.path.isfile(pth) and pattern.search(pth):
+                files.append(pth)
+    #
     return files
 
 
