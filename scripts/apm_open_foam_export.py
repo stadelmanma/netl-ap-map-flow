@@ -161,7 +161,9 @@ def load_foam_files():
         of_file = None
         try:
             of_file = OpenFoamFile.init_from_file(file)
-            key = '{location}.{object}'.format(**of_file.head_dict)
+            name = os.path.basename(file)
+            location = os.path.split(os.path.dirname(file))[1]
+            key = '{0}.{1}'.format(location, name)
             key = key.replace('"', '')
             foam_files[key] = of_file
         except Exception as err:
