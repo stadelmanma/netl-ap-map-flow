@@ -422,13 +422,14 @@ def write_all_files(overwrite=False):
     file to the proper directory given by the namespace object
     """
     #
-    global namespace, export
+    global namespace, export, block_mesh
     overwrite = overwrite or namespace.force
     #
     try:
-        export.write_mesh_file(path=namespace.output_dir,
-                               create_dirs=True,
-                               overwrite=overwrite)
+        if block_mesh is not None:
+            block_mesh.write_mesh_file(path=namespace.output_dir,
+                                       create_dirs=True,
+                                       overwrite=overwrite)
         export.write_foam_files(path=namespace.output_dir, overwrite=overwrite)
     except FileExistsError as err:
         logging.fatal('Specify the "-f" flag to automatically overwrite files')
