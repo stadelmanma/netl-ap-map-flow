@@ -309,9 +309,12 @@ def generate_p_file():
         p_file['internalField'] = 'uniform 0'
         foam_files['0.p'] = p_file
     #
-    # creating boundaryField dict and registering it with the p file
-    bound_field = OpenFoamDict('boundaryField')
-    p_file[bound_field.name] = bound_field
+    # fetching boundary field dict
+    try:
+        bound_field = p_file['boundaryField']
+    except KeyError:
+        bound_field = OpenFoamDict('boundaryField')
+        p_file[bound_field.name] = bound_field
     #
     # setting initial values to zeroGradient for all sides
     for side in ['left', 'right', 'front', 'back', 'top', 'bottom']:
@@ -381,9 +384,12 @@ def generate_U_file():
         u_file['internalField'] = 'uniform (0 0 0)'
         foam_files['0.U'] = u_file
     #
-    # creating boundaryField dict and registering it with the U file
-    bound_field = OpenFoamDict('boundaryField')
-    u_file[bound_field.name] = bound_field
+    # fetching boundaryField dict
+    try:
+        bound_field = u_file['boundaryField']
+    except KeyError:
+        bound_field = OpenFoamDict('boundaryField')
+        u_file[bound_field.name] = bound_field
     #
     # setting up default values for all sides as no-slip bounds
     for side in ['left', 'right', 'front', 'back', 'top', 'bottom']:

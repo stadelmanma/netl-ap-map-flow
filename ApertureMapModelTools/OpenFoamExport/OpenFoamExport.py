@@ -334,58 +334,38 @@ class BlockMeshDict(OpenFoamFile):
         """
         super().__init__('polyMesh', 'blockMeshDict')
         #
+        # field attributes that are copied over
         self.nx = None
         self.nz = None
         self.data_map = sp.array([])
         self.point_data = sp.array([])
-        self.mesh_params = dict(BlockMeshDict.DEFAULT_PARAMS)
-        self._field = field
         #
-        # processing arguments
+        # native attributes
+        self._field = field
+        self.avg_fact = avg_fact
+        self.mesh_params = dict(BlockMeshDict.DEFAULT_PARAMS)
+        #
+        # copying data and updating params
         field.create_point_data()
         field.copy_data(self)
         if mesh_params is not None:
-            for key, value in mesh_params.items():
-                self.mesh_params[key] = value
+            self.mesh_params.update(mesh_params)
+        #
         self.point_data += 1E-6
-        #
-        # initializing required arrays
-        num_verts = 2*(self.nx - 1)*(self.nz - 1) + 4*(self.nx + self.nz)
-        num_faces = 6*self.data_map.size
-        #
-        self._verticies = -sp.ones((num_verts, 3), dtype=float)
-        self._blocks = -sp.ones((self.data_map.size, 8), dtype=int)
-        self._faces = -sp.ones((num_faces, 4), dtype=int)
-        self._edges = sp.ones(0, dtype=str)
-        self._mergePatchPairs = sp.ones(0, dtype=str)
-        #
-        # initializing boundary face labels
-        self.face_labels = {}
-        for side in ['left', 'right', 'top', 'bottom', 'front', 'back']:
-            key = 'boundary.'+side
-            self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
-        #
-        self._build_mesh(avg_fact)
+        self.generate_simple_mesh()
 
-    def _build_vert_map(self, block_mask=None):
+    def _create_blocks(self, cell_mask=None):
         r"""
-        Sets the verticies and returns a vertice map used to setup blocks.
-        block_mask is a boolean array in the shape of the data_map telling
-        the function what blocks to skip.
+        Sets up the verticies and blocks.
+
+            - cell_mask is a boolean array in the shape of the data_map
+        telling the function what blocks to skip.
+
+        The vert_map returned stores the 4 vertex indices that make up the
+        back surface and the front surface is '+ 1' the index of the
+        corresponding lower point.
         """
         #
-        # May be easiest to define blocks here as well since perodically
-        # I'll need to create extra points based on missing blocks
-        #
-        pass
-
-    def _build_mesh(self, avg_fact):
-        r"""
-        Handles population of the arrays and updating boundary face labels
-        """
-        #
-        # vert map stores the vertex number of the 4 points in lower surface
-        # the upper surface is + 1 the value of the corresponding lower point
         vert_map = sp.zeros((self.nz+1, self.nx+1, 4), dtype=int)
         #
         # building verticies and setting vert map
@@ -395,8 +375,8 @@ class BlockMeshDict(OpenFoamFile):
         iv = 2
         for iz in range(self.nz):
             for ix in range(self.nx):
-                xdist = (ix + 1.0) * avg_fact
-                zdist = (iz + 1.0) * avg_fact
+                xdist = (ix + 1.0) * self.avg_fact
+                zdist = (iz + 1.0) * self.avg_fact
                 #
                 if ix == 0:
                     ydist = self.point_data[iz, ix, 3]/2.0
@@ -427,79 +407,80 @@ class BlockMeshDict(OpenFoamFile):
                 iv += 1
         #
         # building block array
-        for iz in range(self.nz):
-            for ix in range(self.nx):
-                ib = iz * self.nx + ix
-                #
-                self._blocks[ib, 0] = vert_map[iz, ix, 0]      # back bottom left
-                self._blocks[ib, 1] = vert_map[iz, ix, 1]      # back bottom right
-                self._blocks[ib, 2] = vert_map[iz, ix, 1] + 1  # front bottom right
-                self._blocks[ib, 3] = vert_map[iz, ix, 0] + 1  # front bottom left
-                self._blocks[ib, 4] = vert_map[iz, ix, 3]      # back top left
-                self._blocks[ib, 5] = vert_map[iz, ix, 2]      # back top right
-                self._blocks[ib, 6] = vert_map[iz, ix, 2] + 1  # front top right
-                self._blocks[ib, 7] = vert_map[iz, ix, 3] + 1  # front top left
-        #
-        # building face arrays
-        offsets = {
-            'bottom': 0,
-            'back': 1,
-            'right': 2,
-            'front': 3,
-            'left': 4,
-            'top': 5,
-        }
-        for iz in range(self.nz):
-            ib = iz * self.nx
-            i = ib * 6 + offsets['left']
-            self._faces[i] = self._blocks[ib, [0, 3, 7, 4]]
-            self.face_labels['boundary.left'][i] = True
-        for iz in range(self.nz):
-            ib = iz * self.nx + (self.nx - 1)
-            i = ib * 6 + offsets['right']
-            self._faces[i] = self._blocks[ib, [1, 2, 6, 5]]
-            self.face_labels['boundary.right'][i] = True
-        for ix in range(self.nx):
-            ib = (self.nz - 1)*self.nx + ix
-            i = ib * 6 + offsets['top']
-            self._faces[i] = self._blocks[ib, [4, 5, 6, 7]]
-            self.face_labels['boundary.top'][i] = True
-        for ix in range(self.nx):
-            ib = ix
-            i = ib * 6 + offsets['bottom']
-            self._faces[i] = self._blocks[ib, [0, 1, 2, 3]]
-            self.face_labels['boundary.bottom'][i] = True
-        #
-        for iz in range(self.nz):
-            for ix in range(self.nx):
-                ib = iz * self.nx + ix
-                i = ib * 6 + offsets['front']
-                self._faces[i] = self._blocks[ib, [3, 2, 6, 7]]
-                self.face_labels['boundary.front'][i] = True
-        for iz in range(self.nz):
-            for ix in range(self.nx):
-                ib = iz * self.nx + ix
-                i = ib * 6 + offsets['back']
-                self._faces[i] = self._blocks[ib, [0, 1, 5, 4]]
-                self.face_labels['boundary.back'][i] = True
+        indices = [0, 1, 1, 0, 3, 2, 2, 3]
+        offsets = [0, 0, 1, 1, 0, 0, 1, 1]
+        for ib in range(self.nz * self.nx):
+            #
+            iz = int(ib/self.nx)
+            ix = ib % self.nx
+            self._blocks[ib] = vert_map[iz, ix, indices] + offsets
 
-    def write_symmetry_plane(self, path='.', create_dirs=True, overwrite=False):
+    def set_boundary_patches(self, boundary_blocks):
         r"""
-        Exports the +Y half of the mesh flattening out everything below 0 on
-        the Y axis
+        Sets up boundary patches based on the dictionary passed in. Does
+        not check for overlap in patch declarations.
+            - boundary_blocks dictionary has the format of:
+                  boundary_blocks[patch_name] = {
+                          side: [ block-list ],
+                      }
         """
         #
-        # storing orginial verticies
-        old_verts = sp.copy(self._verticies)
-        self._verticies[sp.where(self._verticies[:, 1] <= 0.0), 1] = 0.0
+        offsets = {
+            'bottom': (0, (0, 1, 2, 3)),
+            'back': (1, (0, 1, 5, 4)),
+            'right': (2, (1, 2, 6, 5)),
+            'front': (3, (3, 2, 6, 7)),
+            'left': (4, (0, 3, 7, 4)),
+            'top': (5, (4, 5, 6, 7)),
+        }
         #
-        # outputting mesh
-        self.write_mesh_file(path=path,
-                             create_dirs=create_dirs,
-                             overwrite=overwrite)
+        for patch_name, side_dict in boundary_blocks.items():
+            for side, blocks in side_dict.items():
+                indices = sp.array(blocks) * 6 + offsets[side][0]
+                face_verts = self._blocks[blocks][:, offsets[side][1]]
+                self._faces[indices] = face_verts
+                self.face_labels['boundary.'+patch_name][indices] = True
+
+    def generate_simple_mesh(self):
+        r"""
+        Handles population of the arrays and updating boundary face labels
+        """
         #
-        # restoring original verts
-        self._verticies = sp.copy(old_verts)
+        # initializing required arrays
+        num_verts = 2*(self.nx - 1)*(self.nz - 1) + 4*(self.nx + self.nz)
+        num_faces = 6*self.data_map.size
+        #
+        self._verticies = -sp.ones((num_verts, 3), dtype=float)
+        self._blocks = -sp.ones((self.data_map.size, 8), dtype=int)
+        self._faces = -sp.ones((num_faces, 4), dtype=int)
+        self._edges = sp.ones(0, dtype=str)
+        self._mergePatchPairs = sp.ones(0, dtype=str)
+        #
+        # initializing boundary face labels
+        self.face_labels = {}
+        for side in ['left', 'right', 'top', 'bottom', 'front', 'back']:
+            key = 'boundary.'+side
+            self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
+        #
+        # setting up blocks and verticies
+        self._create_blocks(cell_mask=None)
+        #
+        # building face arrays
+        boundary_dict = {
+            'bottom':
+                {'bottom': [ix for ix in range(self.nx)]},
+            'top':
+                {'top': [(self.nz-1)*self.nx + ix for ix in range(self.nx)]},
+            'left':
+                {'left': [iz*self.nx for iz in range(self.nz)]},
+            'right':
+                {'right': [iz*self.nx + (self.nx-1) for iz in range(self.nz)]},
+            'front':
+                {'front': [i for i in range(self.nx*self.nz)]},
+            'back':
+                {'back': [i for i in range(self.nx*self.nz)]},
+        }
+        self.set_boundary_patches(boundary_dict)
 
     def generate_mesh_file(self):
         r"""
@@ -509,14 +490,14 @@ class BlockMeshDict(OpenFoamFile):
         self['convertToMeters '] = self.mesh_params['convertToMeters']
         #
         # writing verticies
-        oflist = OpenFoamList('vertices\n{}\n'.format(len(self._verticies)))
+        oflist = OpenFoamList('vertices\n{}'.format(len(self._verticies)))
         for val in self._verticies:
             val = ['{:12.9F}'.format(v) for v in val]
             oflist.append('(' + ' '.join(val) + ')')
         self[oflist.name] = oflist
         #
         # writing blocks
-        oflist = OpenFoamList('blocks\n{}\n'.format(len(self._blocks)))
+        oflist = OpenFoamList('blocks\n{}'.format(len(self._blocks)))
         fmt = 'hex ({0}) {numbersOfCells} {cellExpansionRatios}\n'
         for val in self._blocks:
             val = ['{:7d}'.format(v) for v in val]
@@ -537,12 +518,12 @@ class BlockMeshDict(OpenFoamFile):
         bounds = set(bounds)
         #
         # writing boundaries
-        oflist = OpenFoamList('boundary\n{}\n'.format(len(bounds)))
+        oflist = OpenFoamList('boundary\n{}'.format(len(bounds)))
         for side in bounds:
             ofdict = OpenFoamDict(side)
             side_faces = self._faces[self.face_labels['boundary.'+side]]
             ofdict['type'] = self.mesh_params['boundary.'+side+'.type']
-            ofdict['faces'] = OpenFoamList('faces\n{}\n'.format(len(side_faces)))
+            ofdict['faces'] = OpenFoamList('faces\n\t\t{}'.format(len(side_faces)))
             #
             for val in side_faces:
                 val = ['{:7d}'.format(v) for v in val]
@@ -591,6 +572,24 @@ class BlockMeshDict(OpenFoamFile):
             block_mesh_file.write(file_content)
         #
         print('Mesh file saved as: '+fname)
+
+    def write_symmetry_plane(self, path='.', create_dirs=True, overwrite=False):
+        r"""
+        Exports the +Y half of the mesh flattening out everything below 0 on
+        the Y axis
+        """
+        #
+        # storing orginial verticies
+        old_verts = sp.copy(self._verticies)
+        self._verticies[sp.where(self._verticies[:, 1] <= 0.0), 1] = 0.0
+        #
+        # outputting mesh
+        self.write_mesh_file(path=path,
+                             create_dirs=create_dirs,
+                             overwrite=overwrite)
+        #
+        # restoring original verts
+        self._verticies = sp.copy(old_verts)
 
 
 class OpenFoamExport(dict):
