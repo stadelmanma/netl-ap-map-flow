@@ -423,7 +423,7 @@ def write_all_files(overwrite=False):
         export.write_mesh_file(path=namespace.output_dir,
                                create_dirs=True,
                                overwrite=overwrite)
-        export.write_foam_files(path=namespace.output_dir,overwrite=overwrite)
+        export.write_foam_files(path=namespace.output_dir, overwrite=overwrite)
     except FileExistsError as err:
         logging.fatal('Specify the "-f" flag to automatically overwrite files')
         raise err
