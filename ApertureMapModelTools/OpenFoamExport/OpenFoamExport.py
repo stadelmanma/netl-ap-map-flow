@@ -309,32 +309,34 @@ class BlockMeshDict(OpenFoamFile):
     This is a special subclass of OpenFoamFile used to generate and output
     a blockMeshDict for OpenFoam
     """
+    #
+    # defining default parameters and attributes
+    DEFAULT_PARAMS = {
+        'convertToMeters': '1.0',
+        'numbersOfCells': '(1 1 1)',
+        'cellExpansionRatios': 'simpleGrading (1 1 1)',
+        #
+        'boundary.left.type': 'wall',
+        'boundary.right.type': 'wall',
+        'boundary.top.type': 'wall',
+        'boundary.bottom.type': 'wall',
+        'boundary.front.type': 'wall',
+        'boundary.back.type': 'wall'
+    }
+
     def __init__(self, field, avg_fact=1.0, mesh_params=None):
         r"""
         Takes a field object and a set of mesh params to set the
         properties of the blockMeshDict
         """
-        #
-        # defining default parameters and attributes
-        default_mesh_params = {
-            'convertToMeters': '1.0',
-            'numbersOfCells': '(1 1 1)',
-            'cellExpansionRatios': 'simpleGrading (1 1 1)',
-            #
-            'boundary.left.type': 'wall',
-            'boundary.right.type': 'wall',
-            'boundary.top.type': 'wall',
-            'boundary.bottom.type': 'wall',
-            'boundary.front.type': 'wall',
-            'boundary.back.type': 'wall'
-        }
         super().__init__('polyMesh', 'blockMeshDict')
         #
         self.nx = None
         self.nz = None
         self.data_map = sp.array([])
         self.point_data = sp.array([])
-        self.mesh_params = default_mesh_params
+        self.mesh_params = dict(BlockMeshDict.DEFAULT_PARAMS)
+        self._field = field
         #
         # processing arguments
         field.create_point_data()
@@ -361,6 +363,18 @@ class BlockMeshDict(OpenFoamFile):
             self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
         #
         self._build_mesh(avg_fact)
+
+    def _build_vert_map(self, block_mask=None):
+        r"""
+        Sets the verticies and returns a vertice map used to setup blocks.
+        block_mask is a boolean array in the shape of the data_map telling
+        the function what blocks to skip.
+        """
+        #
+        # May be easiest to define blocks here as well since perodically
+        # I'll need to create extra points based on missing blocks
+        #
+        pass
 
     def _build_mesh(self, avg_fact):
         r"""
@@ -425,6 +439,14 @@ class BlockMeshDict(OpenFoamFile):
         #
         # building face arrays
         i = 0
+        offsets = {
+            'bottom': 0,
+            'back': 1,
+            'right': 2,
+            'front': 3,
+            'left': 4,
+            'top': 5,
+        }
         for iz in range(self.nz):
             ib = iz * self.nx
             self._faces[i] = self._blocks[ib, [0, 3, 7, 4]]
