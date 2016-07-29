@@ -441,7 +441,6 @@ class BlockMeshDict(OpenFoamFile):
                 self._blocks[ib, 7] = vert_map[iz, ix, 3] + 1  # front top left
         #
         # building face arrays
-        i = 0
         offsets = {
             'bottom': 0,
             'back': 1,
@@ -452,36 +451,37 @@ class BlockMeshDict(OpenFoamFile):
         }
         for iz in range(self.nz):
             ib = iz * self.nx
+            i = ib * 6 + offsets['left']
             self._faces[i] = self._blocks[ib, [0, 3, 7, 4]]
             self.face_labels['boundary.left'][i] = True
-            i += 1
         for iz in range(self.nz):
             ib = iz * self.nx + (self.nx - 1)
+            i = ib * 6 + offsets['right']
             self._faces[i] = self._blocks[ib, [1, 2, 6, 5]]
             self.face_labels['boundary.right'][i] = True
-            i += 1
         for ix in range(self.nx):
             ib = (self.nz - 1)*self.nx + ix
+            i = ib * 6 + offsets['top']
             self._faces[i] = self._blocks[ib, [4, 5, 6, 7]]
             self.face_labels['boundary.top'][i] = True
-            i += 1
         for ix in range(self.nx):
             ib = ix
+            i = ib * 6 + offsets['bottom']
             self._faces[i] = self._blocks[ib, [0, 1, 2, 3]]
             self.face_labels['boundary.bottom'][i] = True
-            i += 1
+        #
         for iz in range(self.nz):
             for ix in range(self.nx):
                 ib = iz * self.nx + ix
+                i = ib * 6 + offsets['front']
                 self._faces[i] = self._blocks[ib, [3, 2, 6, 7]]
                 self.face_labels['boundary.front'][i] = True
-                i += 1
         for iz in range(self.nz):
             for ix in range(self.nx):
                 ib = iz * self.nx + ix
+                i = ib * 6 + offsets['back']
                 self._faces[i] = self._blocks[ib, [0, 1, 5, 4]]
                 self.face_labels['boundary.back'][i] = True
-                i += 1
 
     def write_symmetry_plane(self, path='.', create_dirs=True, overwrite=False):
         r"""
@@ -509,14 +509,14 @@ class BlockMeshDict(OpenFoamFile):
         self['convertToMeters '] = self.mesh_params['convertToMeters']
         #
         # writing verticies
-        oflist = OpenFoamList('vertices')
+        oflist = OpenFoamList('vertices\n{}\n'.format(len(self._verticies)))
         for val in self._verticies:
             val = ['{:12.9F}'.format(v) for v in val]
             oflist.append('(' + ' '.join(val) + ')')
         self[oflist.name] = oflist
         #
         # writing blocks
-        oflist = OpenFoamList('blocks')
+        oflist = OpenFoamList('blocks\n{}\n'.format(len(self._blocks)))
         fmt = 'hex ({0}) {numbersOfCells} {cellExpansionRatios}\n'
         for val in self._blocks:
             val = ['{:7d}'.format(v) for v in val]
@@ -537,13 +537,14 @@ class BlockMeshDict(OpenFoamFile):
         bounds = set(bounds)
         #
         # writing boundaries
-        oflist = OpenFoamList('boundary')
+        oflist = OpenFoamList('boundary\n{}\n'.format(len(bounds)))
         for side in bounds:
             ofdict = OpenFoamDict(side)
+            side_faces = self._faces[self.face_labels['boundary.'+side]]
             ofdict['type'] = self.mesh_params['boundary.'+side+'.type']
-            ofdict['faces'] = OpenFoamList('faces')
+            ofdict['faces'] = OpenFoamList('faces\n{}\n'.format(len(side_faces)))
             #
-            for val in self._faces[self.face_labels['boundary.'+side]]:
+            for val in side_faces:
                 val = ['{:7d}'.format(v) for v in val]
                 ofdict['faces'].append('(' + ' '.join(val) + ')')
             #
