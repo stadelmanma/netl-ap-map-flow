@@ -139,6 +139,7 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
         #
         # initializing head dict
         super().__init__(init_vals)
+        self.name = object_name
         self.head_dict = OpenFoamDict(OpenFoamFile.HEAD_DICT.name,
                                       OpenFoamFile.HEAD_DICT.items())
         #
@@ -243,7 +244,8 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
         with open(filename, 'r') as file:
             content = file.read()
             if not re.search('FoamFile', content):
-                raise ValueError('Invalid OpenFoam input file, no FoamFile dict')
+                msg = 'Invalid OpenFoam input file, no FoamFile dict'
+                raise ValueError(msg)
         #
         # removing comments and other characters
         inline_comment = re.compile(r'(//.*)')
@@ -268,6 +270,7 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
         foam_file = OpenFoamFile(location,
                                  head_dict['object'],
                                  values=foam_file_params)
+        foam_file.name = os.path.basename(filename)
         for key, value in head_dict.items():
             foam_file.head_dict[key] = value
         #
@@ -288,7 +291,7 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
             os.makedirs(path)
         except FileExistsError:
             pass
-        fname = os.path.join(path, self.head_dict['object'])
+        fname = os.path.join(path, self.name)
         #
         # checking if file exists
         if not overwrite and os.path.exists(fname):
