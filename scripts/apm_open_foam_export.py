@@ -166,7 +166,9 @@ def load_foam_files():
             foam_files[key] = of_file
         except Exception as err:
             msg = 'Skipping file: {} - {}: {}'
-            msg = msg.format(os.path.relpath(file), err.__class__.__name__, str(err))
+            msg = msg.format(os.path.relpath(file),
+                             err.__class__.__name__,
+                             str(err))
             logging.debug(msg)
     export.foam_files = foam_files
 
@@ -261,7 +263,9 @@ def load_inp_file():
     }
     #
     # creating blockMeshDict file
-    block_mesh = BlockMeshDict(map_data_field, sim_params['avg_fact'], mesh_params)
+    block_mesh = BlockMeshDict(map_data_field,
+                               sim_params['avg_fact'],
+                               mesh_params)
     export.block_mesh_dict = block_mesh
 
 
@@ -335,7 +339,7 @@ def generate_U_file():
     """
     #
     global namespace, map_data_field
-    #
+
     def calc_velocity(vol_flow, side):
         r"""Calculates the velocity field for a rate BC"""
         #
@@ -423,7 +427,7 @@ def write_all_files(overwrite=False):
         export.write_mesh_file(path=namespace.output_dir,
                                create_dirs=True,
                                overwrite=overwrite)
-        export.write_foam_files(path=namespace.output_dir,overwrite=overwrite)
+        export.write_foam_files(path=namespace.output_dir, overwrite=overwrite)
     except FileExistsError as err:
         logging.fatal('Specify the "-f" flag to automatically overwrite files')
         raise err
