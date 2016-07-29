@@ -316,15 +316,17 @@ def generate_p_file():
     # adding any BCs
     if namespace.sim_params['inlet_p'] is not None:
         value = namespace.sim_params['inlet_p']
+        value = 'uniform {}'.format(value/namespace.sim_params['fluid_dens'])
         side = namespace.sim_params['inlet']
         bound_field[side]['type'] = 'fixedValue'
-        bound_field[side]['value'] = value/namespace.sim_params['fluid_dens']
+        bound_field[side]['value'] = value
     #
     if namespace.sim_params['outlet_p'] is not None:
         value = namespace.sim_params['outlet_p']
+        value = 'uniform {}'.format(value/namespace.sim_params['fluid_dens'])
         side = namespace.sim_params['outlet']
         bound_field[side]['type'] = 'fixedValue'
-        bound_field[side]['value'] = value/namespace.sim_params['fluid_dens']
+        bound_field[side]['value'] = value
 
 
 def generate_U_file():
