@@ -522,7 +522,7 @@ class BlockMeshDict(OpenFoamFile):
             'front':
                 {'front': [i for i in range(self.nx*self.nz)]},
             'back':
-                {'back': [i for i in range(self.nx*self.nz)]},
+                {'back': [i for i in range(self.nx*self.nz)]}
         }
         self.set_boundary_patches(boundary_dict)
 
@@ -556,6 +556,28 @@ class BlockMeshDict(OpenFoamFile):
         #
         # generating blocks and vertices
         self._create_blocks(cell_mask=self.data_map > 0.0)
+        #
+        # building face arrays
+        self.mesh_params['boundary.internal.type'] = 'wall'
+        boundary_dict = {
+            'bottom':
+                {'bottom': []},
+            'top':
+                {'top': []},
+            'left':
+                {'left': []},
+            'right':
+                {'right': []},
+            'front':
+                {'front': []},
+            'back':
+                {'back': []},
+            'internal':
+                {} #lots of entries here for all sides except front and back
+        }
+
+
+        self.set_boundary_patches(boundary_dict)
 
     def generate_mesh_file(self):
         r"""
