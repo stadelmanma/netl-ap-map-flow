@@ -14,6 +14,7 @@ import subprocess
 import re
 import os
 import scipy as sp
+from scipy import sparse as sprs
 #
 ########################################################################
 #  Basic classes
@@ -50,17 +51,33 @@ class DataField:
         self.outfile = ''
         self.nx = 0
         self.nz = 0
+        self._raw_data = None
         self.data_map = None
+        self.data_vector = None
         self.point_data = None
         self._cell_interfaces = None
         self.output_data = dict()
-        self.parse_data_file(**kwargs)
+        #
+        if infile is not None:
+            self.parse_data_file(**kwargs)
+
+    def clone(self):
+        r"""
+        Creates a fully qualified DataField object from the existing one.
+        """
+        # instantiating class and adding attributes
+        clone = DataField(None)
+        #
+        self.copy_data(clone)
+        clone._raw_data = sp.copy(self._raw_data)
+        clone._cell_interfaces = sp.copy(self._cell_interfaces)
+        #
+        return clone
 
     def copy_data(self, obj):
         r"""
         Copies data properites of the field onto another object created
         """
-        obj.infile = self.infile
         obj.nx = self.nx
         obj.nz = self.nz
         obj.data_map = sp.copy(self.data_map)
@@ -83,6 +100,7 @@ class DataField:
                 delim = None if not delim else delim
         #
         self.data_map = sp.loadtxt(self.infile, delimiter=delim)
+        self._raw_data = sp.copy(self.data_map)
         self.data_vector = sp.ravel(self.data_map)
         self.nz, self.nx = self.data_map.shape
         #
@@ -96,7 +114,7 @@ class DataField:
         # covering right column
         self._cell_interfaces = []
         for iz in range(self.nx-1, (self.nz-1)*self.nx, self.nx):
-            self._cell_interfaces.append([iz, iz+self.nz])
+            self._cell_interfaces.append([iz, iz+self.nx])
         # covering interior cells
         for iz in range(0, self.nz-1):
             for ix in range(0, self.nx-1):
@@ -110,6 +128,38 @@ class DataField:
         self._cell_interfaces = sp.array(self._cell_interfaces,
                                          ndmin=2,
                                          dtype=int)
+
+    def create_adjacency_matrix(self, data=None):
+        r"""
+        Returns a weighted adjacency matrix, in CSR format based on the
+        product of weight values sharing an interface.
+        """
+        #
+        if data is None:
+            data = self.data_vector
+        #
+        weights = data[self._cell_interfaces[:, 0]]
+        weights = 2*weights * data[self._cell_interfaces[:, 1]]
+        #
+        # clearing any zero-weighted connections
+        indices = weights > 0
+        interfaces = self._cell_interfaces[indices]
+        weights = weights[indices]
+        #
+        # getting cell connectivity info
+        row = interfaces[:, 0]
+        col = interfaces[:, 1]
+        #
+        # append row & col to each other, and weights to itself
+        row = sp.append(row, interfaces[:, 1])
+        col = sp.append(col, interfaces[:, 0])
+        weights = sp.append(weights, weights)
+        #
+        # Generate sparse adjacency matrix in 'coo' format and convert to csr
+        num_blks = self.nx*self.nz
+        matrix = sprs.coo_matrix((weights, (row, col)), (num_blks, num_blks))
+        matrix = matrix.tocsr()
+        return matrix
 
     def create_point_data(self):
         r"""
@@ -158,6 +208,21 @@ class DataField:
             self.point_data[-1, ix+1, 3] = val
         #
         self.point_data = self.point_data[0:self.nz, 0:self.nx, :]
+
+    def threshold_data(self, min_value=None, max_value=None, repl=sp.nan):
+        r"""
+        Thresholds the data map based on the supplied minimum and
+        maximum values. Values outside of the range are replaced by
+        the repl argument which defaults to sp.nan.
+        """
+        #
+        if min_value is not None:
+            self.data_map[self.data_map <= min_value] = repl
+        if max_value is not None:
+            self.data_map[self.data_map >= max_value] = repl
+        #
+        # updating linked attributes
+        self.data_vector = sp.ravel(self.data_map)
 
 
 class StatFile:
