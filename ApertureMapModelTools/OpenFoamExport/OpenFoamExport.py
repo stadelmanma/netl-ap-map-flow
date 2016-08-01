@@ -357,63 +357,92 @@ class BlockMeshDict(OpenFoamFile):
 
     def _create_blocks(self, cell_mask=None):
         r"""
-        Sets up the verticies and blocks.
+        Sets up the vertices and blocks.
 
             - cell_mask is a boolean array in the shape of the data_map
         telling the function what blocks to skip.
 
-        The vert_map returned stores the 4 vertex indices that make up the
+        vert_map stores the 4 vertex indices that make up the
         back surface and the front surface is '+ 1' the index of the
-        corresponding lower point.
+        corresponding lower point. In terms of the very first block
+        vert_map[i,j,0] is at the orgin (0,0), bottom left corner
+        vert_map[i,j,1] is bottom right corner (1,0)
+        vert_map[i,j,2] is the top right corner (1,1)
+        vert_map[i,j,3] is the top left corner (0,1)
         """
         #
+        # creating mask
         if cell_mask is None:
             cell_mask = sp.ones((self.nz, self.nx), dtype=bool)
+        map_mask = sp.ones((self.nz+1, self.nx+1), dtype=bool)
+        map_mask[0:self.nz, 0:self.nx] = cell_mask
+        map_mask[0:self.nz, self.nx] = cell_mask[0:self.nz, self.nx-1]
+        map_mask[self.nz, 0:self.nx] = cell_mask[self.nz-1, 0:self.nx]
         #
+        # creating temporary arrays to handle vertices
         indices = [0, 1, 1, 0, 3, 2, 2, 3]
         offsets = [0, 0, 1, 1, 0, 0, 1, 1]
+        num_verts = 2*(self.nx - 1)*(self.nz - 1) + 4*(self.nx + self.nz)
+        vertices = sp.zeros((num_verts, 3), dtype=float)
+        vertices[:] = sp.nan
         vert_map = sp.zeros((self.nz+1, self.nx+1, 4), dtype=int)
         vert_map[:] = sp.nan
-        nan_val = vert_map[0,0,0]
         #
-        # building verticies and setting vert map
-        vert_map[0, 0, 0] = 0
-        self._verticies[0] = [0.0, -self.data_map[0, 0]/2.0, 0.0]
-        self._verticies[1] = [0.0, self.data_map[0, 0]/2.0, 0.0]
+        # building vertices and setting vert_map
+        iv = 0
+        if map_mask[0, 0]:
+            vert_map[0, 0, 0] = 0
+            vertices[0] = [0.0, -self.data_map[0, 0]/2.0, 0.0]
+            vertices[1] = [0.0, self.data_map[0, 0]/2.0, 0.0]
+            iv = 2
         #
-        iv = 2
         for iz in range(self.nz):
-            for ix in range(self.nx):
+            if map_mask[iz, 0] or map_mask[iz+1, 0]:
+                zdist = (iz + 1.0) * self.avg_fact
+                ydist = self.point_data[iz, 0, 3]/2.0
+                #
+                vertices[iv] = [0.0, -ydist, zdist]
+                vert_map[iz, 0, 3] = iv
+                vert_map[iz+1, 0, 0] = iv
+                iv += 1
+                vertices[iv] = [0.0, ydist, zdist]
+                iv += 1
+        #
+        for ix in range(self.nx):
+            if map_mask[0, ix] or map_mask[0, ix+1]:
                 xdist = (ix + 1.0) * self.avg_fact
+                ydist = self.point_data[0, ix, 1]/2.0
+                vertices[iv] = [xdist, -ydist, 0.0]
+                vert_map[0, ix, 1] = iv
+                vert_map[0, ix+1, 0] = iv
+                iv += 1
+                vertices[iv] = [xdist, ydist, 0.0]
+                iv += 1
+        #
+        for index in range(self.nx*self.nz):
+            iz = int(index/self.nx)
+            ix = index % self.nx
+            if sp.any(map_mask[iz:iz+2, ix:ix+2]):
+                xdist = (ix + 1.0) * self.avg_fact
+                ydist = self.point_data[iz, ix, 2]/2.0
                 zdist = (iz + 1.0) * self.avg_fact
                 #
-                if ix == 0:
-                    ydist = self.point_data[iz, ix, 3]/2.0
-                    self._verticies[iv] = [0.0, -ydist, zdist]
-                    vert_map[iz, ix, 3] = iv
-                    vert_map[iz+1, ix, 0] = iv
-                    iv += 1
-                    self._verticies[iv] = [0.0, ydist, zdist]
-                    iv += 1
-                #
-                if iz == 0:
-                    ydist = self.point_data[iz, ix, 1]/2.0
-                    self._verticies[iv] = [xdist, -ydist, 0.0]
-                    vert_map[iz, ix, 1] = iv
-                    vert_map[iz, ix+1, 0] = iv
-                    iv += 1
-                    self._verticies[iv] = [xdist, ydist, 0.0]
-                    iv += 1
-                #
-                ydist = self.point_data[iz, ix, 2]/2.0
-                self._verticies[iv] = [xdist, -ydist, zdist]
+                vertices[iv] = [xdist, -ydist, zdist]
                 vert_map[iz, ix, 2] = iv
                 vert_map[iz+1, ix, 1] = iv
                 vert_map[iz, ix+1, 3] = iv
                 vert_map[iz+1, ix+1, 0] = iv
                 iv += 1
-                self._verticies[iv] = [xdist, ydist, zdist]
+                vertices[iv] = [xdist, ydist, zdist]
                 iv += 1
+        #
+        # setting sizes of arrays
+        num_verts = len(sp.where(sp.isfinite(vertices))[0])/3
+        num_verts = int(num_verts)
+        num_blocks = sp.size(sp.where(cell_mask)[0])
+        self._vertices = -sp.ones((num_verts, 3), dtype=float)
+        self._vertices = vertices[0:num_verts]
+        self._blocks = -sp.ones((num_blocks, 8), dtype=int)
         #
         # building block array
         cell_mask = sp.ravel(cell_mask)
@@ -465,11 +494,8 @@ class BlockMeshDict(OpenFoamFile):
         """
         #
         # initializing required arrays
-        num_verts = 2*(self.nx - 1)*(self.nz - 1) + 4*(self.nx + self.nz)
         num_faces = 6*self.data_map.size
         #
-        self._verticies = -sp.ones((num_verts, 3), dtype=float)
-        self._blocks = -sp.ones((self.data_map.size, 8), dtype=int)
         self._faces = -sp.ones((num_faces, 4), dtype=int)
         self._edges = sp.ones(0, dtype=str)
         self._mergePatchPairs = sp.ones(0, dtype=str)
@@ -480,7 +506,7 @@ class BlockMeshDict(OpenFoamFile):
             key = 'boundary.'+side
             self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
         #
-        # setting up blocks and verticies
+        # setting up blocks and vertices
         self._create_blocks(cell_mask=None)
         #
         # building face arrays
@@ -528,12 +554,7 @@ class BlockMeshDict(OpenFoamFile):
         self._field.create_point_data()
         self.point_data = self._field.point_data
         #
-        # resetting arrays to initial values and maximum possible size
-        num_verts = 2*(self.nx - 1)*(self.nz - 1) + 4*(self.nx + self.nz)
-        self._verticies = -sp.ones((num_verts, 3), dtype=float)
-        self._blocks = -sp.ones((self.data_map.size, 8), dtype=int)
-        #
-        # generating blocks and verticies
+        # generating blocks and vertices
         self._create_blocks(cell_mask=self.data_map > 0.0)
 
     def generate_mesh_file(self):
@@ -543,9 +564,9 @@ class BlockMeshDict(OpenFoamFile):
         #
         self['convertToMeters '] = self.mesh_params['convertToMeters']
         #
-        # writing verticies
-        oflist = OpenFoamList('vertices\n{}'.format(len(self._verticies)))
-        for val in self._verticies:
+        # writing vertices
+        oflist = OpenFoamList('vertices\n{}'.format(len(self._vertices)))
+        for val in self._vertices:
             val = ['{:12.9F}'.format(v) for v in val]
             oflist.append('(' + ' '.join(val) + ')')
         self[oflist.name] = oflist
@@ -633,9 +654,9 @@ class BlockMeshDict(OpenFoamFile):
         the Y axis
         """
         #
-        # storing orginial verticies
-        old_verts = sp.copy(self._verticies)
-        self._verticies[sp.where(self._verticies[:, 1] <= 0.0), 1] = 0.0
+        # storing orginial vertices
+        old_verts = sp.copy(self._vertices)
+        self._vertices[sp.where(self._vertices[:, 1] <= 0.0), 1] = 0.0
         #
         # outputting mesh
         self.write_mesh_file(path=path,
@@ -643,7 +664,7 @@ class BlockMeshDict(OpenFoamFile):
                              overwrite=overwrite)
         #
         # restoring original verts
-        self._verticies = sp.copy(old_verts)
+        self._vertices = sp.copy(old_verts)
 
 
 class OpenFoamExport(dict):
