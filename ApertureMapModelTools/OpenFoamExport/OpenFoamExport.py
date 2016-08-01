@@ -12,6 +12,7 @@ from collections import OrderedDict
 import os
 import re
 import scipy as sp
+from scipy.sparse import csgraph
 #
 ########################################################################
 #
@@ -339,15 +340,15 @@ class BlockMeshDict(OpenFoamFile):
         self.nz = None
         self.data_map = sp.array([])
         self.point_data = sp.array([])
+        field.create_point_data()
+        field.copy_data(self)
         #
         # native attributes
-        self._field = field
+        self._field = field.clone()
         self.avg_fact = avg_fact
         self.mesh_params = dict(BlockMeshDict.DEFAULT_PARAMS)
         #
         # copying data and updating params
-        field.create_point_data()
-        field.copy_data(self)
         if mesh_params is not None:
             self.mesh_params.update(mesh_params)
         #
@@ -365,6 +366,9 @@ class BlockMeshDict(OpenFoamFile):
         back surface and the front surface is '+ 1' the index of the
         corresponding lower point.
         """
+        #
+        if cell_mask is None:
+            cell_mask = sp.ones((self.nz, self.nx), dtype=bool)
         #
         vert_map = sp.zeros((self.nz+1, self.nx+1, 4), dtype=int)
         #
@@ -491,12 +495,42 @@ class BlockMeshDict(OpenFoamFile):
         }
         self.set_boundary_patches(boundary_dict)
 
-    def generate_threshold_mesh(self, min_value=0.0):
+    def generate_threshold_mesh(self, min_value=0.0, max_value=1.0e9):
         r"""
         Generates a mesh excluding all blocks below the min_value arg. Regions
         that are isolated by the thresholding are also automatically removed.
         """
-        pass
+        #
+        # thresholding the data and then checking for isolated clusters
+        self._field.threshold_data(min_value, max_value, repl=0.0)
+        self._field.point_data = None
+        self._field.copy_data(self)
+        #
+        adj_matrix = self._field.create_adjacency_matrix()
+        num_cs, cs_ids = csgraph.connected_components(csgraph=adj_matrix,
+                                                      directed=False)
+        # only saving the largest cluster
+        if num_cs > 1:
+            cs_count = [0 for i in range(num_cs)]
+            for cs_num in cs_ids:
+                cs_count[cs_num] += 1
+            main_cluster = sp.argmax(cs_count)
+            self.data_vector[sp.where(cs_ids != main_cluster)[0]] = 0.0
+            self.data_map = sp.reshape(self.data_vector, (self.nz, self.nx))
+        #
+        self._field.data_map = self.data_map
+        self._field.data_vector = sp.ravel(self.data_map)
+        self._field.create_point_data()
+        self.point_data = self._field.point_data
+        #
+        # resetting arrays to initial values and maximum possible size
+        num_verts = 2*(self.nx - 1)*(self.nz - 1) + 4*(self.nx + self.nz)
+        self._verticies = -sp.ones((num_verts, 3), dtype=float)
+        self._blocks = -sp.ones((self.data_map.size, 8), dtype=int)
+        #
+        # generating blocks and verticies
+        self._create_blocks(cell_mask=self.data_map > 0.0)
+
 
     def generate_mesh_file(self):
         r"""
