@@ -97,7 +97,15 @@ def data_field_class():
             self.data_map = sp.arange(100).reshape(10, 10)
             self.data_vector = sp.arange(100)
             self.point_data = None
+            self._raw_data = None
+            self._cell_interfaces = None
             self.output_data = dict()
+
+        def clone(self):
+            clone = PseudoDataField()
+            self.copy_data(clone)
+            clone._raw_data = sp.copy(self._raw_data)
+            clone._cell_interfaces = sp.copy(self._cell_interfaces)
 
         def copy_data(self, obj):
             obj.infile = self.infile

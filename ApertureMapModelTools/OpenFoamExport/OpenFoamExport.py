@@ -370,7 +370,11 @@ class BlockMeshDict(OpenFoamFile):
         if cell_mask is None:
             cell_mask = sp.ones((self.nz, self.nx), dtype=bool)
         #
+        indices = [0, 1, 1, 0, 3, 2, 2, 3]
+        offsets = [0, 0, 1, 1, 0, 0, 1, 1]
         vert_map = sp.zeros((self.nz+1, self.nx+1, 4), dtype=int)
+        vert_map[:] = sp.nan
+        nan_val = vert_map[0,0,0]
         #
         # building verticies and setting vert map
         self._verticies[0] = [0.0, -self.data_map[0, 0]/2.0, 0.0]
@@ -411,13 +415,13 @@ class BlockMeshDict(OpenFoamFile):
                 iv += 1
         #
         # building block array
-        indices = [0, 1, 1, 0, 3, 2, 2, 3]
-        offsets = [0, 0, 1, 1, 0, 0, 1, 1]
-        for ib in range(self.nz * self.nx):
-            #
-            iz = int(ib/self.nx)
-            ix = ib % self.nx
+        cell_mask = sp.ravel(cell_mask)
+        ib = 0
+        for index in sp.where(cell_mask)[0]:
+            iz = int(index/self.nx)
+            ix = index % self.nx
             self._blocks[ib] = vert_map[iz, ix, indices] + offsets
+            ib += 1
 
     def set_boundary_patches(self, boundary_blocks):
         r"""
@@ -530,7 +534,6 @@ class BlockMeshDict(OpenFoamFile):
         #
         # generating blocks and verticies
         self._create_blocks(cell_mask=self.data_map > 0.0)
-
 
     def generate_mesh_file(self):
         r"""
