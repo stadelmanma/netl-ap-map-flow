@@ -418,11 +418,20 @@ class BlockMeshDict(OpenFoamFile):
     def set_boundary_patches(self, boundary_blocks):
         r"""
         Sets up boundary patches based on the dictionary passed in. Does
-        not check for overlap in patch declarations.
+        not check for overlap in patch declarations. The boundary blocks
+        dictionary contains a dictionary entry for each patch name.
+
             - boundary_blocks dictionary has the format of:
-                  boundary_blocks[patch_name] = {
-                          side: [ block-list ],
-                      }
+                  {patch_name: {
+                          <side>: [ block-list ],
+                          <side>: [ block-list ],
+                          ...
+                      },
+                      ...
+                  }
+                  where <side> is left, right, bottom, top, front or back
+                  and block list is a list of blocks to add that patch to the
+                  side of.
         """
         #
         offsets = {
@@ -443,7 +452,7 @@ class BlockMeshDict(OpenFoamFile):
 
     def generate_simple_mesh(self):
         r"""
-        Handles population of the arrays and updating boundary face labels
+        Generates a simple mesh including all cells in the data map
         """
         #
         # initializing required arrays
@@ -481,6 +490,13 @@ class BlockMeshDict(OpenFoamFile):
                 {'back': [i for i in range(self.nx*self.nz)]},
         }
         self.set_boundary_patches(boundary_dict)
+
+    def generate_threshold_mesh(self, min_value=0.0):
+        r"""
+        Generates a mesh excluding all blocks below the min_value arg. Regions
+        that are isolated by the thresholding are also automatically removed.
+        """
+        pass
 
     def generate_mesh_file(self):
         r"""

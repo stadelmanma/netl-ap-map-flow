@@ -52,6 +52,7 @@ class DataField:
         self.nz = 0
         self.data_map = None
         self.point_data = None
+        self._cell_interfaces = None
         self.output_data = dict()
         self.parse_data_file(**kwargs)
 
@@ -83,8 +84,32 @@ class DataField:
         #
         self.data_map = sp.loadtxt(self.infile, delimiter=delim)
         self.data_vector = sp.ravel(self.data_map)
-        #
         self.nz, self.nx = self.data_map.shape
+        #
+        # defining cell interfaces used in adjacency matrix
+        self._define_cell_interfaces()
+
+    def _define_cell_interfaces(self):
+        r"""
+        Populates the cell_interfaces array
+        """
+        # covering right column
+        self._cell_interfaces = []
+        for iz in range(self.nx-1, (self.nz-1)*self.nx, self.nx):
+            self._cell_interfaces.append([iz, iz+self.nz])
+        # covering interior cells
+        for iz in range(0, self.nz-1):
+            for ix in range(0, self.nx-1):
+                ib = iz*self.nx + ix
+                self._cell_interfaces.append([ib, ib+1])
+                self._cell_interfaces.append([ib, ib+self.nx])
+        # covering top row
+        for ix in range((self.nz-1)*self.nx, self.nz*self.nx-1):
+            self._cell_interfaces.append([ix, ix+1])
+        #
+        self._cell_interfaces = sp.array(self._cell_interfaces,
+                                         ndmin=2,
+                                         dtype=int)
 
     def create_point_data(self):
         r"""
