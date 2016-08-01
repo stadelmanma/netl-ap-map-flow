@@ -377,6 +377,7 @@ class BlockMeshDict(OpenFoamFile):
         nan_val = vert_map[0,0,0]
         #
         # building verticies and setting vert map
+        vert_map[0, 0, 0] = 0
         self._verticies[0] = [0.0, -self.data_map[0, 0]/2.0, 0.0]
         self._verticies[1] = [0.0, self.data_map[0, 0]/2.0, 0.0]
         #
