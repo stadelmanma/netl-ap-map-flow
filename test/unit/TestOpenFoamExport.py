@@ -9,6 +9,7 @@ Last Modifed: 2016/06/10
 #
 import os
 import pytest
+import scipy as sp
 from ApertureMapModelTools.OpenFoamExport.OpenFoamExport import OpenFoamObject
 from ApertureMapModelTools import OpenFoamExport as ofe
 
@@ -118,6 +119,12 @@ class TestOpenFoamExport:
         #
         # writing out a symmetry plane
         mesh.write_symmetry_plane(TEMP_DIR, overwrite=True)
+        #
+        # testing generation of a thresholded mesh
+        mesh.generate_threshold_mesh(min_value=9, max_value=90)
+        assert sp.all(mesh.data_map[0, :] == 0)
+        assert sp.all(mesh.data_map[9, :] == 0)
+        assert len(mesh._blocks) == 80
 
     def test_open_foam_export(self, data_field_class):
         self._field = data_field_class()
