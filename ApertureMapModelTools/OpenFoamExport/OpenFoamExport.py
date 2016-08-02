@@ -533,15 +533,18 @@ class BlockMeshDict(OpenFoamFile):
         that are isolated by the thresholding are also automatically removed.
         """
         #
+        self._edges = sp.ones(0, dtype=str)
+        self._mergePatchPairs = sp.ones(0, dtype=str)
+        #
         # thresholding the data and then checking for isolated clusters
         self._field.threshold_data(min_value, max_value, repl=0.0)
-        self._field.point_data = None
         self._field.copy_data(self)
         #
         adj_matrix = self._field.create_adjacency_matrix()
         num_cs, cs_ids = csgraph.connected_components(csgraph=adj_matrix,
                                                       directed=False)
         # only saving the largest cluster
+        main_cluster = 0
         if num_cs > 1:
             cs_count = [0 for i in range(num_cs)]
             for cs_num in cs_ids:
@@ -552,19 +555,27 @@ class BlockMeshDict(OpenFoamFile):
         #
         self._field.data_map = self.data_map
         self._field.data_vector = sp.ravel(self.data_map)
-        self._field.create_point_data()
-        self.point_data = self._field.point_data
         #
         # generating blocks and vertices
         mask = self.data_map > 0.0
         self._create_blocks(cell_mask=mask)
+        #
+        # re-initializing boundary face labels
+        num_faces = 6 * len(self._blocks)
+        self._faces = sp.ones((num_faces, 4), dtype=int) * -sp.iinfo(int).max
+        self.face_labels = {}
+        sides = ['left', 'right', 'top', 'bottom', 'front', 'back', 'internal']
+        for side in sides:
+            key = 'boundary.'+side
+            self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
+        #
+        self.mesh_params['boundary.internal.type'] = 'wall'
         #
         # building face arrays
         mapper = sp.ravel(sp.array(mask, dtype=int))
         mapper[mapper == 1] = sp.arange(sp.count_nonzero(mapper))
         mapper = sp.reshape(mapper, (self.nz, self.nx))
         mapper[~mask] = -sp.iinfo(int).max
-        self.mesh_params['boundary.internal.type'] = 'wall'
         boundary_dict = {
             'bottom':
                 {'bottom': mapper[0, :][mask[0, :]]},
@@ -579,16 +590,43 @@ class BlockMeshDict(OpenFoamFile):
             'back':
                 {'back': mapper[mask]},
             'internal':
-                {} #lots of entries here for all sides except front and back
+                {'bottom': [], 'top': [], 'left': [], 'right': []}
         }
-
-
+        #
+        # determining cells linked to a masked cell
+        masked_cells = sp.where(~sp.ravel(mask))[0]
+        inds = sp.in1d(self._field._cell_interfaces, masked_cells)
+        inds = sp.reshape(inds, (len(self._field._cell_interfaces), 2))
+        inds = inds[:, 0].astype(int) + inds[:, 1].astype(int)
+        inds = (inds == 1)
+        links = self._field._cell_interfaces[inds]
+        #
+        # adjusting order so masked cells are all on links[:, 1]
+        swap = sp.in1d(links[:, 0], masked_cells)
+        links[swap] = links[swap, ::-1]
+        #
+        # setting side based on index difference
+        sides = sp.ndarray(len(links), dtype='<U6')
+        sides[sp.where(links[:, 1] == links[:, 0]-self.nx)[0]] = 'bottom'
+        sides[sp.where(links[:, 1] == links[:, 0]+self.nx)[0]] = 'top'
+        sides[sp.where(links[:, 1] == links[:, 0]-1)[0]] = 'left'
+        sides[sp.where(links[:, 1] == links[:, 0]+1)[0]] = 'right'
+        #
+        # adding each block to the internal face dictionary
+        inds = sp.ravel(mapper)[links[:, 0]]
+        for side, block_id in zip(sides, inds):
+            boundary_dict['internal'][side].append(block_id)
         self.set_boundary_patches(boundary_dict)
 
     def generate_mesh_file(self):
         r"""
         Populates keys on itself based on geometry data to output a mesh file
         """
+        #
+        # removing any old keys to prevent duplicates
+        keys = list(self.keys())
+        for key in keys:
+            del self[key]
         #
         self['convertToMeters '] = self.mesh_params['convertToMeters']
         #
