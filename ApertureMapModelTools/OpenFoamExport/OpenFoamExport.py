@@ -18,7 +18,7 @@ from scipy.sparse import csgraph
 #
 
 
-class OpenFoamObject:
+class OpenFoamObject(object):
     r"""
     General class used to recognize other OpenFoam objects
     """
@@ -172,7 +172,7 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
         str_rep += '\n'
         str_rep += OpenFoamFile.FOAM_SPACER
         #
-        return(str_rep)
+        return str_rep
 
     @staticmethod
     def init_from_file(filename):
@@ -186,10 +186,10 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
             ofdict = OpenFoamDict(match.group(1))
             content = content[match.end():]
             #
-            while not re.match('^}', content):
+            while not re.match(r'^}', content):
                 content = add_param(content, ofdict)
             #
-            content = re.sub('^}\n', '', content)
+            content = re.sub(r'^}\n', '', content)
             if isinstance(out_obj, list):
                 out_obj.append(ofdict)
             else:
@@ -202,10 +202,10 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
             oflist = OpenFoamList(match.group(1))
             content = content[match.end():]
             #
-            while not re.match('^\);', content):
+            while not re.match(r'^\);', content):
                 content = add_param(content, oflist)
             #
-            content = re.sub('^\);\n', '', content)
+            content = re.sub(r'^\);\n', '', content)
             if isinstance(out_obj, list):
                 out_obj.append(oflist)
             else:
@@ -224,16 +224,16 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
             elif list_match:
                 content = build_list(content, list_match, out_obj)
             else:
-                line = re.match('.*\n', content).group()
-                line = re.sub(';', '', line)
+                line = re.match(r'.*\n', content).group()
+                line = re.sub(r';', '', line)
                 line = line.strip()
                 try:
-                    key, value = re.split('\s+', line, maxsplit=1)
+                    key, value = re.split(r'\s+', line, maxsplit=1)
                 except ValueError:
                     key, value = line, ''
                 #
                 # removing line from content
-                content = re.sub('^.*\n', '', content)
+                content = re.sub(r'^.*\n', '', content)
                 if isinstance(out_obj, list):
                     out_obj.append(line)
                 else:
@@ -242,8 +242,8 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
             return content
         #
         # reading file
-        with open(filename, 'r') as file:
-            content = file.read()
+        with open(filename, 'r') as infile:
+            content = infile.read()
             if not re.search('FoamFile', content):
                 msg = 'Invalid OpenFoam input file, no FoamFile dict'
                 raise ValueError(msg)
@@ -253,8 +253,8 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
         block_comment = re.compile(r'(/[*].*?[*]/)', flags=re.S)
         content = inline_comment.sub('', content)
         content = block_comment.sub('', content)
-        content = re.sub('\s*$', '\n', content, flags=re.M)
-        content = re.sub('^\s*', '', content, flags=re.M)
+        content = re.sub(r'\s*$', '\n', content, flags=re.M)
+        content = re.sub(r'^\s*', '', content, flags=re.M)
         #
         # parsing content of file
         foam_file_params = OrderedDict()
@@ -262,7 +262,7 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
             content = add_param(content, foam_file_params)
         #
         # generating OpenFoamFile
-        head_dict = foam_file_params.pop('FoamFile')
+        head_dict = foam_file_params.pop('FoamFile', {})
         try:
             location = head_dict['location'].replace('"', '')
         except KeyError:
@@ -339,14 +339,21 @@ class BlockMeshDict(OpenFoamFile):
         self.nx = None
         self.nz = None
         self.data_map = sp.array([])
+        self.data_vector = sp.array([])
         self.point_data = sp.array([])
         field.create_point_data()
         field.copy_data(self)
         #
         # native attributes
-        self._field = field.clone()
         self.avg_fact = avg_fact
         self.mesh_params = dict(BlockMeshDict.DEFAULT_PARAMS)
+        self.face_labels = {}
+        self._field = field.clone()
+        self._vertices = None
+        self._blocks = None
+        self._edges = None
+        self._faces = None
+        self._merge_patch_pairs = None
         #
         # copying data and updating params
         if mesh_params is not None:
@@ -382,42 +389,40 @@ class BlockMeshDict(OpenFoamFile):
         # creating temporary arrays to handle vertices
         indices = [0, 1, 1, 0, 3, 2, 2, 3]
         offsets = [0, 0, 1, 1, 0, 0, 1, 1]
-        num_verts = 2*(self.nx - 1)*(self.nz - 1) + 4*(self.nx + self.nz)
-        vertices = sp.zeros((num_verts, 3), dtype=float)
-        vertices[:] = sp.nan
+        vertices = []
         vert_map = sp.zeros((self.nz+1, self.nx+1, 4), dtype=int)
         vert_map[:] = sp.nan
         #
         # building vertices and setting vert_map
-        iv = 0
+        vert_index = 0
         if map_mask[0, 0]:
             vert_map[0, 0, 0] = 0
-            vertices[0] = [0.0, -self.data_map[0, 0]/2.0, 0.0]
-            vertices[1] = [0.0, self.data_map[0, 0]/2.0, 0.0]
-            iv = 2
+            vertices.append([0.0, -self.data_map[0, 0]/2.0, 0.0])
+            vertices.append([0.0, self.data_map[0, 0]/2.0, 0.0])
+            vert_index = 2
         #
         for iz in range(self.nz):
             if map_mask[iz, 0] or map_mask[iz+1, 0]:
                 zdist = (iz + 1.0) * self.avg_fact
                 ydist = self.point_data[iz, 0, 3]/2.0
                 #
-                vertices[iv] = [0.0, -ydist, zdist]
-                vert_map[iz, 0, 3] = iv
-                vert_map[iz+1, 0, 0] = iv
-                iv += 1
-                vertices[iv] = [0.0, ydist, zdist]
-                iv += 1
+                vertices.append([0.0, -ydist, zdist])
+                vert_map[iz, 0, 3] = vert_index
+                vert_map[iz+1, 0, 0] = vert_index
+                vert_index += 1
+                vertices.append([0.0, ydist, zdist])
+                vert_index += 1
         #
         for ix in range(self.nx):
             if map_mask[0, ix] or map_mask[0, ix+1]:
                 xdist = (ix + 1.0) * self.avg_fact
                 ydist = self.point_data[0, ix, 1]/2.0
-                vertices[iv] = [xdist, -ydist, 0.0]
-                vert_map[0, ix, 1] = iv
-                vert_map[0, ix+1, 0] = iv
-                iv += 1
-                vertices[iv] = [xdist, ydist, 0.0]
-                iv += 1
+                vertices.append([xdist, -ydist, 0.0])
+                vert_map[0, ix, 1] = vert_index
+                vert_map[0, ix+1, 0] = vert_index
+                vert_index += 1
+                vertices.append([xdist, ydist, 0.0])
+                vert_index += 1
         #
         for index in range(self.nx*self.nz):
             iz = int(index/self.nx)
@@ -427,31 +432,26 @@ class BlockMeshDict(OpenFoamFile):
                 ydist = self.point_data[iz, ix, 2]/2.0
                 zdist = (iz + 1.0) * self.avg_fact
                 #
-                vertices[iv] = [xdist, -ydist, zdist]
-                vert_map[iz, ix, 2] = iv
-                vert_map[iz+1, ix, 1] = iv
-                vert_map[iz, ix+1, 3] = iv
-                vert_map[iz+1, ix+1, 0] = iv
-                iv += 1
-                vertices[iv] = [xdist, ydist, zdist]
-                iv += 1
-        #
-        # setting sizes of arrays
-        num_verts = len(sp.where(sp.isfinite(vertices))[0])/3
-        num_verts = int(num_verts)
-        num_blocks = sp.size(sp.where(cell_mask)[0])
-        self._vertices = -sp.ones((num_verts, 3), dtype=float)
-        self._vertices = vertices[0:num_verts]
-        self._blocks = -sp.ones((num_blocks, 8), dtype=int)
+                vertices.append([xdist, -ydist, zdist])
+                vert_map[iz, ix, 2] = vert_index
+                vert_map[iz+1, ix, 1] = vert_index
+                vert_map[iz, ix+1, 3] = vert_index
+                vert_map[iz+1, ix+1, 0] = vert_index
+                vert_index += 1
+                vertices.append([xdist, ydist, zdist])
+                vert_index += 1
         #
         # building block array
+        self._blocks = []
         cell_mask = sp.ravel(cell_mask)
-        ib = 0
         for index in sp.where(cell_mask)[0]:
             iz = int(index/self.nx)
             ix = index % self.nx
-            self._blocks[ib] = vert_map[iz, ix, indices] + offsets
-            ib += 1
+            self._blocks.append(vert_map[iz, ix, indices] + offsets)
+        #
+        # coverting lists to scipy arrays
+        self._vertices = sp.array(vertices, ndmin=2, dtype=float)
+        self._blocks = sp.array(self._blocks, ndmin=2, dtype=int)
 
     def set_boundary_patches(self, boundary_blocks):
         r"""
@@ -483,7 +483,7 @@ class BlockMeshDict(OpenFoamFile):
         #
         for patch_name, side_dict in boundary_blocks.items():
             for side, blocks in side_dict.items():
-                indices = sp.array(blocks) * 6 + offsets[side][0]
+                indices = sp.array(blocks, dtype=int) * 6 + offsets[side][0]
                 face_verts = self._blocks[blocks][:, offsets[side][1]]
                 self._faces[indices] = face_verts
                 self.face_labels['boundary.'+patch_name][indices] = True
@@ -498,7 +498,7 @@ class BlockMeshDict(OpenFoamFile):
         #
         self._faces = -sp.ones((num_faces, 4), dtype=int)
         self._edges = sp.ones(0, dtype=str)
-        self._mergePatchPairs = sp.ones(0, dtype=str)
+        self._merge_patch_pairs = sp.ones(0, dtype=str)
         #
         # initializing boundary face labels
         self.face_labels = {}
@@ -534,7 +534,7 @@ class BlockMeshDict(OpenFoamFile):
         """
         #
         self._edges = sp.ones(0, dtype=str)
-        self._mergePatchPairs = sp.ones(0, dtype=str)
+        self._merge_patch_pairs = sp.ones(0, dtype=str)
         #
         # thresholding the data and then checking for isolated clusters
         self._field.threshold_data(min_value, max_value, repl=0.0)
@@ -544,13 +544,11 @@ class BlockMeshDict(OpenFoamFile):
         num_cs, cs_ids = csgraph.connected_components(csgraph=adj_matrix,
                                                       directed=False)
         # only saving the largest cluster
-        main_cluster = 0
         if num_cs > 1:
-            cs_count = [0 for i in range(num_cs)]
+            cs_count = sp.zeros(num_cs, dtype=int)
             for cs_num in cs_ids:
                 cs_count[cs_num] += 1
-            main_cluster = sp.argmax(cs_count)
-            self.data_vector[sp.where(cs_ids != main_cluster)[0]] = 0.0
+            self.data_vector[sp.where(cs_ids != sp.argmax(cs_count))[0]] = 0.0
             self.data_map = sp.reshape(self.data_vector, (self.nz, self.nx))
         #
         self._field.data_map = self.data_map
@@ -566,8 +564,8 @@ class BlockMeshDict(OpenFoamFile):
         self.face_labels = {}
         sides = ['left', 'right', 'top', 'bottom', 'front', 'back', 'internal']
         for side in sides:
-            key = 'boundary.'+side
-            self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
+            side = 'boundary.'+side
+            self.face_labels[side] = sp.zeros(num_faces, dtype=bool)
         #
         self.mesh_params['boundary.internal.type'] = 'wall'
         #
@@ -594,15 +592,15 @@ class BlockMeshDict(OpenFoamFile):
         }
         #
         # determining cells linked to a masked cell
-        masked_cells = sp.where(~sp.ravel(mask))[0]
-        inds = sp.in1d(self._field._cell_interfaces, masked_cells)
+        mask = sp.where(~sp.ravel(mask))[0]
+        inds = sp.in1d(self._field._cell_interfaces, mask)
         inds = sp.reshape(inds, (len(self._field._cell_interfaces), 2))
         inds = inds[:, 0].astype(int) + inds[:, 1].astype(int)
         inds = (inds == 1)
         links = self._field._cell_interfaces[inds]
         #
         # adjusting order so masked cells are all on links[:, 1]
-        swap = sp.in1d(links[:, 0], masked_cells)
+        swap = sp.in1d(links[:, 0], mask)
         links[swap] = links[swap, ::-1]
         #
         # setting side based on index difference
@@ -654,9 +652,8 @@ class BlockMeshDict(OpenFoamFile):
         # getting unique list of boundary faces defined
         bounds = []
         for key in self.face_labels.keys():
-            mat = re.match(r'boundary.(\w+)[.]?', key)
+            mat = re.match(r'boundary.(\w+)', key)
             mat = bounds.append(mat.group(1)) if mat else None
-        bounds = set(bounds)
         #
         # writing boundaries
         oflist = OpenFoamList('boundary\n{}'.format(len(bounds)))
@@ -664,7 +661,8 @@ class BlockMeshDict(OpenFoamFile):
             ofdict = OpenFoamDict(side)
             side_faces = self._faces[self.face_labels['boundary.'+side]]
             ofdict['type'] = self.mesh_params['boundary.'+side+'.type']
-            ofdict['faces'] = OpenFoamList('faces\n\t\t{}'.format(len(side_faces)))
+            fmt = 'faces\n\t\t{}'
+            ofdict['faces'] = OpenFoamList(fmt.format(len(side_faces)))
             #
             for val in side_faces:
                 val = ['{:7d}'.format(v) for v in val]
@@ -742,6 +740,7 @@ class OpenFoamExport(dict):
         Handles generation and exporting of OpenFoam files
         """
         #
+        super().__init__()
         self.foam_files = {}
         self.block_mesh_dict = None
         if field is not None:
@@ -770,15 +769,16 @@ class OpenFoamExport(dict):
         """
         #
         # looping through args
-        for file in args:
+        for file_params in args:
             # generating initial dict from iterable and getting required args
-            values = OrderedDict(file)
+            values = OrderedDict(file_params)
             location = values.pop('location')
             object_name = values.pop('object')
             class_name = values.pop('class_name', None)
             #
-            file = OpenFoamFile(location, object_name, class_name, values=values)
-            self.foam_files[location + '.' + object_name] = file
+            foam_file = OpenFoamFile(location, object_name,
+                                     class_name, values=values)
+            self.foam_files[location + '.' + object_name] = foam_file
 
     def write_symmetry_plane(self, path='.', create_dirs=True, overwrite=False):
         r"""
@@ -795,8 +795,8 @@ class OpenFoamExport(dict):
     def write_foam_files(self, path='.', overwrite=False):
         r"""
         Writes the files generated by 'generate_foam_files' to their
-        associated directories on the supplied path. If a directory doesn't exist
-        then it is created
+        associated directories on the supplied path. If a directory doesn't
+        exist then it is created
         """
         #
         # writing files
