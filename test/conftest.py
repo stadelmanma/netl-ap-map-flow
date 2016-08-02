@@ -1,9 +1,15 @@
 from collections import OrderedDict
-from os.path import join, dirname, realpath
+from os import path
 from os import mkdir
 import pytest
 from shutil import rmtree
+import sys
 import scipy as sp
+#
+# setting path to module
+sys.path.insert(0, path.abspath(path.join('..')))
+print(sys.path[0])
+#
 import ApertureMapModelTools as amt
 
 
@@ -12,7 +18,7 @@ def fixtures_directory(request):
     r"""
     Defines FIXTURE_DIR global for loading files
     """
-    fixture_dir = join(dirname(realpath(__file__)), 'fixtures')
+    fixture_dir = path.join(path.dirname(path.realpath(__file__)), 'fixtures')
     request.function.__globals__['FIXTURE_DIR'] = fixture_dir
 
 
@@ -21,7 +27,7 @@ def setup_temp_directory(request):
     r"""
     Defines TEMP_DIR global for saving files
     """
-    temp_dir = join(dirname(realpath(__file__)), 'temp')
+    temp_dir = path.join(path.dirname(path.realpath(__file__)), 'temp')
     try:
         mkdir(temp_dir)
     except:
@@ -42,7 +48,7 @@ def temp_directory(request, setup_temp_directory):
     r"""
     Defines TEMP_DIR global for saving files
     """
-    temp_dir = join(dirname(realpath(__file__)), 'temp')
+    temp_dir = path.join(path.dirname(path.realpath(__file__)), 'temp')
     try:
         mkdir(temp_dir)
     except:
