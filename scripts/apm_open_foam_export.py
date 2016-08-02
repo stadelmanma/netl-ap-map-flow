@@ -3,6 +3,7 @@ import argparse
 from argparse import RawDescriptionHelpFormatter
 import logging
 import os
+import re
 from subprocess import call as subp_call
 from sys import argv
 import scipy as sp
@@ -298,7 +299,7 @@ def generate_p_file():
     Handles creation of the p file in the zero directory
     """
     #
-    global namespace
+    global namespace, block_mesh
     #
     # fetching or creating p file
     try:
@@ -309,12 +310,21 @@ def generate_p_file():
         p_file['internalField'] = 'uniform 0'
         foam_files['0.p'] = p_file
     #
-    # creating boundaryField dict and registering it with the p file
-    bound_field = OpenFoamDict('boundaryField')
-    p_file[bound_field.name] = bound_field
+    # fetching boundary field dict
+    try:
+        bound_field = p_file['boundaryField']
+    except KeyError:
+        bound_field = OpenFoamDict('boundaryField')
+        p_file[bound_field.name] = bound_field
     #
     # setting initial values to zeroGradient for all sides
-    for side in ['left', 'right', 'front', 'back', 'top', 'bottom']:
+    sides = ['left', 'right', 'front', 'back', 'top', 'bottom']
+    if block_mesh is not None:
+        sides = []
+        for key in block_mesh.face_labels.keys():
+            sides.append(re.match(r'boundary.(\w+)', key).group(1))
+    #
+    for side in sides:
         side_dict = OpenFoamDict(side)
         side_dict['type'] = 'zeroGradient'
         bound_field[side] = side_dict
@@ -340,7 +350,7 @@ def generate_U_file():
     Handles creation of the U file in the zero directory
     """
     #
-    global namespace, map_data_field
+    global namespace, map_data_field, block_mesh
 
     def calc_velocity(vol_flow, side):
         r"""Calculates the velocity field for a rate BC"""
@@ -381,12 +391,21 @@ def generate_U_file():
         u_file['internalField'] = 'uniform (0 0 0)'
         foam_files['0.U'] = u_file
     #
-    # creating boundaryField dict and registering it with the U file
-    bound_field = OpenFoamDict('boundaryField')
-    u_file[bound_field.name] = bound_field
+    # fetching boundaryField dict
+    try:
+        bound_field = u_file['boundaryField']
+    except KeyError:
+        bound_field = OpenFoamDict('boundaryField')
+        u_file[bound_field.name] = bound_field
     #
     # setting up default values for all sides as no-slip bounds
-    for side in ['left', 'right', 'front', 'back', 'top', 'bottom']:
+    sides = ['left', 'right', 'front', 'back', 'top', 'bottom']
+    if block_mesh is not None:
+        sides = []
+        for key in block_mesh.face_labels.keys():
+            sides.append(re.match(r'boundary.(\w+)', key).group(1))
+    #
+    for side in sides:
         side_dict = OpenFoamDict(side)
         side_dict['type'] = 'fixedValue'
         side_dict['value'] = 'uniform (0 0 0)'

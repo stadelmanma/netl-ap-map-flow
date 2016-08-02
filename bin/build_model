@@ -1,5 +1,13 @@
 #!/bin/bash
 #
 # Building the flow model from source
-cd "$(git rev-parse --show-toplevel)/source"
+REPO_HOME=$(git rev-parse --show-toplevel)
+cd "$REPO_HOME/source"
 make
+#
+# adding module to python path
+PY_SITE=$(python3 -m site --user-site)
+mkdir -p "$PY_SITE"
+cd "$PY_SITE"
+ln -s "$REPO_HOME/ApertureMapModelTools"
+ls -l

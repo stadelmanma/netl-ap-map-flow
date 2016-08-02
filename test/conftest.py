@@ -1,9 +1,10 @@
 from collections import OrderedDict
-from os.path import join, dirname, realpath
+from os import path
 from os import mkdir
 import pytest
 from shutil import rmtree
 import scipy as sp
+import ApertureMapModelTools as amt
 
 
 @pytest.fixture(autouse=True)
@@ -11,7 +12,7 @@ def fixtures_directory(request):
     r"""
     Defines FIXTURE_DIR global for loading files
     """
-    fixture_dir = join(dirname(realpath(__file__)), 'fixtures')
+    fixture_dir = path.join(path.dirname(path.realpath(__file__)), 'fixtures')
     request.function.__globals__['FIXTURE_DIR'] = fixture_dir
 
 
@@ -20,7 +21,7 @@ def setup_temp_directory(request):
     r"""
     Defines TEMP_DIR global for saving files
     """
-    temp_dir = join(dirname(realpath(__file__)), 'temp')
+    temp_dir = path.join(path.dirname(path.realpath(__file__)), 'temp')
     try:
         mkdir(temp_dir)
     except:
@@ -41,7 +42,7 @@ def temp_directory(request, setup_temp_directory):
     r"""
     Defines TEMP_DIR global for saving files
     """
-    temp_dir = join(dirname(realpath(__file__)), 'temp')
+    temp_dir = path.join(path.dirname(path.realpath(__file__)), 'temp')
     try:
         mkdir(temp_dir)
     except:
@@ -85,7 +86,7 @@ def data_field_class():
     and placeholder data
     """
 
-    class PseudoDataField:
+    class PseudoDataField(amt.DataField):
         r"""
         Handles testing of the data field object without needing to create one
         """
@@ -97,15 +98,11 @@ def data_field_class():
             self.data_map = sp.arange(100).reshape(10, 10)
             self.data_vector = sp.arange(100)
             self.point_data = None
+            self._raw_data = None
+            self._cell_interfaces = None
             self.output_data = dict()
-
-        def copy_data(self, obj):
-            obj.infile = self.infile
-            obj.nx = self.nx
-            obj.nz = self.nz
-            obj.data_map = sp.copy(self.data_map)
-            obj.data_vector = sp.copy(self.data_vector)
-            obj.point_data = sp.copy(self.point_data)
+            #
+            self._define_cell_interfaces()
 
         def parse_data_file(self):
             pass
