@@ -510,19 +510,20 @@ class BlockMeshDict(OpenFoamFile):
         self._create_blocks(cell_mask=None)
         #
         # building face arrays
+        mapper = sp.reshape(sp.arange(self.nx*self.nz), (self.nz, self.nx))
         boundary_dict = {
             'bottom':
-                {'bottom': [ix for ix in range(self.nx)]},
+                {'bottom': mapper[0, :]},
             'top':
-                {'top': [(self.nz-1)*self.nx + ix for ix in range(self.nx)]},
+                {'top': mapper[-1, :]},
             'left':
-                {'left': [iz*self.nx for iz in range(self.nz)]},
+                {'left': mapper[:, 0]},
             'right':
-                {'right': [iz*self.nx + (self.nx-1) for iz in range(self.nz)]},
+                {'right': mapper[:, -1]},
             'front':
-                {'front': [i for i in range(self.nx*self.nz)]},
+                {'front': sp.arange(self.nx*self.nz)},
             'back':
-                {'back': [i for i in range(self.nx*self.nz)]}
+                {'back': sp.arange(self.nx*self.nz)}
         }
         self.set_boundary_patches(boundary_dict)
 
@@ -555,23 +556,28 @@ class BlockMeshDict(OpenFoamFile):
         self.point_data = self._field.point_data
         #
         # generating blocks and vertices
-        self._create_blocks(cell_mask=self.data_map > 0.0)
+        mask = self.data_map > 0.0
+        self._create_blocks(cell_mask=mask)
         #
         # building face arrays
+        mapper = sp.ravel(sp.array(mask, dtype=int))
+        mapper[mapper == 1] = sp.arange(sp.count_nonzero(mapper))
+        mapper = sp.reshape(mapper, (self.nz, self.nx))
+        mapper[~mask] = -sp.iinfo(int).max
         self.mesh_params['boundary.internal.type'] = 'wall'
         boundary_dict = {
             'bottom':
-                {'bottom': []},
+                {'bottom': mapper[0, :][mask[0, :]]},
             'top':
-                {'top': []},
+                {'top': mapper[-1, :][mask[-1, :]]},
             'left':
-                {'left': []},
+                {'left': mapper[:, 0][mask[:, 0]]},
             'right':
-                {'right': []},
+                {'right': mapper[:, -1][mask[:, -1]]},
             'front':
-                {'front': []},
+                {'front': mapper[mask]},
             'back':
-                {'back': []},
+                {'back': mapper[mask]},
             'internal':
                 {} #lots of entries here for all sides except front and back
         }
