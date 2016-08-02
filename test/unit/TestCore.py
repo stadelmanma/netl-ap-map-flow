@@ -41,7 +41,10 @@ class TestCore:
         r"""
         Builds a data field and tests its properties
         """
-        fname = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT')
+        #
+        # covering basic methods
+        map_file = 'PARALELL-PLATE-01VOX.TXT'
+        fname = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', map_file)
         field = amt.DataField(fname)
         field.create_point_data()
         field.copy_data(field)
@@ -50,6 +53,26 @@ class TestCore:
         assert field.nz == 100
         assert field.data_map.size == 10000
         assert field.point_data.size == 40000
+        #
+        # testing clone method returns proper data and class reference
+        cloned_field = field.clone()
+        assert isinstance(cloned_field, field.__class__)
+        assert sp.all(cloned_field.data_map == field.data_map)
+        assert sp.all(cloned_field._raw_data == field._raw_data)
+        #
+        # testing adjacency matrix
+        matrix = field.create_adjacency_matrix()
+        assert matrix is not None
+        #
+        # testing thresholding
+        field.data_map = sp.arange(field.nz*field.nx, dtype=float).reshape(field.nz, field.nx)
+        field.data_vector = sp.ravel(field.data_map)
+        low_inds = sp.where(field.data_vector <= 100)
+        high_inds = sp.where(field.data_vector >= 900)
+        field.threshold_data(min_value=100, repl=-1)
+        field.threshold_data(max_value=900)
+        assert sp.all(field.data_vector[low_inds] == -1)
+        assert sp.all(sp.isnan(field.data_vector[high_inds]))
 
     def test_stat_file(self):
         r"""

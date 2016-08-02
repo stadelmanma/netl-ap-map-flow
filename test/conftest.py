@@ -4,6 +4,7 @@ from os import mkdir
 import pytest
 from shutil import rmtree
 import scipy as sp
+import ApertureMapModelTools as amt
 
 
 @pytest.fixture(autouse=True)
@@ -85,7 +86,7 @@ def data_field_class():
     and placeholder data
     """
 
-    class PseudoDataField:
+    class PseudoDataField(amt.DataField):
         r"""
         Handles testing of the data field object without needing to create one
         """
@@ -100,20 +101,8 @@ def data_field_class():
             self._raw_data = None
             self._cell_interfaces = None
             self.output_data = dict()
-
-        def clone(self):
-            clone = PseudoDataField()
-            self.copy_data(clone)
-            clone._raw_data = sp.copy(self._raw_data)
-            clone._cell_interfaces = sp.copy(self._cell_interfaces)
-
-        def copy_data(self, obj):
-            obj.infile = self.infile
-            obj.nx = self.nx
-            obj.nz = self.nz
-            obj.data_map = sp.copy(self.data_map)
-            obj.data_vector = sp.copy(self.data_vector)
-            obj.point_data = sp.copy(self.point_data)
+            #
+            self._define_cell_interfaces()
 
         def parse_data_file(self):
             pass
