@@ -3,13 +3,7 @@ from os import path
 from os import mkdir
 import pytest
 from shutil import rmtree
-import sys
 import scipy as sp
-#
-# setting path to module
-sys.path.insert(0, path.abspath(path.join('..')))
-print(sys.path[0])
-#
 import ApertureMapModelTools as amt
 
 
