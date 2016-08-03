@@ -17,10 +17,10 @@ This class wraps up the core functionality contained in the RunModel submodule i
 .. code-block:: python
 
 	bulk_run = BulkRun(input_file, # Used as a template to generate simulation runs from
-					   sim_inputs=None, # list of map parameter dictionaries
-					   num_CPUs=2.0, # Maximum number of CPUs to try and use
-					   sys_RAM=4.0, # Maximum amount of RAM to use
-					   **kwargs)
+	                   sim_inputs=None, # list of map parameter dictionaries
+	                   num_CPUs=2.0, # Maximum number of CPUs to try and use
+	                   sys_RAM=4.0, # Maximum amount of RAM to use
+	                   **kwargs)
 
 Useful kwargs include:
  * :code:`start_delay`: time to delay starting of the overall run
@@ -72,10 +72,47 @@ The :code:`dry_run()` method works exactly as its name implies, doing everything
 
 The :code:`start()` method simply begins the simulations. One slight difference from the :code:`dry_run()` method is that input files are only written when a simulation is about to be spawned, instead of writing them all out in the beginning. One additional caveat is that although the BulkRun code takes advantage of the threading and subprocess modules to run simulations asynchronously the BulkRun program itself runs synchronously. This can easily be overcome by the user through the multiprocessing module if desired.
 
+Behind the Scenes
+=================
 
+Outside of the public methods used to generate inputs and start a simulation the class does a large portion of the work behind the scenes. Understanding the process can help prevent errors when defining the input ranges. Below is the general flow of the routine after :code:`start()` is called and then each step will be gone over in additional detail. 
 
+ 1. :code:`start()` - Begins the bulk run of simulations, passing args along
+ 2. :code:`_start_bulk_run(start_delay=20.0, **kwargs)` - Acts as a driver function 
+ 3. :code:`_combine_run_args` - processes the map specific dictionaries
+ 4. :code:`_check_processes` - Tests to see if any of the simulations have completed
+ 5. :code:`_start_simulations` - Tests to see if additional simulations are able to be started
 
+The _start_bulk_run Method
+--------------------------
 
+:code:`_start_bulk_run` is the actual workhorse of the BulkRun class. The only thing :code:`start()` does is call this method passing the class itself in as a double starred argument. This layer of abstraction is used to prevent errors since the class itself is a subclassed dictionary and stores keywords as entries on itself. The only keyword :code:`_start_bulk_run` expects is :code:`start_delay` and it passes the rest off to other functions.
 
+This method performs several tasks before starting the while loop used to manage simulations. Firstly it creates a list of input maps which are sent to the core method :code:`estimate_req_RAM` to ensure enough RAM was allocated. This RAM value is then stored on each map's dictionary so the routine can later check that value against the amount of free RAM when determining whether to start a new simulation.
 
+If the run has enough RAM then :code:`_combine_run_args()` is called to generate the final list of InputFile objects to start simulations with. After generation, a while loop is entered that runs :code:`_check_processes` and :code:`_start_simulations` until all InputFile objects have been run through the model. 
+
+The _combine_run_args Method
+----------------------------
+
+:code:`_combine_run_args` handles generation of the InputFile objects used to run the LCL model from Python. All of the parameters contained in a single map dictionary are combined using the :code:`product` function from the :code:`itertools` module in the standard library. :code:`product` accepts 'N' lists with at least 1 element and returns a list of tuples containing all possible combinations of arguments. 
+
+:code:`_combine_run_args` then loops over all of the tuples returned. First, mapping them back into a dictionary and then calling the :code:`clone` method of the InputFile object generated during the BulkRun class instantiation. The filename formats defined in the map dictionary are passed in during cloning. The cloned version of the input file is then updated with the current combination of args by calling it's :code:`update_args` method passing in the re-maps args dictionary. The new InputFile object is then appended to the :code:`input_file_list` attribute of the BulkRun class and the process is repeated until all tuples and map dictionaries have been processed. The final list of input files is used to drive the while loop in :code:`_start_bulk_run` 
+
+Running each InputFile
+----------------------
+
+The while loop in :code:`_start_bulk_run` operates as long as there is a value left in the :code:`input_file_list` attribute of the BulkRun class object. A non-empty array is treated as a 'True' or 'Truthy' value in Python. The while loop executes two function continuously with a slight delay defined by the user inputs :code:`retest_delay` and :code:`spawn_delay`. The functions it executes are :code:`_check_processes` and :code:`_start_simulations`. 
+
+The _check_processes Method
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:code:`_check_processes` is a very simple method that essentially pauses the routine until a simulation is completed. It looks through the currently running processes which are stored as an array of Popen objects returned by the core method :code:`run_model`. Popen objects are part of the subprocess module in the standard library, they have a method :code:`poll()` which returns :code:`None` if the process has not yet completed. Regardless of the return code when the :code:`poll()` returns a value the corresponding process is removed and its RAM requirement is released before returning from the method. If no processes have completed then the function waits the amount of time specified by :code:`retest_delay` argument and checks again.
+
+The _start_simulations Method
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+:code:`_start_simulations` handles the spawning of new processes if certain criteria are met. This method is only entered if :code:`_check_processes` registers that a simulation has completed. It first calculates the amount of free RAM based on the maximum requirement of currently running simulations. Then it enters a while loop to test spawn criteria, if either fail the method returns and while loop tests its own exit criteria and calls :code:`_check_processes` otherwise. Return conditions are if the number of current processes is greater than or equal to the number of CPUs or if all maps require more RAM than available.
+
+If both criteria are satisfied then a new process is spawned and its RAM requirement and the process are stored in two lists. The method then waits for the duration specified by the :code:`spawn_delay` argument and checks to see if it can spawn any additional processes by retesting the same exit criteria defined above. This method and the one above work in conjunction to process all of the InputFiles generated by :code:`_combine_run_args`.
 	
