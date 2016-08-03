@@ -116,7 +116,7 @@ class TestRunCore:
         # updating paths so they are absolute
         files = ['SUMMARY-PATH', 'STAT-FILE', 'APER-FILE', 'FLOW-FILE', 'PRESS-FILE', 'VTK-FILE']
         for file in files:
-            inp_file[file].commened_out = True
+            inp_file[file].update_value(os.path.join(TEMP_DIR, file+'.RCTEST'))
         inp_file.filename_formats['input_file'] = os.path.join(TEMP_DIR, 'TEST_INIT.INP')
         #
         dirs = os.path.split(inp_file['PVT-PATH'].value)
