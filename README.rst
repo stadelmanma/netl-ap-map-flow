@@ -12,18 +12,18 @@ AP MAP FLOW
 
 Description
 -----------
-AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law simulations of single phase flow through a discrete fracture and analyze the data. There are several tools written in `Python <https://www.python.org/>`_ to provide added functionality which are packaged in the ApertureMapModelTools module. The Fortran code was compiled on Windows 7 with the `Cygwin <https://www.cygwin.com/>`_ gfortran 64-bit compiler and using the standalone gfortran compiler on OSX and Linux. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen reader functions the images may be upside down. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. 
+AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. There are several tools written in `Python <https://www.python.org/>`_ to provide added functionality which are packaged in the ApertureMapModelTools module. The Fortran code was compiled on Windows 7 with the `Cygwin <https://www.cygwin.com/>`_ gfortran 64-bit compiler and using the standalone gfortran compiler on OSX and Linux. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method.
 
 
 ApertureMapModelTools contains four sub modules DataProcessing, OpenFoamExport, RunModel and UnitConversion.
 
-| 
+|
 
  * DataProcessing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is apm_process_data.py which accepts various command line arguments to automatically perform basic post-processing. There will be an example of post processing data in the 'examples' directory.
 
 |
 
- * OpenFoamExport is used to create a blockMeshDict file from the flattened aperture map used in the LCL model. There is an example of how to utilize the OpenFoamExport class in `<examples/openfoam-export-example.rst>`_. 
+ * OpenFoamExport is used to create a blockMeshDict file from the flattened aperture map used in the LCL model. There is an example of how to utilize the OpenFoamExport class in `<examples/openfoam-export-example.rst>`_.
 
 |
 
@@ -31,7 +31,7 @@ ApertureMapModelTools contains four sub modules DataProcessing, OpenFoamExport, 
 
 |
 
- * UnitConversion performs unit conversions for the user and is able to handle a wide variety of inputs. However it assumes the user is supplying a valid conversion i.e. meters to feet, where the dimensionality matches. There will be an example of how to use the module in the 'examples' directory. 
+ * UnitConversion performs unit conversions for the user and is able to handle a wide variety of inputs. However it assumes the user is supplying a valid conversion i.e. meters to feet, where the dimensionality matches. There will be an example of how to use the module in the 'examples' directory.
 
 Setting up the Modeling Package
 -------------------------------
@@ -49,13 +49,13 @@ Once you have gfortran and Python you will need to build the flow model from sou
 
 
 
-Making ApertureMapModuleTools globally visible to the Python install is optional but can simplify usage of the module. Python stores all third party packages in a local directory, the location of that directory can be found using the following command. If needed substiute "python3" for which ever python executable you have or want to use.  
+Making ApertureMapModuleTools globally visible to the Python install is optional but can simplify usage of the module. Python stores all third party packages in a local directory, the location of that directory can be found using the following command. If needed substiute "python3" for which ever python executable you have or want to use.
 
 .. code-block:: bash
 
     python3 -m site --user-site
 
-After you have the location of that directory you can either move the entire ApertureMapModelTools directory there or symlink it using the command below in a terminal window from **inside the ApertureMapModelTools directory**. The command as written will only work on Linux and OSX. Windows users will need to manually symlink the module folder using the :code:`mklink` command after locating the directory. The steps to symlink the module will differ if you are using WinPython as well. You will need to run the above command in a command prompt opened from inside of Spyder because WinPython uses it's own installation of Python. After that you will need to manually symlink the module folder using the :code:`mklink` command. 
+After you have the location of that directory you can either move the entire ApertureMapModelTools directory there or symlink it using the command below in a terminal window from **inside the ApertureMapModelTools directory**. The command as written will only work on Linux and OSX. Windows users will need to manually symlink the module folder using the :code:`mklink` command after locating the directory. The steps to symlink the module will differ if you are using WinPython as well. You will need to run the above command in a command prompt opened from inside of Spyder because WinPython uses it's own installation of Python. After that you will need to manually symlink the module folder using the :code:`mklink` command.
 
 .. code-block:: bash
 
