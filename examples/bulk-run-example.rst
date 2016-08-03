@@ -22,10 +22,10 @@ This class wraps up the core functionality contained in the RunModel submodule i
 	                   sys_RAM=4.0, # Maximum amount of RAM to use
 	                   **kwargs)
 
-Useful kwargs include:
- * :code:`start_delay`: time to delay starting of the overall run
- * :code:`spawn_delay`: minimum time between spawning of new processes
- * :code:`retest_delay`: time to wait between checking for completed processes
+Useful kwargs and defaults are:
+ * :code:`start_delay=20.0`: time to delay starting of the overall run
+ * :code:`spawn_delay=5.0`: minimum time between spawning of new processes
+ * :code:`retest_delay=5.0`: time to wait between checking for completed processes
 
 It is more convenient to use the process_input_tuples method to generate :code:`sim_inputs` than to specify a valid argument yourself. When running the simulations the program considers the available RAM first and if there is enough space will then check for an open CPU to start a simulation on. The RAM requirement is an estimation based on the size of the map, the code will only seek to use 90% of the supplied value because the LCL model carries a small fraction of additional overhead which can not be predicted. The program is not guaranteed to run simulations sequentially with respect to the sim_inputs list. If the next map on the list is too large it will loop through the remaining maps to try and find one small enough to run. Time between tests and simulation spawns are controlled by the keywords listed above. The class has three public methods :code:`process_input_tuples`, :code:`dry_run` and :code:`start` these will be gone over next. 
 
@@ -35,7 +35,7 @@ The process_input_tuples Method
 The format the BulkRun class expects its parameters to be in is not the most convenient for a user to manually create, this function was designed to address that issue. The raw format the BulkRun class expects its inputs to be in is a dictionary specifying the aperture map file, a dictionary of parameters to vary and a dictionary storing filename formats. The structure is required to simplify code when running maps but is inherently inflexible in the presence of running many maps with mostly the same formats and parameters. 
 
 The method accepts three arguments :code:`process_input_tuples(input_tuples, default_params=None, default_name_format=None)`. The fist argument is a list of tuples, the next two are dictionaries defining the default values for each map being run. 
-BulkRun simulation settings have the follow input resolution order:
+BulkRun simulation settings have the following input resolution order:
 
  1. Hard-coded model defaults 
  2. Values in the initial input file used to instantiate the class 
@@ -61,14 +61,14 @@ The arguments to the method have the following general format:
 		(['file2', 'file3'], {}, {}) #this one only uses default values defined.
 	]
 
-The first value in the tuple has to be a list even if it is a single map. Each entry in the param dictionaries also have to be lists even for a single value. Additionally each parameter value needs to already be a string. This string is directly placed into the input file as well in the place of any :code:`%param keyword%` portions of the filename format. Strings are required to avoid the added complexity of attempting to format an arbitrary user defined value. If no group specific settings are required an empty dictionary, :code:`{}`, can be used. When the function is executed each tuple is processed and a map specific dictionary is generated for each map supplied in the `list of maps`. This allows you to easily create a large amount of simulation inputs without having to write duplicate definitions. :code:`default_params` and :code:`default_name_formats` are not required arguments and if omitted only group specific values will be used. 
+The first value in the tuple has to be a list even if it is a single map. Each entry in the param dictionaries also have to be lists, even for a single value. Additionally each parameter value needs to already be a string. This string is directly placed into the input file as well in the place of any :code:`%param keyword%` portions of the filename format. Strings are required to avoid the added complexity of attempting to format an arbitrary user defined value. If no group specific settings are required an empty dictionary, :code:`{}`, can be used. When the function is executed each tuple is processed and a map specific dictionary is generated for each map supplied in the `list of maps`. This allows you to easily create a large amount of simulation inputs without having to write duplicate definitions. :code:`default_params` and :code:`default_name_formats` are not required arguments and if omitted only group specific values will be used. 
 
-The result of processing the input_tuples is stored on the class object in the attribute :code:`sim_inputs` which is a list. This is the same attribute where the value of the optional argument :code:`sim_inputs=None` is stored. **This function will overwrite the value of sim_inputs passed in during class instantiation.** You can add additional map dictionaries to the :code:`sim_inputs` attribute by appending them to the list. There are no limits to the number of parameters or parameter values to vary but keep in mind every parameter with more than one value increases the total number of simulations multiplicatively. Conflicting parameters will also need to be carefully managed, i.e. varying the boundary conditions, by having all conflicting lines commented out in the initial input file so only valid combinations become uncommented when the program generates each simulation input file.
+The result of processing the input_tuples is stored on the class object in the attribute :code:`sim_inputs` which is a list. This is the same attribute where the value of the optional argument :code:`sim_inputs=None` is stored. **This function will overwrite the value of sim_inputs passed in during class instantiation.** You can add additional map dictionaries to the :code:`sim_inputs` attribute by appending them to the list after running this function. There are no limits to the number of parameters or parameter values to vary but keep in mind every parameter with more than one value increases the total number of simulations multiplicatively. Conflicting parameters will also need to be carefully managed, i.e. varying the boundary conditions. When using conflicting inputs you will need to have all conflicting lines commented out in the initial input file so only valid combinations are uncommented when the file is generated.
 
 The dry_run and start Methods
 -----------------------------
 
-The :code:`dry_run()` method works exactly as its name implies, doing everything except actually starting simulations. It is best if you always run this method before calling the :code:`start()` method to ensure everything checks out. :code:`dry_run` will generate and write out all model input files used allowing you to ensure the input parameters and any name formatting is properly executed. Also, as the code runs it calculates and stores the estimated RAM required for each map. If a map is found to exceed the available RAM an EnvironmentError/OSError will be raised halting the program. The BulkRun code does not actually require each input file to have a unique name since the LCL model only references it during initialization. However, if you are overwriting an existing file ensure the spawn_delay is non-zero to avoid creating a race condition. Non-unique output filenames can also cause an IO error in the FORTRAN code if two simulations attempt to use the same file at the same time.
+The :code:`dry_run()` method works exactly as its name implies, doing everything except actually starting simulations. It is best if you always run this method before calling the :code:`start()` method to ensure everything checks out. :code:`dry_run` will generate and write out all model input files used allowing you to ensure the input parameters and any name formatting is properly executed. Also, as the code runs it calculates and stores the estimated RAM required for each map. If a map is found to exceed the available RAM an EnvironmentError/OSError will be raised halting the program. The BulkRun code does not actually require each input file to have a unique name since the LCL model only references it during initialization. However, if you are overwriting an existing file ensure the spawn_delay is non-zero to avoid creating a race condition or an IO error from simultaneous access. Non-unique output filenames can also cause an IO error in the FORTRAN code if two simulations attempt to use the same file at the same time.
 
 The :code:`start()` method simply begins the simulations. One slight difference from the :code:`dry_run()` method is that input files are only written when a simulation is about to be spawned, instead of writing them all out in the beginning. One additional caveat is that although the BulkRun code takes advantage of the threading and subprocess modules to run simulations asynchronously the BulkRun program itself runs synchronously. This can easily be overcome by the user through the multiprocessing module if desired.
 
@@ -79,9 +79,9 @@ Outside of the public methods used to generate inputs and start a simulation the
 
  1. :code:`start()` - Begins the bulk run of simulations, passing args along
  2. :code:`_start_bulk_run(start_delay=20.0, **kwargs)` - Acts as a driver function 
- 3. :code:`_combine_run_args` - processes the map specific dictionaries
- 4. :code:`_check_processes` - Tests to see if any of the simulations have completed
- 5. :code:`_start_simulations` - Tests to see if additional simulations are able to be started
+ 3. :code:`_combine_run_args()` - processes the map specific dictionaries
+ 4. :code:`_check_processes(processes, RAM_in_use, retest_delay=5, **kwargs)` - Tests to see if any of the simulations have completed
+ 5. :code:`_start_simulations(processes, RAM_in_use, spawn_delay=5, **kwargs)` - Tests to see if additional simulations are able to be started
 
 The _start_bulk_run Method
 --------------------------
@@ -97,7 +97,7 @@ The _combine_run_args Method
 
 :code:`_combine_run_args` handles generation of the InputFile objects used to run the LCL model from Python. All of the parameters contained in a single map dictionary are combined using the :code:`product` function from the :code:`itertools` module in the standard library. :code:`product` accepts 'N' lists with at least 1 element and returns a list of tuples containing all possible combinations of arguments. 
 
-:code:`_combine_run_args` then loops over all of the tuples returned. First, mapping them back into a dictionary and then calling the :code:`clone` method of the InputFile object generated during the BulkRun class instantiation. The filename formats defined in the map dictionary are passed in during cloning. The cloned version of the input file is then updated with the current combination of args by calling it's :code:`update_args` method passing in the re-maps args dictionary. The new InputFile object is then appended to the :code:`input_file_list` attribute of the BulkRun class and the process is repeated until all tuples and map dictionaries have been processed. The final list of input files is used to drive the while loop in :code:`_start_bulk_run` 
+:code:`_combine_run_args` then loops over all of the tuples returned. First, mapping them back into a dictionary and then calling the :code:`clone` method of the InputFile object generated during the BulkRun class instantiation. The filename formats defined in the map dictionary are passed in during cloning. The cloned version of the input file is then updated with the current combination of args by calling it's :code:`update_args` method passing in the re-mapped args dictionary. The new InputFile object is then appended to the :code:`input_file_list` attribute of the BulkRun class and the process is repeated until all tuples and map dictionaries have been processed. The final list of input files is used to drive the while loop in :code:`_start_bulk_run` 
 
 Running each InputFile
 ----------------------
@@ -114,5 +114,5 @@ The _start_simulations Method
 
 :code:`_start_simulations` handles the spawning of new processes if certain criteria are met. This method is only entered if :code:`_check_processes` registers that a simulation has completed. It first calculates the amount of free RAM based on the maximum requirement of currently running simulations. Then it enters a while loop to test spawn criteria, if either fail the method returns and while loop tests its own exit criteria and calls :code:`_check_processes` otherwise. Return conditions are if the number of current processes is greater than or equal to the number of CPUs or if all maps require more RAM than available.
 
-If both criteria are satisfied then a new process is spawned and its RAM requirement and the process are stored in two lists. The method then waits for the duration specified by the :code:`spawn_delay` argument and checks to see if it can spawn any additional processes by retesting the same exit criteria defined above. This method and the one above work in conjunction to process all of the InputFiles generated by :code:`_combine_run_args`.
+If both criteria are satisfied then a new process is spawned and its RAM requirement and the process are stored. The method then waits for the duration specified by the :code:`spawn_delay` argument and checks to see if it can spawn any additional processes by retesting the same exit criteria defined above. This method and the one above work in conjunction to process all of the InputFiles generated by :code:`_combine_run_args`.
 	
