@@ -234,20 +234,12 @@ class InputFile(OrderedDict):
         arguments and creates file paths if directories do not exist yet
         """
         #
-        formats = self.filename_formats
-        outfiles = {k: formats[k] for k in formats.keys()}
+        outfiles = {key: value for key, value in self.filename_formats.items()}
+        format_args = {key: arg.value for key, arg in self.items()}
+        format_args.update(self.filename_format_args)
         #
-        for arg in self.keys():
-            pattern = re.compile('%'+arg+'%', flags=re.I)
-            for fname in outfiles.keys():
-                name = pattern.sub(self[arg].value, outfiles[fname])
-                outfiles[fname] = name
-        #
-        for arg in self.filename_format_args.keys():
-            pattern = re.compile('%'+arg+'%', flags=re.I)
-            for fname in outfiles.keys():
-                name = pattern.sub(self.filename_format_args[arg], outfiles[fname])
-                outfiles[fname] = name
+        for keyword in outfiles.keys():
+            outfiles[keyword] = outfiles[keyword].format(**format_args)
         #
         # checking existance of directories and updating dict
         for fname in outfiles.keys():

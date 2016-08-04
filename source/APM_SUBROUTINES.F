@@ -199,7 +199,6 @@ C
       CHARACTER(MAXLEN),ALLOCATABLE :: OPENED_FILES(:)
 C
 C     VARIABLE INITIALIZATIONS
-      PRINT *, WIN64
       SEP = '/'
       IF (WIN64 == 1) SEP = '\'
       APM = .FALSE.

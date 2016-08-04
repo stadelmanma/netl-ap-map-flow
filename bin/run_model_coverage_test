@@ -12,7 +12,7 @@ cp makefile ../test/fortran
 cd ../test/fortran
 make test
 
-# executing test scripts amd capturing return codes
+# executing test scripts and capturing return codes
 set +e
 
 echo ""

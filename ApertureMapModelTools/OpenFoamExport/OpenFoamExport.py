@@ -38,7 +38,7 @@ class OpenFoamDict(OpenFoamObject, OrderedDict):
               a dictionary
         """
         init_vals = {}
-        if values:
+        if values is not None:
             init_vals = values
         #
         super().__init__(init_vals)
@@ -78,7 +78,7 @@ class OpenFoamList(OpenFoamObject, list):
               a list
         """
         init_vals = []
-        if values:
+        if values is not None:
             init_vals = values
         #
         super().__init__(init_vals)
@@ -453,7 +453,7 @@ class BlockMeshDict(OpenFoamFile):
         self._vertices = sp.array(vertices, ndmin=2, dtype=float)
         self._blocks = sp.array(self._blocks, ndmin=2, dtype=int)
 
-    def set_boundary_patches(self, boundary_blocks):
+    def set_boundary_patches(self, boundary_blocks, reset=False):
         r"""
         Sets up boundary patches based on the dictionary passed in. Does
         not check for overlap in patch declarations. The boundary blocks
@@ -470,6 +470,8 @@ class BlockMeshDict(OpenFoamFile):
                   where <side> is left, right, bottom, top, front or back
                   and block list is a list of blocks to add that patch to the
                   side of.
+            - reset - boolean : if True then the face labels dictionary
+                and _faces array are re-initialized to default values
         """
         #
         offsets = {
@@ -480,6 +482,14 @@ class BlockMeshDict(OpenFoamFile):
             'left': (4, (0, 3, 7, 4)),
             'top': (5, (4, 5, 6, 7)),
         }
+        #
+        if reset:
+            num_faces = 6 * len(self._blocks)
+            self._faces = sp.ones((num_faces, 4), dtype=int)*-sp.iinfo(int).max
+            self.face_labels = {}
+            for patch_name in boundary_blocks.keys():
+                key = 'boundary.'+patch_name
+                self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
         #
         for patch_name, side_dict in boundary_blocks.items():
             for side, blocks in side_dict.items():
@@ -493,18 +503,9 @@ class BlockMeshDict(OpenFoamFile):
         Generates a simple mesh including all cells in the data map
         """
         #
-        # initializing required arrays
-        num_faces = 6*self.data_map.size
-        #
-        self._faces = -sp.ones((num_faces, 4), dtype=int)
+        # initializing arrays
         self._edges = sp.ones(0, dtype=str)
         self._merge_patch_pairs = sp.ones(0, dtype=str)
-        #
-        # initializing boundary face labels
-        self.face_labels = {}
-        for side in ['left', 'right', 'top', 'bottom', 'front', 'back']:
-            key = 'boundary.'+side
-            self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
         #
         # setting up blocks and vertices
         self._create_blocks(cell_mask=None)
@@ -525,7 +526,7 @@ class BlockMeshDict(OpenFoamFile):
             'back':
                 {'back': sp.arange(self.nx*self.nz)}
         }
-        self.set_boundary_patches(boundary_dict)
+        self.set_boundary_patches(boundary_dict, reset=True)
 
     def generate_threshold_mesh(self, min_value=0.0, max_value=1.0e9):
         r"""
@@ -533,6 +534,7 @@ class BlockMeshDict(OpenFoamFile):
         that are isolated by the thresholding are also automatically removed.
         """
         #
+        self.mesh_params['boundary.internal.type'] = 'wall'
         self._edges = sp.ones(0, dtype=str)
         self._merge_patch_pairs = sp.ones(0, dtype=str)
         #
@@ -557,17 +559,6 @@ class BlockMeshDict(OpenFoamFile):
         # generating blocks and vertices
         mask = self.data_map > 0.0
         self._create_blocks(cell_mask=mask)
-        #
-        # re-initializing boundary face labels
-        num_faces = 6 * len(self._blocks)
-        self._faces = sp.ones((num_faces, 4), dtype=int) * -sp.iinfo(int).max
-        self.face_labels = {}
-        sides = ['left', 'right', 'top', 'bottom', 'front', 'back', 'internal']
-        for side in sides:
-            side = 'boundary.'+side
-            self.face_labels[side] = sp.zeros(num_faces, dtype=bool)
-        #
-        self.mesh_params['boundary.internal.type'] = 'wall'
         #
         # building face arrays
         mapper = sp.ravel(sp.array(mask, dtype=int))
@@ -614,7 +605,7 @@ class BlockMeshDict(OpenFoamFile):
         inds = sp.ravel(mapper)[links[:, 0]]
         for side, block_id in zip(sides, inds):
             boundary_dict['internal'][side].append(block_id)
-        self.set_boundary_patches(boundary_dict)
+        self.set_boundary_patches(boundary_dict, reset=True)
 
     def generate_mesh_file(self):
         r"""
@@ -646,7 +637,7 @@ class BlockMeshDict(OpenFoamFile):
         self[oflist.name] = oflist
         #
         # writing edges
-        oflist = OpenFoamList('edges')
+        oflist = OpenFoamList('edges', self._edges)
         self[oflist.name] = oflist
         #
         # getting unique list of boundary faces defined
@@ -672,16 +663,10 @@ class BlockMeshDict(OpenFoamFile):
         self[oflist.name] = oflist
         #
         # writing mergePatchPairs
-        oflist = OpenFoamList('mergePatchPairs')
+        oflist = OpenFoamList('mergePatchPairs', self._merge_patch_pairs)
         self[oflist.name] = oflist
 
     def write_foam_file(self, path='.', create_dirs=True, overwrite=False):
-        r"""
-        Passes args off to write_mesh_file
-        """
-        self.write_mesh_file(path, create_dirs, overwrite)
-
-    def write_mesh_file(self, path='.', create_dirs=True, overwrite=False):
         r"""
         Writes a full blockMeshDict file based on stored geometry data
         """
@@ -712,6 +697,12 @@ class BlockMeshDict(OpenFoamFile):
         #
         print('Mesh file saved as: '+fname)
 
+    def write_mesh_file(self, path='.', create_dirs=True, overwrite=False):
+        r"""
+        Passes args off to write_foam_file
+        """
+        self.write_foam_file(path, create_dirs, overwrite)
+
     def write_symmetry_plane(self, path='.', create_dirs=True, overwrite=False):
         r"""
         Exports the +Y half of the mesh flattening out everything below 0 on
@@ -722,8 +713,8 @@ class BlockMeshDict(OpenFoamFile):
         old_verts = sp.copy(self._vertices)
         self._vertices[sp.where(self._vertices[:, 1] <= 0.0), 1] = 0.0
         #
-        # outputting mesh
-        self.write_mesh_file(path=path,
+        # outputing mesh
+        self.write_foam_file(path=path,
                              create_dirs=create_dirs,
                              overwrite=overwrite)
         #

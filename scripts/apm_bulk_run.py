@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+r"""
 ########################################################################
 #
 # !!! IMPORTANT NOTES: !!!
@@ -35,10 +36,13 @@
 #
 # file_name_format_dict follows similar logic as above in respect to keys.
 # Filename formats have form of:
-#  './STATIC_PORTION_OF_NAME-%param_keyword%-STATIC-PORTION.EXT'
-# The '%param_keyword%' portion of the name is replaced by the value
+#  './STATIC_PORTION_OF_NAME-{param_keyword}-STATIC-PORTION.EXT'
+# The '{param_keyword}' portion of the name is replaced by the value
 # of that parameter. This allows the user to vary a range of parameters
 # and have names automatically generated to prevent overwrites or ambiguity.
+# The process is done using standard python formatting based on keywords
+# so if you need to pre-format your formats as I perform below parameters need
+# to be enclosed in {{ }} to escape them from the initial string formatting.
 # Extra non-input parameters can be added to use in filename formatting.
 # These should be specified on a per map(s) basis and as a list with a
 # single value to prevent the non-input parameters creating duplicate runs.
@@ -65,24 +69,33 @@
 #
 ########################################################################
 #
+"""
 from ApertureMapModelTools.RunModel import BulkRun
 
 #
 # Input tuple setup demo
-prefix = ['IS-8_0', 'IS-8_1', 'IS-8_2', 'IS-8_3', 'IS-8_4']
+stages = ['IS-8_0', 'IS-8_1', 'IS-8_2', 'IS-8_3', 'IS-8_4']
 map_format_str = r'./{0}/{1}_ApertureMap.txt'
-maps = [map_format_str.format('SHEARING_TEST7-8', pf) for pf in prefix]
+maps = [map_format_str.format('SHEARING_TEST7-8', pf) for pf in stages]
 #
-dir_fmt = './%dir%/%map_type%/'
+dir_fmt = './{{dir}}/{{map_type}}/'
 file_formats = {
-    'SUMMARY-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%-LOG.TXT',
-    'STAT-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%-STAT.CSV',
-    'APER-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%-APER.CSV',
-    'FLOW-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%-FLOW.CSV',
-    'PRESS-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%-PRES.CSV',
-    'VTK-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%.vtk',
-    'input_file': dir_fmt+'INP_FILES/{}-OUTLET_PRESS_%OUTLET-PRESS%.INP'
+    'SUMMARY-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_{{OUTLET-PRESS}}-LOG.TXT',
+    'STAT-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_{{OUTLET-PRESS}}-STAT.CSV',
+    'APER-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_{{OUTLET-PRESS}}-APER.CSV',
+    'FLOW-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_{{OUTLET-PRESS}}-FLOW.CSV',
+    'PRESS-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_{{OUTLET-PRESS}}-PRES.CSV',
+    'VTK-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_{{OUTLET-PRESS}}.vtk',
+    'input_file': dir_fmt+'INP_FILES/{0}-OUTLET_PRESS_{{OUTLET-PRESS}}.INP'
 }
+#
+map_run_params = [
+    {'OUTLET-PRESS': ['995.13', '993.02', '989.04'], 'map_type':['FULL']},
+    {'OUTLET-PRESS': ['995.32', '979.55', '945.06'], 'map_type':['FULL']},
+    {'OUTLET-PRESS': ['997.84', '993.04', '982.18'], 'map_type':['FULL']},
+    {'OUTLET-PRESS': ['997.70', '999.58', '999.40'], 'map_type':['FULL']},
+    {'OUTLET-PRESS': ['999.70', '999.63', '999.49'], 'map_type':['FULL']}
+]
 #
 run_dict = {
     'INLET-PRESS': ['1000'],
@@ -94,19 +107,11 @@ run_dict = {
 }
 #
 map_file_fmts = [
-    {k: file_formats[k].format(prefix[0]) for k in file_formats},
-    {k: file_formats[k].format(prefix[1]) for k in file_formats},
-    {k: file_formats[k].format(prefix[2]) for k in file_formats},
-    {k: file_formats[k].format(prefix[3]) for k in file_formats},
-    {k: file_formats[k].format(prefix[4]) for k in file_formats}
-]
-#
-map_run_params = [
-    {'OUTLET-PRESS': ['995.13', '993.02', '989.04'], 'map_type':['FULL']},
-    {'OUTLET-PRESS': ['995.32', '979.55', '945.06'], 'map_type':['FULL']},
-    {'OUTLET-PRESS': ['997.84', '993.04', '982.18'], 'map_type':['FULL']},
-    {'OUTLET-PRESS': ['997.70', '999.58', '999.40'], 'map_type':['FULL']},
-    {'OUTLET-PRESS': ['999.70', '999.63', '999.49'], 'map_type':['FULL']}
+    {k: file_formats[k].format(stages[0]) for k in file_formats},
+    {k: file_formats[k].format(stages[1]) for k in file_formats},
+    {k: file_formats[k].format(stages[2]) for k in file_formats},
+    {k: file_formats[k].format(stages[3]) for k in file_formats},
+    {k: file_formats[k].format(stages[4]) for k in file_formats}
 ]
 #
 input_params = [
@@ -117,8 +122,16 @@ input_params = [
     (maps[3:4], map_run_params[3], map_file_fmts[3]),
     (maps[4:5], map_run_params[4], map_file_fmts[4])
 ]
+#
+# alternatively in a single loop
+input_params = []
+for i, prefix in enumerate(stages):
+    ap_map = map_format_str.format(run_dict['dir'][0], prefix)
+    map_fmts = {k: fname.format(prefix) for k, fname in file_formats.items()}
+    input_params.append(([ap_map], map_run_params[i], map_fmts))
+
 # unsetting demo values
-del prefix
+del stages
 del map_format_str
 del maps
 del map_file_fmts

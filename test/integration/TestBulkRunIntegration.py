@@ -31,13 +31,13 @@ class TestBulkRun:
         #
         global_file_formats = {
             'PVT-PATH': os.path.join(FIXTURE_DIR, 'PVT', 'H2O_TEMP_058F.CSV'),
-            'SUMMARY-PATH': os.path.join(TEMP_DIR, '%APERMAP%-RF%ROUGHNESS%-%OUTLET-PRESS%PA-LOG.TXT'),
-            'STAT-FILE': os.path.join(TEMP_DIR, '%APERMAP%-RF%ROUGHNESS%-%OUTLET-PRESS%PA-STAT.CSV'),
-            'APER-FILE': os.path.join(TEMP_DIR, '%APERMAP%-RF%ROUGHNESS%-%OUTLET-PRESS%PA-APER.CSV'),
-            'FLOW-FILE': os.path.join(TEMP_DIR, '%APERMAP%-RF%ROUGHNESS%-%OUTLET-PRESS%PA-FLOW.CSV'),
-            'PRESS-FILE': os.path.join(TEMP_DIR, '%APERMAP%-RF%ROUGHNESS%-%OUTLET-PRESS%PA-PRES.CSV'),
-            'VTK-FILE': os.path.join(TEMP_DIR, '%APERMAP%-RF%ROUGHNESS%-%OUTLET-PRESS%PA-VTK.vtk'),
-            'input_file': os.path.join(TEMP_DIR, '%APERMAP%-RF%ROUGHNESS%-%OUTLET-PRESS%PA-INIT.INP')
+            'SUMMARY-PATH': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-LOG.TXT'),
+            'STAT-FILE': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-STAT.CSV'),
+            'APER-FILE': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-APER.CSV'),
+            'FLOW-FILE': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-FLOW.CSV'),
+            'PRESS-FILE': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-PRES.CSV'),
+            'VTK-FILE': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-VTK.vtk'),
+            'input_file': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-INIT.INP')
         }
         global_run_params = {
             'FRAC-PRESS': ['1000'],
@@ -55,7 +55,7 @@ class TestBulkRun:
         #
         input_tuples = [
             (maps[0:1], run_params[0], {}),
-            (maps[1:2], run_params[1], {'SUMMARY-PATH': os.path.join(TEMP_DIR, '%APERMAP%-RF%ROUGHNESS%-%OUTLET-PRESS%PA-LOG2.TXT')}),
+            (maps[1:2], run_params[1], {'SUMMARY-PATH': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-LOG2.TXT')}),
             (maps[2:3], run_params[2], {})
         ]
         #
@@ -72,3 +72,8 @@ class TestBulkRun:
         test_bulk_run.dry_run()
         #
         test_bulk_run.start()
+        #
+        # checking that some files were created
+        assert os.path.isfile(os.path.join(TEMP_DIR, 'PARALELL-PLATE-01VOX-RF1.00-400PA-STAT.CSV'))
+        assert os.path.isfile(os.path.join(TEMP_DIR, 'PARALELL-PLATE-10VOX-RF1.00-700PA-LOG2.TXT'))
+        assert os.path.isfile(os.path.join(TEMP_DIR, 'FRACTURE1-10AVG-RF0.00-300PA-INIT.INP'))
