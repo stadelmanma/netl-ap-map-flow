@@ -150,21 +150,21 @@ class BulkRun(dict):
         """
         #
         # creating a combination of all arg lists for each input map
-        input_file_list = []
+        self.input_file_list = []
         for map_args in self.sim_inputs:
-            keys = list(map_args['run_params'].keys())
-            values = list(map_args['run_params'].values())
-            param_combs = list(product(*values))
-            for comb in param_combs:
+            #
+            file_formats = map_args['filename_formats']
+            params = map_args['run_params']
+            params = {key: val for key, val in params.items() if val}
+            for comb in product(*params.values()):
                 #
-                args = {k: v for k, v in zip(keys, comb)}
+                args = {key: val for key, val in zip(params.keys(), comb)}
                 args['APER-MAP'] = map_args['aperture_map']
-                inp_file = self.init_input_file.clone(map_args['filename_formats'])
+                #
+                inp_file = self.init_input_file.clone(file_formats)
                 inp_file.RAM_req = map_args['RAM_req']
                 inp_file.update_args(args)
-                input_file_list.append(inp_file)
-        #
-        self.input_file_list = input_file_list
+                self.input_file_list.append(inp_file)
 
     @staticmethod
     def _check_processes(processes, RAM_in_use, retest_delay=5, **kwargs):

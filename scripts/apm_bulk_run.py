@@ -75,13 +75,13 @@ maps = [map_format_str.format('SHEARING_TEST7-8', pf) for pf in prefix]
 #
 dir_fmt = './%dir%/%map_type%/'
 file_formats = {
-    'SUMMARY-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%-LOG.TXT',
-    'STAT-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%-STAT.CSV',
-    'APER-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%-APER.CSV',
-    'FLOW-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%-FLOW.CSV',
-    'PRESS-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%-PRES.CSV',
-    'VTK-FILE': dir_fmt+'{}/{}-OUTLET_PRESS_%OUTLET-PRESS%.vtk',
-    'input_file': dir_fmt+'INP_FILES/{}-OUTLET_PRESS_%OUTLET-PRESS%.INP'
+    'SUMMARY-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_%OUTLET-PRESS%-LOG.TXT',
+    'STAT-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_%OUTLET-PRESS%-STAT.CSV',
+    'APER-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_%OUTLET-PRESS%-APER.CSV',
+    'FLOW-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_%OUTLET-PRESS%-FLOW.CSV',
+    'PRESS-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_%OUTLET-PRESS%-PRES.CSV',
+    'VTK-FILE': dir_fmt+'{0}/{0}-OUTLET_PRESS_%OUTLET-PRESS%.vtk',
+    'input_file': dir_fmt+'INP_FILES/{0}-OUTLET_PRESS_%OUTLET-PRESS%.INP'
 }
 #
 run_dict = {
