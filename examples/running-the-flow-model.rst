@@ -8,7 +8,7 @@ Running the Flow Model
 Intro
 =====
 
-The Local Cubic Law flow model by default is named :code:`APM-MODEL.EXE`, the added extension doesn't affect UNIX systems and allows Windows to recognize it as executable. There are two methods to run the model, first is directly on the command line specifying your input parameters file and the second is using Python scripting through the :code:`RunModel` sub-module in :code:`ApertureMapModelTools`. The model requires two or three input files and generates several output files. The model works in the X-Z plane where +Z is vertical and +X is to the right. The Y direction is the aperture variation and the model assumes a planar mid surface. This implies that the fracture is symmetric with respect to the X-Z plane. If you envision a spiral bound notebook with the bottom left corner as the origin. The Z-axis follows the metal spiral upward, positive X is the direction moving away from the spiral. Y is the thickness of the notebook.
+The Local Cubic Law (LCL) flow model by default is named :code:`APM-MODEL.EXE`, the added extension doesn't affect UNIX systems and allows Windows to recognize it as executable. There are two methods to run the model, first is directly on the command line specifying your input parameters file and the second is using Python scripting through the :code:`RunModel` sub-module in :code:`ApertureMapModelTools`. The model requires two or three input files and generates several output files. The model works in the X-Z plane where +Z is vertical and +X is to the right. The Y direction is the aperture variation and the model assumes a planar mid surface. This implies that the fracture is symmetric with respect to the X-Z plane. If you envision a spiral bound notebook with the bottom left corner as the origin. The Z-axis follows the metal spiral upward, positive X is the direction moving away from the spiral. Y is the thickness of the notebook.
 
 
 The Input Parameters File
@@ -33,7 +33,7 @@ This is where the path of input and output files are defined. If the line :code:
 
 **Notes:**
  * Any output files that are omitted will be saved using a default name in the current working directory.
- * Output files are opened relative to where the executable is being run. For this reason it makes things much simpler to either use absolute paths or have the executable in the same directory as the input file.
+ * Files are opened relative to where the executable is being run. For this reason it makes things much simpler to either use absolute paths or have the executable in the same directory as the input file.
 
 Input Files
 ~~~~~~~~~~~
@@ -42,7 +42,7 @@ Input Files
 
 Output Files
 ~~~~~~~~~~~~
-  - :code:`SUMMARY-PATH:` Logs the information printed to the screen (.txt expected)
+  - :code:`SUMMARY-FILE:` Logs the information printed to the screen (.txt expected)
   - :code:`STAT-FILE PATH:` Stores statistics calculated and certain simulation parameters (.csv expected)
   - :code:`APER-FILE PATH:` Stores a copy of the input aperture map that is converted to the desired output units and has any applied roughness factored in (.csv expected)
   - :code:`FLOW-FILE PATH:` Used as the root name for the three flow files output: X-component, Z-component and magnitude. The files have -X, -Z, -M suffixes appended to the root name before the extension.  (.csv expected)
@@ -52,12 +52,13 @@ Output Files
 Boundary Conditions
 -------------------
 
-Defines the boundary conditions for the model, only :code:`OUTLET-PRESS` or :code:`OUTLET-RATE` should be specified. If both keywords are defined unexpected results can occur.
+Defines the boundary conditions for the model, the model does no internal checking to see if the BCs supplied create a valid solvable problem. It is the user's resposiblity to ensure a valid combination is supplied; two Dirichlet (pressure) conditions or one Dirichlet and one Nuemann (flow rate) condition on the inlet and outlet.
 
- * :code:`FRAC-PRESS:` value unit ;The pressure value to use at the inlet
+ * :code:`INLET-PRESS:` value unit ;The pressure value to use at the inlet
+ * :code:`INLET-RATE:`  value unit ;The flow rate to apply at the inlet
  * :code:`OUTLET-PRESS:` value unit ;The pressure value to use at the outlet
  * :code:`OUTLET-RATE:`  value unit ;The flow rate to apply at the outlet.
- * :code:`OUTFLOW-SIDE:` [LEFT, RIGHT, TOP, BOTTOM] sets the outlet side, the inlet is assumed to be the opposite face. i.e. top is outlet, bottom is inlet
+ * :code:`OUTLET-SIDE:` [LEFT, RIGHT, TOP, BOTTOM] sets the outlet side, the inlet is assumed to be the opposite face. i.e. top is outlet, bottom is inlet
 
 Model Properties
 ----------------
@@ -101,7 +102,7 @@ This can be copy and pasted into a blank text document to quickly create a new i
 	; FILE PATHS AND NAMES
 	;PVT-PATH:
 	;APER-MAP PATH:
-	;SUMMARY-PATH:
+	;SUMMARY-FILE:
 	;STAT-FILE PATH:
 	;APER-FILE PATH:
 	;FLOW-FILE PATH:
@@ -110,10 +111,11 @@ This can be copy and pasted into a blank text document to quickly create a new i
 	;OVERWRITE EXISTING FILES
 	;
 	; BOUNDARY CONDITIONS
-	;FRAC-PRESS:
+	;INLET-PRESS:
+	;INLET-RATE:
 	;OUTLET-PRESS:
 	;OUTLET-RATE:
-	;OUTFLOW-SIDE:
+	;OUTLET-SIDE:
 	;
 	; MODEL PROPERTIES
 	;FLUID-TYPE: LIQUID
@@ -156,7 +158,7 @@ Open model-input-params.inp with your favorite text editor and copy and paste th
 	;
 	; FILE PATHS AND NAMES
 	APER-MAP PATH: ../examples/Fractures/Fracture1ApertureMap-10avg.txt
-	;SUMMARY-PATH:
+	;SUMMARY-FILE:
 	;STAT-FILE PATH:
 	;APER-FILE PATH:
 	;FLOW-FILE PATH:
@@ -165,9 +167,9 @@ Open model-input-params.inp with your favorite text editor and copy and paste th
 	;OVERWRITE EXISTING FILES
 	;
 	; BOUNDARY CONDITIONS
-	FRAC-PRESS: 100 PA
+	INLET-PRESS: 100 PA
 	OUTLET-PRESS: 0 PA
-	OUTFLOW-SIDE: TOP
+	OUTLET-SIDE: TOP
 	;
 	; MODEL PROPERTIES
 	FLUID-TYPE: LIQUID
@@ -238,7 +240,7 @@ Argument - Type - Description
     # updating a set of parameters
     new_param_values = {
         'OVERWRITE': 'OVERWRITE FILES',
-        'FRAC-PRESS': '150.00'
+        'INLET-PRESS': '150.00'
     }
     inp_file.update_args(new_param_values)
 
@@ -246,7 +248,7 @@ Argument - Type - Description
     print(inp_file)
 
 
-You will notice that the line :code:`OVERWRITE EXISTING FILES` has been changed and uncommented. The class by default will uncomment any parameter that is updated. Parameters are stored in their own class called `ArgInput <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ which can be directly manipulated by accessing the keyword of an InputFile object like so, :code:`inp_file['FLUID-VISCOSITY']`. Earlier when we updated the value of the viscosity directly we called the method :code:`.update_value` which is a method of the ArgInput class not the InputFile class. Directly manipulating the ArgInput objects stored by the InputFile class allows you to perform more complex operations on a parameter such as commenting it out or updating the units.
+You will notice that the line :code:`OVERWRITE EXISTING FILES` has been changed and uncommented. The class by default will uncomment any parameter that is updated. Parameters are stored in their own class called `ArgInput <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ which can be directly manipulated by accessing the keyword of an InputFile object like so, :code:`inp_file['FLUID-VISCOSITY']`. Earlier when we updated the value of the viscosity directly we called the method :code:`.update_value` which is a method of the ArgInput class not the InputFile class. Directly manipulating the ArgInput objects stored by the InputFile class allows you to perform more complex operations on a parameter such as changing the line entirely or directly commenting out inputs.
 
 .. code-block:: python
 
@@ -254,8 +256,7 @@ You will notice that the line :code:`OVERWRITE EXISTING FILES` has been changed 
     inp_file['CALCULATE'].commented_out = True
 
     # changing the unit and value of density
-    val_index = inp_file['FLUID-DENSITY'].value_index
-    inp_file['FLUID-DENSITY'].line_arr[val_index+1] = 'LB/FT^3'
+    inp_file['FLUID-DENSITY'].unit = 'LB/FT^3'
     inp_file['FLUID-DENSITY'].update_value('62.42796')
 
     #
