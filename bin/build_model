@@ -1,13 +1,29 @@
 #!/bin/bash
-#
+
+# Determining top level of repository
+REPO_HOME=""
+if command -v git >/dev/null 2>&1;  then
+    echo "Using git to determine repository path"
+    REPO_HOME=$(git rev-parse --show-toplevel)
+fi
+if [ ! $REPO_HOME ]; then
+    echo ""
+    echo "Defaulting to assume source code is located at ./source"
+    REPO_HOME=$(pwd)
+fi
+set -e
+
 # Building the flow model from source
-REPO_HOME=$(git rev-parse --show-toplevel)
 cd "$REPO_HOME/source"
 make
-#
+
 # adding module to python path
 PY_SITE=$(python3 -m site --user-site)
-mkdir -p "$PY_SITE"
-cd "$PY_SITE"
-ln -s "$REPO_HOME/ApertureMapModelTools"
-ls -l
+if ! [ -d "$PY_SITE/ApertureMapModelTools" ]; then
+    echo ""
+    echo "Attempting to symlink module into python user site"
+    mkdir -p "$PY_SITE"
+    cd "$PY_SITE"
+    ln -s "$REPO_HOME/ApertureMapModelTools"
+    echo "Successfully added link to module in: $PY_SITE"
+fi
