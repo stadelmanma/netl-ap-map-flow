@@ -160,6 +160,7 @@ class BulkRun(dict):
                 #
                 args = {key: val for key, val in zip(params.keys(), comb)}
                 args['APER-MAP'] = map_args['aperture_map']
+                file_formats['APER-MAP'] = map_args['aperture_map']
                 #
                 inp_file = self.init_input_file.clone(file_formats)
                 inp_file.RAM_req = map_args['RAM_req']
