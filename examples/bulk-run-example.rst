@@ -52,16 +52,17 @@ The arguments to the method have the following general format:
 	}
 
 	default_formats = {
-		'outfile keyword': 'path/filename_p1-%param1 keyword%-p2_%param2 keyword%'
+		'outfile keyword': 'path/filename_p1-{param1 keyword}-p2_{param2 keyword}'
 	}
 
 	input_tuples = [
 		(['list of map files'], {group specific parameters}, {group specific filename formats}),
-		(['file1'], {'param1 keyword': ['value1', 'value2', 'value3']}, {}),
-		(['file2', 'file3'], {}, {}) #this one only uses default values defined.
+		(['file1'], {'param1 keyword': ['value1', 'value2', 'value3']}, {}), #redefining param1 locally
+		(['file2'], {'param2 keyword': []}, {}) #disabling param2 locally 
+		(['file3', 'file3'], {}, {}) #this one only uses default values defined.
 	]
 
-The first value in the tuple has to be a list even if it is a single map. Each entry in the param dictionaries also have to be lists, even for a single value. Additionally each parameter value needs to already be a string. This string is directly placed into the input file as well in the place of any :code:`%param keyword%` portions of the filename format. Strings are required to avoid the added complexity of attempting to format an arbitrary user defined value. If no group specific settings are required an empty dictionary, :code:`{}`, can be used. When the function is executed each tuple is processed and a map specific dictionary is generated for each map supplied in the `list of maps`. This allows you to easily create a large amount of simulation inputs without having to write duplicate definitions. :code:`default_params` and :code:`default_name_formats` are not required arguments and if omitted only group specific values will be used. 
+The first value in the tuple has to be a list even if it is a single map. Each entry in the param dictionaries also have to be lists, even for a single value. Additionally it is recommend that each value already be a string. The value is directly placed into the input file as well in the place of any :code:`{param keyword}` portions of the filename format. Standard Python formatting syntax is used when generating a filename, so non-string arguments may be passed in and will be formatted as defined. Something like :code:`{OUTLET-PRESS:0.4f}` is perfectly valid in the filename formats to handle a floating point number, however no formatting is applied when the value is output to the InputFile object. If no group specific settings are required an empty dictionary, :code:`{}`, can be used. When the function is executed each tuple is processed and a map specific dictionary is generated for each map supplied in the `list of maps`. This allows you to easily create a large amount of simulation inputs without having to write duplicate definitions. :code:`default_params` and :code:`default_name_formats` are not required arguments and if omitted only group specific values will be used. To disable a parameter defined in the defaults an empty list can passed in the group specific parameters for the desired keyword.
 
 The result of processing the input_tuples is stored on the class object in the attribute :code:`sim_inputs` which is a list. This is the same attribute where the value of the optional argument :code:`sim_inputs=None` is stored. **This function will overwrite the value of sim_inputs passed in during class instantiation.** You can add additional map dictionaries to the :code:`sim_inputs` attribute by appending them to the list after running this function. There are no limits to the number of parameters or parameter values to vary but keep in mind every parameter with more than one value increases the total number of simulations multiplicatively. Conflicting parameters will also need to be carefully managed, i.e. varying the boundary conditions. When using conflicting inputs you will need to have all conflicting lines commented out in the initial input file so only valid combinations are uncommented when the file is generated.
 
@@ -95,7 +96,7 @@ If the run has enough RAM then :code:`_combine_run_args()` is called to generate
 The _combine_run_args Method
 ----------------------------
 
-:code:`_combine_run_args` handles generation of the InputFile objects used to run the LCL model from Python. All of the parameters contained in a single map dictionary are combined using the :code:`product` function from the :code:`itertools` module in the standard library. :code:`product` accepts 'N' lists with at least 1 element and returns a list of tuples containing all possible combinations of arguments. 
+:code:`_combine_run_args` handles generation of the InputFile objects used to run the LCL model from Python. All of the parameters contained in a single map dictionary are combined using the :code:`product` function from the :code:`itertools` module in the standard library. :code:`product` accepts 'N' lists with at least 1 element and returns a list of tuples containing all possible combinations of arguments. Any value that evaluates as 'Falsy' is dropped here before the product is taken, empty lists :code:`[]` and None are 'Falsy' in Python. 
 
 :code:`_combine_run_args` then loops over all of the tuples returned. First, mapping them back into a dictionary and then calling the :code:`clone` method of the InputFile object generated during the BulkRun class instantiation. The filename formats defined in the map dictionary are passed in during cloning. The cloned version of the input file is then updated with the current combination of args by calling it's :code:`update_args` method passing in the re-mapped args dictionary. The new InputFile object is then appended to the :code:`input_file_list` attribute of the BulkRun class and the process is repeated until all tuples and map dictionaries have been processed. The final list of input files is used to drive the while loop in :code:`_start_bulk_run` 
 
