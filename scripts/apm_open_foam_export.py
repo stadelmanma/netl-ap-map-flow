@@ -8,8 +8,8 @@ from subprocess import call as subp_call
 from sys import argv
 import scipy as sp
 from ApertureMapModelTools import DataField, files_from_directory
-from ApertureMapModelTools.OpenFoamExport import OpenFoamExport, OpenFoamFile
-from ApertureMapModelTools.OpenFoamExport import BlockMeshDict, OpenFoamDict
+from ApertureMapModelTools.OpenFoam import OpenFoamExport, OpenFoamFile
+from ApertureMapModelTools.OpenFoam import BlockMeshDict, OpenFoamDict
 from ApertureMapModelTools.RunModel import InputFile
 from ApertureMapModelTools.UnitConversion import get_conversion_factor
 #
@@ -161,7 +161,7 @@ def load_foam_files():
     for file in raw_files:
         of_file = None
         try:
-            of_file = OpenFoamFile.init_from_file(file)
+            of_file = OpenFoamFile(file)
             name = os.path.basename(file)
             location = os.path.split(os.path.dirname(file))[1]
             key = '{0}.{1}'.format(location, name)

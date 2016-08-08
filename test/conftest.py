@@ -118,6 +118,34 @@ def data_field_class():
 
 
 @pytest.fixture
+def openfoam_file_class():
+    r"""
+    Returns a pseduo OpenFoamFile class object with some methods and
+    placeholder data.
+    """
+
+    class PseduoOpenFoamFile(amt.OpenFoam.OpenFoamFile):
+        r"""
+        Simplfies testing of functions needing an OpenFoamFile instance
+        """
+        def __init__(self):
+            self.name = 'pseduoOpenFoamFile'
+            self.head_dict = OrderedDict([
+                ('version', 2.0),
+                ('format', 'ascii'),
+                ('class', 'testDictionary'),
+                ('location', '"conftest"'),
+                ('object', 'pseduoOpenFoamFile')
+            ])
+            self['keyword'] = 'value'
+
+        def write_foam_file(self, *args, **kwargs):
+            print('PseduoOpenFoamFile.write_foam_file() was called')
+
+    return PseduoOpenFoamFile
+
+
+@pytest.fixture
 def input_file_class():
     r"""
     Returns a pseudo InputFile class object with the proper methods. Due to

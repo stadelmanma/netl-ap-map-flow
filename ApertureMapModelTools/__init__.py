@@ -20,3 +20,4 @@ from .__core__ import calc_percentile, calc_percentile_num, get_data_vect
 from . import UnitConversion
 from . import DataProcessing
 from . import RunModel
+from . import OpenFoam
