@@ -129,14 +129,8 @@ def openfoam_file_class():
         Simplfies testing of functions needing an OpenFoamFile instance
         """
         def __init__(self):
+            super().__init__('conftest', 'pseduoOpenFoamFile')
             self.name = 'pseduoOpenFoamFile'
-            self.head_dict = OrderedDict([
-                ('version', 2.0),
-                ('format', 'ascii'),
-                ('class', 'testDictionary'),
-                ('location', '"conftest"'),
-                ('object', 'pseduoOpenFoamFile')
-            ])
             self['keyword'] = 'value'
 
         def write_foam_file(self, *args, **kwargs):
