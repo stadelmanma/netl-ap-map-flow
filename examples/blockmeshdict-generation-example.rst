@@ -97,12 +97,12 @@ The template below can be used with some minor customization for simple mesh gen
         'boundary.back.type': 'wall'
     }
     #
-    mesh = BlockMeshDict(field=aper_map_field, avg_fact=1.0, mesh_params=my_mesh_params)
+    mesh = BlockMeshDict(aper_map_field, avg_fact=1.0, mesh_params=my_mesh_params)
     mesh.write_foam_file(path='.', create_dirs=True, overwrite=False)
     #
     #
     # the code below generates a thresholded mesh
     #
-    # mesh.generate_threshold_mesh(self, min_value=0.0, max_value=1.0e9)
+    # mesh.generate_threshold_mesh(min_value=0.0, max_value=1.0e9)
     # mesh.write_foam_file(path='.', create_dirs=True, overwrite=False)
 
