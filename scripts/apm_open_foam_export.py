@@ -183,7 +183,7 @@ def load_inp_file():
     """
     global namespace, export, apm_input_file, map_data_field, block_mesh
     #
-    # loading fiel and getting all uncommented lines
+    # loading file and getting all uncommented lines
     apm_input_file = InputFile(namespace.input_file)
     input_args = apm_input_file.get_uncommented_values()
     #

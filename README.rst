@@ -23,7 +23,7 @@ ApertureMapModelTools contains four sub modules DataProcessing, OpenFoamExport, 
 
 |
 
- * OpenFoamExport houses classes and methods to export data into a format acceptable for OpenFoam to use. There are several classes contained in this sub module however the three primary ones are OpenFoamFile, BlockMeshDict and OpenFoamExport. There is an example of how to utilize the BlockMeshDict class in `<examples/blockmeshdict-generation-example.rst>`_ and the OpenFoamExport class in `<examples/openfoam-export-example.rst>`_.
+ * OpenFoam houses classes and methods to export data into a format acceptable for OpenFoam to use. There are several classes contained in this sub module however the three primary ones are OpenFoamFile, BlockMeshDict and OpenFoamExport. There is an example of how to utilize the BlockMeshDict class in `<examples/blockmeshdict-generation-example.rst>`_ and the OpenFoam module in `<examples/openfoam-example.rst>`_.
 
 |
 
