@@ -1,11 +1,11 @@
 
 Using the BlockMeshDict class
-==============================
+=============================
 .. contents::
 
 Description
 -----------
-This describes the basic process of how to convert a vertical aperture map into an OpenFOAM readable blockMeshDict. Using the BlockMeshDict class is a very simple and all the heavy lifting is done internally unless additional customizations are needed. Additional customizations can include setting up your own edges and mergePatchPairs as well as apply more than just the standard boundary face labels. The routine can also create sub directories OpenFOAM expects the mesh file to be in. The template at the bottom of the file can be used to base a simple mesh generation off of by copying and pasting it into a file and running it as a python script. There is additional code commented out below that allows you to generate a thresholded mesh. **Currently there is not a good method to add custom face labels that is in the works.**
+This describes the basic process of how to convert a vertical aperture map into an OpenFoam readable blockMeshDict. Using the BlockMeshDict class is a very simple and all the heavy lifting is done internally unless additional customizations are needed. Additional customizations can include setting up your own edges and mergePatchPairs as well as apply more than just the standard boundary face labels. The routine can also create sub directories OpenFoam expects the mesh file to be in. The template at the bottom of the file can be used to base a simple mesh generation off of by copying and pasting it into a file and running it as a python script. There is additional code commented out below that allows you to generate a thresholded mesh. **Currently there is not a good method to add custom face labels that is in the works.**
 
 There are three steps required to generate a mesh file:
   1. Create a DataField object to store the aperture map data
@@ -13,13 +13,13 @@ There are three steps required to generate a mesh file:
   3. Write the mesh to your desired location
 
 Setting up the BlockMeshDict
----------------------
+----------------------------
 As mentioned the first step is creating a data field object, the only required argument is the path to the aperture map file. However first we need to import the modules.
 
 .. code-block:: python
 
     from ApertureMapModelTools import DataField
-    from ApertureMapModelTools.OpenFoamExport import BlockMeshDict
+    from ApertureMapModelTools.OpenFoam import BlockMeshDict
 
 Next we can instantiate the data field class.
 
@@ -66,17 +66,17 @@ The mesh stores the verticies, blocks, faces, edges and mergePatchPairs in scipy
 
 Creating the blockMeshdict File
 -------------------------------
-All of the work mainly takes place in the setup steps and the user just needs to call :code:`mesh.write_foam_file()` to use the defaults and output a mesh file in the local directory. The output function also takes three optional parameters as well, :code:`mesh.write_foam_file(path='.', create_dirs=True, overwrite=False)`. The first allows for an alternate output location, say in the 'run' folder of OpenFOAM, relative and absolute paths are valid. `create_dirs` tells the export whether or not to create the :code:`constants/polyMesh` directories for you, if this is true and they already exist the file will be output in that location preserving the contents of those directories. The final parameter `overwrite` prevents or enables the program to replace an existing blockMeshDict file in the chosen location.
+All of the work mainly takes place in the setup steps and the user just needs to call :code:`mesh.write_foam_file()` to use the defaults and output a mesh file in the local directory. The output function also takes three optional parameters as well, :code:`mesh.write_foam_file(path='.', create_dirs=True, overwrite=False)`. The first allows for an alternate output location, say in the 'run' folder of OpenFoam, relative and absolute paths are valid. `create_dirs` tells the export whether or not to create the :code:`constants/polyMesh` directories for you, if this is true and they already exist the file will be output in that location preserving the contents of those directories. The final parameter `overwrite` prevents or enables the program to replace an existing blockMeshDict file in the chosen location.
 
 Template Code for Simple Mesh Generation
---------------------------------
+----------------------------------------
 The template below can be used with some minor customization for simple mesh generation. The commented out section below allows generation of a 'thresholded' mesh where all data values less/greater than or equal to the min_value and max_value are removed. When cells are removed internal faces are exposed and assigned an 'internal' patch name which defaults to the 'wall' BC type.
 
 .. code-block:: python
 
     import os
     from ApertureMapModelTools import DataField
-    from ApertureMapModelTools.OpenFoamExport import BlockMeshDict
+    from ApertureMapModelTools.OpenFoam import BlockMeshDict
     #
     # The path to the aperture map needs to be updated to match the file you want to export
     aper_map_file = os.path.join('path', 'to', 'aperture_map_file.txt')
