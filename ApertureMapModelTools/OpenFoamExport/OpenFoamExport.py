@@ -325,7 +325,8 @@ class BlockMeshDict(OpenFoamFile):
         'boundary.top.type': 'wall',
         'boundary.bottom.type': 'wall',
         'boundary.front.type': 'wall',
-        'boundary.back.type': 'wall'
+        'boundary.back.type': 'wall',
+        'boundary.internal.type': 'wall'
     }
 
     def __init__(self, field, avg_fact=1.0, mesh_params=None):
@@ -534,7 +535,6 @@ class BlockMeshDict(OpenFoamFile):
         that are isolated by the thresholding are also automatically removed.
         """
         #
-        self.mesh_params['boundary.internal.type'] = 'wall'
         self._edges = sp.ones(0, dtype=str)
         self._merge_patch_pairs = sp.ones(0, dtype=str)
         #
