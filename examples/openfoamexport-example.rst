@@ -73,6 +73,7 @@ This is the second core building block used in OpenFoam files and mainly in bloc
 
 BlockMeshDict Class
 ===================
+The BlockMeshDict class is used to generate a mesh file from a provided 2-D aperture map data field. It descends from the OpenFoamFile class howeever has significantly different usage and the only method it shares from the parent class is :code:`write_foam_file`. If 'create_dirs' is true then it will automatically generate the 'constant/polyMesh' sub directories on the desired path. Full explaination of mesh generation is beyond the scope of this example and is covered in depth in the `blockMeshDict example <blockmeshdict-generation-example.rst>`_
 
 OpenFoamExport Class
 ====================
