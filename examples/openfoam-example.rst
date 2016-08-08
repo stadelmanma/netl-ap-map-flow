@@ -147,4 +147,4 @@ Interactive mode is activated by using the -i flag. When interactive mode is use
 
 Files are not automatically written in interactive mode. To write all files based on the command line args used call the function :code:`write_all_files(overwrite=False)`. If the -f flag was used overwrite=False is ignored, alternatively overwrite=True can be used to mimic the effects of the -f flag. This command will write the blockMeshDict file as well.
 
-Several global variables are defined to ease the use of interactive mode. For a more complete understanding of what is available in terms of functions and globals it recommended to review the code in ` apm_open_foam_export.py <../scripts/apm_open_foam_export.py>`_.
+Several global variables are defined to ease the use of interactive mode. For a more complete understanding of what is available in terms of functions and globals it recommended to review the code in ` apm_open_foam_export.py <../scripts/apm_open_foam_export.py>_`.
