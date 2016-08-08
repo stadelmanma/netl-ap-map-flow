@@ -134,6 +134,20 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
     FOAM_SPACER = FOAM_SPACER[1:]
 
     def __init__(self, location, object_name, class_name=None, values=None):
+        r"""
+        Creates and instance of the class passing the first three arguments
+        to the FileFile header dict and the final argument can be used to
+        initialize the OpenFoamFile object with entries.
+
+        location : string, sets the subdirectory location of the file
+            during output.
+        object_name : string, sets initial value of self.name attribute used
+            to name the output file and the 'object' key in the FoamFile dict
+        class_name : string, optional, sets the 'class' key in the FoamFile
+            dict, it defaults to 'dictionary'
+        values : iterable, optional, any valid iterable that can be used to
+            initialize a regular Python dictionary
+        """
         init_vals = {}
         if values:
             init_vals = values
