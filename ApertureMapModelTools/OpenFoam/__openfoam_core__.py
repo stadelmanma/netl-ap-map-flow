@@ -207,7 +207,7 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
             ofdict = OpenFoamDict(match.group(1))
             content = content[match.end():]
             #
-            while not re.match(r'^}', content):
+            while not re.match(r'^}', content) and content:
                 content = add_param(content, ofdict)
             #
             content = re.sub(r'^}\n', '', content)
@@ -223,7 +223,7 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
             oflist = OpenFoamList(match.group(1))
             content = content[match.end():]
             #
-            while not re.match(r'^\);', content):
+            while not re.match(r'^\);', content) and content:
                 content = add_param(content, oflist)
             #
             content = re.sub(r'^\);\n', '', content)
@@ -265,9 +265,10 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
         # reading file
         with open(filename, 'r') as infile:
             content = infile.read()
-            if not re.search('FoamFile', content):
-                msg = 'Invalid OpenFoam input file, no FoamFile dict'
-                raise ValueError(msg)
+        #
+        if not re.search('FoamFile', content):
+            msg = 'Invalid OpenFoam input file, no FoamFile dict'
+            raise ValueError(msg)
         #
         # removing comments and other characters
         inline_comment = re.compile(r'(//.*)')
