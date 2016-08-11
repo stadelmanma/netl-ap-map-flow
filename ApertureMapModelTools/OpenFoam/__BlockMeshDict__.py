@@ -56,7 +56,8 @@ class BlockMeshDict(OpenFoamFile):
         self.data_map = sp.array([])
         self.data_vector = sp.array([])
         self.point_data = sp.array([])
-        field.create_point_data()
+        if field.point_data is None:
+            field.create_point_data()
         field.copy_data(self)
         #
         # native attributes
@@ -112,8 +113,8 @@ class BlockMeshDict(OpenFoamFile):
         vert_index = 0
         if map_mask[0, 0]:
             vert_map[0, 0, 0] = 0
-            vertices.append([0.0, -self.data_map[0, 0]/2.0, 0.0])
-            vertices.append([0.0, self.data_map[0, 0]/2.0, 0.0])
+            vertices.append([0.0, -self.point_data[0, 0, 0]/2.0, 0.0])
+            vertices.append([0.0, self.point_data[0, 0, 0]/2.0, 0.0])
             vert_index = 2
         #
         for iz in range(self.nz):
@@ -422,6 +423,7 @@ class BlockMeshDict(OpenFoamFile):
         Exports the +Y half of the mesh flattening out everything below 0 on
         the Y axis
         """
+        # TODO: consider replacing the bottom face type with symmetryPlane
         #
         # storing orginial vertices
         old_verts = sp.copy(self._vertices)
