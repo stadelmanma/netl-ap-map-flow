@@ -171,9 +171,10 @@ class BlockMeshDict(OpenFoamFile):
 
     def set_boundary_patches(self, boundary_blocks, reset=False):
         r"""
-        Sets up boundary patches based on the dictionary passed in. Does
-        not check for overlap in patch declarations. The boundary blocks
-        dictionary contains a dictionary entry for each patch name.
+        Sets up boundary patches based on the dictionary passed in. Overlapping
+        declarations are overwritten by the last patch to use that face.
+        The boundary blocks dictionary contains a dictionary entry for
+        each patch name.
 
             - boundary_blocks dictionary has the format of:
                   {patch_name: {
@@ -198,7 +199,9 @@ class BlockMeshDict(OpenFoamFile):
             'left': (4, (0, 3, 7, 4)),
             'top': (5, (4, 5, 6, 7)),
         }
+        reset_indices = {}
         #
+        # re-initializing all face labels
         if reset:
             num_faces = 6 * len(self._blocks)
             self._faces = sp.ones((num_faces, 4), dtype=int)*-sp.iinfo(int).max
@@ -207,12 +210,22 @@ class BlockMeshDict(OpenFoamFile):
                 key = 'boundary.'+patch_name
                 self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
         #
+        # setting new face labels
         for patch_name, side_dict in boundary_blocks.items():
             for side, blocks in side_dict.items():
                 indices = sp.array(blocks, dtype=int) * 6 + offsets[side][0]
                 face_verts = self._blocks[blocks][:, offsets[side][1]]
                 self._faces[indices] = face_verts
                 self.face_labels['boundary.'+patch_name][indices] = True
+                reset_indices['boundary.'+patch_name] = indices
+        #
+        # preventing overlapping face labels
+        for patch_name, indices in reset_indices.items():
+            for label in self.face_labels:
+                if label == patch_name:
+                    continue
+                self.face_labels[label][indices] = False
+
 
     def generate_simple_mesh(self):
         r"""
