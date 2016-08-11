@@ -50,7 +50,6 @@ class DataFieldRegion(DataField):
         raise NotImplementedError(msg)
 
 
-
 class BlockMeshRegion(BlockMeshDict):
     r"""
     Used to handle a sub-set of field point data for parallel mesh generation
@@ -83,7 +82,6 @@ class BlockMeshRegion(BlockMeshDict):
         self._vertices[:, 2] += self.avg_fact * self.z_shift
 
 
-
 class ParallelMeshGen(object):
     r"""
     Handles creation of a large mesh in parallel utilizing the OpenFoam
@@ -106,6 +104,7 @@ class ParallelMeshGen(object):
         self.nprocs = nprocs
         self.avg_fact = kwargs.pop('avg_fact', 1.0)
         self.mesh_params = mesh_params
+        self._stitch_list = []
 
     def generate_mesh(self, mesh_type='simple', path='.', **kwargs):
         r"""
@@ -122,11 +121,15 @@ class ParallelMeshGen(object):
         #
         # setting up initial region grid
         ndivs = 2
+        #
         grid = sp.arange(0, ndivs*ndivs, dtype=int)
         grid = sp.reshape(grid, (ndivs, ndivs))
         #
         self._create_subregion_meshes(ndivs, mesh_type=mesh_type, **kwargs)
-        #self._merge_submeshes(grid, path)
+        self._merge_submeshes(grid, path)
+        from time import sleep
+        sleep(10)
+        self._stitch_patches(path)
         #self._remove_leftover_patches(path)
 
     def _create_subregion_meshes(self, ndivs, **kwargs):
@@ -166,19 +169,19 @@ class ParallelMeshGen(object):
             #
             # this is where I will check nprocs and spawn new ones when finish
             #
-            region_mesh = self._setup_region(i, z_slice, x_slice, **kwargs)
+            region_mesh = self._setup_region(i, z_slice, x_slice, ndivs, **kwargs)
             proc = self._create_region_mesh(i, region_mesh, **kwargs)
             proc.wait()
             if proc.poll() != 0:
                 raise OSError
 
-    def _setup_region(self, region_id, z_slice, x_slice, **kwargs):
+    def _setup_region(self, region_id, z_slice, x_slice, ndivs, **kwargs):
         r"""
         sets up an individual mesh region
         """
         #
-        patch_names = ['mergeLR{}', 'mergeRL{}', 'mergeTB{}', 'mergeBT{}']
-        patch_names = ['boundary.'+patch for patch in patch_names]
+        patches = ['mergeLR{}', 'mergeRL{}', 'mergeTB{}', 'mergeBT{}']
+        labels = ['boundary.'+patch for patch in patches]
         #
         # setting offset values and region
         x_offset = x_slice.start
@@ -200,25 +203,77 @@ class ParallelMeshGen(object):
         # updating patches with ones to merge
         face_labels = region_mesh.face_labels
         if x_slice.start != 0:
-            patch = patch_names[0].format(region_id)
-            region_mesh.mesh_params[patch+'.type'] = 'empty'
-            region_mesh.face_labels[patch] = face_labels.pop('boundary.left')
+            label = labels[0].format(region_id)
+            region_mesh.mesh_params[label+'.type'] = 'empty'
+            region_mesh.face_labels[label] = face_labels.pop('boundary.left')
+            patch = patches[0].format(region_id)
+            self._stitch_list.append((patch, patches[1].format(region_id-1)))
         #
         if x_slice.stop != self.nx:
-            patch = patch_names[1].format(region_id)
-            region_mesh.mesh_params[patch+'.type'] = 'empty'
-            region_mesh.face_labels[patch] = face_labels.pop('boundary.right')
+            label = labels[1].format(region_id)
+            region_mesh.mesh_params[label+'.type'] = 'empty'
+            region_mesh.face_labels[label] = face_labels.pop('boundary.right')
+            patch = patches[1].format(region_id)
+            self._stitch_list.append((patch, patches[0].format(region_id+1)))
+
         #
         if z_slice.start != 0:
-            patch = patch_names[3].format(region_id)
-            region_mesh.mesh_params[patch+'.type'] = 'empty'
-            region_mesh.face_labels[patch] = face_labels.pop('boundary.bottom')
+            label = labels[3].format(region_id)
+            region_mesh.mesh_params[label+'.type'] = 'empty'
+            region_mesh.face_labels[label] = face_labels.pop('boundary.bottom')
+            patch = patches[3].format(region_id)
+            self._stitch_list.append((patch, patches[2].format(region_id-ndivs)))
         #
         if z_slice.stop != self.nz:
-            patch = patch_names[2].format(region_id)
-            region_mesh.mesh_params[patch+'.type'] = 'empty'
-            region_mesh.face_labels[patch] = face_labels.pop('boundary.top')
+            label = labels[2].format(region_id)
+            region_mesh.mesh_params[label+'.type'] = 'empty'
+            region_mesh.face_labels[label] = face_labels.pop('boundary.top')
+            patch = patches[2].format(region_id)
+            self._stitch_list.append((patch, patches[3].format(region_id+ndivs)))
         #
+        if mesh_type != 'threshold':
+            return region_mesh
+        #
+        # need to test for holes on merge boundaries and change patch to internal
+        # creating map indexed 1:_blocks.size but with shape of (nz, nx)
+        mesh_map = -sp.ones(region_mesh.data_vector.size, dtype=int)
+        inds = sp.where(region_mesh.data_vector > 0)[0]
+        mesh_map[inds] = sp.arange(inds.size)
+        mesh_map = sp.reshape(mesh_map, region_mesh.data_map.shape)
+        boundary_dict = {
+            'internal':
+                {'bottom': [], 'top': [], 'left': [], 'right': []}
+        }
+        #
+        if x_slice.start != 0:
+            for iz in range(region_mesh.nz):
+                IZ = iz + z_offset
+                IX = x_offset
+                if self.data_map[IZ, IX] and not self.data_map[IZ, IX-1]:
+                    boundary_dict['internal']['left'].append(mesh_map[iz, 0])
+        #
+        if x_slice.stop != self.nx:
+            for iz in range(region_mesh.nz):
+                IZ = iz + z_offset
+                IX = x_offset + region_mesh.nx - 1
+                if self.data_map[IZ, IX] and not self.data_map[IZ, IX+1]:
+                    boundary_dict['internal']['right'].append(mesh_map[iz, -1])
+        #
+        if z_slice.start != 0:
+            for ix in range(region_mesh.nx):
+                IZ = z_offset
+                IX = ix + x_offset
+                if self.data_map[IZ, IX] and not self.data_map[IZ-1, IX]:
+                    boundary_dict['internal']['bottom'].append(mesh_map[0, ix])
+        #
+        if z_slice.stop != self.nz:
+            for ix in range(region_mesh.nx):
+                IZ = z_offset + region_mesh.nz - 1
+                IX = ix + x_offset
+                if self.data_map[IZ, IX] and not self.data_map[IZ+1, IX]:
+                    boundary_dict['internal']['top'].append(mesh_map[-1, ix])
+        #
+        region_mesh.set_boundary_patches(boundary_dict)
         return region_mesh
 
     def _create_region_mesh(self, region_id, region_mesh, **kwargs):
@@ -275,6 +330,7 @@ class ParallelMeshGen(object):
         Determines the region merge list based on the grid supplied
         """
         #
+        new_grid = sp.copy(grid)
         if direction == 'left':
             # Horizontally pairing up regions
             new_nx = int(grid.shape[1]/2) + grid.shape[1] % 2
@@ -326,14 +382,16 @@ class ParallelMeshGen(object):
         slave_region = 'mesh-region{}'.format(slave_id)
         slave_path = os.path.join(path, slave_region)
         #
-        master_patch = 'mergeRL{}'
-        slave_patch = 'mergeLR{}'
-        if direction == 'top':
-            master_patch = 'mergeTB{}'
-            slave_patch = 'mergeBT{}'
-        #
-        master_patch = master_patch.format(master_id)
-        slave_patch = slave_patch.format(slave_id)
+#==============================================================================
+#         master_patch = 'mergeRL{}'
+#         slave_patch = 'mergeLR{}'
+#         if direction == 'top':
+#             master_patch = 'mergeTB{}'
+#             slave_patch = 'mergeBT{}'
+#         #
+#         master_patch = master_patch.format(master_id)
+#         slave_patch = slave_patch.format(slave_id)
+#==============================================================================
         #
         # merging mesh
         proc = call(('mergeMeshes', '-overwrite', master_path, slave_path))
@@ -343,13 +401,32 @@ class ParallelMeshGen(object):
         # removing slave directiory and cleaning the polyMesh of merge files
         rmtree(slave_path)
         ParallelMeshGen._clean_polymesh(master_path)
+
+    def _stitch_patches(self, path):
+        r"""
+        Stitches all the leftover patches from merging
+        """
         #
-        # stitching faces together to couple them
-        proc = call(('stitchMesh', '-case', master_path, '-overwrite',
-                    master_patch, slave_patch))
-        if proc != 0:
-            raise OSError
-        ParallelMeshGen._clean_polymesh(master_path)
+        # creating a unique list of patches
+        print(self._stitch_list)
+        print(self._stitch_list[0])
+        patches = [[master, slave] for master, slave in self._stitch_list]
+        [pair.sort() for pair in patches]
+        patches = ['@'.join(pair) for pair in patches]
+        self._stitch_list = set(patches)
+        self._stitch_list = [patches.split('@') for patches in self._stitch_list]
+        #
+        path = os.path.join(path, 'mesh-region0')
+        args = ['stitchMesh', '-case', path, '-overwrite', 'mp', 'sp']
+        for master, slave in self._stitch_list:
+            #
+            # stitching faces together to couple them
+            args[4] = master
+            args[5] = slave
+            proc = call(tuple(args))
+            if proc != 0:
+                raise OSError
+            ParallelMeshGen._clean_polymesh(path)
 
     @staticmethod
     def _remove_leftover_patches(path):
