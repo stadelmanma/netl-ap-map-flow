@@ -40,7 +40,7 @@ class OpenFoamDict(OpenFoamObject, OrderedDict):
             init_vals = values
         #
         super().__init__(init_vals)
-        self.name = name
+        self.name = name.strip()
 
     def __str__(self, indent=0):
         r"""
@@ -80,7 +80,7 @@ class OpenFoamList(OpenFoamObject, list):
             init_vals = values
         #
         super().__init__(init_vals)
-        self.name = name
+        self.name = name.strip()
 
     def __str__(self, indent=0):
         r"""
