@@ -199,15 +199,17 @@ class BlockMeshDict(OpenFoamFile):
             'left': (4, (0, 3, 7, 4)),
             'top': (5, (4, 5, 6, 7)),
         }
-        reset_indices = {}
         #
         # re-initializing all face labels
+        num_faces = 6 * len(self._blocks)
         if reset:
-            num_faces = 6 * len(self._blocks)
             self._faces = sp.ones((num_faces, 4), dtype=int)*-sp.iinfo(int).max
             self.face_labels = {}
-            for patch_name in boundary_blocks.keys():
-                key = 'boundary.'+patch_name
+        #
+        # adding any new face labels to the dictionary
+        for patch_name in boundary_blocks.keys():
+            key = 'boundary.'+patch_name
+            if key not in self.face_labels.keys():
                 self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
         #
         # setting new face labels
@@ -217,15 +219,13 @@ class BlockMeshDict(OpenFoamFile):
                 face_verts = self._blocks[blocks][:, offsets[side][1]]
                 self._faces[indices] = face_verts
                 self.face_labels['boundary.'+patch_name][indices] = True
-                reset_indices['boundary.'+patch_name] = indices
         #
         # preventing overlapping face labels
-        for patch_name, indices in reset_indices.items():
-            for label in self.face_labels:
-                if label == patch_name:
-                    continue
-                self.face_labels[label][indices] = False
-
+        for label, indices in self.face_labels.items():
+            reset = {key: indices for key in self.face_labels.keys()}
+            del reset[label]
+            for key, indices in reset.items():
+                self.face_labels[key][indices] = False
 
     def generate_simple_mesh(self):
         r"""
