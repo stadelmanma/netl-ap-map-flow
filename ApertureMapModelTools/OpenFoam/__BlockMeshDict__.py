@@ -221,9 +221,10 @@ class BlockMeshDict(OpenFoamFile):
                 self.face_labels['boundary.'+patch_name][indices] = True
         #
         # preventing overlapping face labels
-        for label, indices in self.face_labels.items():
+        for patch_name in boundary_blocks.keys():
+            indices = self.face_labels['boundary.'+patch_name]
             reset = {key: indices for key in self.face_labels.keys()}
-            del reset[label]
+            del reset['boundary.'+patch_name]
             for key, indices in reset.items():
                 self.face_labels[key][indices] = False
 
