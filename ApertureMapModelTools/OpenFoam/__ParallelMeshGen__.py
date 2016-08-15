@@ -4,15 +4,16 @@ mergeMeshes and stitchMesh OpenFoam utilities.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/08/09
-Last Modifed: 2016/08/09
+Last Modifed: 2016/08/15
 #
 """
+import logging
 import os
 import re
 from shutil import rmtree
 from subprocess import Popen, PIPE
 from time import sleep
-from threading import Thread, active_count
+from threading import Event, Thread, active_count
 import scipy as sp
 from scipy.sparse import csgraph
 from ..__core__ import DataField
@@ -21,6 +22,19 @@ from .__BlockMeshDict__ import BlockMeshDict
 #
 ########################################################################
 #
+# setting up logger
+fmt = '%(asctime)s %(levelname)s - %(name)s -> %(message)s'
+fmt = logging.Formatter(fmt, datefmt='%Y-%m-%d %H:%M:%S')
+logger = logging.getLogger(__name__.split('.')[-1])
+logger.setLevel(logging.DEBUG)
+screen = logging.StreamHandler()
+screen.setFormatter(fmt)
+screen.setLevel(logging.DEBUG)
+logger.addHandler(screen)
+#
+_blockMesh_error = Event()
+_mergeMesh_error = Event()
+_stitchMesh_error = Event()
 
 
 class DataFieldRegion(DataField):
@@ -96,18 +110,19 @@ class BlockMeshRegion(BlockMeshDict):
             self.write_foam_file(path=self.path, overwrite=self.overwrite)
         #
         # copying system directory to region directory
-        cmd = 'cp -r {0} {1}'
         new_sys_path = os.path.join(self.path, 'system')
-        os.system(cmd.format(self.system_dir, new_sys_path))
+        os.system('cp -r {0} {1}'.format(self.system_dir, new_sys_path))
         #
         # running blockMesh
         cmd = ('blockMesh', '-case', self.path)
-        print('Running: ', ' '.join(cmd), 'in thread: ', self.thread_name)
+        msg = 'Running: %s in thread: %s'
+        logger.info(msg, ' '.join(cmd), self.thread_name)
         proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         out, err = proc.communicate()
         if proc.poll() != 0:
             print(out)
             print(err)
+            _blockMesh_error.set()
             raise OSError
 
 
@@ -144,12 +159,14 @@ class MergeGroup(object):
         master_path = self.region_dir
         slave_path = self.region_in.region_dir
         cmd = ('mergeMeshes', '-overwrite', master_path, slave_path)
-        print('Running: ', ' '.join(cmd), 'in thread: ', self.thread_name)
+        msg = 'Running: %s in thread: %s'
+        logger.info(msg, ' '.join(cmd), self.thread_name)
         proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         out, err = proc.communicate()
         if proc.poll() != 0:
             print(out)
             print(err)
+            _mergeMesh_error.set()
             raise OSError
         #
         # removing slave directiory and cleaning the polyMesh of merge files
@@ -204,13 +221,14 @@ class MergeGroup(object):
             args[5] = master
             args[6] = slave
             cmd = tuple(args)
-            print('Running: ', ' '.join(cmd), 'in thread: ', self.thread_name)
+            msg = 'Running: %s in thread: %s'
+            logger.info(msg, ' '.join(cmd), self.thread_name)
             proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
             out, err = proc.communicate()
             if proc.poll() != 0:
                 print(out)
                 print(err)
-                raise OSError
+                _stitchMesh_error.set()
             self._clean_polymesh(path)
 
     @staticmethod
@@ -238,6 +256,7 @@ class ParallelMeshGen(object):
         field.create_point_data()
         self.nx = field.nx
         self.nz = field.nz
+        self.data_vector = field.data_vector
         self.data_map = field.data_map
         self.point_data = field.point_data
         self._field = field.clone()
@@ -256,11 +275,6 @@ class ParallelMeshGen(object):
         kwargs need to be supplied for the given mesh type if it needs
         additional keywords.
         """
-        #
-        # I only want to check for the existance of the mesh-region0 directory
-        # because it stores the final results
-        # could be worth while to move the contents of the constant directory
-        # to the top level and delete the mesh-region0 directory
         #
         # setting up initial region grid
         ndivs = 8
@@ -291,7 +305,9 @@ class ParallelMeshGen(object):
         self._create_subregion_meshes(ndivs, mesh_type=mesh_type, path=path,
                                       **kwargs)
         self._merge_submeshes(grid)
-        self._remove_leftover_patches(path)
+        #
+        if not _stitchMesh_error.is_set():
+            self._remove_leftover_patches(path)
 
     def _create_subregion_meshes(self, ndivs, **kwargs):
         r"""
@@ -328,13 +344,16 @@ class ParallelMeshGen(object):
         init_count = active_count()
         for i, (z_slice, x_slice) in enumerate(slice_list):
             #
+            # waiting for threads to finish before starting new ones
             while active_count() - init_count >= self.nprocs:
-                # print('Waiting 5 seconds (in for loop mesh gen)...')
+                if _blockMesh_error.is_set():
+                    raise OSError('Mesh generation failure')
                 sleep(1)
             region_mesh = self._setup_region(i, z_slice, x_slice, **kwargs)
             self._create_region_mesh(i, region_mesh, **kwargs)
+        #
+        # waiting until all meshes have finished generating
         while active_count() > init_count:
-            # print('Waiting 5 seconds (after for loop mesh gen)...')
             sleep(1)
 
     def _setup_region(self, region_id, z_slice, x_slice, **kwargs):
@@ -449,14 +468,18 @@ class ParallelMeshGen(object):
             # getting merge list and updating grid
             merge_list, grid = self._create_merge_list(grid, direction)
             for master, slave in merge_list:
+                #
+                # waiting for threads to finish before starting more
                 while active_count() - init_count >= self.nprocs:
-                    # print('Waiting 5 seconds (in for loop mesh merge)...')
+                    if _mergeMesh_error.is_set():
+                        raise OSError('Mesh merging failure')
                     sleep(1)
                 master = self.merge_groups[master]
                 slave = self.merge_groups[slave]
                 master.merge_regions(slave, direction)
+            #
+            # waiting for all threads to complete
             while active_count() > init_count:
-                # print('Waiting 5 seconds (after for loop mesh merge)...')
                 sleep(1)
             #
             # switching directions
