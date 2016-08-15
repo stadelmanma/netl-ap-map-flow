@@ -10,10 +10,10 @@ Last Modifed: 2016/08/15
 import logging
 import os
 import re
+from queue import Queue
 from shutil import rmtree
 from subprocess import Popen, PIPE
-from time import sleep
-from threading import Event, Thread, active_count
+from threading import Event, Thread
 import scipy as sp
 from scipy.sparse import csgraph
 from ..__core__ import DataField
@@ -98,25 +98,25 @@ class BlockMeshRegion(BlockMeshDict):
         self._vertices[:, 0] += self.avg_fact * self.x_shift
         self._vertices[:, 2] += self.avg_fact * self.z_shift
 
-    def run(self):
+    def run_block_mesh(self, mesh_type, path, system_dir, t_name, overwrite):
         r"""
-        Writes the blockMeshDict and runs blockMesh in a separate thread
+        Writes the blockMeshDict and runs blockMesh on a region
         """
         #
         # writing files based on mesh type
-        if self.mesh_type == 'symmetry':
-            self.write_symmetry_plane(path=self.path, overwrite=self.overwrite)
+        if mesh_type == 'symmetry':
+            self.write_symmetry_plane(path=path, overwrite=overwrite)
         else:
-            self.write_foam_file(path=self.path, overwrite=self.overwrite)
+            self.write_foam_file(path=path, overwrite=overwrite)
         #
         # copying system directory to region directory
-        new_sys_path = os.path.join(self.path, 'system')
-        os.system('cp -r {0} {1}'.format(self.system_dir, new_sys_path))
+        new_sys_path = os.path.join(path, 'system')
+        os.system('cp -r {0} {1}'.format(system_dir, new_sys_path))
         #
         # running blockMesh
-        cmd = ('blockMesh', '-case', self.path)
+        cmd = ('blockMesh', '-case', path)
         msg = 'Running: %s in thread: %s'
-        logger.info(msg, ' '.join(cmd), self.thread_name)
+        logger.info(msg, ' '.join(cmd), t_name)
         proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         out, err = proc.communicate()
         if proc.poll() != 0:
@@ -142,40 +142,12 @@ class MergeGroup(object):
         self.region_id = region_id
         self.regions = sp.array([region_id], ndmin=2, dtype=int)
         self.region_dir = os.path.join(path, 'mesh-region{}'.format(region_id))
-        self.region_in = None
-        self.thread_name = 'Region {} Thread'.format(self.region_id)
         #
         self.external_patches = {}
-        self.internal_patches = []
         for side, patch_name in external_patches.items():
             self.external_patches[side] = [patch_name]
 
-    def run(self):
-        r"""
-        Manages subprocesses in a separate thread
-        """
-        #
-        # merging regions and then stitching internal patches
-        master_path = self.region_dir
-        slave_path = self.region_in.region_dir
-        cmd = ('mergeMeshes', '-overwrite', master_path, slave_path)
-        msg = 'Running: %s in thread: %s'
-        logger.info(msg, ' '.join(cmd), self.thread_name)
-        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
-        out, err = proc.communicate()
-        if proc.poll() != 0:
-            print(out)
-            print(err)
-            _mergeMesh_error.set()
-            raise OSError
-        #
-        # removing slave directiory and cleaning the polyMesh of merge files
-        rmtree(slave_path)
-        self._clean_polymesh(master_path)
-        #
-        self.stitch_patches()
-
-    def merge_regions(self, region_in, direction):
+    def merge_regions(self, region_in, direction, t_name):
         r"""
         Merges two regions updating the external_patches dict and stitching
         and patches that become internal. It is assumed the region_in will
@@ -193,7 +165,6 @@ class MergeGroup(object):
             swap = ['top', 'bottom']
         #
         # updating regions array
-        self.region_in = region_in
         self.regions = sp.append(self.regions, region_in.regions, axis=axis)
         #
         # appending to external_patches
@@ -201,14 +172,32 @@ class MergeGroup(object):
             self.external_patches[key] += region_in.external_patches[key]
         #
         # swapping patches in merge direction and setting internal patches
-        self.internal_patches = zip(self.external_patches[swap[0]],
-                                    region_in.external_patches[swap[1]])
+        internal_patches = zip(self.external_patches[swap[0]],
+                               region_in.external_patches[swap[1]])
         #
         self.external_patches[swap[0]] = region_in.external_patches[swap[0]]
-        thread = Thread(name=self.thread_name, target=self.run)
-        thread.start()
+        #
+        # merging regions and then stitching internal patches
+        master_path = self.region_dir
+        slave_path = region_in.region_dir
+        cmd = ('mergeMeshes', '-overwrite', master_path, slave_path)
+        msg = 'Running: %s in thread: %s'
+        logger.info(msg, ' '.join(cmd), t_name)
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        out, err = proc.communicate()
+        if proc.poll() != 0:
+            print(out)
+            print(err)
+            _mergeMesh_error.set()
+            raise OSError
+        #
+        # removing slave directiory and cleaning the polyMesh of merge files
+        rmtree(slave_path)
+        self._clean_polymesh(master_path)
+        #
+        self.stitch_patches(internal_patches, t_name)
 
-    def stitch_patches(self):
+    def stitch_patches(self, internal_patches, t_name):
         r"""
         Stitches all internal patches in the region together
         """
@@ -216,13 +205,13 @@ class MergeGroup(object):
         # stitching faces together to couple them
         path = self.region_dir
         args = ['stitchMesh', '-case', path, '-overwrite', '-perfect', '', '']
-        for master, slave in self.internal_patches:
+        for master, slave in internal_patches:
             #
             args[5] = master
             args[6] = slave
             cmd = tuple(args)
             msg = 'Running: %s in thread: %s'
-            logger.info(msg, ' '.join(cmd), self.thread_name)
+            logger.info(msg, ' '.join(cmd), t_name)
             proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
             out, err = proc.communicate()
             if proc.poll() != 0:
@@ -281,6 +270,7 @@ class ParallelMeshGen(object):
         #
         grid = sp.arange(0, ndivs*ndivs, dtype=int)
         grid = sp.reshape(grid, (ndivs, ndivs))
+        self.merge_groups = []
         #
         # updating mask if threshold
         if mesh_type == 'threshold':
@@ -340,21 +330,44 @@ class ParallelMeshGen(object):
                 x_st = slice_list[-1][1].stop
             #
             z_st = slice_list[-1][0].stop
-
-        init_count = active_count()
-        for i, (z_slice, x_slice) in enumerate(slice_list):
-            #
-            # waiting for threads to finish before starting new ones
-            while active_count() - init_count >= self.nprocs:
-                if _blockMesh_error.is_set():
-                    raise OSError('Mesh generation failure')
-                sleep(1)
-            region_mesh = self._setup_region(i, z_slice, x_slice, **kwargs)
-            self._create_region_mesh(i, region_mesh, **kwargs)
         #
-        # waiting until all meshes have finished generating
-        while active_count() > init_count:
-            sleep(1)
+        # creating queue from slice list
+        region_queue = Queue()
+        for i, (z_slice, x_slice) in enumerate(slice_list):
+            region_queue.put((i, (z_slice, x_slice)))
+        #
+        # creating worker threads
+        for i in range(self.nprocs):
+            t_name = 'BlockMesh Worker {}'.format(i)
+            thread = Thread(name=t_name,
+                            target=self._create_regions_thread,
+                            args=(region_queue, t_name, kwargs))
+            logger.debug('Thread: %s is running.', thread.name)
+            thread.start()
+        #
+        region_queue.join()
+        self.merge_groups.sort(key=lambda grp: grp.region_id)
+
+    def _create_regions_thread(self, region_queue, t_name, kwargs):
+        r"""
+        Handles processing of the queue in it's own thread
+        """
+        while True:
+            reg_id, (z_slice, x_slice) = region_queue.get()
+            reg_mesh = self._setup_region(reg_id, z_slice, x_slice, **kwargs)
+            #
+            # processing kwargs
+            mesh_type = kwargs.get('mesh_type', 'simple')
+            overwrite = kwargs.get('overwrite', False)
+            path = kwargs.get('path', '.')
+            path = os.path.join(path, 'mesh-region{}'.format(reg_id))
+            sys_dir = self.system_dir
+            #
+            # writing mesh and calling blockMesh
+            reg_mesh.run_block_mesh(mesh_type, path, sys_dir, t_name, overwrite)
+            region_queue.task_done()
+            if _blockMesh_error.is_set():
+                raise OSError('Mesh generation failure')
 
     def _setup_region(self, region_id, z_slice, x_slice, **kwargs):
         r"""
@@ -437,72 +450,57 @@ class ParallelMeshGen(object):
         #
         return region_mesh
 
-    def _create_region_mesh(self, region_id, region_mesh, **kwargs):
-        r"""
-        Handles the process of generating a mesh, writing it and then
-        calling blockMesh. Returns a Popen object.
-        """
-        #
-        # setting important attributes to generate the mesh
-        region_mesh.mesh_type = kwargs.get('mesh_type', 'simple')
-        region_mesh.overwrite = kwargs.get('overwrite', False)
-        path = kwargs.get('path', '.')
-        region_mesh.path = os.path.join(path, 'mesh-region{}'.format(region_id))
-        region_mesh.system_dir = self.system_dir
-        #
-        # starting mesh generation thread
-        region_mesh.thread_name = 'Region {} Thread'.format(region_id)
-        thread = Thread(name=region_mesh.thread_name, target=region_mesh.run)
-        thread.start()
-
     def _merge_submeshes(self, grid):
         r"""
         Handles merging and stitching of meshes based on alternating rounds
         of horizontal pairing and then vertical pairing.
         """
         #
-        init_count = active_count()
+        def merge_worker(merge_queue, t_name):
+            while True:
+                master, slave = merge_queue.get()
+                master = self.merge_groups[master]
+                slave = self.merge_groups[slave]
+                master.merge_regions(slave, direction, t_name)
+                merge_queue.task_done()
+                if _mergeMesh_error.is_set():
+                    raise OSError('Mesh merging failure')
+        #
         direction = 'right'
         while sp.size(grid) > 1:
             #
-            # getting merge list and updating grid
-            merge_list, grid = self._create_merge_list(grid, direction)
-            for master, slave in merge_list:
-                #
-                # waiting for threads to finish before starting more
-                while active_count() - init_count >= self.nprocs:
-                    if _mergeMesh_error.is_set():
-                        raise OSError('Mesh merging failure')
-                    sleep(1)
-                master = self.merge_groups[master]
-                slave = self.merge_groups[slave]
-                master.merge_regions(slave, direction)
+            # getting merge queue and updating grid
+            merge_queue, grid = self._create_merge_queue(grid, direction)
             #
-            # waiting for all threads to complete
-            while active_count() > init_count:
-                sleep(1)
+            # merging and stitching the regions together
+            for i in range(self.nprocs):
+                t_name = 'MergeMesh Worker {}'.format(i)
+                args = (merge_queue, t_name)
+                thread = Thread(name=t_name, target=merge_worker, args=args)
+                logger.debug('Thread: %s is running.', thread.name)
+                thread.start()
             #
-            # switching directions
+            merge_queue.join()
             direction = 'top' if direction == 'right' else 'right'
 
     @staticmethod
-    def _create_merge_list(grid, direction):
+    def _create_merge_queue(grid, direction):
         r"""
-        Determines the region merge list based on the grid supplied
+        Determines the region merge queue based on the grid supplied
         """
         #
+        merge_queue = Queue()
         new_grid = sp.copy(grid)
         if direction == 'right':
             # Horizontally pairing up regions
             new_nx = int(grid.shape[1]/2) + grid.shape[1] % 2
             new_grid = -sp.ones(grid.shape[0]*new_nx, dtype=int)
-            merge_list = []
             #
             for iz in range(grid.shape[0]):
                 i = iz*new_nx
                 ix = 0
                 for ix in range(0, grid.shape[1]-1, 2):
-                    merge_list.append((grid[iz, ix], grid[iz, ix+1]))
+                    merge_queue.put((grid[iz, ix], grid[iz, ix+1]))
                     new_grid[i] = grid[iz, ix]
                     i += 1
                 if ix != grid.shape[1]-2:
@@ -514,13 +512,12 @@ class ParallelMeshGen(object):
             # Vertically pairing up regions
             new_nz = int(grid.shape[0]/2) + grid.shape[0] % 2
             new_grid = -sp.ones(new_nz*grid.shape[1], dtype=int)
-            merge_list = []
             #
             for ix in range(grid.shape[1]):
                 i = ix
                 iz = 0
                 for iz in range(0, grid.shape[0]-1, 2):
-                    merge_list.append((grid[iz, ix], grid[iz+1, ix]))
+                    merge_queue.put((grid[iz, ix], grid[iz+1, ix]))
                     new_grid[i] = grid[iz, ix]
                     i += grid.shape[1]
                 if iz != grid.shape[0]-2:
@@ -528,7 +525,7 @@ class ParallelMeshGen(object):
             #
             new_grid = sp.reshape(new_grid, (new_nz, grid.shape[1]))
         #
-        return merge_list, new_grid
+        return merge_queue, new_grid
 
     @staticmethod
     def _remove_leftover_patches(path):
