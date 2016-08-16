@@ -56,7 +56,8 @@ class BlockMeshDict(OpenFoamFile):
         self.data_map = sp.array([])
         self.data_vector = sp.array([])
         self.point_data = sp.array([])
-        field.create_point_data()
+        if field.point_data is None:
+            field.create_point_data()
         field.copy_data(self)
         #
         # native attributes
@@ -77,12 +78,12 @@ class BlockMeshDict(OpenFoamFile):
         self.point_data += 1E-6
         self.generate_simple_mesh()
 
-    def _create_blocks(self, cell_mask=None):
+    def _create_blocks(self, cell_mask):
         r"""
         Sets up the vertices and blocks.
 
             - cell_mask is a boolean array in the shape of the data_map
-        telling the function what blocks to skip.
+        telling the function what blocks to include.
 
         vert_map stores the 4 vertex indices that make up the
         back surface and the front surface is '+ 1' the index of the
@@ -93,9 +94,6 @@ class BlockMeshDict(OpenFoamFile):
         vert_map[i,j,3] is the top left corner (0,1)
         """
         #
-        # creating mask
-        if cell_mask is None:
-            cell_mask = sp.ones((self.nz, self.nx), dtype=bool)
         map_mask = sp.ones((self.nz+1, self.nx+1), dtype=bool)
         map_mask[0:self.nz, 0:self.nx] = cell_mask
         map_mask[0:self.nz, self.nx] = cell_mask[0:self.nz, self.nx-1]
@@ -112,8 +110,8 @@ class BlockMeshDict(OpenFoamFile):
         vert_index = 0
         if map_mask[0, 0]:
             vert_map[0, 0, 0] = 0
-            vertices.append([0.0, -self.data_map[0, 0]/2.0, 0.0])
-            vertices.append([0.0, self.data_map[0, 0]/2.0, 0.0])
+            vertices.append([0.0, -self.point_data[0, 0, 0]/2.0, 0.0])
+            vertices.append([0.0, self.point_data[0, 0, 0]/2.0, 0.0])
             vert_index = 2
         #
         for iz in range(self.nz):
@@ -170,9 +168,10 @@ class BlockMeshDict(OpenFoamFile):
 
     def set_boundary_patches(self, boundary_blocks, reset=False):
         r"""
-        Sets up boundary patches based on the dictionary passed in. Does
-        not check for overlap in patch declarations. The boundary blocks
-        dictionary contains a dictionary entry for each patch name.
+        Sets up boundary patches based on the dictionary passed in. Overlapping
+        declarations are overwritten by the last patch to use that face.
+        The boundary blocks dictionary contains a dictionary entry for
+        each patch name.
 
             - boundary_blocks dictionary has the format of:
                   {patch_name: {
@@ -198,59 +197,106 @@ class BlockMeshDict(OpenFoamFile):
             'top': (5, (4, 5, 6, 7)),
         }
         #
+        # re-initializing all face labels
+        num_faces = 6 * len(self._blocks)
         if reset:
-            num_faces = 6 * len(self._blocks)
             self._faces = sp.ones((num_faces, 4), dtype=int)*-sp.iinfo(int).max
             self.face_labels = {}
-            for patch_name in boundary_blocks.keys():
-                key = 'boundary.'+patch_name
+        #
+        # adding any new face labels to the dictionary
+        for patch_name in boundary_blocks.keys():
+            key = 'boundary.'+patch_name
+            if key not in self.face_labels.keys():
                 self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
         #
+        # setting new face labels
         for patch_name, side_dict in boundary_blocks.items():
             for side, blocks in side_dict.items():
                 indices = sp.array(blocks, dtype=int) * 6 + offsets[side][0]
                 face_verts = self._blocks[blocks][:, offsets[side][1]]
                 self._faces[indices] = face_verts
                 self.face_labels['boundary.'+patch_name][indices] = True
+        #
+        # preventing overlapping face labels
+        for patch_name in boundary_blocks.keys():
+            indices = self.face_labels['boundary.'+patch_name]
+            reset = {key: indices for key in self.face_labels.keys()}
+            del reset['boundary.'+patch_name]
+            for key, indices in reset.items():
+                self.face_labels[key][indices] = False
+
+    def _generate_masked_mesh(self, cell_mask=None):
+        r"""
+        Generates the mesh based on the cell mask provided
+        """
+        #
+        if cell_mask is None:
+            cell_mask = sp.ones(self.data_map.shape, dtype=bool)
+        #
+        # initializing arrays
+        self._edges = sp.ones(0, dtype=str)
+        self._merge_patch_pairs = sp.ones(0, dtype=str)
+        self._create_blocks(cell_mask)
+        #
+        # building face arrays
+        mapper = sp.ravel(sp.array(cell_mask, dtype=int))
+        mapper[mapper == 1] = sp.arange(sp.count_nonzero(mapper))
+        mapper = sp.reshape(mapper, (self.nz, self.nx))
+        mapper[~cell_mask] = -sp.iinfo(int).max
+        #
+        boundary_dict = {
+            'bottom':
+                {'bottom': mapper[0, :][cell_mask[0, :]]},
+            'top':
+                {'top': mapper[-1, :][cell_mask[-1, :]]},
+            'left':
+                {'left': mapper[:, 0][cell_mask[:, 0]]},
+            'right':
+                {'right': mapper[:, -1][cell_mask[:, -1]]},
+            'front':
+                {'front': mapper[cell_mask]},
+            'back':
+                {'back': mapper[cell_mask]},
+            'internal':
+                {'bottom': [], 'top': [], 'left': [], 'right': []}
+        }
+        #
+        # determining cells linked to a masked cell
+        cell_mask = sp.where(~sp.ravel(cell_mask))[0]
+        inds = sp.in1d(self._field._cell_interfaces, cell_mask)
+        inds = sp.reshape(inds, (len(self._field._cell_interfaces), 2))
+        inds = inds[:, 0].astype(int) + inds[:, 1].astype(int)
+        inds = (inds == 1)
+        links = self._field._cell_interfaces[inds]
+        #
+        # adjusting order so masked cells are all on links[:, 1]
+        swap = sp.in1d(links[:, 0], cell_mask)
+        links[swap] = links[swap, ::-1]
+        #
+        # setting side based on index difference
+        sides = sp.ndarray(len(links), dtype='<U6')
+        sides[sp.where(links[:, 1] == links[:, 0]-self.nx)[0]] = 'bottom'
+        sides[sp.where(links[:, 1] == links[:, 0]+self.nx)[0]] = 'top'
+        sides[sp.where(links[:, 1] == links[:, 0]-1)[0]] = 'left'
+        sides[sp.where(links[:, 1] == links[:, 0]+1)[0]] = 'right'
+        #
+        # adding each block to the internal face dictionary
+        inds = sp.ravel(mapper)[links[:, 0]]
+        for side, block_id in zip(sides, inds):
+            boundary_dict['internal'][side].append(block_id)
+        self.set_boundary_patches(boundary_dict, reset=True)
 
     def generate_simple_mesh(self):
         r"""
         Generates a simple mesh including all cells in the data map
         """
-        #
-        # initializing arrays
-        self._edges = sp.ones(0, dtype=str)
-        self._merge_patch_pairs = sp.ones(0, dtype=str)
-        #
-        # setting up blocks and vertices
-        self._create_blocks(cell_mask=None)
-        #
-        # building face arrays
-        mapper = sp.reshape(sp.arange(self.nx*self.nz), (self.nz, self.nx))
-        boundary_dict = {
-            'bottom':
-                {'bottom': mapper[0, :]},
-            'top':
-                {'top': mapper[-1, :]},
-            'left':
-                {'left': mapper[:, 0]},
-            'right':
-                {'right': mapper[:, -1]},
-            'front':
-                {'front': sp.arange(self.nx*self.nz)},
-            'back':
-                {'back': sp.arange(self.nx*self.nz)}
-        }
-        self.set_boundary_patches(boundary_dict, reset=True)
+        self._generate_masked_mesh(cell_mask=None)
 
     def generate_threshold_mesh(self, min_value=0.0, max_value=1.0e9):
         r"""
         Generates a mesh excluding all blocks below the min_value arg. Regions
         that are isolated by the thresholding are also automatically removed.
         """
-        #
-        self._edges = sp.ones(0, dtype=str)
-        self._merge_patch_pairs = sp.ones(0, dtype=str)
         #
         # thresholding the data and then checking for isolated clusters
         self._field.threshold_data(min_value, max_value, repl=0.0)
@@ -272,54 +318,7 @@ class BlockMeshDict(OpenFoamFile):
         #
         # generating blocks and vertices
         mask = self.data_map > 0.0
-        self._create_blocks(cell_mask=mask)
-        #
-        # building face arrays
-        mapper = sp.ravel(sp.array(mask, dtype=int))
-        mapper[mapper == 1] = sp.arange(sp.count_nonzero(mapper))
-        mapper = sp.reshape(mapper, (self.nz, self.nx))
-        mapper[~mask] = -sp.iinfo(int).max
-        boundary_dict = {
-            'bottom':
-                {'bottom': mapper[0, :][mask[0, :]]},
-            'top':
-                {'top': mapper[-1, :][mask[-1, :]]},
-            'left':
-                {'left': mapper[:, 0][mask[:, 0]]},
-            'right':
-                {'right': mapper[:, -1][mask[:, -1]]},
-            'front':
-                {'front': mapper[mask]},
-            'back':
-                {'back': mapper[mask]},
-            'internal':
-                {'bottom': [], 'top': [], 'left': [], 'right': []}
-        }
-        #
-        # determining cells linked to a masked cell
-        mask = sp.where(~sp.ravel(mask))[0]
-        inds = sp.in1d(self._field._cell_interfaces, mask)
-        inds = sp.reshape(inds, (len(self._field._cell_interfaces), 2))
-        inds = inds[:, 0].astype(int) + inds[:, 1].astype(int)
-        inds = (inds == 1)
-        links = self._field._cell_interfaces[inds]
-        #
-        # adjusting order so masked cells are all on links[:, 1]
-        swap = sp.in1d(links[:, 0], mask)
-        links[swap] = links[swap, ::-1]
-        #
-        # setting side based on index difference
-        sides = sp.ndarray(len(links), dtype='<U6')
-        sides[sp.where(links[:, 1] == links[:, 0]-self.nx)[0]] = 'bottom'
-        sides[sp.where(links[:, 1] == links[:, 0]+self.nx)[0]] = 'top'
-        sides[sp.where(links[:, 1] == links[:, 0]-1)[0]] = 'left'
-        sides[sp.where(links[:, 1] == links[:, 0]+1)[0]] = 'right'
-        #
-        # adding each block to the internal face dictionary
-        inds = sp.ravel(mapper)[links[:, 0]]
-        for side, block_id in zip(sides, inds):
-            boundary_dict['internal'][side].append(block_id)
-        self.set_boundary_patches(boundary_dict, reset=True)
+        self._generate_masked_mesh(cell_mask=mask)
 
     def generate_mesh_file(self):
         r"""
@@ -422,6 +421,7 @@ class BlockMeshDict(OpenFoamFile):
         Exports the +Y half of the mesh flattening out everything below 0 on
         the Y axis
         """
+        # TODO: consider replacing the bottom face type with symmetryPlane
         #
         # storing orginial vertices
         old_verts = sp.copy(self._vertices)

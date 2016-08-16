@@ -3,7 +3,7 @@ Handles testing of the OpenFOAM export module
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/09
-Last Modifed: 2016/06/10
+Last Modifed: 2016/08/15
 #
 """
 #
@@ -14,7 +14,7 @@ from ApertureMapModelTools.OpenFoam.__openfoam_core__ import OpenFoamObject
 from ApertureMapModelTools import OpenFoam
 
 
-class TestOpenFoamExport:
+class TestOpenFoam:
     r"""
     Executes a set of functions to handle testing of the export routines
     """
