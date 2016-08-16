@@ -14,7 +14,6 @@ from ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ import DataFieldRegion
 from ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ import BlockMeshRegion
 from ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ import MergeGroup
 from ApertureMapModelTools.OpenFoam import ParallelMeshGen
-from ApertureMapModelTools.OpenFoam import OpenFoamFile
 
 
 class TestParallelMeshGen:
@@ -70,3 +69,4 @@ class TestParallelMeshGen:
 
     def test_parallel_mesh_gen(self, data_field_class):
         pass
+
