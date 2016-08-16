@@ -78,12 +78,12 @@ class BlockMeshDict(OpenFoamFile):
         self.point_data += 1E-6
         self.generate_simple_mesh()
 
-    def _create_blocks(self, cell_mask=None):
+    def _create_blocks(self, cell_mask):
         r"""
         Sets up the vertices and blocks.
 
             - cell_mask is a boolean array in the shape of the data_map
-        telling the function what blocks to skip.
+        telling the function what blocks to include.
 
         vert_map stores the 4 vertex indices that make up the
         back surface and the front surface is '+ 1' the index of the
@@ -93,10 +93,6 @@ class BlockMeshDict(OpenFoamFile):
         vert_map[i,j,2] is the top right corner (1,1)
         vert_map[i,j,3] is the top left corner (0,1)
         """
-        #
-        # creating mask
-        if cell_mask is None:
-            cell_mask = sp.ones(self.data_map.shape, dtype=bool)
         #
         map_mask = sp.ones((self.nz+1, self.nx+1), dtype=bool)
         map_mask[0:self.nz, 0:self.nx] = cell_mask
@@ -240,7 +236,7 @@ class BlockMeshDict(OpenFoamFile):
         # initializing arrays
         self._edges = sp.ones(0, dtype=str)
         self._merge_patch_pairs = sp.ones(0, dtype=str)
-        self._create_blocks(cell_mask=cell_mask)
+        self._create_blocks(cell_mask)
         #
         # building face arrays
         mapper = sp.ravel(sp.array(cell_mask, dtype=int))

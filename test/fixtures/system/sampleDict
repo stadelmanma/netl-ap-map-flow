@@ -1,0 +1,145 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  4.0                                   |
+|   \\  /    A nd           | Web:      www.OpenFOAM.org                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+	version	2.0;
+	format	ascii;
+	class	dictionary;
+	location	"system";
+	object	sampleDict;
+}
+// ************************************************************************* //
+
+setFormat	raw;
+
+interpolationScheme	cell;
+
+fields
+(
+	p
+	U
+);
+
+sets
+(
+
+	profile0y
+	{
+		type	face;
+		axis	y;
+		start	(0.000127 -0.025273 0);
+		end	(0.000127 0.025273  0);
+	}
+
+	profile0z
+	{
+		type	face;
+		axis	z;
+		start	(0.000127 0 -0.025273);
+		end	(0.000127 0  0.025273);
+	}
+
+	profile1y
+	{
+		type	face;
+		axis	y;
+		start	(0.0254 -0.025273 0);
+		end	(0.0254  0.025273 0);
+	}
+
+	profile1z
+	{
+		type	face;
+		axis	z;
+		start	(0.0254 0  -0.025273);
+		end	(0.0254 0   0.025273);
+	}
+
+	profile2y
+	{
+		type	face;
+		axis	y;
+		start	(0.0508 -0.025273 0);
+		end	(0.0508  0.025273 0);
+	}
+
+	profile2z
+	{
+		type	face;
+		axis	z;
+		start	(0.0508 0  -0.025273);
+		end	(0.0508 0   0.025273);
+	}
+
+	profile3y
+	{
+		type	face;
+		axis	y;
+		start	(0.0762 -0.025273 0);
+		end	(0.0762  0.025273 0);
+	}
+
+	profile3z
+	{
+		type	face;
+		axis	z;
+		start	(0.0762 0  -0.025273);
+		end	(0.0762 0   0.025273);
+	}
+
+	profile4y
+	{
+		type	face;
+		axis	y;
+		start	(0.1016 -0.025273 0);
+		end	(0.1016  0.025273 0);
+	}
+
+	profile4z
+	{
+		type	face;
+		axis	z;
+		start	(0.1016 0  -0.025273);
+		end	(0.1016 0   0.025273);
+	}
+
+	profile5y
+	{
+		type	face;
+		axis	y;
+		start	(0.1270 -0.025273 0);
+		end	(0.1270  0.025273 0);
+	}
+
+	profile5z
+	{
+		type	face;
+		axis	y;
+		start	(0.1270 0  -0.025273);
+		end	(0.1270 0   0.025273);
+	}
+
+	profile6y
+	{
+		type	face;
+		axis	y;
+		start	(0.1522 -0.025273 0);
+		end	(0.1522  0.025273 0);
+	}
+
+	profile6z
+	{
+		type	face;
+		axis	z;
+		start	(0.1522 0  -0.025273);
+		end	(0.1522 0   0.025273);
+	}
+);
+
+
+// ************************************************************************* //

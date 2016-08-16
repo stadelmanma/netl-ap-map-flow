@@ -1,0 +1,14 @@
+#!/bin/bash
+
+echo "blockMesh Dummy Executable"
+
+# testing args exists
+if [ ! $1 == '-case' ]; then
+    echo "invalid -case arg -> $1"
+    exit 1
+fi
+
+if [ ! $2 ]; then
+    echo "no value for -case arg"
+    exit 1
+fi

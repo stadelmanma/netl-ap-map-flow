@@ -26,7 +26,7 @@ from .__BlockMeshDict__ import BlockMeshDict
 fmt = '%(asctime)s %(levelname)s - %(name)s -> %(message)s'
 fmt = logging.Formatter(fmt, datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger(__name__.split('.')[-1])
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.WARNING)
 screen = logging.StreamHandler()
 screen.setFormatter(fmt)
 screen.setLevel(logging.DEBUG)
@@ -86,7 +86,7 @@ class BlockMeshRegion(BlockMeshDict):
         """
         self.x_shift = x_shift
         self.z_shift = z_shift
-        super().__init__(region, avg_fact, mesh_params)
+        super().__init__(region, avg_fact, mesh_params=mesh_params)
 
     def _create_blocks(self, cell_mask=None):
         r"""
@@ -257,16 +257,13 @@ class ParallelMeshGen(object):
         self.mesh_params = mesh_params
         self.merge_groups = []
 
-    def generate_mesh(self, mesh_type='simple', path='.', **kwargs):
+    def generate_mesh(self, mesh_type='simple', path='.', ndivs=8, **kwargs):
         r"""
         Generates multiple mesh types and outputs them to a specific path.
         Valid mesh_types are: simple, threshold and symmetry. Additional
         kwargs need to be supplied for the given mesh type if it needs
         additional keywords.
         """
-        #
-        # setting up initial region grid
-        ndivs = 8
         #
         grid = sp.arange(0, ndivs*ndivs, dtype=int)
         grid = sp.reshape(grid, (ndivs, ndivs))
@@ -342,6 +339,7 @@ class ParallelMeshGen(object):
             thread = Thread(name=t_name,
                             target=self._create_regions_thread,
                             args=(region_queue, t_name, kwargs))
+            thread.daemon = True
             logger.debug('Thread: %s is running.', thread.name)
             thread.start()
         #
@@ -477,6 +475,7 @@ class ParallelMeshGen(object):
                 t_name = 'MergeMesh Worker {}'.format(i)
                 args = (merge_queue, t_name)
                 thread = Thread(name=t_name, target=merge_worker, args=args)
+                thread.daemon = True
                 logger.debug('Thread: %s is running.', thread.name)
                 thread.start()
             #

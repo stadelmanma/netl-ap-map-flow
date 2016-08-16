@@ -1,18 +1,35 @@
 #!/usr/bin/env python3
+import os
 import sys
 import pytest
-#
+
+# initializing args
+sys_args = list(sys.argv)
 args = ['-v']
-# allowing stdout is desired
-if '-s' in sys.argv:
-    args.append('-s')
+
+# adding my fixture bin to PATH so tests ignore actual OpenFoam programs
+if '--use-openfoam' in sys_args:
+    del sys_args[sys_args.index('--use-openfoam')]
+else:
+    fixture_bin = os.path.join('test', 'fixtures', 'bin')
+    fixture_bin = os.path.abspath(fixture_bin) + os.pathsep
+    os.environ['PATH'] = os.path.join(fixture_bin) + os.environ['PATH']
+
 # setting pytest pep8 arg
-if 'pep8' in sys.argv:
+if 'pep8' in sys_args:
+    del sys_args[sys_args.index('pep8')]
     args.append('--pep8')
+
 # setting pytest coverage args
-if 'cov' in sys.argv:
-    args.extend(['--cov-report=term-missing',
-                 '--cov=ApertureMapModelTools'])
-# testing entire module
+if 'cov' in sys_args:
+    del sys_args[sys_args.index('cov')]
+    args.append('--cov-report=term-missing')
+    args.append('--cov=ApertureMapModelTools')
+
+# building final argument list
+del sys_args[0]
+args = sys_args + args
+
+# running pytest
 exit_code = pytest.main(args)
 exit(exit_code)
