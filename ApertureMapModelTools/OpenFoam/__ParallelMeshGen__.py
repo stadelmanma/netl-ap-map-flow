@@ -26,7 +26,7 @@ from .__BlockMeshDict__ import BlockMeshDict
 fmt = '%(asctime)s %(levelname)s - %(name)s -> %(message)s'
 fmt = logging.Formatter(fmt, datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger(__name__.split('.')[-1])
-logger.setLevel(logging.WARNING)
+logger.setLevel(logging.INFO)
 screen = logging.StreamHandler()
 screen.setFormatter(fmt)
 screen.setLevel(logging.DEBUG)
