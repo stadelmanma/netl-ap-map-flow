@@ -69,4 +69,3 @@ class TestParallelMeshGen:
 
     def test_parallel_mesh_gen(self, data_field_class):
         pass
-

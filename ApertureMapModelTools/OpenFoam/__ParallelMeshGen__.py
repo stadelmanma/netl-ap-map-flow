@@ -26,7 +26,7 @@ from .__BlockMeshDict__ import BlockMeshDict
 fmt = '%(asctime)s %(levelname)s - %(name)s -> %(message)s'
 fmt = logging.Formatter(fmt, datefmt='%Y-%m-%d %H:%M:%S')
 logger = logging.getLogger(__name__.split('.')[-1])
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 screen = logging.StreamHandler()
 screen.setFormatter(fmt)
 screen.setLevel(logging.DEBUG)
@@ -104,7 +104,7 @@ class BlockMeshRegion(BlockMeshDict):
         """
         #
         # writing files based on mesh type
-        if mesh_type == 'symmetry':
+        if re.search('symmetry', mesh_type):
             self.write_symmetry_plane(path=path, overwrite=overwrite)
         else:
             self.write_foam_file(path=path, overwrite=overwrite)
@@ -270,7 +270,7 @@ class ParallelMeshGen(object):
         self.merge_groups = []
         #
         # updating mask if threshold
-        if mesh_type == 'threshold':
+        if re.search('threshold', mesh_type):
             min_value = kwargs.get('min_value', 0.0)
             max_value = kwargs.get('max_value', 1e9)
             self._field.threshold_data(min_value, max_value, repl=0.0)
