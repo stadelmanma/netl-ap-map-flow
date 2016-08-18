@@ -2,3 +2,23 @@
 
 echo "mergeMeshes Dummy Executable"
 
+if [ ! $1 == '-overwrite' ]; then
+    echo "-overwrite flag was not the first argument"
+    exit 1
+fi
+
+if [ ! $2 ]; then
+    echo "no path to master case given"
+    exit 1
+fi
+
+if [ ! $3 ]; then
+    echo "no path to slave case given"
+    exit 1
+fi
+
+# adding statement to force a return code of 1
+if [ $(echo $3 | grep 'exit1') ]; then
+    echo "forced return code of 1"
+    exit 1
+fi

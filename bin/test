@@ -7,8 +7,9 @@ import pytest
 sys_args = list(sys.argv)
 args = ['-v']
 
-# adding my fixture bin to PATH so tests ignore actual OpenFoam programs
+# adding fixture bin to PATH to allow testing without using OpenFoam utilties
 if '--use-openfoam' in sys_args:
+    print('Notice: Unit tests in TestParallelMeshGen.py will fail using real utilities')
     del sys_args[sys_args.index('--use-openfoam')]
 else:
     fixture_bin = os.path.join('test', 'fixtures', 'bin')

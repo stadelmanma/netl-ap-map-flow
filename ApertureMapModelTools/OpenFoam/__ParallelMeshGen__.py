@@ -238,8 +238,6 @@ class ParallelMeshGen(object):
     def __init__(self, field, system_dir, nprocs=4, **kwargs):
         #
         super().__init__()
-        mesh_params = kwargs.get('mesh_params', None)
-        mesh_params = mesh_params or {}
         #
         # field attributes that are copied over
         field.create_point_data()
@@ -254,7 +252,7 @@ class ParallelMeshGen(object):
         self.system_dir = system_dir
         self.nprocs = nprocs
         self.avg_fact = kwargs.get('avg_fact', 1.0)
-        self.mesh_params = mesh_params
+        self.mesh_params = kwargs.get('mesh_params', {})
         self.merge_groups = []
 
     def generate_mesh(self, mesh_type='simple', path='.', ndivs=8, **kwargs):
@@ -264,6 +262,11 @@ class ParallelMeshGen(object):
         kwargs need to be supplied for the given mesh type if it needs
         additional keywords.
         """
+        #
+        # resetting error Events
+        _blockMesh_error.clear()
+        _mergeMesh_error.clear()
+        _stitchMesh_error.clear()
         #
         grid = sp.arange(0, ndivs*ndivs, dtype=int)
         grid = sp.reshape(grid, (ndivs, ndivs))
@@ -529,7 +532,7 @@ class ParallelMeshGen(object):
     @staticmethod
     def _remove_leftover_patches(path):
         r"""
-        Removes all left over merge patches
+        Removes all left over merge patches from theboundary file
         """
         file_name = os.path.join(path, 'mesh-region0', 'constant', 'polyMesh')
         file_name = os.path.join(file_name, 'boundary')

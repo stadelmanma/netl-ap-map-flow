@@ -3,13 +3,14 @@ Handles testing of the OpenFoam.ParallelMeshGen submodule module
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/09
-Last Modifed: 2016/08/16
+Last Modifed: 2016/08/18
 #
 """
 #
 import os
 import pytest
 import scipy as sp
+import ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ as pmg_submodule
 from ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ import DataFieldRegion
 from ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ import BlockMeshRegion
 from ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ import MergeGroup
@@ -63,9 +64,128 @@ class TestParallelMeshGen:
         # sending a failing case
         with pytest.raises(OSError):
             mesh_region.run_block_mesh('simple', '', sys_dir, 'Test Worker 0', True)
+        assert pmg_submodule._blockMesh_error.is_set()
 
     def test_merge_group(self):
-        pass
+        #
+        # setting up first group and testing properties
+        sides = ['left', 'right', 'top', 'bottom']
+        ext_pat = {side: side+'0' for side in ['right', 'top']}
+        ext_pat.update({'left': 'left', 'bottom': 'bottom'})
+        merge_group0 = MergeGroup(0, ext_pat, TEMP_DIR)
+        assert merge_group0.region_id == 0
+        assert merge_group0.region_dir == os.path.join(TEMP_DIR, 'mesh-region0')
+        assert merge_group0.regions == sp.array([0], ndmin=2, dtype=int)
+        assert merge_group0.external_patches == {key: [val] for key, val in ext_pat.items()}
+        #
+        # setting up additional merge groups to test directions
+        ext_pat = {side: side+'1' for side in ['left', 'right', 'top']}
+        ext_pat.update({'bottom': 'bottom'})
+        merge_group1 = MergeGroup(1, ext_pat, TEMP_DIR)
+        ext_pat = {side: side+'2' for side in ['right', 'top', 'bottom']}
+        ext_pat.update({'left': 'left'})
+        merge_group2 = MergeGroup(2, ext_pat, TEMP_DIR)
+        ext_pat = {side: side+'3' for side in sides}
+        merge_group3 = MergeGroup(3, ext_pat, TEMP_DIR)
+        #
+        # adding place holder directories for rmtree to remove
+        for i in [1, 2, 3]:
+            os.mkdir(os.path.join(TEMP_DIR, 'mesh-region{}'.format(i)))
+        #
+        # testing merge directions
+        merge_group0.merge_regions(merge_group1, 'right', 'test-thread0')
+        merge_group2.merge_regions(merge_group3, 'right', 'test-thread2')
+        assert sp.all(merge_group0.regions == sp.array([0, 1], ndmin=2, dtype=int))
+        assert merge_group0.external_patches == {'left': ['left'], 'right': ['right1'],
+                                                 'top': ['top0', 'top1'], 'bottom': ['bottom', 'bottom']}
+        merge_group0.merge_regions(merge_group2, 'top', 'test-thread0')
+        #
+        # testing case when mergeMeshes return code != 0
+        ext_pat = {side: side+'2' for side in ['right', 'top', 'bottom']}
+        ext_pat.update({'left': 'left'})
+        merge_group2 = MergeGroup(2, ext_pat, TEMP_DIR)
+        ext_pat = {side: side+'3' for side in sides}
+        merge_group3 = MergeGroup(3, ext_pat, TEMP_DIR+'-exit1')
+        with pytest.raises(OSError):
+            merge_group2.merge_regions(merge_group3, 'right', 'test-thread2')
+        assert pmg_submodule._mergeMesh_error.is_set()
+        #
+        # testing case when stitchMeshes return code != 0
+        internal_patches = [('patch1', 'patch2-exit1')]
+        merge_group2.stitch_patches(internal_patches, 'test-thread2')
+        assert pmg_submodule._stitchMesh_error.is_set()
 
     def test_parallel_mesh_gen(self, data_field_class):
-        pass
+        r"""
+        only testing initializtion and merge_queue generation. The other functions
+        are exercised during integration testing
+        """
+        #
+        # testing ParallelMeshGen init method
+        #
+        field = data_field_class()
+        # testing defaults first
+        pmg = ParallelMeshGen(field, 'system-test')
+        assert pmg.system_dir == 'system-test'
+        assert pmg.nprocs == 4
+        assert pmg.mesh_params == {}
+        assert pmg.merge_groups == []
+        assert pmg.avg_fact == 1.0
+        assert pmg.nx == field.nx
+        assert pmg.nz == field.nz
+        assert sp.all(pmg._mask)
+        # checking pmg only has references to data initially, new references are
+        # created if the 'threashold' method was used because it resets the arrays
+        # using the internal _field which was cloned and independent of the original
+        assert id(pmg.data_map) == id(field.data_map)
+        assert id(pmg.data_vector) == id(field.data_vector)
+        assert id(pmg.point_data) == id(field.point_data)
+        assert id(pmg._field) != id(field)
+        #
+        # testing non default values
+        params = {'test-key': 'test-value'}
+        pmg = ParallelMeshGen(field, 'system-test', nprocs=15, avg_fact=7.0,
+                              mesh_params=params)
+        assert pmg.nprocs == 15
+        assert pmg.avg_fact == 7.0
+        assert pmg.mesh_params == params
+        #
+        # Testing ParaMeshGen _create_merge_queue method
+        #
+        # testing merge queue for (2**, 2**n) grid shapes
+        grid = sp.reshape(sp.arange(4, dtype=int), (2, 2))
+        queue, new_grid = pmg._create_merge_queue(grid, 'right')
+        assert queue.qsize() == 2
+        pairs = []
+        while queue.qsize():
+            pairs.append(queue.get())
+        assert pairs == [(0, 1), (2, 3)]
+        assert sp.all(new_grid == sp.array([[0], [2]], ndmin=2, dtype=int))
+        #
+        grid = sp.reshape(sp.arange(4, dtype=int), (2, 2))
+        queue, new_grid = pmg._create_merge_queue(grid, 'top')
+        assert queue.qsize() == 2
+        pairs = []
+        while queue.qsize():
+            pairs.append(queue.get())
+        assert pairs == [(0, 2), (1, 3)]
+        assert sp.all(new_grid == sp.array([[0, 1]], ndmin=2, dtype=int))
+        #
+        # testing merge queue for (n x n) grid shapes
+        grid = sp.reshape(sp.arange(6, dtype=int), (2, 3))
+        queue, new_grid = pmg._create_merge_queue(grid, 'right')
+        assert queue.qsize() == 2
+        pairs = []
+        while queue.qsize():
+            pairs.append(queue.get())
+        assert pairs == [(0, 1), (3, 4)]
+        assert sp.all(new_grid == sp.array([[0, 2], [3, 5]], ndmin=2, dtype=int))
+        #
+        grid = sp.reshape(sp.arange(6, dtype=int), (3, 2))
+        queue, new_grid = pmg._create_merge_queue(grid, 'top')
+        assert queue.qsize() == 2
+        pairs = []
+        while queue.qsize():
+            pairs.append(queue.get())
+        assert pairs == [(0, 2), (1, 3)]
+        assert sp.all(new_grid == sp.array([[0, 1], [4, 5]], ndmin=2, dtype=int))
