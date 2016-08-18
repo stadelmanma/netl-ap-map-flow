@@ -18,7 +18,7 @@ if [ ! $3 ]; then
 fi
 
 # adding statement to force a return code of 1
-if [ $(echo $3 | grep 'exit1') ]; then
+if [ $(echo $3 | grep 'mergemesh-exit1') ]; then
     echo "forced return code of 1"
     exit 1
 fi

@@ -12,3 +12,9 @@ if [ ! $2 ]; then
     echo "no value for -case arg"
     exit 1
 fi
+
+# adding statement to force return code of zero
+if [ $(echo $2 | grep 'blockmesh-exit1') ]; then
+    echo "forced return code of 1"
+    exit 1
+fi

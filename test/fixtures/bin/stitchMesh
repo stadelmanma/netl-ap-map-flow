@@ -28,7 +28,7 @@ if [ ! $6 ]; then
 fi
 
 # adding final statement to fore return code of 1
-if [ $(echo $6 | grep 'exit1') ]; then
+if [ $(echo $2 | grep 'stitchmesh-exit1') ]; then
     echo 'Forced return code of 1'
     exit 1
 fi
