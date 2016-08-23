@@ -292,8 +292,6 @@ class ParallelMeshGen(object):
         #
         self._create_subregion_meshes(ndivs, mesh_type=mesh_type, path=path,
                                       **kwargs)
-        if _blockMesh_error.is_set():
-            raise OSError('Mesh Generation Failure')
         #
         self._merge_submeshes(grid)
         #
@@ -348,6 +346,9 @@ class ParallelMeshGen(object):
             thread.start()
         #
         region_queue.join()
+        if _blockMesh_error.is_set():
+            raise OSError('Mesh Generation Failure')
+        #
         self.merge_groups.sort(key=lambda grp: grp.region_id)
 
     def _create_regions_thread(self, region_queue, t_name, kwargs):
