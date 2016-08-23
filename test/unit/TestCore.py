@@ -8,14 +8,14 @@ Last Modifed: 2016/06/10
 """
 from collections import namedtuple
 from imp import reload
+import logging
 import os
 import pytest
 import re
 import sys
 import scipy as sp
 import ApertureMapModelTools as amt
-from ApertureMapModelTools.__core__ import ArgProcessor
-from ApertureMapModelTools.__core__ import multi_output_columns
+import ApertureMapModelTools.__core__ as amt_core
 
 
 class TestCore:
@@ -86,8 +86,20 @@ class TestCore:
         r"""
         Builds an ArgProcessor object
         """
-        arg = ArgProcessor(True)
+        arg = amt_core.ArgProcessor(True)
         assert arg.field
+
+    def test_init_logger(self):
+        r"""
+        Tests creation of a logger
+        """
+        logger = amt_core._init_logger('Test.TestCore')
+        #
+        assert logger.name == 'TestCore'
+        assert len(logger.handlers) == 1
+        assert isinstance(logger.handlers[0], logging.StreamHandler)
+        assert logger.handlers[0].level == 10
+        assert logger.level == 20
 
     def test_files_from_directory(self):
         r"""
@@ -152,4 +164,4 @@ class TestCore:
         output function. That way I'll rememeber to make a test function
         """
         with pytest.raises(NotImplementedError):
-            multi_output_columns(None)
+            amt_core.multi_output_columns(None)

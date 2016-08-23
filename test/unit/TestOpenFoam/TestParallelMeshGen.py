@@ -65,7 +65,6 @@ class TestParallelMeshGen:
         with pytest.raises(OSError):
             path = os.path.join(TEMP_DIR, 'blockmesh-exit1')
             mesh_region.run_block_mesh('simple', path, sys_dir, 'Test Worker 0', True)
-        assert pmg_submodule._blockMesh_error.is_set()
 
     def test_merge_group(self):
         #
@@ -109,7 +108,6 @@ class TestParallelMeshGen:
         merge_group3 = MergeGroup(3, ext_pat, os.path.join(TEMP_DIR, 'mergemesh-exit1'))
         with pytest.raises(OSError):
             merge_group2.merge_regions(merge_group3, 'right', 'test-thread2')
-        assert pmg_submodule._mergeMesh_error.is_set()
         #
         # testing case when stitchMeshes return code != 0
         internal_patches = [('patch1', 'patch2')]

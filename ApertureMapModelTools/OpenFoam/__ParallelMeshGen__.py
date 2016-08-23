@@ -7,34 +7,25 @@ Date Written: 2016/08/09
 Last Modifed: 2016/08/15
 #
 """
-import logging
 import os
 import re
-from queue import Queue
+from queue import Queue, Empty
 from shutil import rmtree
 from subprocess import Popen, PIPE
 from threading import Event, Thread
 import scipy as sp
 from scipy.sparse import csgraph
-from ..__core__ import DataField
+from ..__core__ import DataField, _init_logger
 from .__openfoam_core__ import OpenFoamFile, OpenFoamDict, OpenFoamList
 from .__BlockMeshDict__ import BlockMeshDict
 #
 ########################################################################
 #
-# setting up logger
-fmt = '%(asctime)s %(levelname)s - %(name)s -> %(message)s'
-fmt = logging.Formatter(fmt, datefmt='%Y-%m-%d %H:%M:%S')
-logger = logging.getLogger(__name__.split('.')[-1])
-logger.setLevel(logging.DEBUG)
-screen = logging.StreamHandler()
-screen.setFormatter(fmt)
-screen.setLevel(logging.DEBUG)
-logger.addHandler(screen)
-#
+# module globals
 _blockMesh_error = Event()
 _mergeMesh_error = Event()
 _stitchMesh_error = Event()
+logger = _init_logger(__name__)
 
 
 class DataFieldRegion(DataField):
@@ -122,8 +113,7 @@ class BlockMeshRegion(BlockMeshDict):
         if proc.poll() != 0:
             print(out)
             print(err)
-            _blockMesh_error.set()
-            raise OSError
+            raise OSError('Mesh generation failure')
 
 
 class MergeGroup(object):
@@ -188,8 +178,7 @@ class MergeGroup(object):
         if proc.poll() != 0:
             print(out)
             print(err)
-            _mergeMesh_error.set()
-            raise OSError
+            raise OSError('Mesh merging failure')
         #
         # removing slave directiory and cleaning the polyMesh of merge files
         rmtree(slave_path)
@@ -294,6 +283,7 @@ class ParallelMeshGen(object):
         #
         self._create_subregion_meshes(ndivs, mesh_type=mesh_type, path=path,
                                       **kwargs)
+        #
         self._merge_submeshes(grid)
         #
         if not _stitchMesh_error.is_set():
@@ -337,38 +327,55 @@ class ParallelMeshGen(object):
             region_queue.put((i, (z_slice, x_slice)))
         #
         # creating worker threads
-        for i in range(self.nprocs):
+        n_max = region_queue.qsize()
+        for i in range(min(self.nprocs, n_max)):
             t_name = 'BlockMesh Worker {}'.format(i)
             thread = Thread(name=t_name,
                             target=self._create_regions_thread,
                             args=(region_queue, t_name, kwargs))
-            thread.daemon = True
             logger.debug('Thread: %s is running.', thread.name)
             thread.start()
         #
         region_queue.join()
+        if _blockMesh_error.is_set():
+            raise OSError('Mesh Generation Failure')
+        #
         self.merge_groups.sort(key=lambda grp: grp.region_id)
 
     def _create_regions_thread(self, region_queue, t_name, kwargs):
         r"""
         Handles processing of the queue in it's own thread
         """
-        while True:
-            reg_id, (z_slice, x_slice) = region_queue.get()
-            reg_mesh = self._setup_region(reg_id, z_slice, x_slice, **kwargs)
-            #
-            # processing kwargs
-            mesh_type = kwargs.get('mesh_type', 'simple')
-            overwrite = kwargs.get('overwrite', False)
-            path = kwargs.get('path', '.')
-            path = os.path.join(path, 'mesh-region{}'.format(reg_id))
-            sys_dir = self.system_dir
-            #
-            # writing mesh and calling blockMesh
-            reg_mesh.run_block_mesh(mesh_type, path, sys_dir, t_name, overwrite)
+        #
+        # processing kwargs
+        mesh_type = kwargs.get('mesh_type', 'simple')
+        overwrite = kwargs.get('overwrite', False)
+        path = kwargs.get('path', '.')
+        sys_dir = self.system_dir
+        try:
+            while True:
+                reg_id, (z_slice, x_slice) = region_queue.get(False)
+                # short circuiting loop if there was an error
+                if _blockMesh_error.is_set():
+                    msg = '{} - There has been an error skipping region {}'
+                    logger.debug(msg.format(t_name, reg_id))
+                    region_queue.task_done()
+                    continue
+                #
+                args = [reg_id, z_slice, x_slice]
+                reg_mesh = self._setup_region(*args, **kwargs)
+                filename = os.path.join(path, 'mesh-region{}'.format(reg_id))
+                #
+                # writing mesh and calling blockMesh
+                args = [mesh_type, filename, sys_dir, t_name, overwrite]
+                reg_mesh.run_block_mesh(*args)
+                region_queue.task_done()
+        except Empty:
+            logger.debug(t_name+' region_queue is empty.')
+        except Exception as err:
             region_queue.task_done()
-            if _blockMesh_error.is_set():
-                raise OSError('Mesh generation failure')
+            _blockMesh_error.set()
+            raise err
 
     def _setup_region(self, region_id, z_slice, x_slice, **kwargs):
         r"""
@@ -458,14 +465,26 @@ class ParallelMeshGen(object):
         """
         #
         def merge_worker(merge_queue, t_name):
-            while True:
-                master, slave = merge_queue.get()
-                master = self.merge_groups[master]
-                slave = self.merge_groups[slave]
-                master.merge_regions(slave, direction, t_name)
+            try:
+                while True:
+                    master, slave = merge_queue.get(False)
+                    # short circuiting loop if there was an error
+                    if _mergeMesh_error.is_set():
+                        msg = '{} - There has been an error not merging {} -> {}'
+                        logger.debug(msg.format(t_name, slave, master))
+                        merge_queue.task_done()
+                        continue
+                    #
+                    master = self.merge_groups[master]
+                    slave = self.merge_groups[slave]
+                    master.merge_regions(slave, direction, t_name)
+                    merge_queue.task_done()
+            except Empty:
+                logger.debug(t_name+' merge_queue is empty.')
+            except Exception as err:
                 merge_queue.task_done()
-                if _mergeMesh_error.is_set():
-                    raise OSError('Mesh merging failure')
+                _mergeMesh_error.set()
+                raise err
         #
         direction = 'right'
         while sp.size(grid) > 1:
@@ -474,15 +493,17 @@ class ParallelMeshGen(object):
             merge_queue, grid = self._create_merge_queue(grid, direction)
             #
             # merging and stitching the regions together
-            for i in range(self.nprocs):
+            n_max = merge_queue.qsize()
+            for i in range(min(self.nprocs, n_max)):
                 t_name = 'MergeMesh Worker {}'.format(i)
                 args = (merge_queue, t_name)
                 thread = Thread(name=t_name, target=merge_worker, args=args)
-                thread.daemon = True
                 logger.debug('Thread: %s is running.', thread.name)
                 thread.start()
             #
             merge_queue.join()
+            if _mergeMesh_error.is_set():
+                raise OSError('Mesh Merging failure')
             direction = 'top' if direction == 'right' else 'right'
 
     @staticmethod
