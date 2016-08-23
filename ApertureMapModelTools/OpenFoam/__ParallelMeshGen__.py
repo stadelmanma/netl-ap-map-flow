@@ -337,7 +337,8 @@ class ParallelMeshGen(object):
             region_queue.put((i, (z_slice, x_slice)))
         #
         # creating worker threads
-        for i in range(self.nprocs):
+        n_max = region_queue.qsize()
+        for i in range(min(self.nprocs, n_max)):
             t_name = 'BlockMesh Worker {}'.format(i)
             thread = Thread(name=t_name,
                             target=self._create_regions_thread,
@@ -474,7 +475,8 @@ class ParallelMeshGen(object):
             merge_queue, grid = self._create_merge_queue(grid, direction)
             #
             # merging and stitching the regions together
-            for i in range(self.nprocs):
+            n_max = merge_queue.qsize()
+            for i in range(min(self.nprocs, n_max)):
                 t_name = 'MergeMesh Worker {}'.format(i)
                 args = (merge_queue, t_name)
                 thread = Thread(name=t_name, target=merge_worker, args=args)
