@@ -46,19 +46,25 @@ def test_parallel_mesh_gen():
     parallel_mesh_gen.generate_mesh(mesh_type='symmetry', path=out_path,
                                     ndivs=2, overwrite=True)
     #
-    # lightly hitting error cases by directly setting error events
-    # full testing of runtime exception handling is not possible
+    # hitting error cases
     parallel_mesh_gen = ParallelMeshGen(field, sys_dir)
+    #
+    # adding a fake blockMeshDict file to throw an error in mesh gen
+    bnd_file.name = 'blockMeshDict'
+    out_path = os.path.join(TEMP_DIR, 'test-pmg2-fail', 'mesh-region3')
+    bnd_file.write_foam_file(path=out_path, overwrite=True)
+    out_path = os.path.join(TEMP_DIR, 'test-pmg2-fail')
     with pytest.raises(OSError):
-        pmg_submodule._blockMesh_error.set()
-        parallel_mesh_gen._create_subregion_meshes(2, mesh_type='simple',
-                                                   path=out_path, overwrite=True)
+        parallel_mesh_gen._create_subregion_meshes(4, mesh_type='simple',
+                                                   path=out_path)
     #
     pmg_submodule._blockMesh_error.clear()
-    pmg_submodule._mergeMesh_error.set()
-    parallel_mesh_gen._create_subregion_meshes(2, mesh_type='simple',
+    parallel_mesh_gen._create_subregion_meshes(4, mesh_type='simple',
                                                path=out_path, overwrite=True)
-    grid = sp.arange(0, 4, dtype=int)
-    grid = sp.reshape(grid, (2, 2))
+    grid = sp.arange(0, 16, dtype=int)
+    grid = sp.reshape(grid, (4, 4))
+    #
+    # renaming a merge directory to throw an error
+    parallel_mesh_gen.merge_groups[3].region_dir += '-mergemesh-exit1'
     with pytest.raises(OSError):
         parallel_mesh_gen._merge_submeshes(grid)
