@@ -47,7 +47,9 @@ map_field = DataField(infile)
 system_dir = 'system'
 np = 16
 print('Setting generator up...')
-pmg = ParallelMeshGen(map_field, system_dir, nprocs=np, avg_fact=avg_fact, mesh_params=mesh_params)
+args = [map_field, system_dir]
+kwargs = {'nprocs': np, 'avg_fact': avg_fact, 'mesh_params': mesh_params}
+pmg = ParallelMeshGen(*args, **kwargs)
 
 # creating the mesh
 print('Creating the mesh...')
