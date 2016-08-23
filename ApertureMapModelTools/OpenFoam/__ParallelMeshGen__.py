@@ -10,7 +10,7 @@ Last Modifed: 2016/08/15
 import logging
 import os
 import re
-from queue import Queue
+from queue import Queue, Empty
 from shutil import rmtree
 from subprocess import Popen, PIPE
 from threading import Event, Thread
@@ -341,7 +341,6 @@ class ParallelMeshGen(object):
             thread = Thread(name=t_name,
                             target=self._create_regions_thread,
                             args=(region_queue, t_name, kwargs))
-            thread.daemon = True
             logger.debug('Thread: %s is running.', thread.name)
             thread.start()
         #
@@ -354,7 +353,7 @@ class ParallelMeshGen(object):
         """
         try:
             while True:
-                reg_id, (z_slice, x_slice) = region_queue.get()
+                reg_id, (z_slice, x_slice) = region_queue.get(False)
                 reg_mesh = self._setup_region(reg_id, z_slice, x_slice, **kwargs)
                 #
                 # processing kwargs
@@ -367,7 +366,10 @@ class ParallelMeshGen(object):
                 # writing mesh and calling blockMesh
                 reg_mesh.run_block_mesh(mesh_type, path, sys_dir, t_name, overwrite)
                 region_queue.task_done()
+        except Empty:
+            logger.debug(t_name+' region_queue is empty.')
         except Exception as err:
+            region_queue.task_done()
             _blockMesh_error.set()
             raise err
 
@@ -461,12 +463,15 @@ class ParallelMeshGen(object):
         def merge_worker(merge_queue, t_name):
             try:
                 while True:
-                    master, slave = merge_queue.get()
+                    master, slave = merge_queue.get(False)
                     master = self.merge_groups[master]
                     slave = self.merge_groups[slave]
                     master.merge_regions(slave, direction, t_name)
                     merge_queue.task_done()
+            except Empty:
+                logger.debug(t_name+' merge_queue is empty.')
             except Exception as err:
+                merge_queue.task_done()
                 _mergeMesh_error.set()
                 raise err
         #
@@ -482,7 +487,6 @@ class ParallelMeshGen(object):
                 t_name = 'MergeMesh Worker {}'.format(i)
                 args = (merge_queue, t_name)
                 thread = Thread(name=t_name, target=merge_worker, args=args)
-                thread.daemon = True
                 logger.debug('Thread: %s is running.', thread.name)
                 thread.start()
             #
