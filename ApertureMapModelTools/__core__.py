@@ -10,9 +10,10 @@ Last Modifed: 2016/08/10
 #
 ########################################################################
 #
-import subprocess
-import re
+import logging
 import os
+import re
+import subprocess
 import scipy as sp
 from scipy import sparse as sprs
 #
@@ -276,8 +277,28 @@ class StatFile:
 
 #
 ########################################################################
-#  Base functions
+#  Basic functions
 ########################################################################
+
+
+def _init_logger(module_name):
+    r"""
+    Initializes a module level logger
+    """
+    #
+    logger = logging.getLogger(module_name.split('.')[-1])
+    #
+    fmt = '%(asctime)s %(levelname)s - %(name)s -> %(message)s'
+    fmt = logging.Formatter(fmt, datefmt='%Y-%m-%d %H:%M:%S')
+    #
+    screen = logging.StreamHandler()
+    screen.setFormatter(fmt)
+    screen.setLevel(logging.DEBUG)
+    #
+    logger.setLevel(logging.INFO)
+    logger.addHandler(screen)
+    #
+    return logger
 
 
 def files_from_directory(directory='.', pattern='.', deep=True):
