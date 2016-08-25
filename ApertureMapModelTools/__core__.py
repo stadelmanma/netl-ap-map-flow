@@ -281,23 +281,14 @@ class StatFile:
 ########################################################################
 
 
-def _init_logger(module_name):
+def _get_logger(module_name):
     r"""
-    Initializes a module level logger
+    Fetches a module level logger, setting AMT as the parent logger
     """
     #
-    logger = logging.getLogger(module_name.split('.')[-1])
-    #
-    fmt = '%(asctime)s %(levelname)s - %(name)s -> %(message)s'
-    fmt = logging.Formatter(fmt, datefmt='%Y-%m-%d %H:%M:%S')
-    #
-    screen = logging.StreamHandler()
-    screen.setFormatter(fmt)
-    screen.setLevel(logging.DEBUG)
-    #
-    logger.setLevel(logging.INFO)
-    logger.addHandler(screen)
-    #
+    name = module_name.replace('ApertureMapModelTools', 'AMT')
+    name = name.replace('_', '')
+    logger = logging.getLogger(name)
     return logger
 
 

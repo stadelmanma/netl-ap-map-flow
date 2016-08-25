@@ -89,17 +89,24 @@ class TestCore:
         arg = amt_core.ArgProcessor(True)
         assert arg.field
 
-    def test_init_logger(self):
+    def test_toplevel_logger(self):
         r"""
-        Tests creation of a logger
+        Tests te configuation of the top level logger
         """
-        logger = amt_core._init_logger('Test.TestCore')
-        #
-        assert logger.name == 'TestCore'
+        logger = amt_core._get_logger('ApertureMapModelTools')
+        assert logger.name == 'AMT'
         assert len(logger.handlers) == 1
         assert isinstance(logger.handlers[0], logging.StreamHandler)
         assert logger.handlers[0].level == 10
-        assert logger.level == 20
+        assert logger.level == 30
+
+    def test_get_logger(self):
+        r"""
+        Tests creation of a logger
+        """
+        logger = amt_core._get_logger('ApertureMapModelTools.Test.TestCore')
+        #
+        assert logger.name == 'AMT.Test.TestCore'
 
     def test_files_from_directory(self):
         r"""

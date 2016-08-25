@@ -15,7 +15,7 @@ from subprocess import Popen, PIPE
 from threading import Event, Thread
 import scipy as sp
 from scipy.sparse import csgraph
-from ..__core__ import DataField, _init_logger
+from ..__core__ import DataField, _get_logger
 from .__openfoam_core__ import OpenFoamFile, OpenFoamDict, OpenFoamList
 from .__BlockMeshDict__ import BlockMeshDict
 #
@@ -25,7 +25,7 @@ from .__BlockMeshDict__ import BlockMeshDict
 _blockMesh_error = Event()
 _mergeMesh_error = Event()
 _stitchMesh_error = Event()
-logger = _init_logger(__name__)
+logger = _get_logger(__name__)
 
 
 class DataFieldRegion(DataField):
