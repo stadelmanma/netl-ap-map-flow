@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import argparse
 from argparse import RawDescriptionHelpFormatter
-import logging
+from logging import DEBUG
 import os
 import re
 from subprocess import call as subp_call
 from sys import argv
 import scipy as sp
-from ApertureMapModelTools import DataField, files_from_directory
+from ApertureMapModelTools import DataField, files_from_directory, _get_logger
 from ApertureMapModelTools.OpenFoam import OpenFoamExport, OpenFoamFile
 from ApertureMapModelTools.OpenFoam import BlockMeshDict, OpenFoamDict
 from ApertureMapModelTools.RunModel import InputFile
@@ -82,6 +82,7 @@ parser.add_argument('input_file', nargs='?', type=os.path.realpath,
                     help='APM-MODEL input file to read in')
 #
 # globals defined for easier interactive use
+logger = _get_logger(OpenFoamExport.__module__)
 export = None
 raw_files = None
 block_mesh = None
@@ -103,8 +104,7 @@ def apm_open_foam_export():
     carg_list = argv
     #
     if namespace.verbose:
-        fmt = "[%(filename)s:%(levelname)s:%(lineno)s - %(funcName)s] %(message)s"
-        logging.basicConfig(format=fmt, level=logging.DEBUG)
+        logger.setLevel(DEBUG)
     #
     if namespace.interactive and not namespace.no_interactive:
         run_interactive(carg_list)
@@ -118,7 +118,7 @@ def apm_open_foam_export():
         generate_p_file()
         if map_data_field is None:
             msg = 'Cannot calculate flow velocities without an aperture map'
-            logging.warn(msg)
+            logger.warn(msg)
         else:
             generate_U_file()
     #
@@ -172,7 +172,7 @@ def load_foam_files():
             msg = msg.format(os.path.relpath(file),
                              err.__class__.__name__,
                              str(err))
-            logging.debug(msg)
+            logger.debug(msg)
     export.foam_files = foam_files
 
 
@@ -196,7 +196,7 @@ def load_inp_file():
     try:
         map_data_field = DataField(map_path)
     except FileNotFoundError:
-        logging.warn('Aperture map file was not found at path: '+map_path)
+        logger.warn('Aperture map file was not found at path: '+map_path)
     #
     # setting transport and bc params from file
     input_params = [
@@ -233,7 +233,7 @@ def load_inp_file():
             msg = msg.format(apm_input_file[keyword].line,
                              err.__class__.__name__,
                              str(err))
-            logging.warn(msg)
+            logger.warn(msg)
     #
     # getting inlet/outlet sides
     sides = {'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top'}
@@ -451,7 +451,7 @@ def write_all_files(overwrite=False):
                                        overwrite=overwrite)
         export.write_foam_files(path=namespace.output_dir, overwrite=overwrite)
     except FileExistsError as err:
-        logging.fatal('Specify the "-f" flag to automatically overwrite files')
+        logger.fatal('Specify the "-f" flag to automatically overwrite files')
         raise err
 #
 ########################################################################

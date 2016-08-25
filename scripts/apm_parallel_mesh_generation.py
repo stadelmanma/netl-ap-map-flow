@@ -4,8 +4,9 @@ Little script designed to semi-automatically generate a mesh
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
+from logging import DEBUG
 import os
-from ApertureMapModelTools import DataField
+from ApertureMapModelTools import DataField, _get_logger
 from ApertureMapModelTools.OpenFoam import ParallelMeshGen
 
 #
@@ -64,6 +65,9 @@ def apm_parallel_mesh_generation():
     """
     #
     namespace = parser.parse_args()
+    if namespace.verbose:
+        logger = _get_logger(ParallelMeshGen.__module__)
+        logger.setLevel(DEBUG)
     #
     # initial mesh parameters
     mesh_params = {
