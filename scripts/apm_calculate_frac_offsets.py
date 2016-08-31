@@ -6,6 +6,7 @@ the fracture.
 from logging import DEBUG
 from itertools import product
 from PIL import Image
+import os
 import scipy as sp
 from ApertureMapModelTools import _get_logger
 from scipy import sparse as sprs
@@ -158,12 +159,14 @@ def generate_adjacency_matrix(conns, nonzero_locs):
     return adj_mat
 
 
-def remove_isolated_clusters(adj_mat, nonzero_locs, num_to_keep):
+def remove_isolated_clusters(conns, nonzero_locs, num_to_keep):
     r"""
     Identifies and removes all disconnected clusters except the number of
     groups specified by "num_to_keep". num_to_keep=N retains the N largest
     clusters
     """
+    #
+    adj_mat = generate_adjacency_matrix(conns, nonzero_locs)
     #
     logger.info('determining connected components...')
     cs_ids = csgraph.connected_components(csgraph=adj_mat, directed=False)[1]
@@ -191,25 +194,86 @@ def remove_isolated_clusters(adj_mat, nonzero_locs, num_to_keep):
     return nonzero_locs
 
 
+def save_image_stack(nonzero_locs, img_dims, path):
+    r"""
+    Saves a text image stack in a directory to be read by ImageJ
+    """
+    #
+    logger.info('saving image data as text stack...')
+    #
+    img_data = 255*sp.ones(img_dims, dtype=sp.uint8)
+    x_coords, y_coords, z_coords = sp.unravel_index(nonzero_locs, img_dims)
+    img_data[x_coords, y_coords, z_coords] = 0
+    #
+    # creating any needed directories
+    try:
+        os.makedirs(path)
+    except FileExistsError:
+        pass
+    #
+    # saving the image frames
+    for frame in range(img_data.shape[2]):
+        name = os.path.join(path, 'image-frame-{}.bmp'.format(frame))
+        frame = Image.fromarray(img_data[:, :, frame].transpose())
+        frame.save(name)
+
+
+def generate_offset_map(nonzero_locs, shape):
+    r"""
+    Creates a map storing the index of the lowest y-axis pixel in an
+    X-Z column.
+    """
+    #
+    logger.info('creating initial offset map')
+    #
+    x_coords, y_coords, z_coords = sp.unravel_index(nonzero_locs, shape)
+    data = sp.ones(shape, dtype=sp.uint16)*sp.iinfo(sp.int16).max
+    data[x_coords, y_coords, z_coords] = y_coords
+    #
+    offset_map = sp.zeros((shape[0], shape[2]), dtype=sp.uint16)
+    for z_index in range(shape[2]):
+        offset_map[:, z_index] = sp.amin(data[:, :, z_index], axis=1)
+        offset_map[:, z_index][offset_map[:, z_index] > shape[1]] = 0
+    #
+    return offset_map
+
+
 def calculate_offset_map():
     r"""
-    Driver program to load an image and generate an offset map
+    Driver program to load an image and generate an offset map. Arrays
+    can be quite large and are explicity deleted to conserve RAM
     """
     # XXX these will be command-line parameters
     image_file = 'is6-turn1-binary-fracture.tif'
+    path = '.'
+    img_stack_dirname = 'image-stack'
+    offset_map_name = 'is6-offset-map.txt'
     num_to_keep = 5
 
     # loading image data
     data_array = load_image_data(image_file)
+    img_dims = data_array.shape
     nonzero_locs = locate_nonzero_data(data_array)
-    index_map = generate_index_map(nonzero_locs, data_array.shape)
+    index_map = generate_index_map(nonzero_locs, img_dims)
 
     # determing connectivity
     conns = generate_node_connectivity_array(index_map, data_array)
+    shape = data_array.shape
     del data_array
     del index_map
-    #
-    adj_mat = generate_adjacency_matrix(conns, nonzero_locs)
-    nonzero_locs = remove_isolated_clusters(adj_mat, nonzero_locs, num_to_keep)
+
+    # saving processed image
+    stack_path = os.path.join(path, img_stack_dirname)
+    nonzero_locs = remove_isolated_clusters(conns, nonzero_locs, num_to_keep)
+    save_image_stack(nonzero_locs, img_dims, stack_path)
+
+    # creating initial offset map from nonzero locations
+    map_path = os.path.join(path, offset_map_name)
+    offset_map = generate_offset_map(nonzero_locs, shape)
+    del nonzero_locs
+
+
+    sp.savetxt(map_path, offset_map.transpose(), fmt='%d', delimiter='\t')
+
 #
 calculate_offset_map()
