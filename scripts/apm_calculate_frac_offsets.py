@@ -238,6 +238,19 @@ def generate_offset_map(nonzero_locs, shape):
     return offset_map
 
 
+def fill_in_zeros(data_array):
+    r"""
+    Fills in any areas with a value of zero by taking a linear average of
+    the nearest non-zero values along each axis
+    """
+    pass
+    #
+    # need to make sure I can handle the case when there isn't a value
+    # on the opposite axis, i.e edges.
+    # maybe I can easily fill in edges first using some specialized logic
+    #
+
+
 def calculate_offset_map():
     r"""
     Driver program to load an image and generate an offset map. Arrays
@@ -268,12 +281,12 @@ def calculate_offset_map():
     save_image_stack(nonzero_locs, img_dims, stack_path)
 
     # creating initial offset map from nonzero locations
-    map_path = os.path.join(path, offset_map_name)
+    map_path = os.path.join(path, 'is6-offset-map-raw.txt')
     offset_map = generate_offset_map(nonzero_locs, shape)
+    sp.savetxt(map_path, offset_map.transpose(), fmt='%d', delimiter='\t')
     del nonzero_locs
 
 
-    sp.savetxt(map_path, offset_map.transpose(), fmt='%d', delimiter='\t')
 
 #
 calculate_offset_map()
