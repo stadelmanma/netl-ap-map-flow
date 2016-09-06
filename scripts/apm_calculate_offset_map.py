@@ -3,22 +3,109 @@ r"""
 Script designed to take a TIFF stack and determine the vertical offset of
 the fracture.
 """
-from logging import DEBUG
+import argparse
+from argparse import RawDescriptionHelpFormatter as RawDesc
+from glob import glob
 from itertools import product
+from logging import DEBUG
 from PIL import Image
 import os
 import scipy as sp
-from ApertureMapModelTools import _get_logger
 from scipy import sparse as sprs
 from scipy.sparse import csgraph
+from scipy.interpolate import griddata
+from ApertureMapModelTools import _get_logger
 
-# ======================================================================
 #
+desc_str = r"""
+Description: Generates a 2-D offset map based on the binary CT image stack.
+The offset map is based on the lower surface of the fracture after removing
+disconnected clusters and noise. Gaps in the data from zero aperture regions
+are interpolated based on the nearest neighbor.
+
+Written By: Matthew stadelman
+Date Written: 2016/08/30
+Last Modfied: 2016/09/06
+"""
 # setting up logger
-logger = _get_logger('ApertureMapModelTools.scripts')
-logger.setLevel(DEBUG)
-#
-# ======================================================================
+logger = _get_logger('ApertureMapModelTools.Scripts')
+
+# creating arg parser
+parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
+
+# adding arguments
+parser.add_argument('-f', '--force', action='store_true',
+                    help='allows program to overwrite existing files')
+
+parser.add_argument('-v', '--verbose', action='store_true',
+                    help='debug messages are printed to the screen')
+
+parser.add_argument('-o', '--output-dir',
+                    type=os.path.realpath, default=os.getcwd(),
+                    help='''outputs files to the specified
+                    directory, sub-directories are created as needed''')
+
+parser.add_argument('-n', '--num-clusters', type=int, default=5,
+                    help='number of clusters to retain, ordered by size')
+
+parser.add_argument('image_file', type=os.path.realpath,
+                    help='binary TIF stack image to process')
+
+parser.add_argument('offset_map_name',
+                    help='name to save the offset map under')
+
+parser.add_argument('img_stack_dirname', nargs='?', default=None,
+                    help='''directory to save processed image stack to,
+                    if omitted the stack is not saved''')
+
+
+def apm_calculate_offset_map():
+    r"""
+    Driver program to load an image and generate an offset map. Arrays
+    can be quite large and are explicity deleted to conserve RAM
+    """
+    # parsing commandline args
+    namespace = parser.parse_args()
+    if namespace.verbose:
+        logger.setLevel(DEBUG)
+    print(namespace)
+
+    # checking paths
+    stack_path = os.path.join(namespace.output_dir, namespace.img_stack_dirname)
+    map_path = os.path.join(namespace.output_dir, namespace.offset_map_name)
+    #
+    if os.path.exists(stack_path) and not namespace.force:
+        msg = 'Image Stack directory: {} already exists, '
+        msg += 'use "-f" option to overwrite'
+        raise FileExistsError(msg.format(stack_path))
+    if os.path.exists(map_path) and not namespace.force:
+        msg = '{} already exists, use "-f" option to overwrite'
+        raise FileExistsError(msg.format(map_path))
+
+    # loading image data
+    data_array = load_image_data(namespace.image_file)
+    img_dims = data_array.shape
+    nonzero_locs = locate_nonzero_data(data_array)
+    index_map = generate_index_map(nonzero_locs, img_dims)
+
+    # determing connectivity and removing clusters
+    conns = generate_node_connectivity_array(index_map, data_array)
+    del data_array
+    del index_map
+    nonzero_locs = remove_isolated_clusters(conns,
+                                            nonzero_locs,
+                                            namespace.num_clusters)
+
+    # saving processed image
+    if namespace.img_stack_dirname is not None:
+        save_image_stack(nonzero_locs, img_dims, stack_path)
+
+    # creating offset map and filling gaps left from zero aperture regions
+    offset_map = generate_offset_map(nonzero_locs, img_dims)
+    offset_map = patch_holes(offset_map)
+
+    # saving map
+    sp.savetxt(map_path, offset_map.T, fmt='%d', delimiter='\t')
 
 
 def load_image_data(image_file):
@@ -94,12 +181,12 @@ def generate_node_connectivity_array(index_map, data_array):
     for sect in slice_list:
         # getting coordinates of nodes and their neighbors
         nodes = index_map[sect]
-        dim0 = nodes.shape[0]
-        inds = sp.repeat(nodes, 26, axis=0) + sp.tile(conn_map, (dim0, 1))
+        inds = sp.repeat(nodes, conn_map.shape[0], axis=0)
+        inds += sp.tile(conn_map, (nodes.shape[0], 1))
         #
         # calculating the flattened index of the central nodes and storing
         nodes = sp.ravel_multi_index(sp.hsplit(nodes, 3), data_array.shape)
-        inds = sp.hstack([inds, sp.repeat(nodes, 26, axis=0)])
+        inds = sp.hstack([inds, sp.repeat(nodes, conn_map.shape[0], axis=0)])
         #
         # removing neigbors with negative indicies
         mask = ~inds[:, 0:3] < 0
@@ -194,12 +281,12 @@ def remove_isolated_clusters(conns, nonzero_locs, num_to_keep):
     return nonzero_locs
 
 
-def save_image_stack(nonzero_locs, img_dims, path):
+def save_image_stack(nonzero_locs, img_dims, path, overwrite=False):
     r"""
     Saves a text image stack in a directory to be read by ImageJ
     """
     #
-    logger.info('saving image data as text stack...')
+    logger.info('saving image data as .bmp stack...')
     #
     img_data = 255*sp.ones(img_dims, dtype=sp.uint8)
     x_coords, y_coords, z_coords = sp.unravel_index(nonzero_locs, img_dims)
@@ -209,7 +296,14 @@ def save_image_stack(nonzero_locs, img_dims, path):
     try:
         os.makedirs(path)
     except FileExistsError:
-        pass
+        if not overwrite:
+            msg = 'Image Stack destination already exists, '
+            msg += ' use "-f" option to overwrite'
+            raise FileExistsError(msg)
+        else:
+            files = glob(os.path.join(path, '*'))
+            for f in files:
+                os.remove(f)
     #
     # saving the image frames
     for frame in range(img_data.shape[2]):
@@ -230,63 +324,38 @@ def generate_offset_map(nonzero_locs, shape):
     data = sp.ones(shape, dtype=sp.uint16)*sp.iinfo(sp.int16).max
     data[x_coords, y_coords, z_coords] = y_coords
     #
-    offset_map = sp.zeros((shape[0], shape[2]), dtype=sp.uint16)
+    offset_map = sp.zeros((shape[0], shape[2]), dtype=sp.int16)
     for z_index in range(shape[2]):
         offset_map[:, z_index] = sp.amin(data[:, :, z_index], axis=1)
-        offset_map[:, z_index][offset_map[:, z_index] > shape[1]] = 0
+        offset_map[:, z_index][offset_map[:, z_index] > shape[1]] = -1
     #
     return offset_map
 
 
-def fill_in_zeros(data_array):
+def patch_holes(data_map):
     r"""
-    Fills in any areas with a value of zero by taking a linear average of
+    Fills in any areas with a value of -1 by taking a linear average of
     the nearest non-zero values along each axis
     """
-    pass
     #
-    # need to make sure I can handle the case when there isn't a value
-    # on the opposite axis, i.e edges.
-    # maybe I can easily fill in edges first using some specialized logic
+    logger.info('interpolating missing data due to zero aperture zones')
     #
-
-
-def calculate_offset_map():
-    r"""
-    Driver program to load an image and generate an offset map. Arrays
-    can be quite large and are explicity deleted to conserve RAM
-    """
-    # XXX these will be command-line parameters
-    image_file = 'is6-turn1-binary-fracture.tif'
-    path = '.'
-    img_stack_dirname = 'image-stack'
-    offset_map_name = 'is6-offset-map.txt'
-    num_to_keep = 5
-
-    # loading image data
-    data_array = load_image_data(image_file)
-    img_dims = data_array.shape
-    nonzero_locs = locate_nonzero_data(data_array)
-    index_map = generate_index_map(nonzero_locs, img_dims)
-
-    # determing connectivity
-    conns = generate_node_connectivity_array(index_map, data_array)
-    shape = data_array.shape
-    del data_array
-    del index_map
-
-    # saving processed image
-    stack_path = os.path.join(path, img_stack_dirname)
-    nonzero_locs = remove_isolated_clusters(conns, nonzero_locs, num_to_keep)
-    save_image_stack(nonzero_locs, img_dims, stack_path)
-
-    # creating initial offset map from nonzero locations
-    map_path = os.path.join(path, 'is6-offset-map-raw.txt')
-    offset_map = generate_offset_map(nonzero_locs, shape)
-    sp.savetxt(map_path, offset_map.transpose(), fmt='%d', delimiter='\t')
-    del nonzero_locs
-
-
+    # getting coordinates of all valid data points
+    data_vector = sp.ravel(data_map)
+    inds = sp.where(data_vector >= 0)[0]
+    points = sp.unravel_index(inds, data_map.shape)
+    values = data_vector[inds]
+    #
+    # setting up to interpolate over all data coordinates
+    intrp = sp.arange(data_map.size, dtype=int)
+    intrp = sp.unravel_index(intrp, data_map.shape)
+    #
+    # interpolating data to fill gaps and creating the new data map
+    data_vector = griddata(points, values, intrp, method='nearest')
+    data_map = sp.reshape(data_vector, data_map.shape)
+    #
+    return data_map
 
 #
-calculate_offset_map()
+if __name__ == '__main__':
+    apm_calculate_offset_map()
