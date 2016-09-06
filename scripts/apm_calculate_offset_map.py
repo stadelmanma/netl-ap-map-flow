@@ -48,6 +48,9 @@ parser.add_argument('-o', '--output-dir',
 parser.add_argument('-n', '--num-clusters', type=int, default=5,
                     help='number of clusters to retain, ordered by size')
 
+parser.add_argument('-i', '--invert', action='store_true',
+                    help='use this flag if your fracture is in black')
+
 parser.add_argument('image_file', type=os.path.realpath,
                     help='binary TIF stack image to process')
 
@@ -83,7 +86,7 @@ def apm_calculate_offset_map():
         raise FileExistsError(msg.format(map_path))
 
     # loading image data
-    data_array = load_image_data(namespace.image_file)
+    data_array = load_image_data(namespace.image_file, namespace.invert)
     img_dims = data_array.shape
     nonzero_locs = locate_nonzero_data(data_array)
     index_map = generate_index_map(nonzero_locs, img_dims)
@@ -108,7 +111,7 @@ def apm_calculate_offset_map():
     sp.savetxt(map_path, offset_map.T, fmt='%d', delimiter='\t')
 
 
-def load_image_data(image_file):
+def load_image_data(image_file, invert):
     r"""
     Loads an image from a *.tiff stack and creates an array from it. The
     fracture is assumed to be black and the solid is white.
@@ -122,7 +125,8 @@ def load_image_data(image_file):
     for frame in range(img_data.n_frames):
         img_data.seek(frame)
         frame = sp.array(img_data, dtype=bool).transpose()
-        frame = ~frame  # beacuse fracture is black, solid is white
+        if invert:
+            frame = ~frame  # beacuse fracture is black, solid is white
         data_array.append(frame)
     #
     data_array = sp.stack(data_array, axis=2)
@@ -150,8 +154,10 @@ def generate_index_map(nonzero_locs, shape):
     """
     #
     logger.info('creating index map of non-zero values...')
-    index_map = sp.unravel_index(nonzero_locs, shape)
-    index_map = sp.stack(index_map, axis=1)
+    x_c = sp.unravel_index(nonzero_locs, shape)[0].astype(sp.int16)
+    y_c = sp.unravel_index(nonzero_locs, shape)[1].astype(sp.int16)
+    z_c = sp.unravel_index(nonzero_locs, shape)[2].astype(sp.int16)
+    index_map = sp.stack((x_c, y_c, z_c), axis=1)
     #
     return index_map
 
