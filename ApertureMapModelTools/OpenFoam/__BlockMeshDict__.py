@@ -38,7 +38,7 @@ class BlockMeshDict(OpenFoamFile):
         'boundary.internal.type': 'wall'
     }
 
-    def __init__(self, field, avg_fact=1.0, mesh_params=None):
+    def __init__(self, field, avg_fact=1.0, mesh_params=None, offset_field=None):
         r"""
         Takes a field object and a set of mesh params to set the
         properties of the blockMeshDict
@@ -47,6 +47,8 @@ class BlockMeshDict(OpenFoamFile):
         avg_fact : float, optional, number of voxels along the X and Z axes.
         mesh_params : dict, optional, a dictionary containing parameters to
         use instead of the defaults
+        offset_field : DataField, field object that stores the offset data
+        for an aperture map
         """
         super().__init__('polyMesh', 'blockMeshDict')
         #
@@ -59,6 +61,14 @@ class BlockMeshDict(OpenFoamFile):
         if field.point_data is None:
             field.create_point_data()
         field.copy_data(self)
+        #
+        # creating offset field
+        self.offset_points = sp.zeros(self.point_data.shape)
+        if offset_field is not None:
+            if offset_field.point_data is None:
+                offset_field.create_point_data()
+            self.offset_points = sp.copy(offset_field.point_data)
+            # XXX: need to check shape of offset map to match point data
         #
         # native attributes
         self.avg_fact = avg_fact
@@ -110,31 +120,37 @@ class BlockMeshDict(OpenFoamFile):
         vert_index = 0
         if map_mask[0, 0]:
             vert_map[0, 0, 0] = 0
-            vertices.append([0.0, -self.point_data[0, 0, 0]/2.0, 0.0])
-            vertices.append([0.0, self.point_data[0, 0, 0]/2.0, 0.0])
+            ydist = self.point_data[0, 0, 0]/2.0
+            offset = self.offset_points[0, 0, 0]
+            #
+            vertices.append([0.0, offset-ydist, 0.0])
+            vertices.append([0.0, offset+ydist, 0.0])
             vert_index = 2
         #
         for iz in range(self.nz):
             if map_mask[iz, 0] or map_mask[iz+1, 0]:
                 zdist = (iz + 1.0) * self.avg_fact
                 ydist = self.point_data[iz, 0, 3]/2.0
+                offset = self.offset_points[iz, 0, 3]
                 #
-                vertices.append([0.0, -ydist, zdist])
+                vertices.append([0.0, offset-ydist, zdist])
                 vert_map[iz, 0, 3] = vert_index
                 vert_map[iz+1, 0, 0] = vert_index
                 vert_index += 1
-                vertices.append([0.0, ydist, zdist])
+                vertices.append([0.0, offset+ydist, zdist])
                 vert_index += 1
         #
         for ix in range(self.nx):
             if map_mask[0, ix] or map_mask[0, ix+1]:
                 xdist = (ix + 1.0) * self.avg_fact
                 ydist = self.point_data[0, ix, 1]/2.0
-                vertices.append([xdist, -ydist, 0.0])
+                offset = self.offset_points[0, ix, 1]
+                #
+                vertices.append([xdist, offset-ydist, 0.0])
                 vert_map[0, ix, 1] = vert_index
                 vert_map[0, ix+1, 0] = vert_index
                 vert_index += 1
-                vertices.append([xdist, ydist, 0.0])
+                vertices.append([xdist, offset+ydist, 0.0])
                 vert_index += 1
         #
         for index in range(self.nx*self.nz):
@@ -144,14 +160,15 @@ class BlockMeshDict(OpenFoamFile):
                 xdist = (ix + 1.0) * self.avg_fact
                 ydist = self.point_data[iz, ix, 2]/2.0
                 zdist = (iz + 1.0) * self.avg_fact
+                offset = self.offset_points[iz, ix, 2]
                 #
-                vertices.append([xdist, -ydist, zdist])
+                vertices.append([xdist, offset-ydist, zdist])
                 vert_map[iz, ix, 2] = vert_index
                 vert_map[iz+1, ix, 1] = vert_index
                 vert_map[iz, ix+1, 3] = vert_index
                 vert_map[iz+1, ix+1, 0] = vert_index
                 vert_index += 1
-                vertices.append([xdist, ydist, zdist])
+                vertices.append([xdist, offset+ydist, zdist])
                 vert_index += 1
         #
         # building block array

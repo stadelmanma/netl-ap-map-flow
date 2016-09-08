@@ -94,7 +94,8 @@ class TestOpenFoam:
             of_file = OpenFoam.OpenFoamFile(path)
 
     def test_block_mesh_dict(self, data_field_class):
-        self._field = data_field_class()
+        field = data_field_class()
+        offsets = data_field_class()
         #
         params = {
             'convertToMeters': '0.000010000',
@@ -108,7 +109,7 @@ class TestOpenFoam:
             'boundary.front.type': 'wall',
             'boundary.back.type': 'wall'
         }
-        mesh = OpenFoam.BlockMeshDict(self._field, avg_fact=10.0, mesh_params=params)
+        mesh = OpenFoam.BlockMeshDict(field, avg_fact=10.0, mesh_params=params, offset_field=offsets)
         mesh._edges = ['placeholder']
         mesh._mergePatchPairs = ['placeholder']
         mesh.write_foam_file(TEMP_DIR, overwrite=True)

@@ -74,13 +74,16 @@ def apm_calculate_offset_map():
     print(namespace)
 
     # checking paths
-    stack_path = os.path.join(namespace.output_dir, namespace.img_stack_dirname)
     map_path = os.path.join(namespace.output_dir, namespace.offset_map_name)
     #
-    if os.path.exists(stack_path) and not namespace.force:
-        msg = 'Image Stack directory: {} already exists, '
-        msg += 'use "-f" option to overwrite'
-        raise FileExistsError(msg.format(stack_path))
+    if namespace.img_stack_dirname is not None:
+        stack_path = os.path.join(namespace.output_dir,
+                                  namespace.img_stack_dirname)
+        if os.path.exists(stack_path) and not namespace.force:
+            msg = 'Image Stack directory: {} already exists, '
+            msg += 'use "-f" option to overwrite'
+            raise FileExistsError(msg.format(stack_path))
+    #
     if os.path.exists(map_path) and not namespace.force:
         msg = '{} already exists, use "-f" option to overwrite'
         raise FileExistsError(msg.format(map_path))
@@ -140,7 +143,7 @@ def locate_nonzero_data(data_array):
     Generates a vector of non-zero indicies for the flattened array
     """
     #
-    logger.info('flatting array and locating non-zero voxels...')
+    logger.info('flattening array and locating non-zero voxels...')
     data_vector = sp.ravel(data_array)
     nonzero_locs = sp.where(data_vector)[0]
     logger.debug('    {} non-zero voxels'.format(nonzero_locs.size))
