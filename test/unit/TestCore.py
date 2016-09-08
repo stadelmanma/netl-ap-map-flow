@@ -95,10 +95,7 @@ class TestCore:
         """
         logger = amt_core._get_logger('ApertureMapModelTools')
         assert logger.name == 'AMT'
-        assert len(logger.handlers) == 1
-        assert isinstance(logger.handlers[0], logging.StreamHandler)
-        assert logger.handlers[0].level == 10
-        assert logger.level == 30
+        assert len(logger.handlers) == 0
 
     def test_get_logger(self):
         r"""

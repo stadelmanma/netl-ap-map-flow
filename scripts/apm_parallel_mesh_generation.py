@@ -22,7 +22,7 @@ Date Written: 2016/08/16
 Last Modfied: 2016/08/25
 """
 # creating arg parser
-parser = argparse.ArgumentParser(description=desc_str,formatter_class=RawDesc)
+parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
 
 # adding arguments
 parser.add_argument('-f', '--force', action='store_true',
