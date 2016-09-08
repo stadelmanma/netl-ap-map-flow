@@ -71,7 +71,6 @@ def apm_calculate_offset_map():
     namespace = parser.parse_args()
     if namespace.verbose:
         logger.setLevel(DEBUG)
-    print(namespace)
 
     # checking paths
     map_path = os.path.join(namespace.output_dir, namespace.offset_map_name)

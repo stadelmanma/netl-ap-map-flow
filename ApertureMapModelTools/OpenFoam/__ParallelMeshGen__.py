@@ -62,7 +62,7 @@ class BlockMeshRegion(BlockMeshDict):
     r"""
     Used to handle a sub-set of field point data for parallel mesh generation
     """
-    def __init__(self, region, avg_fact, x_shift, z_shift, mesh_params):
+    def __init__(self, region, avg_fact, x_shift, z_shift, mesh_params, offset_reg):
         r"""
         Takes a field object and a set of mesh params to set the
         properties of the blockMeshDict. The x_shift and z_shift values are
@@ -73,11 +73,15 @@ class BlockMeshRegion(BlockMeshDict):
         x_shift : int, number of voxels shifted from orgin
         z_shift : int, number of voxels shifted from origin
         mesh_params : dict, a dictionary containing parameters to
+        offsets : DataFieldRegion object
         use instead of the defaults
         """
         self.x_shift = x_shift
         self.z_shift = z_shift
-        super().__init__(region, avg_fact, mesh_params=mesh_params)
+        super().__init__(region,
+                         avg_fact,
+                         mesh_params=mesh_params,
+                         offset_field=offset_reg)
 
     def _create_blocks(self, cell_mask=None):
         r"""
@@ -238,6 +242,13 @@ class ParallelMeshGen(object):
         self._field = field.clone()
         self._mask = sp.ones(self.data_map.shape, dtype=bool)
         #
+        self.offset_map = sp.zeros(self.data_map.shape)
+        self.offset_points = sp.zeros(self.point_data.shape)
+        if kwargs.get('offset_field', None):
+            kwargs['offset_field'].create_point_data()
+            self.offset_map = sp.copy(kwargs['offset_field'].data_map)
+            self.offset_points = sp.copy(kwargs['offset_field'].point_data)
+        #
         self.system_dir = system_dir
         self.nprocs = nprocs
         self.avg_fact = kwargs.get('avg_fact', 1.0)
@@ -392,9 +403,12 @@ class ParallelMeshGen(object):
         z_offset = z_slice.start
         region = DataFieldRegion(self.data_map[z_slice, x_slice],
                                  self.point_data[z_slice, x_slice, :])
+        offset_reg = DataFieldRegion(self.offset_map[z_slice, x_slice],
+                                     self.offset_points[z_slice, x_slice, :])
         #
         # creating regional mesh
-        args = [region, self.avg_fact, x_offset, z_offset, self.mesh_params]
+        args = [region, self.avg_fact, x_offset,
+                z_offset, self.mesh_params, offset_reg]
         region_mesh = BlockMeshRegion(*args)
         region_mesh._generate_masked_mesh(cell_mask=self._mask[z_slice, x_slice])
         #

@@ -44,7 +44,8 @@ class TestParallelMeshGen:
 
     def test_block_mesh_region(self, data_field_class):
         data_field = data_field_class()
-        mesh_region = BlockMeshRegion(data_field, 10, 7, 5, None)
+        offset_reg = data_field_class()
+        mesh_region = BlockMeshRegion(data_field, 10, 7, 5, None, offset_reg)
         #
         # testing mesh_region attributes
         assert mesh_region.avg_fact == 10
@@ -134,6 +135,7 @@ class TestParallelMeshGen:
         assert pmg.nx == field.nx
         assert pmg.nz == field.nz
         assert sp.all(pmg._mask)
+        #
         # checking pmg only has references to data initially, new references are
         # created if the 'threashold' method was used because it resets the arrays
         # using the internal _field which was cloned and independent of the original
