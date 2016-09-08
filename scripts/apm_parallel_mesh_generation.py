@@ -55,8 +55,11 @@ parser.add_argument('map_file', type=os.path.realpath,
 parser.add_argument('avg_fact', type=int,
                     help='horizontal averaging factor of map')
 
-parser.add_argument('mesh_type', nargs='?', default='simple',
+parser.add_argument('mesh_type',
                     help='the type of mesh to generate')
+
+parser.add_argument('offset_file', nargs='?', type=os.path.realpath,
+                    help='aperture map offset file to read in')
 
 
 def apm_parallel_mesh_generation():
@@ -91,12 +94,18 @@ def apm_parallel_mesh_generation():
     print('Processing aperture map...')
     map_field = DataField(namespace.map_file)
     #
+    # reading offset file if provided
+    offset_field = None
+    if namespace.offset_file:
+        offset_field = DataField(namespace.offset_file)
+    #
     # setting up mesh generator
     system_dir = os.path.join(namespace.system_path,'system')
     np = namespace.np
     kwargs = {'nprocs': np,
               'avg_fact': namespace.avg_fact,
-              'mesh_params': mesh_params}
+              'mesh_params': mesh_params,
+              'offset_field': offset_field}
     #
     print('Setting generator up...')
     pmg = ParallelMeshGen(map_field, system_dir, **kwargs)
