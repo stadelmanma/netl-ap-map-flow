@@ -159,8 +159,8 @@ class DataField(object):
         # Generate sparse adjacency matrix in 'coo' format and convert to csr
         num_blks = self.nx*self.nz
         matrix = sprs.coo_matrix((weights, (row, col)), (num_blks, num_blks))
-        matrix = matrix.tocsr()
-        return matrix
+        #
+        return matrix.tocsr()
 
     def create_point_data(self):
         r"""
@@ -247,26 +247,25 @@ class StatFile:
         """
         self.infile = (stat_file if stat_file else self.infile)
         #
-        with open(self.infile, 'r') as f:
-            content = f.read()
+        with open(self.infile, 'r') as stat_file:
+            content = stat_file.read()
             content_arr = content.split('\n')
             content_arr = [re.sub(r', *$', '', l).strip() for l in content_arr]
             content_arr = [re.sub(r'^#.*', '', l) for l in content_arr]
             content_arr = [l for l in content_arr if l]
         #
-        map_file_line = content_arr.pop(0)
-        pvt_file_line = content_arr.pop(0)
-        #
         # adding the space prevents a possible index error
-        self.map_file = re.split(r'\s', map_file_line+' ', 1)[1]
-        self.pvt_file = re.split(r'\s', pvt_file_line+' ', 1)[1]
+        self.map_file = content_arr.pop(0)
+        self.pvt_file = content_arr.pop(0)
+        self.map_file = re.split(r'\s', self.map_file+' ', 1)[1]
+        self.pvt_file = re.split(r'\s', self.pvt_file+' ', 1)[1]
         #
         # stepping through pairs of lines to get key -> values
         for i in range(0, len(content_arr), 2):
-            key_arr = re.split(r',', content_arr[i])
-            val_arr = re.split(r',', content_arr[i+1])
-            key_list = [k.strip() for k in key_arr]
-            val_list = [float(v) for v in val_arr]
+            key_list = re.split(r',', content_arr[i])
+            key_list = [k.strip() for k in key_list]
+            val_list = re.split(r',', content_arr[i+1])
+            val_list = [float(v) for v in val_list]
             #
             for key, val in zip(key_list, val_list):
                 m = re.search(r'\[(.*?)\]$', key)
@@ -288,8 +287,8 @@ def _get_logger(module_name):
     #
     name = module_name.replace('ApertureMapModelTools', 'AMT')
     name = name.replace('_', '')
-    logger = logging.getLogger(name)
-    return logger
+    #
+    return logging.getLogger(name)
 
 
 def files_from_directory(directory='.', pattern='.', deep=True):
@@ -302,13 +301,14 @@ def files_from_directory(directory='.', pattern='.', deep=True):
     #
     # setting up pattern
     try:
-        if (pattern[0] == '*'):
+        if pattern[0] == '*':
             pattern = re.sub(r'\.', r'\\.', pattern)
             pattern = '.'+pattern+'$'
-            print('Modifying glob pattern to proper regular expression', pattern)
+            msg = 'Modifying glob pattern to proper regular expression: {}'
+            logger.warn(msg.format(pattern))
         pattern = re.compile(pattern, flags=re.I)
     except (ValueError, TypeError):
-        print('Using user compiled pattern: ', pattern)
+        logger.info('Using user compiled pattern: {}'.format(pattern))
     #
     # initializing
     dirs = [directory]
@@ -346,12 +346,12 @@ def load_infile_list(infile_list, delim='auto'):
     for infile in infile_list:
         #
         # constructing object
-        field = DataField(infile)
-        print('Finished reading file: '+field.infile)
+        field = DataField(infile, delim=delim)
+        logger.info('Finished reading file: '+field.infile)
         #
         field_list.append(field)
     #
-    return(field_list)
+    return field_list
 
 
 def calc_percentile(perc, data, sort=True):
@@ -361,14 +361,14 @@ def calc_percentile(perc, data, sort=True):
     tot_vals = float(len(data))
     num_vals = 0.0
     sorted_data = list(data)
-    if (sort):
+    if sort:
         sorted_data.sort()
     #
     # stepping through list
     index = 0
     for i in range(len(sorted_data)):
         index = i
-        if ((num_vals/tot_vals*100.0) >= perc):
+        if (num_vals/tot_vals*100.0) >= perc:
             break
         else:
             num_vals += 1
@@ -386,14 +386,14 @@ def calc_percentile_num(num, data, last=False, sort=True):
     tot_vals = float(len(data))
     num_vals = 0.0
     sorted_data = list(data)
-    if (sort):
+    if sort:
         sorted_data.sort()
     #
     # stepping through list
     for i in range(len(sorted_data)):
-        if (last is True) and (data[i] > num):
+        if last is True and data[i] > num:
             break
-        elif (last is False) and (data[i] >= num):
+        elif last is False and data[i] >= num:
             break
         else:
             num_vals += 1
@@ -405,67 +405,29 @@ def calc_percentile_num(num, data, last=False, sort=True):
 
 def get_data_vect(data_map, direction, start_id=1):
     r"""
-    Returns either of a row or column of cells as a vector in the x or z direction
+    Returns either of a row or column of the data map as a single vector
     """
     #
     nz, nx = data_map.shape
-    if (direction.lower() == 'x'):
+    if direction.lower() == 'x':
         # getting row index
-        if (start_id >= nz):
+        if start_id >= nz:
             start_id = nz
-        elif (start_id <= 0):
+        elif start_id <= 0:
             start_id = 1
         return data_map[start_id-1, :]
 
-    elif (direction.lower() == 'z'):
-        if (start_id >= nx):
+    elif direction.lower() == 'z':
+        if start_id >= nx:
             start_id = nx
-        elif (start_id <= 0):
+        elif start_id <= 0:
             start_id = 1
         #
         return data_map[:, start_id-1]
     else:
-        raise ValueError("Error - invalid direction supplied, can only be x or z")
+        msg = 'Error - invalid direction supplied, can only be x or z'
+        raise ValueError(msg)
 
-
-def multi_output_columns(data_fields):
-    r"""
-    Takes the content of several fields of output data and outputs them
-    columnwise side by side
-    """
-    msg = 'This function is retired until I make a better version'
-    raise NotImplementedError(msg)
-    #   splitting content of each outfile
-    # num_lines = 0
-    # for field in data_fields:
-    #     content_arr = field.outfile_content.split('\n')
-    #     field.outfile_arr = list(content_arr)
-    #  num_lines = len(content_arr) if (len(content_arr) > num_lines) else num_lines
-    #   processing content
-    # content_arr = []
-    # max_len = 0
-    # for l in range(num_lines):
-    #     line_arr = []
-    #     for field in data_fields:
-    #         try:
-    #             line = field.outfile_arr[l].split(',')
-    #             max_len = len(line) if (len(line) > max_len) else max_len
-    #         except IndexError:
-    #             line = ['']
-    #         line_arr.append(line)
-    #     content_arr.append(line_arr)
-    #
-    #   creating group content
-    # group_content = ''
-    # for l in range(len(content_arr)):
-    #     line = list(content_arr[l])
-    #     out_str = ''
-    #     for i in range(len(line)):
-    #         for j in range(max_len):
-    #             if (j < len(line[i])):
-    #                 out_str += line[i][j]+','
-    #             else:
-    #                 out_str += ','
-    #         out_str += ','
-    #     group_content += out_str + '\n'
-    # return group_content
+#
+# setting up core logger
+logger = _get_logger(__name__)

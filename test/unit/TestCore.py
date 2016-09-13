@@ -161,11 +161,3 @@ class TestCore:
         #
         with pytest.raises(ValueError):
             amt.get_data_vect(data, 'y')
-
-    def test_multi_output_columns(self):
-        r"""
-        Adding this test so it will throw an error later when I fix the
-        output function. That way I'll rememeber to make a test function
-        """
-        with pytest.raises(NotImplementedError):
-            amt_core.multi_output_columns(None)
