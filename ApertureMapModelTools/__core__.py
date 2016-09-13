@@ -291,6 +291,17 @@ def _get_logger(module_name):
     return logging.getLogger(name)
 
 
+def set_main_logger_level(level_name):
+    r"""
+    Sets the logging level of the top level module logger by providing one
+    of the predefined logger levels DEBUG, INFO, WARNING, ERROR, CRITICAL
+    """
+    #
+    level_name = level_name.upper()
+    main_logger = _get_logger(__name__.split('.')[0])
+    main_logger.setLevel(logging.getLevelName(level_name))
+
+
 def files_from_directory(directory='.', pattern='.', deep=True):
     r"""
     Allows the user to get a list of files in the supplied directory

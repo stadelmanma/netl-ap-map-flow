@@ -105,6 +105,16 @@ class TestCore:
         #
         assert logger.name == 'AMT.Test.TestCore'
 
+    def test_set_main_logger_level(self):
+        r"""
+        Tests adjudtment of primary logger level
+        """
+        #
+        logger = logging.getLogger('AMT')
+        amt_core.set_main_logger_level('debug')
+        #
+        assert logger.getEffectiveLevel() == logging.DEBUG
+
     def test_files_from_directory(self):
         r"""
         Runs the files_from_directory command with various args

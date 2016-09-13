@@ -4,9 +4,8 @@ Little script designed to semi-automatically generate a mesh
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
-from logging import DEBUG
 import os
-from ApertureMapModelTools import DataField, _get_logger
+from ApertureMapModelTools import DataField, _get_logger, set_main_logger_level
 from ApertureMapModelTools.OpenFoam import ParallelMeshGen
 
 #
@@ -19,8 +18,12 @@ Valid mesh_types are: simple, symmetry, threshold and symmetry-threshold
 
 Written By: Matthew stadelman
 Date Written: 2016/08/16
-Last Modfied: 2016/08/25
+Last Modfied: 2016/09/13
 """
+# setting up logging
+set_main_logger_level('info')
+logger =_get_logger('ApertureMapModelTools.Scripts')
+
 # creating arg parser
 parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
 
@@ -69,8 +72,7 @@ def apm_parallel_mesh_generation():
     #
     namespace = parser.parse_args()
     if namespace.verbose:
-        logger = _get_logger(ParallelMeshGen.__module__)
-        logger.setLevel(DEBUG)
+        set_main_logger_level('debug')
     #
     # initial mesh parameters
     mesh_params = {
@@ -87,11 +89,11 @@ def apm_parallel_mesh_generation():
     #
     # reading params file if supplied
     if namespace.read_file:
-        print('Reading parameters file...')
+        logger.info('Reading parameters file...')
         read_params_file(namespace.read_file, mesh_params)
     #
     # creating data field from aperture map
-    print('Processing aperture map...')
+    logger.info('Processing aperture map...')
     map_field = DataField(namespace.map_file)
     #
     # reading offset file if provided
@@ -107,11 +109,11 @@ def apm_parallel_mesh_generation():
               'mesh_params': mesh_params,
               'offset_field': offset_field}
     #
-    print('Setting generator up...')
+    logger.info('Setting generator up...')
     pmg = ParallelMeshGen(map_field, system_dir, **kwargs)
     #
     # creating the mesh
-    print('Creating the mesh...')
+    logger.info('Creating the mesh...')
     pmg.generate_mesh(namespace.mesh_type,
                       path=namespace.output_dir,
                       overwrite=namespace.force)
@@ -142,6 +144,13 @@ def read_params_file(infile, mesh_params):
         key, value = line.split(' ', maxsplit=1)
         value = value.strip()
         mesh_params[key] = value
+    #
+    # logging out the updated mesh parameters
+    msg = 'Updated Mesh Parameter values:\n'
+    for key, value in mesh_params.items():
+        msg += '{}: {}\n'.format(key, value)
+    #
+    logger.info(msg)
 
 #
 if __name__ == '__main__':
