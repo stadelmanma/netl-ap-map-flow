@@ -82,7 +82,7 @@ parser.add_argument('input_file', nargs='?', type=os.path.realpath,
                     help='APM-MODEL input file to read in')
 #
 # globals defined for easier interactive use
-logger = _get_logger(OpenFoamExport.__module__)
+logger = _get_logger('ApertureMapModelTools.Scripts')
 export = None
 raw_files = None
 block_mesh = None
