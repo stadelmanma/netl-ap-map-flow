@@ -1,33 +1,34 @@
 #!/usr/bin/env python3
 r"""
-Script designed to take a TIFF stack and determine the vertical offset of
+Script designed to take a TIF stack and determine the vertical offset of
 the fracture.
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 from glob import glob
 from itertools import product
-from logging import DEBUG
 from PIL import Image
 import os
 import scipy as sp
 from scipy import sparse as sprs
 from scipy.sparse import csgraph
 from scipy.interpolate import griddata
-from ApertureMapModelTools import _get_logger
+from ApertureMapModelTools import _get_logger, set_main_logger_level
 
 #
 desc_str = r"""
 Description: Generates a 2-D offset map based on the binary CT image stack.
 The offset map is based on the lower surface of the fracture after removing
 disconnected clusters and noise. Gaps in the data from zero aperture regions
-are interpolated based on the nearest neighbor.
+are interpolated based on the nearest neighbor. A by product of this routine
+is the cleaned CT image stack.
 
 Written By: Matthew stadelman
 Date Written: 2016/08/30
 Last Modfied: 2016/09/06
 """
 # setting up logger
+set_main_logger_level('info')
 logger = _get_logger('ApertureMapModelTools.Scripts')
 
 # creating arg parser
@@ -70,7 +71,7 @@ def apm_calculate_offset_map():
     # parsing commandline args
     namespace = parser.parse_args()
     if namespace.verbose:
-        logger.setLevel(DEBUG)
+        set_main_logger_level('debug')
 
     # checking paths
     map_path = os.path.join(namespace.output_dir, namespace.offset_map_name)
