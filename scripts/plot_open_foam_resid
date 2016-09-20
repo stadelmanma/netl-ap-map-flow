@@ -1,0 +1,21 @@
+#!/bin/bash
+file="simple-foam.log"
+
+# checking if a file was supplied as first arg
+if [ ! -z "$1" ]; then
+    file=$1
+fi
+
+gnuplot -persist <<-EOFMarker
+if (!exists("file")) file='simple-foam.log'
+set logscale y
+set title "Residuals"
+set ylabel 'Residual'
+set xlabel 'Iteration'
+plot \
+"< cat $file | grep 'Solving for Ux' | cut -d' ' -f9 | tr -d ','" title 'Ux' with lines,\
+"< cat $file | grep 'Solving for Uy' | cut -d' ' -f9 | tr -d ','" title 'Uy' with lines,\
+"< cat $file | grep 'Solving for Uz' | cut -d' ' -f9 | tr -d ','" title 'Uz' with lines,\
+"< cat $file  | grep 'Solving for p' | cut -d' ' -f9 | tr -d ','" title 'p' with lines
+pause -1
+EOFMarker

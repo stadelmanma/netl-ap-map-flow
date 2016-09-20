@@ -1,0 +1,34 @@
+#!/usr/bin/env pvpython
+r"""
+This program reads in a legacy VTK and exports out the mid-plane into
+CSV format. All point data is passed along to the CSV file. It is run using
+pvpython ../bin/export_data_midplane.py [VTK filename] [CSV filename]
+"""
+import os
+import sys
+from paraview import simple
+
+# parsing commandline line args
+if sys.argv[1] == '-h' or sys.argv[1] == '-help':
+    usage = '\nUsage:\n'
+    usage += 'pvpython ' + sys.argv[0] + ' '
+    usage += '[VTK filename] [CSV filename]'
+    usage += '\n'
+    print(usage)
+    exit()
+#
+filename = os.path.abspath(sys.argv[1])
+csv_path = os.path.abspath(sys.argv[2])
+
+# loading OpenFoam data
+foam_data = simple.LegacyVTKReader(FileNames=filename)
+slice = simple.Slice(Input=foam_data)
+slice.SliceType.Normal = [0.0, 1.0, 0.0]
+point_data = simple.CellDatatoPointData(Input=slice)
+
+# writing out last time step
+writer = simple.CreateWriter(csv_path, point_data)
+writer.UseScientificNotation = True
+writer.Precision = 9
+writer.FieldAssociation = "Points"
+writer.UpdatePipeline()
