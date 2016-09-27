@@ -41,7 +41,7 @@ inp_file['EXE-FILE'].update_value(exe_path, False)
 #
 # setting parameters
 pvt_path = os.path.join(FIXTURE_DIR, 'H2O_TEMP_058F.CSV')
-inp_file['PVT-PATH'].update_value(pvt_path)
+inp_file['PVT-FILE'].update_value(pvt_path)
 map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
 inp_file['APER-MAP'].update_value(map_path)
 inp_file['OVERWRITE'].commented_out = True
@@ -51,7 +51,7 @@ inp_file['BAD-INPUT'] = ArgInput('BAD-INPUT: VALUE')
 run_model_wrapper(inp_file)
 #
 # commenting/ uncommenting some inputs so they don't cause issue
-inp_file['SUMMARY-PATH'].commented_out = True
+inp_file['SUMMARY-FILE'].commented_out = True
 inp_file['OVERWRITE'].commented_out = False
 inp_file['FRAC-PRESS'].commented_out = True
 inp_file['OUTFLOW-SIDE'].commented_out = True
@@ -64,7 +64,7 @@ inp_file['FLUID-TYPE'].update_value('GAS')
 run_model_wrapper(inp_file)
 #
 # running liquid sim with no PVT, AVG_VISC and outlet rate control
-inp_file['PVT-PATH'].commented_out = True
+inp_file['PVT-FILE'].commented_out = True
 inp_file['FLUID-VISCOSITY'].commented_out = False
 inp_file['INLET-RATE'].commented_out = True
 inp_file['OUTLET-PRESS'].commented_out = True

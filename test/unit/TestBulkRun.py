@@ -40,7 +40,7 @@ class TestBulkRun:
                                             'FLOW-FILE': 'test-flow.csv',
                                             'PRESS-FILE': 'test-press.csv',
                                             'STAT-FILE': 'test-stat.csv',
-                                            'SUMMARY-PATH': 'test-summary.txt',
+                                            'SUMMARY-FILE': 'test-summary.txt',
                                             'VTK-FILE': 'test-para.vtk',
                                             'input_file': 'test-init.inp'},
                        'run_params': {'FRAC-PRESS': ['1000'],
