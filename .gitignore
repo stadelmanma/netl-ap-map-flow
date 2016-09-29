@@ -3,6 +3,7 @@
 *.mod
 *.o
 *.exe
+*.EXE
 .coverage
 .cache
 .spyderworkspace
