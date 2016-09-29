@@ -89,7 +89,7 @@ class TestRunCore:
         #
         # writing the output file to TEMP_DIR without an EXE-FILE and a directory needing created
         del inp_file['EXE-FILE']
-        inp_file.filename_formats['PVT-PATH'] = os.path.join(TEMP_DIR, 'new-dir', 'PVT/H2O_TEMP_058F.CSV')
+        inp_file.filename_formats['PVT-FILE'] = os.path.join(TEMP_DIR, 'new-dir', 'PVT/H2O_TEMP_058F.CSV')
         inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'
         inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
@@ -114,14 +114,14 @@ class TestRunCore:
         inp_file = RunModel.InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
         #
         # updating paths so they are absolute
-        files = ['SUMMARY-PATH', 'STAT-FILE', 'APER-FILE', 'FLOW-FILE', 'PRESS-FILE', 'VTK-FILE']
+        files = ['SUMMARY-FILE', 'STAT-FILE', 'APER-FILE', 'FLOW-FILE', 'PRESS-FILE', 'VTK-FILE']
         for file in files:
             inp_file[file].update_value(os.path.join(TEMP_DIR, file+'.RCTEST'))
         inp_file.filename_formats['input_file'] = os.path.join(TEMP_DIR, 'TEST_INIT.INP')
         #
-        dirs = os.path.split(inp_file['PVT-PATH'].value)
+        dirs = os.path.split(inp_file['PVT-FILE'].value)
         new_path = os.path.join(FIXTURE_DIR, 'PVT', 'H2O_TEMP_058F.CSV')
-        inp_file['PVT-PATH'].update_value(new_path)
+        inp_file['PVT-FILE'].update_value(new_path)
         #
         dirs = os.path.split(inp_file['APER-MAP'].value)
         new_path = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT')

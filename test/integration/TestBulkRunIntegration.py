@@ -30,8 +30,8 @@ class TestBulkRun:
         ]
         #
         global_file_formats = {
-            'PVT-PATH': os.path.join(FIXTURE_DIR, 'PVT', 'H2O_TEMP_058F.CSV'),
-            'SUMMARY-PATH': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-LOG.TXT'),
+            'PVT-FILE': os.path.join(FIXTURE_DIR, 'PVT', 'H2O_TEMP_058F.CSV'),
+            'SUMMARY-FILE': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-LOG.TXT'),
             'STAT-FILE': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-STAT.CSV'),
             'APER-FILE': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-APER.CSV'),
             'FLOW-FILE': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-FLOW.CSV'),
@@ -40,7 +40,7 @@ class TestBulkRun:
             'input_file': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-INIT.INP')
         }
         global_run_params = {
-            'FRAC-PRESS': ['1000'],
+            'INLET-PRESS': ['1000'],
             'MAP': ['10'],
             'ROUGHNESS': ['0.00', '1.00'],
             'OUTPUT-UNITS': ['PA, MM, MM^3/MIN'],
@@ -55,7 +55,7 @@ class TestBulkRun:
         #
         input_tuples = [
             (maps[0:1], run_params[0], {}),
-            (maps[1:2], run_params[1], {'SUMMARY-PATH': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-LOG2.TXT')}),
+            (maps[1:2], run_params[1], {'SUMMARY-FILE': os.path.join(TEMP_DIR, '{APERMAP}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-LOG2.TXT')}),
             (maps[2:3], run_params[2], {})
         ]
         #

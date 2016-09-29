@@ -2,22 +2,21 @@
 ;EXE-FILE: APM-MODEL.EXE
 ;
 ; FILE PATHS AND NAMES
-;PVT-PATH:        "(PATH/TO/PVT-DATA.*)"
-;APER-MAP PATH:   "(PATH/TO/FILE.*)"
-SUMMARY-PATH:    ./coverage_test_log.txt
+;PVT-FILE:        "(PATH/TO/PVT-DATA.*)"
+;APER-MAP:   "(PATH/TO/FILE.*)"
 SUMMARY-FILE:    ./coverage_test_log.txt
-STAT-FILE PATH:  ./coverage_test_stats.csv
-APER-FILE PATH:  ./coverage_test_map.csv
-FLOW-FILE PATH:  ./coverage_test_flow.csv
-PRESS-FILE PATH: ./coverage_test_press.csv
-VTK-FILE PATH:   ./coverage_test_data.vtk
+STAT-FILE:  ./coverage_test_stats.csv
+APER-FILE:  ./coverage_test_map.csv
+FLOW-FILE:  ./coverage_test_flow.csv
+PRESS-FILE: ./coverage_test_press.csv
+VTK-FILE:   ./coverage_test_data.vtk
 OVERWRITE EXISTING FILES
 ;
 ; BOUNDARY CONDITIONS
 FRAC-PRESS: 100 PA ;HITTING THE OLD KEYWORDS AS WELL
-INLET-PRESS: 100 PA  
+INLET-PRESS: 100 PA
 ;INLET-RATE: 1.0 MM^3/SEC
-OUTLET-PRESS: 0 PA 
+OUTLET-PRESS: 0 PA
 ;OUTLET-RATE: 1.0 MM^3/SEC
 OUTFLOW-SIDE: TOP ;DEPRECATED
 OUTLET-SIDE:  TOP
@@ -29,7 +28,7 @@ FLUID-VISCOSITY: 1.0 PA*SEC
 MAXIMUM MAP DIMENSION: 250
 STD-TEMP:      273.15 K
 STD-PRESS:       1.00 ATM
-MANIFOLD: TRUE ;DEPRECATED 
+MANIFOLD: TRUE ;DEPRECATED
 SOLVER TYPE: D4-GAUSS ;DEPRECATED
 ;
 ; OTHER PARAMETERS

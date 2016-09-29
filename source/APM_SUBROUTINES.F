@@ -248,48 +248,39 @@ C     READING IN FILE NAMES
       DO
         CALL LNPROC(IINP,MAXFLD,MAXLEN,CVAR,CFLD,LFLD,NFLD,'SAME')
         IF (NFLD == 0) EXIT
-        IF (INDEX(CFLD(1),'PVT-PATH') > 0) THEN
-          IFLD = 2
-          IF (NFLD < 2) GOTO 905
-          PVT_FILE = CFLD(IFLD)
-          PVT = .TRUE.
-        ELSE IF (INDEX(CFLD(1),'PVT-FILE') > 0) THEN
+        IF (INDEX(CFLD(1),'PVT-FILE') > 0) THEN
           IFLD = 2
           IF (NFLD < 2) GOTO 905
           PVT_FILE = CFLD(IFLD)
           PVT = .TRUE.
         ELSEIF (INDEX(CFLD(1),'APER-MAP') > 0) THEN
-          IFLD = 3
-          IF (NFLD < 3) GOTO 905
-          APM_FILE = CFLD(IFLD)
-          APM = .TRUE.
-        ELSEIF (INDEX(CFLD(1),'SUMMARY-PATH') > 0) THEN
           IFLD = 2
           IF (NFLD < 2) GOTO 905
-          SUM_FILE = CFLD(IFLD)
+          APM_FILE = CFLD(IFLD)
+          APM = .TRUE.
         ELSEIF (INDEX(CFLD(1),'SUMMARY-FILE') > 0) THEN
           IFLD = 2
           IF (NFLD < 2) GOTO 905
           SUM_FILE = CFLD(IFLD)
         ELSEIF (INDEX(CFLD(1),'STAT-FILE') > 0) THEN
-          IFLD = 3
-          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          IF (NFLD < 2) GOTO 905
           STAT_FILE = CFLD(IFLD)
         ELSEIF (INDEX(CFLD(1),'APER-FILE') > 0) THEN
-          IFLD = 3
-          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          IF (NFLD < 2) GOTO 905
           MAP_FILE = CFLD(IFLD)
         ELSEIF (INDEX(CFLD(1),'FLOW-FILE') > 0) THEN
-          IFLD = 3
-          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          IF (NFLD < 2) GOTO 905
           FLOW_FILE = CFLD(IFLD)
         ELSEIF (INDEX(CFLD(1),'PRESS-FILE') > 0) THEN
-          IFLD = 3
-          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          IF (NFLD < 2) GOTO 905
           PRESS_FILE = CFLD(IFLD)
         ELSEIF (INDEX(CFLD(1),'VTK-FILE') > 0) THEN
-          IFLD = 3
-          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          IF (NFLD < 2) GOTO 905
           VTK_FILE = CFLD(IFLD)
           I = INDEX(VTK_FILE,'.',BACK=.TRUE.)
           CALL LOWER_CASE(VTK_FILE(I:),VTK_FILE(I:))
@@ -765,7 +756,7 @@ C
         DO IFLD = 1,NFLD
           IF (NFLD > MAXDIM) GOTO 930
 C
-          READ(MAPCFLD(IFLD),"(F10.0)",ERR=910) AP_MAP(NZ,IFLD,0)
+          READ(MAPCFLD(IFLD),*,ERR=910) AP_MAP(NZ,IFLD,0)
           RAW_APER = RAW_APER + AP_MAP(NZ,IFLD,0)
 C
 C         CONDITIONALS USED TO COLLECT DATA ON MAP

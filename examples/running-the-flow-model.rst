@@ -37,17 +37,17 @@ This is where the path of input and output files are defined. If the line :code:
 
 Input Files
 ~~~~~~~~~~~
-  - :code:`PVT-PATH:` File storing state data for liquids or gases, required if :code:`FLUID-TYPE: GAS` is present. Only iso-thermal data is accepted.
-  - :code:`APER-MAP PATH:` File that stores the aperture map data.
+  - :code:`PVT-FILE:` File storing state data for liquids or gases, required if :code:`FLUID-TYPE: GAS` is present. Only iso-thermal data is accepted.
+  - :code:`APER-MAP:` File that stores the aperture map data.
 
 Output Files
 ~~~~~~~~~~~~
   - :code:`SUMMARY-FILE:` Logs the information printed to the screen (.txt expected)
-  - :code:`STAT-FILE PATH:` Stores statistics calculated and certain simulation parameters (.csv expected)
-  - :code:`APER-FILE PATH:` Stores a copy of the input aperture map that is converted to the desired output units and has any applied roughness factored in (.csv expected)
-  - :code:`FLOW-FILE PATH:` Used as the root name for the three flow files output: X-component, Z-component and magnitude. The files have -X, -Z, -M suffixes appended to the root name before the extension.  (.csv expected)
-  - :code:`PRESS-FILE PATH:` Stores a pressure distribution map of the fracture(.csv expected)
-  - :code:`VTK-FILE PATH:` A legacy formatted input file for Paraview which combines all of the former input files and includes several other data maps. (.vtk expected)
+  - :code:`STAT-FILE:` Stores statistics calculated and certain simulation parameters (.csv expected)
+  - :code:`APER-FILE:` Stores a copy of the input aperture map that is converted to the desired output units and has any applied roughness factored in (.csv expected)
+  - :code:`FLOW-FILE:` Used as the root name for the three flow files output: X-component, Z-component and magnitude. The files have -X, -Z, -M suffixes appended to the root name before the extension.  (.csv expected)
+  - :code:`PRESS-FILE:` Stores a pressure distribution map of the fracture(.csv expected)
+  - :code:`VTK-FILE:` A legacy formatted input file for Paraview which combines all of the former input files and includes several other data maps. (.vtk expected)
 
 Boundary Conditions
 -------------------
@@ -100,14 +100,14 @@ This can be copy and pasted into a blank text document to quickly create a new i
 	;
 	;
 	; FILE PATHS AND NAMES
-	;PVT-PATH:
-	;APER-MAP PATH:
+	;PVT-FILE:
+	;APER-MAP:
 	;SUMMARY-FILE:
-	;STAT-FILE PATH:
-	;APER-FILE PATH:
-	;FLOW-FILE PATH:
-	;PRESS-FILE PATH:
-	;VTK-FILE PATH:
+	;STAT-FILE:
+	;APER-FILE:
+	;FLOW-FILE:
+	;PRESS-FILE:
+	;VTK-FILE:
 	;OVERWRITE EXISTING FILES
 	;
 	; BOUNDARY CONDITIONS
@@ -157,13 +157,13 @@ Open model-input-params.inp with your favorite text editor and copy and paste th
 	;EXE-FILE: APM-MODEL.EXE
 	;
 	; FILE PATHS AND NAMES
-	APER-MAP PATH: ../examples/Fractures/Fracture1ApertureMap-10avg.txt
+	APER-MAP: ../examples/Fractures/Fracture1ApertureMap-10avg.txt
 	;SUMMARY-FILE:
-	;STAT-FILE PATH:
-	;APER-FILE PATH:
-	;FLOW-FILE PATH:
-	;PRESS-FILE PATH:
-	;VTK-FILE PATH:
+	;STAT-FILE:
+	;APER-FILE:
+	;FLOW-FILE:
+	;PRESS-FILE:
+	;VTK-FILE:
 	;OVERWRITE EXISTING FILES
 	;
 	; BOUNDARY CONDITIONS
@@ -218,7 +218,7 @@ The InputFile Class
 The InputFile class is used to read, write and manipulate an input parameters file. It provides an easy to use interface for updating parameters and can dynamically generate filenames based on those input parameters. One caveat is you can not easily add in new parameters that weren't in the original input file used to instantiate the class. Therefore, when using this class it is best to use a template file that has all of the parameters present and unneeded ones commented out.
 
 Notes:
- * The keywords of the input file class are the first characters occurring before *any* spaces on a line. The keyword for parameter :code:`FLOW-FILE PATH: path/to/filename` is :code:`FLOW-FILE`
+ * The keywords of the input file class are the first characters occurring before *any* spaces on a line. The keyword for parameter :code:`FLOW-FILE: path/to/filename` is :code:`FLOW-FILE`
  * Currently the original units are preserved and can not easily be updated.
 
 Argument - Type - Description
@@ -269,7 +269,7 @@ In addition to updating arguments you can also apply a set of filename formats t
     # setting the formats dict up
     # Format replacements are recognized by %KEYWORD% in the filename
     name_formats = {
-        'SUMMARY-PATH': '%APMAP%-SUMMARY-VISC-%FLUID-VISCOSITY%CP.TXT',
+        'SUMMARY-FILE': '%APMAP%-SUMMARY-VISC-%FLUID-VISCOSITY%CP.TXT',
         'STAT-FILE': '%APMAP%-STAT-VISC-%FLUID-VISCOSITY%CP.CSV',
         'VTK-FILE': '%APMAP%-VTK-VISC-%FLUID-VISCOSITY%CP.vtk'
     }
