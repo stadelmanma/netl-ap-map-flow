@@ -7,6 +7,7 @@ Last Modifed: 2016/06/16
 #
 """
 from itertools import product
+import string
 from time import sleep
 from .__run_model_core__ import InputFile, estimate_req_RAM, run_model
 
@@ -35,42 +36,6 @@ class BulkRun(dict):
         #
         # setting useful keys and removing two I don't want passed around
         [self.__setitem__(key, value) for key, value in kwargs.items()]
-
-    def process_input_tuples(self,
-                             input_tuples,
-                             default_params=None,
-                             default_name_format=None):
-        r"""
-        This function takes the tuples containing a list of aperture maps, run params
-        and file formats and turns it into a standard format for the bulk simulator.
-        """
-        #
-        def_params = default_params
-        def_name_format = default_name_format
-        if default_params is None:
-            def_params = {}
-        if default_name_format is None:
-            def_name_format = {}
-        #
-        sim_inputs = []
-        for tup in input_tuples:
-            for apm in tup[0]:
-                args = dict()
-                args['aperture_map'] = apm
-                #
-                # setting global run params first and then map specific params
-                args['run_params'] = {k: list(def_params[k]) for k in def_params}
-                for key in tup[1].keys():
-                    args['run_params'][key] = tup[1][key]
-                #
-                # setting global name format first and then map specific formats
-                formats = {k: def_name_format[k] for k in def_name_format}
-                args['filename_formats'] = formats
-                for key in tup[2].keys():
-                    args['filename_formats'][key] = tup[2][key]
-                sim_inputs.append(dict(args))
-        #
-        self.sim_inputs = sim_inputs
 
     def dry_run(self):
         r"""
@@ -143,29 +108,68 @@ class BulkRun(dict):
         print('')
         print('')
 
-    def _combine_run_args(self):
+    def generate_input_files(self,
+                             default_params,
+                             default_name_formats,
+                             case_identifer='',
+                             case_params=None):
         r"""
-        This function takes all of the args for each input map and then makes
-        a list of InputFile objects to be run in parallel.
         """
         #
-        # creating a combination of all arg lists for each input map
-        self.input_file_list = []
-        for map_args in self.sim_inputs:
+        #  processing unique identifier and setting up cases
+        if case_identifer:
+            case_params = case_params or {}
             #
-            file_formats = map_args['filename_formats']
-            params = map_args['run_params']
-            params = {key: val for key, val in params.items() if val}
-            for comb in product(*params.values()):
-                #
+            # pulling format keys out an combining them specifically
+            keys = string.Formatter().parse(case_identifer)
+            keys = [key[1] for key in keys if key[1]]
+            params = {key: default_params[key] for key in keys}
+            param_combs = self._combine_run_params(params)
+            #
+            # updating default params for each case
+            keys = default_params.keys()
+            run_cases = []
+            for params in param_combs:
+                # updating default params to only use identifer values
+                print(params)
+                identifier = case_identifer.format(**params)
+                params = {key: [val] for key, val in params.items()}
+                params = {key: params.get(key, default_params[key]) for key in keys}
+                # updating params with the case specific params
+                params.update(case_params.get(identifier, {}))
+                run_cases.append(params)
+        else:
+            run_cases = [default_params]
+        #
+        # stepping through each case and combining args
+        self.input_file_list = []
+        for params in run_cases:
+            param_combs = self._combine_run_params(params)
+            for comb in param_combs:
+                # generating new InputFile with parameter combination
                 args = {key: val for key, val in zip(params.keys(), comb)}
-                args['APER-MAP'] = map_args['aperture_map']
-                file_formats['APER-MAP'] = map_args['aperture_map']
-                #
-                inp_file = self.init_input_file.clone(file_formats)
-                inp_file.RAM_req = map_args['RAM_req']
+                inp_file = self.init_input_file.clone(default_name_formats)
                 inp_file.update_args(args)
                 self.input_file_list.append(inp_file)
+
+    @staticmethod
+    def _combine_run_params(run_params):
+        r"""
+        Generates all possible unique combinations from a set of
+        parameter arrays.
+        """
+        #
+        # processing run_params for falsy values, i.e. empty arrays or None
+        run_params = {key: val for key, val in run_params.items() if val}
+        #
+        # creating a combination of all arg lists for each input map
+        combinations = []
+        for comb in product(*run_params.values()):
+            #
+            args = {key: val for key, val in zip(run_params.keys(), comb)}
+            combinations.append(args)
+        #
+        return combinations
 
     @staticmethod
     def _check_processes(processes, RAM_in_use, retest_delay=5, **kwargs):

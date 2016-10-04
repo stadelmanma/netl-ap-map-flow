@@ -156,8 +156,6 @@ class InputFile(OrderedDict):
         for value in self.values():
             content += value.output_line()+'\n'
         #
-        print('Input file would be saved as: '+self.outfile_name)
-        #
         return content
 
     def parse_input_file(self, infile):
@@ -200,6 +198,7 @@ class InputFile(OrderedDict):
         Creates a new InputFile obj and then populates it with the current
         objects data, created nre references to prevent mutation.
         """
+        FIX ME
         if file_formats is None:
             file_formats = self.filename_formats
         #
