@@ -198,7 +198,8 @@ class InputFile(OrderedDict):
         Creates a new InputFile obj and then populates it with the current
         objects data, created nre references to prevent mutation.
         """
-        FIX ME
+        FIX ME # right now it essentially tries to read itself, need to just directly read the ArgInputs instead
+          # Otherwise filename formats can get borked inbetween clones
         if file_formats is None:
             file_formats = self.filename_formats
         #
