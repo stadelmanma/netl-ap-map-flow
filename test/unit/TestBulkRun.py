@@ -26,35 +26,25 @@ class TestBulkRun:
         """
         bulk_run = BulkRun(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
         #
-        assert not bulk_run.sim_inputs
         assert not bulk_run.input_file_list
         assert bulk_run.num_CPUs == 2.0
         assert bulk_run.sys_RAM == 4.0
+        assert bulk_run.avail_RAM == 3.6
 
-    def test_combine_run_args(self, bulk_run_class, input_file_class):
-        r"""
-        ensuring this returns a valid list of input file objects
-        """
-        sim_inputs = [{'aperture_map': 'test-map.txt',
-                       'filename_formats': {'APER-FILE': 'test-map.txt',
-                                            'FLOW-FILE': 'test-flow.csv',
-                                            'PRESS-FILE': 'test-press.csv',
-                                            'STAT-FILE': 'test-stat.csv',
-                                            'SUMMARY-FILE': 'test-summary.txt',
-                                            'VTK-FILE': 'test-para.vtk',
-                                            'input_file': 'test-init.inp'},
-                       'run_params': {'FRAC-PRESS': ['1000'],
-                                      'MAP': ['1'],
-                                      'OUTLET-PRESS': ['995.13', '993.02', '989.04', '977.78', '966.20', '960.53'],
-                                      'OUTPUT-UNITS': ['PSI, MM, MM^3/MIN'],
-                                      'ROUGHNESS': ['2.50'],
-                                      'VOXEL': ['26.8']},
-                       'RAM_req': 0.0}]
-        #
+    def test_combine_run_params(self, bulk_run_class):
+        params = {
+            'param1': [1, 2, 3],
+            'param2': [4, 5],
+            'param3': [6],
+            'param4': None
+        }
         bulk_run_obj = bulk_run_class()
-        bulk_run_obj.sim_inputs = sim_inputs
-        BulkRun._combine_run_args(bulk_run_obj)
-        assert len(bulk_run_obj.input_file_list) == 6
+        combs = bulk_run_obj._combine_run_params(params)
+        #
+        assert len(combs) == 6
+        assert list(combs[0].keys()) == ['param3', 'param2', 'param1']
+        assert list(combs[0].values()) == [6, 4, 1]
+        assert list(combs[-1].values()) == [6, 5, 3]
 
     def test_check_processes(self):
         r"""
@@ -78,11 +68,11 @@ class TestBulkRun:
         assert not processes
         assert not RAM_in_use
 
-    def test_process_input_tuples(self, bulk_run_class):
+    def test_generate_input_files(self, bulk_run_class):
         r"""
         Testing the front end input processing function
         """
-        #
+        # !!! need to fix this test
         input_tuples = [
             (['test-map1', 'test-map2'], {'test-param1': [1000]}, {'test-format': 'path-to-file12'}),
             (['test-map3', 'test-map4'], {'test-param2': 'ABC'}, {'test-format': 'path-to-file34'}),
