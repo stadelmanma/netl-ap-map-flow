@@ -294,12 +294,16 @@ def _get_logger(module_name):
 def set_main_logger_level(level_name):
     r"""
     Sets the logging level of the top level module logger by providing one
-    of the predefined logger levels DEBUG, INFO, WARNING, ERROR, CRITICAL
+    of the predefined logger levels DEBUG, INFO, WARNING, ERROR, CRITICAL.
+    If a number is passed in it is used directly
     """
     #
-    level_name = level_name.upper()
     main_logger = _get_logger(__name__.split('.')[0])
-    main_logger.setLevel(logging.getLevelName(level_name))
+    try:
+        level_name = level_name.upper()
+        main_logger.setLevel(logging.getLevelName(level_name))
+    except AttributeError:
+        main_logger.setLevel(level_name)
 
 
 def files_from_directory(directory='.', pattern='.', deep=True):
