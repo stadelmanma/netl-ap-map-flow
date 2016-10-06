@@ -120,14 +120,15 @@ class AsyncCommunicate(Thread):
 
 class InputFile(OrderedDict):
     r"""
-    Stores the data for an entire input file and methods to output one
+    Stores the data for an input file and methods to generate and write
+    an input file.
     """
     def __init__(self, infile, filename_formats=None):
         #
         super().__init__()
         self.filename_format_args = {}
         self.RAM_req = 0.0
-        self.outfile_name = 'FRACTURE_INITIALIZATION.INP'
+        self.outfile_name = 'lcl_model_param_file.inp'
         #
         if filename_formats is None:
             filename_formats = {}
@@ -143,7 +144,7 @@ class InputFile(OrderedDict):
         if 'input_file' not in filename_formats:
             self.filename_formats['input_file'] = self.outfile_name
 
-    def __repr__(self):
+    def __str__(self):
         r"""
         Writes an input file to the screen
         """
@@ -153,19 +154,19 @@ class InputFile(OrderedDict):
         #
         # builidng content from ArgInput class line attribute
         content = ''
-        for value in self.values():
-            content += value.output_line()+'\n'
+        for arg_input in self.values():
+            content += arg_input.output_line()+'\n'
         #
         return content
 
     def parse_input_file(self, infile):
         r"""
-        This function is used to create the first InputFile from which the
-        rest will be copied from.
+        Populates the InputFile instance with data from a file or copies
+        an existing instance passed in.
         """
         #
-        if isinstance(infile, InputFile):
-            content = infile.__repr__()
+        if isinstance(infile, self.__class__):
+            content = str(infile)
             file_path = os.path.realpath(infile.outfile_name)
         else:
             file_path = os.path.realpath(infile)
@@ -196,10 +197,8 @@ class InputFile(OrderedDict):
     def clone(self, file_formats=None):
         r"""
         Creates a new InputFile obj and then populates it with the current
-        objects data, created nre references to prevent mutation.
+        object's data. New ArgInput instances are created to prevent mutation.
         """
-        FIX ME # right now it essentially tries to read itself, need to just directly read the ArgInputs instead
-          # Otherwise filename formats can get borked inbetween clones
         if file_formats is None:
             file_formats = self.filename_formats
         #
@@ -272,13 +271,9 @@ class InputFile(OrderedDict):
         Writes an input file to the outfile_name based on the current args
         """
         #
-        # updating filenames to match current args
+        # creating file directories and generating input file
         self._construct_file_names(make_dirs=True)
-        #
-        # builidng content from ArgInput class line attribute
-        content = ''
-        for value in self.values():
-            content += value.output_line()+'\n'
+        content = str(self)
         #
         file_name = self.outfile_name
         if alt_path:
