@@ -215,6 +215,9 @@ class InputFile(OrderedDict):
                 self[key].update_value(args[key])
             except KeyError:
                 self.filename_format_args[key] = args[key]
+        #
+        # setting up new filenames
+        self._construct_file_names()
 
     def get_uncommented_values(self):
         r"""
