@@ -48,6 +48,7 @@ class BulkRun(dict):
         orig_level = logger.getEffectiveLevel()
         set_main_logger_level('debug')
         #
+        self._initialize_run()
         fmt = '{:d} simulations would be performed'
         logger.info(fmt.format(len(self.input_file_list)))
         #
@@ -69,6 +70,7 @@ class BulkRun(dict):
                 return 0
         #
         logger.info('Beginning bulk run of simulations')
+        self._initialize_run()
         #
         # initializing processes list with dummy processes and starting loop
         processes = [dummy]
@@ -81,11 +83,14 @@ class BulkRun(dict):
                              default_params,
                              default_name_formats,
                              case_identifer='',
-                             case_params=None):
+                             case_params=None,
+                             append=False):
         r"""
         Generates the input file list based on the default parameters
         and case specific parameters. An InputFile instance is generated for
         each unique combination of model parameters.
+        - If append is True, then the files are appended to the input_file_list
+        instead of resetting it.
         """
         #
         #  processing unique identifier and setting up cases
@@ -114,8 +119,11 @@ class BulkRun(dict):
         else:
             run_cases = [default_params]
         #
+        # checking if file list needs reset or not
+        if not append:
+            self.input_file_list = []
+        #
         # stepping through each case and combining args
-        self.input_file_list = []
         for params in run_cases:
             param_combs = self._combine_run_params(params)
             for comb in param_combs:
@@ -124,8 +132,6 @@ class BulkRun(dict):
                 inp_file = self.init_input_file.clone(default_name_formats)
                 inp_file.update_args(comb)
                 self.input_file_list.append(inp_file)
-        #
-        self._initialize_run()
 
     @staticmethod
     def _combine_run_params(run_params):

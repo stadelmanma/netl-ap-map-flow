@@ -127,7 +127,7 @@ class InputFile(OrderedDict):
         #
         super().__init__()
         self.filename_format_args = {}
-        self.RAM_req = 0.0
+        self.RAM_req = None
         self.outfile_name = 'lcl_model_param_file.inp'
         #
         if filename_formats is None:
