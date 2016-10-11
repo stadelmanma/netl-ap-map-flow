@@ -11,7 +11,7 @@ from itertools import product
 import string
 from time import sleep
 from ..__core__ import _get_logger, set_main_logger_level
-from .__run_model_core__ import InputFile, estimate_req_RAM, run_model
+from .__run_model_core__ import estimate_req_RAM, run_model
 
 # module globals
 logger = _get_logger(__name__)
