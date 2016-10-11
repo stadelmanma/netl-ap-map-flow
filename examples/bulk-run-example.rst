@@ -7,23 +7,21 @@ Using the BulkRun Class
 Intro
 =====
 
-The BulkRun class housed in the RunModel submodule allows the user to setup a test matrix where all combinations of a parameter set can be tested taking advantage of multiple cores on the computer. It relies heavily on the core methods and classes in the RunModel submodule and it is recommended that you go through the example  `running-the-flow-model <running-the-flow-model.rst>`_ before trying to use the script to be familiar with how the code will work behind the scenes. In addition to the core methods a special class is used to facilitate running a test matrix, `BulkRun <../ApertureMapModelTools/RunModel/__BulkRun__.py>`_. It is also recommended you view the source of the class to understand the flow of the program. Lastly the script `apm_bulk_run.py <../scripts/apm_bulk_run.py>`_ contains additional documentation and an example of setting up an entire bulk simulation.
+The BulkRun class housed in the RunModel submodule allows the user to setup a test matrix where all combinations of a parameter set can be tested taking advantage of multiple cores on the computer. It relies heavily on the core methods and classes in the RunModel submodule and it is recommended that you go through the example  `running-the-flow-model <running-the-flow-model.rst>`_ before trying to use the script to be familiar with how the code will work behind the scenes. In addition to the core methods a special class is used to facilitate running a test matrix, `BulkRun <../ApertureMapModelTools/RunModel/__BulkRun__.py>`_. It is also recommended you view the source of the class to understand the flow of the program. Lastly the script `apm_bulk_run.py <../scripts/apm_bulk_run.py>`_ can be used to process a bulk run for you by supplying one or more YAML formatted input files to it. An example YAML file is displayed below and to run the script you need to have the :code:`pyyaml` module installed which can be installed via pip.
 
 The BulkRun Class
 =================
 
-This class wraps up the core functionality contained in the RunModel submodule into a format allowing easy processing of a test matrix in parallel. The Local Cubic Law (LCL) model itself is not parallelized however this limitation is overcome by calling the :code:`run_model` function in asynchronous mode and capturing the screen output produced. The class accepts many arguments during instantiation but the only required argument is an initial model input file to read or clone. This input file acts as a template for all of the subsequent runs and can either be a filename or an InputFile class object. The block below shows accepted arguments and defaults. 
+This class wraps up the core functionality contained in the RunModel submodule into a format allowing easy processing of a test matrix in parallel. The Local Cubic Law (LCL) model itself is not parallelized however this limitation is overcome by calling the :code:`run_model` function in asynchronous mode and capturing the screen output produced. The class accepts many arguments during instantiation but the only required argument is an initial InputFile instance to clone. The InputFile instance acts as a template for all subsequent runs. All arguments that are being varied need to be present even if they only contain a dummy value. The block below shows accepted arguments and defaults. 
 
 .. code-block:: python
 
 	bulk_run = BulkRun(input_file, # Used as a template to generate simulation runs from
-	                   sim_inputs=None, # list of map parameter dictionaries
 	                   num_CPUs=2.0, # Maximum number of CPUs to try and use
 	                   sys_RAM=4.0, # Maximum amount of RAM to use
 	                   **kwargs)
 
 Useful kwargs and defaults are:
- * :code:`start_delay=20.0`: time to delay starting of the overall run
  * :code:`spawn_delay=5.0`: minimum time between spawning of new processes
  * :code:`retest_delay=5.0`: time to wait between checking for completed processes
 
@@ -31,6 +29,8 @@ It is more convenient to use the process_input_tuples method to generate :code:`
 
 The process_input_tuples Method
 -------------------------------
+
+**!!!! NEEDS UPDATED TO describe generate_input_files method**
 
 The format the BulkRun class expects its parameters to be in is not the most convenient for a user to manually create, this function was designed to address that issue. The raw format the BulkRun class expects its inputs to be in is a dictionary specifying the aperture map file, a dictionary of parameters to vary and a dictionary storing filename formats. The structure is required to simplify code when running maps but is inherently inflexible in the presence of running many maps with mostly the same formats and parameters. 
 
@@ -69,12 +69,16 @@ The result of processing the input_tuples is stored on the class object in the a
 The dry_run and start Methods
 -----------------------------
 
+**!!! Needs Updated**
+
 The :code:`dry_run()` method works exactly as its name implies, doing everything except actually starting simulations. It is best if you always run this method before calling the :code:`start()` method to ensure everything checks out. :code:`dry_run` will generate and write out all model input files used allowing you to ensure the input parameters and any name formatting is properly executed. Also, as the code runs it calculates and stores the estimated RAM required for each map. If a map is found to exceed the available RAM an EnvironmentError/OSError will be raised halting the program. The BulkRun code does not actually require each input file to have a unique name since the LCL model only references it during initialization. However, if you are overwriting an existing file ensure the spawn_delay is non-zero to avoid creating a race condition or an IO error from simultaneous access. Non-unique output filenames can also cause an IO error in the FORTRAN code if two simulations attempt to use the same file at the same time.
 
 The :code:`start()` method simply begins the simulations. One slight difference from the :code:`dry_run()` method is that input files are only written when a simulation is about to be spawned, instead of writing them all out in the beginning. One additional caveat is that although the BulkRun code takes advantage of the threading and subprocess modules to run simulations asynchronously the BulkRun program itself runs synchronously. This can easily be overcome by the user through the multiprocessing module if desired.
 
 Behind the Scenes
 =================
+
+**!!! Needs Updated**
 
 Outside of the public methods used to generate inputs and start a simulation the class does a large portion of the work behind the scenes. Understanding the process can help prevent errors when defining the input ranges. Below is the general flow of the routine after :code:`start()` is called and then each step will be gone over in additional detail. 
 
