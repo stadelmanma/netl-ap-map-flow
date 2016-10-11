@@ -7,8 +7,6 @@ Last Modifed: 2016/06/11
 #
 """
 #
-import os
-import pytest
 from ApertureMapModelTools.RunModel.__BulkRun__ import BulkRun
 
 
@@ -24,27 +22,26 @@ class TestBulkRun:
         r"""
         Testing BulkRun initiailization
         """
-        bulk_run = BulkRun(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
+        bulk_run = BulkRun(input_file_class())
         #
         assert not bulk_run.input_file_list
         assert bulk_run.num_CPUs == 2.0
         assert bulk_run.sys_RAM == 4.0
         assert bulk_run.avail_RAM == 3.6
 
-    def test_combine_run_params(self, bulk_run_class):
+    def test_combine_run_params(self):
         params = {
             'param1': [1, 2, 3],
             'param2': [4, 5],
             'param3': [6],
             'param4': None
         }
-        bulk_run_obj = bulk_run_class()
-        combs = bulk_run_obj._combine_run_params(params)
+        combs = BulkRun._combine_run_params(params)
         #
         assert len(combs) == 6
-        assert list(combs[0].keys()) == ['param3', 'param2', 'param1']
-        assert list(combs[0].values()) == [6, 4, 1]
-        assert list(combs[-1].values()) == [6, 5, 3]
+        assert set(combs[0].keys()) == set(['param3', 'param2', 'param1'])
+        assert set(combs[0].values()) == set([6, 4, 1])
+        assert set(combs[-1].values()) == set([6, 5, 3])
 
     def test_check_processes(self):
         r"""
@@ -72,15 +69,25 @@ class TestBulkRun:
         r"""
         Testing the front end input processing function
         """
-        # !!! need to fix this test
-        input_tuples = [
-            (['test-map1', 'test-map2'], {'test-param1': [1000]}, {'test-format': 'path-to-file12'}),
-            (['test-map3', 'test-map4'], {'test-param2': 'ABC'}, {'test-format': 'path-to-file34'}),
-            (['test-map5'], {'test-param3': 'LEFT'}, {'test-format': 'path-to-file5'})
-        ]
-        #
         bulk_run = bulk_run_class()
-        sim_inputs = BulkRun.process_input_tuples(bulk_run, input_tuples)
-        print(bulk_run.sim_inputs)
-        assert len(bulk_run.sim_inputs) == 5
-        assert {'aperture_map', 'filename_formats', 'run_params'}.issubset(bulk_run.sim_inputs[0].keys())
+        #
+        # testing when only defaults are provided
+        default_params = {
+            'test-param1': [1000, 2000],
+            'test-param2': ['ABC', 'DEF']
+        }
+        name_formats = {
+            'test-format': 'path-to-file12{test-param1}',
+            'test-format2': 'path-to-file34{test-param2}'
+        }
+        #
+        BulkRun.generate_input_files(bulk_run, default_params, name_formats)
+        assert len(bulk_run.input_file_list) == 4
+        #
+        # testing when adding a case spefic args
+        case_key = '{test-param2}'
+        case_params = {
+            'ABC': {'test-param3': [100, 200]}
+        }
+        BulkRun.generate_input_files(bulk_run, default_params, name_formats, case_key, case_params)
+        assert len(bulk_run.input_file_list) == 6

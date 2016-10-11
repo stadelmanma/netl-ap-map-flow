@@ -30,7 +30,7 @@ class BulkRun(dict):
           retest_delay: time to wait between checking for completed processes
         """
         super().__init__()
-        self.init_input_file = InputFile(init_input_file)
+        self.init_input_file = init_input_file.clone()
         self.num_CPUs = num_CPUs
         self.sys_RAM = sys_RAM
         self.avail_RAM = sys_RAM * 0.90
