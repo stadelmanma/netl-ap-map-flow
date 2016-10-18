@@ -152,7 +152,7 @@ class OpenFoamFile(OpenFoamObject, OrderedDict):
             #
             location = foam_file.head_dict['location'].replace('"', "")
             object_name = foam_file.head_dict['object']
-            class_name = foam_file.head_dict.get('class_name', 'dictionary')
+            class_name = foam_file.head_dict.get('class', 'dictionary')
             values = foam_file.items()
         else:
             location = args[0]
