@@ -7,7 +7,7 @@ Using the BulkRun Class
 Intro
 =====
 
-The BulkRun class housed in the RunModel submodule allows the user to setup a test matrix where all combinations of a parameter set can be tested taking advantage of multiple cores on the computer. It relies heavily on the core methods and classes in the RunModel submodule and it is recommended that you go through the example  `running-the-flow-model <running-the-flow-model.rst>`_ before trying to use the script to be familiar with how the code will work behind the scenes. In addition to the core methods a special class is used to facilitate running a test matrix, `BulkRun <../ApertureMapModelTools/RunModel/__BulkRun__.py>`_. It is also recommended you view the source of the class to understand the flow of the program. Lastly the script `apm_bulk_run.py <../scripts/apm_bulk_run.py>`_ can be used to process a bulk run for you by supplying one or more YAML formatted input files to it. An example YAML file is displayed below and to run the script you need to have the :code:`pyyaml` module installed which can be installed via pip.
+The BulkRun class housed in the RunModel submodule allows the user to setup a test matrix where all combinations of a parameter set can be tested taking advantage of multiple cores on the computer. It relies heavily on the core methods and classes in the RunModel submodule and it is recommended that you go through the example  `running-the-flow-model <running-the-flow-model.rst>`_ before trying to use the script to be familiar with how the code will work behind the scenes. In addition to the core methods a special class is used to facilitate running a test matrix, `BulkRun <../ApertureMapModelTools/RunModel/__BulkRun__.py>`_. It is also recommended you view the source of the class to understand the flow of the program. Lastly the script `apm_bulk_run.py <../scripts/apm_bulk_run.py>`_ can be used to process a bulk run for you by supplying one or more YAML formatted input files to it. An example YAML file is displayed below and to run the script you need to have :code:`pyyaml` installed which, can be installed via pip.
 
 The BulkRun Class
 =================
@@ -81,8 +81,6 @@ The :code:`start()` method simply begins the simulations. One slight difference 
 Behind the Scenes
 =================
 
-**!!! Needs Updated**
-
 Outside of the public methods used to generate inputs and start a simulation the class does a large portion of the work behind the scenes. Understanding the process can help prevent errors when defining the input ranges. Below is the general flow of the routine after :code:`start()` is called. 
 
  1. :code:`_initialize_run()` - processes the aperture maps to estimate requried RAM
@@ -111,7 +109,67 @@ Using the apm_bulk_run.py Script
 
 Usage
 -----
-**Forthcoming**
+
+The usage of the apm_bulk_run.py script is very simple because it only needs to parse YAML parameter files using the yaml module which can be installed through pip via the :code:`pyyaml` package. YAML files are read in as series of nested dictionaries which the BulkRun module is designed to use. Any number of YAML files can be read in at once however, the first YAML file sets up the BulkRun class and the others are only used to generate additional InputFile instances from. 
+
+Full usage information can be obtained by using the :code:`-h` flag, :code:`./apm_bulk_run.py -h`
+
+By default the script does a dry run, the :code:`--start` flag needs to be added to actually begin simulations. 
 
 Example YAML File
 -----------------
+
+.. code-block:: yaml
+
+	# initial model input file to use as a template
+	initial_input_file: './model-input-file.inp'
+
+	# keyword arguments passed onto the BulkRun __init__ method
+	bulk_run_keyword_args:
+	    spawn_delay: 1.0  # delay in starting new individual simulations
+	    retest_delay: 5.0  # time to wait between checks for completed sims
+	    sys_RAM: 8.0 # amount of RAM allocated for simulations
+	    num_CPUs: 4 # number of CPUs allocated for simulations
+
+	# filename formats to use when building filenames based on input parameters
+	default_file_formats:
+	    APER-MAP: './maps/{stage}_ApertureMapRB{map_type}.txt'
+	    SUMMARY-FILE: './{sim-type}/{stage}/{stage}{map_type}-inlet_rate_{INLET-RATE}ml_min-log.txt'
+	    STAT-FILE: './{sim-type}/{stage}/{stage}{map_type}-inlet_rate_{INLET-RATE}ml_min-stat.csv'
+	    APER-FILE: './{sim-type}/{stage}/{stage}{map_type}-inlet_rate_{INLET-RATE}ml_min-aper.csv'
+	    FLOW-FILE: './{sim-type}/{stage}/{stage}{map_type}-inlet_rate_{INLET-RATE}ml_min-flow.csv'
+	    PRESS-FILE: './{sim-type}/{stage}/{stage}{map_type}-inlet_rate_{INLET-RATE}ml_min-press.csv'
+	    VTK-FILE: './{sim-type}/{stage}/{stage}{map_type}-inlet_rate_{INLET-RATE}ml_min.vtk'
+	    input_file: './{sim-type}/inp_files/{stage}{map_type}-inlet_rate_{INLET-RATE}ml_min.inp'
+
+
+	# parameter lists to combine when generating individual InputFile
+	default_run_parameters:
+	    OUTLET-PRESS: [0.00]
+	    INLET-RATE: [1.00, 2.00, 4.00, 6.00, 10.00]
+	    MAP: [1]
+	    ROUGHNESS: [0.0]
+	    OUTPUT-UNITS: ['PA,M,M^3/SEC']
+	    VOXEL: [26.8]
+	    # these are not model inputs and only affect filename formatting
+	    stage:
+		- 'IS-6_0'
+		- 'IS-6_1'
+		- 'IS-6_2'
+		- 'IS-6_3'
+		- 'IS-6_4'
+	    sim-type: ['const-flow']
+	    map_type: ['-full', '-10avg']
+
+	# format string used to identify specific cases based on parameters
+	case_identifier: '{map_type}'
+
+	# parameters for each desired identifier value
+	case_parameters:
+	    -10avg:
+		MAP: ['10']
+		OUTLET-PRESS:   # empty key-value pair used to unset a run parmeter
+
+Block or Flow styling may by used based on the user preference, in this example flow style sequences were chosen for parameters and block style for mapppings because of readability and compactness. The block style list for the :code:`stage` keyword was done to denote significance. 
+
+Although all values are converted to strings before use in the InputFile instances, values in the YAML file are not *required* to be quoted. However, adding quotes can be safer when a value contains characters that may confuse/error the YAML parser such as the value for :code:`OUTPUT-UNITS`. Without quotes it would be interpreted as a list instead of a string, producing an invalid entry in the InputFile. Additional higher level YAML functionality can likely be used but has not been tested. The basic syntax is used here to allow non-programmers to setup and run a set of simulations relatively easily.
