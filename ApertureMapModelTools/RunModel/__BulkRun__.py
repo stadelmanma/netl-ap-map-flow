@@ -6,71 +6,38 @@ Date Written: 2016/06/16
 Last Modifed: 2016/06/16
 #
 """
+from collections import defaultdict
 from itertools import product
+import string
 from time import sleep
-from .__run_model_core__ import InputFile, estimate_req_RAM, run_model
+from ..__core__ import _get_logger, set_main_logger_level
+from .__run_model_core__ import estimate_req_RAM, run_model
+
+# module globals
+logger = _get_logger(__name__)
 
 
 class BulkRun(dict):
     r"""
     Stores properties and methods to handle mass runs of the model
     """
-    def __init__(self, init_input_file, sim_inputs=None, num_CPUs=2.0, sys_RAM=4.0,
-                 **kwargs):
+    def __init__(self, init_input_file, num_CPUs=2.0, sys_RAM=4.0, **kwargs):
         r"""
         Setting basic properties of the class.
         Useful kwargs include:
           delim: the expected delimiter in the aperture map files
-          start_delay: time to delay starting of the overall run
           spawn_delay: minimum time between spawning of new processes
           retest_delay: time to wait between checking for completed processes
         """
         super().__init__()
-        self.init_input_file = InputFile(init_input_file)
-        self.sim_inputs = sim_inputs if sim_inputs else []
+        self.init_input_file = init_input_file.clone()
         self.num_CPUs = num_CPUs
         self.sys_RAM = sys_RAM
         self.avail_RAM = sys_RAM * 0.90
         self.input_file_list = []
         #
-        # setting useful keys and removing two I don't want passed around
-        [self.__setitem__(key, value) for key, value in kwargs.items()]
-
-    def process_input_tuples(self,
-                             input_tuples,
-                             default_params=None,
-                             default_name_format=None):
-        r"""
-        This function takes the tuples containing a list of aperture maps, run params
-        and file formats and turns it into a standard format for the bulk simulator.
-        """
-        #
-        def_params = default_params
-        def_name_format = default_name_format
-        if default_params is None:
-            def_params = {}
-        if default_name_format is None:
-            def_name_format = {}
-        #
-        sim_inputs = []
-        for tup in input_tuples:
-            for apm in tup[0]:
-                args = dict()
-                args['aperture_map'] = apm
-                #
-                # setting global run params first and then map specific params
-                args['run_params'] = {k: list(def_params[k]) for k in def_params}
-                for key in tup[1].keys():
-                    args['run_params'][key] = tup[1][key]
-                #
-                # setting global name format first and then map specific formats
-                formats = {k: def_name_format[k] for k in def_name_format}
-                args['filename_formats'] = formats
-                for key in tup[2].keys():
-                    args['filename_formats'][key] = tup[2][key]
-                sim_inputs.append(dict(args))
-        #
-        self.sim_inputs = sim_inputs
+        # updating keys
+        self.update(kwargs)
 
     def dry_run(self):
         r"""
@@ -78,94 +45,135 @@ class BulkRun(dict):
         input files without actually starting any of the simulations.
         """
         #
-        print('Beginning dry run of aperture map simulations on INP files output')
-        print('Use method "start" to actually run models')
+        orig_level = logger.getEffectiveLevel()
+        set_main_logger_level('debug')
         #
-        input_maps = [args['aperture_map'] for args in self.sim_inputs]
-        RAM_per_map = estimate_req_RAM(input_maps, self.avail_RAM, **self)
+        self._initialize_run()
+        fmt = '{:d} simulations would be performed'
+        logger.info(fmt.format(len(self.input_file_list)))
         #
-        for i, RAM in enumerate(RAM_per_map):
-            self.sim_inputs[i]['RAM_req'] = RAM
-        #
-        self._combine_run_args()
-        #
-        fmt = 'Total Number of simulations that would be performed: {:d}'
-        print('')
-        print(fmt.format(len(self.input_file_list)))
-        #
+        logger.info('Writing model input files to disk for inspection')
         for inp_file in self.input_file_list:
             inp_file.write_inp_file()
-            print(' Est. RAM reqired for this run: {:f}'.format(inp_file.RAM_req))
-            print('')
+        #
+        logger.info('Dry run has been completed.')
+        logger.info('Use the start() method to begin simulations')
+        set_main_logger_level(orig_level)
 
     def start(self):
         r"""
-        Handles properly passing any internal arguments to start bulk run
-        """
-        self._start_bulk_run(**self)
-
-    def _start_bulk_run(self, start_delay=20.0, **kwargs):
-        r"""
-        This acts as the driver function for the entire bulk run of simulations.
+        Acts as the driver function for the entire bulk run of simulations.
         """
         class dummy:
-            r"""
-            Dummy class used to simulate a Popen object
-            """
+            r""" Dummy class used to simulate a Popen object """
             def poll():
                 return 0
-
-        print('Beginning bulk run of aperture map simulations')
         #
-        input_maps = [args['aperture_map'] for args in self.sim_inputs]
-        RAM_per_map = estimate_req_RAM(input_maps, self.avail_RAM, **self)
+        logger.info('Beginning bulk run of simulations')
+        self._initialize_run()
         #
-        for i, RAM in enumerate(RAM_per_map):
-            self.sim_inputs[i]['RAM_req'] = RAM
-        #
-        self._combine_run_args()
-        #
-        fmt = 'Total Number of simulations to perform: {:d}'
-        print('')
-        print(fmt.format(len(self.input_file_list)))
-        print('')
-        fmt = 'Simulations will begin in {} seconds.'
-        print(fmt.format(start_delay))
-        sleep(start_delay)
-        #
-        # initializing processes list with dummy processes and beginning loop
+        # initializing processes list with dummy processes and starting loop
         processes = [dummy]
         RAM_in_use = [0.0]
         while self.input_file_list:
             self._check_processes(processes, RAM_in_use, **self)
             self._start_simulations(processes, RAM_in_use, **self)
-        #
-        print('')
-        print('')
 
-    def _combine_run_args(self):
+    def generate_input_files(self,
+                             default_params,
+                             default_name_formats,
+                             case_identifer='',
+                             case_params=None,
+                             append=False):
         r"""
-        This function takes all of the args for each input map and then makes
-        a list of InputFile objects to be run in parallel.
+        Generates the input file list based on the default parameters
+        and case specific parameters. An InputFile instance is generated for
+        each unique combination of model parameters.
+        - If append is True, then the files are appended to the input_file_list
+        instead of resetting it.
         """
         #
-        # creating a combination of all arg lists for each input map
-        self.input_file_list = []
-        for map_args in self.sim_inputs:
+        #  processing unique identifier and setting up cases
+        if case_identifer:
+            case_params = case_params or {}
             #
-            file_formats = map_args['filename_formats']
-            params = map_args['run_params']
-            params = {key: val for key, val in params.items() if val}
-            for comb in product(*params.values()):
+            # pulling format keys out an combining them specifically
+            keys = string.Formatter().parse(case_identifer)
+            keys = [key[1] for key in keys if key[1]]
+            params = {key: default_params[key] for key in keys}
+            param_combs = self._combine_run_params(params)
+            #
+            # updating default params for each case
+            keys = default_params.keys()
+            run_cases = []
+            for params in param_combs:
                 #
-                args = {key: val for key, val in zip(params.keys(), comb)}
-                args['APER-MAP'] = map_args['aperture_map']
-                file_formats['APER-MAP'] = map_args['aperture_map']
+                # updating default params to only use identifer values
+                identifier = case_identifer.format(**params)
+                params = {key: [val] for key, val in params.items()}
+                params = {key: params.get(key, default_params[key]) for key in keys}
                 #
-                inp_file = self.init_input_file.clone(file_formats)
-                inp_file.RAM_req = map_args['RAM_req']
-                inp_file.update_args(args)
+                # updating params with the case specific params
+                params.update(case_params.get(identifier, {}))
+                run_cases.append(params)
+        else:
+            run_cases = [default_params]
+        #
+        # checking if file list needs reset or not
+        if not append:
+            self.input_file_list = []
+        #
+        # stepping through each case and combining args
+        for params in run_cases:
+            param_combs = self._combine_run_params(params)
+            for comb in param_combs:
+                #
+                # generating new InputFile with parameter combination
+                inp_file = self.init_input_file.clone(default_name_formats)
+                inp_file.update_args(comb)
                 self.input_file_list.append(inp_file)
+
+    @staticmethod
+    def _combine_run_params(run_params):
+        r"""
+        Generates all possible unique combinations from a set of
+        parameter arrays.
+        """
+        #
+        # processing run_params for falsy values, i.e. empty arrays or None
+        run_params = {key: val for key, val in run_params.items() if val}
+        #
+        # creating a combination of all arg lists for each input map
+        combinations = []
+        for comb in product(*run_params.values()):
+            #
+            args = {key: val for key, val in zip(run_params.keys(), comb)}
+            combinations.append(args)
+        #
+        return combinations
+
+    def _initialize_run(self):
+        r"""
+        Handles initialization steps after generation of input files
+        """
+        logger.info('Assesing RAM requirements of each aperture map')
+        #
+        # storing InputFile instances by aperture map for easy RAM_req updates
+        maps = defaultdict(list)
+        for inp_file in self.input_file_list:
+            maps[inp_file['APER-MAP'].value].append(inp_file)
+        #
+        # estimating the RAM requirement for each aperture map
+        keys = list(maps.keys())
+        RAM_per_map = estimate_req_RAM(keys, self.avail_RAM, **self)
+        RAM_per_map = {key: value for key, value in zip(keys, RAM_per_map)}
+        #
+        # Updating the InputFile instances with their RAM requirement
+        for key, value in RAM_per_map.items():
+            msg = 'Estimated {:f}gb RAM reqired for map: {}'
+            logger.info(msg.format(value, key))
+            for inp_file in maps[key]:
+                inp_file.RAM_req = value
 
     @staticmethod
     def _check_processes(processes, RAM_in_use, retest_delay=5, **kwargs):

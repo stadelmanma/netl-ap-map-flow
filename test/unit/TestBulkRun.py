@@ -7,8 +7,6 @@ Last Modifed: 2016/06/11
 #
 """
 #
-import os
-import pytest
 from ApertureMapModelTools.RunModel.__BulkRun__ import BulkRun
 
 
@@ -24,37 +22,26 @@ class TestBulkRun:
         r"""
         Testing BulkRun initiailization
         """
-        bulk_run = BulkRun(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
+        bulk_run = BulkRun(input_file_class())
         #
-        assert not bulk_run.sim_inputs
         assert not bulk_run.input_file_list
         assert bulk_run.num_CPUs == 2.0
         assert bulk_run.sys_RAM == 4.0
+        assert bulk_run.avail_RAM == 3.6
 
-    def test_combine_run_args(self, bulk_run_class, input_file_class):
-        r"""
-        ensuring this returns a valid list of input file objects
-        """
-        sim_inputs = [{'aperture_map': 'test-map.txt',
-                       'filename_formats': {'APER-FILE': 'test-map.txt',
-                                            'FLOW-FILE': 'test-flow.csv',
-                                            'PRESS-FILE': 'test-press.csv',
-                                            'STAT-FILE': 'test-stat.csv',
-                                            'SUMMARY-FILE': 'test-summary.txt',
-                                            'VTK-FILE': 'test-para.vtk',
-                                            'input_file': 'test-init.inp'},
-                       'run_params': {'FRAC-PRESS': ['1000'],
-                                      'MAP': ['1'],
-                                      'OUTLET-PRESS': ['995.13', '993.02', '989.04', '977.78', '966.20', '960.53'],
-                                      'OUTPUT-UNITS': ['PSI, MM, MM^3/MIN'],
-                                      'ROUGHNESS': ['2.50'],
-                                      'VOXEL': ['26.8']},
-                       'RAM_req': 0.0}]
+    def test_combine_run_params(self):
+        params = {
+            'param1': [1, 2, 3],
+            'param2': [4, 5],
+            'param3': [6],
+            'param4': None
+        }
+        combs = BulkRun._combine_run_params(params)
         #
-        bulk_run_obj = bulk_run_class()
-        bulk_run_obj.sim_inputs = sim_inputs
-        BulkRun._combine_run_args(bulk_run_obj)
-        assert len(bulk_run_obj.input_file_list) == 6
+        assert len(combs) == 6
+        assert set(combs[0].keys()) == set(['param3', 'param2', 'param1'])
+        assert set(combs[0].values()) == set([6, 4, 1])
+        assert set(combs[-1].values()) == set([6, 5, 3])
 
     def test_check_processes(self):
         r"""
@@ -78,19 +65,29 @@ class TestBulkRun:
         assert not processes
         assert not RAM_in_use
 
-    def test_process_input_tuples(self, bulk_run_class):
+    def test_generate_input_files(self, bulk_run_class):
         r"""
         Testing the front end input processing function
         """
-        #
-        input_tuples = [
-            (['test-map1', 'test-map2'], {'test-param1': [1000]}, {'test-format': 'path-to-file12'}),
-            (['test-map3', 'test-map4'], {'test-param2': 'ABC'}, {'test-format': 'path-to-file34'}),
-            (['test-map5'], {'test-param3': 'LEFT'}, {'test-format': 'path-to-file5'})
-        ]
-        #
         bulk_run = bulk_run_class()
-        sim_inputs = BulkRun.process_input_tuples(bulk_run, input_tuples)
-        print(bulk_run.sim_inputs)
-        assert len(bulk_run.sim_inputs) == 5
-        assert {'aperture_map', 'filename_formats', 'run_params'}.issubset(bulk_run.sim_inputs[0].keys())
+        #
+        # testing when only defaults are provided
+        default_params = {
+            'test-param1': [1000, 2000],
+            'test-param2': ['ABC', 'DEF']
+        }
+        name_formats = {
+            'test-format': 'path-to-file12{test-param1}',
+            'test-format2': 'path-to-file34{test-param2}'
+        }
+        #
+        BulkRun.generate_input_files(bulk_run, default_params, name_formats)
+        assert len(bulk_run.input_file_list) == 4
+        #
+        # testing when adding a case spefic args
+        case_key = '{test-param2}'
+        case_params = {
+            'ABC': {'test-param3': [100, 200]}
+        }
+        BulkRun.generate_input_files(bulk_run, default_params, name_formats, case_key, case_params)
+        assert len(bulk_run.input_file_list) == 6

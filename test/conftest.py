@@ -158,7 +158,7 @@ def input_file_class():
             }
             self.arg_order = []
             self.RAM_req = 0.0
-            self.outfile_name = 'FRACTURE_INITIALIZATION.INP'
+            self.outfile_name = './FRACTURE_INITIALIZATION.INP'
 
         def parse_input_file(self, infile):
             pass
@@ -167,7 +167,7 @@ def input_file_class():
             return PseudoInputFile()
 
         def update_args(self, args):
-            pass
+            self.update(args)
 
         def construct_file_names(self):
             pass
@@ -184,14 +184,15 @@ def bulk_run_class(input_file_class):
     Returns a pseduo BulkRun class object for unit testing of the class where
     possible
     """
-    class PseudoBulkRun(dict):
+    class PseudoBulkRun(amt.RunModel.BulkRun):
         r"""
         Setting placeholder methods and arguments
         """
         def __init__(self):
-            super().__init__()
-            self.init_input_file = input_file_class()
-            self.sim_inputs = []
+            inp_file = input_file_class()
+            super().__init__(inp_file)
+            self.init_input_file = inp_file
+            #
             self.num_CPUs = 2.0
             self.sys_RAM = 4.0
             self.avail_RAM = self.sys_RAM * 0.90
@@ -199,11 +200,10 @@ def bulk_run_class(input_file_class):
             #
             # setting keys
             self['delim'] = 'auto'
-            self['start_delay'] = 10.0
             self['spawn_delay'] = 2.5
             self['retest_delay'] = 1.5
 
-        def process_input_tuples(self, *args, **kwargs):
+        def generate_input_files(self, *args, **kwargs):
             pass
 
         def dry_run(self, *args, **kwargs):
@@ -212,7 +212,7 @@ def bulk_run_class(input_file_class):
         def start(self, *args, **kwargs):
             pass
 
-        def _combine_run_args(self, *args, **kwargs):
+        def _initialize_run(self, *args, **kwargs):
             pass
 
         @staticmethod

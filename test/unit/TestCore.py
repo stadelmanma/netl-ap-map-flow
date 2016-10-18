@@ -43,7 +43,7 @@ class TestCore:
         """
         #
         # covering basic methods
-        map_file = 'PARALELL-PLATE-01VOX.TXT'
+        map_file = 'parallel-plate-01vox.txt'
         fname = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', map_file)
         field = amt.DataField(fname)
         field.create_point_data()
@@ -128,8 +128,8 @@ class TestCore:
         r"""
         Sends a list of infiles
         """
-        fname1 = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-01VOX.TXT')
-        fname2 = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'PARALELL-PLATE-10VOX.TXT')
+        fname1 = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'parallel-plate-01vox.txt')
+        fname2 = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'parallel-plate-10vox.txt')
         infile_list = [fname1, fname2]
         #
         fields = amt.load_infile_list(infile_list)
