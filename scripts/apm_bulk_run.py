@@ -20,7 +20,7 @@ bulk_run_class.
 
 Written By: Matthew stadelman
 Date Written: 2016/08/04
-Last Modfied: 2016/10/11
+Last Modfied: 2016/10/18
 """
 
 # setting log level
