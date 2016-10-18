@@ -14,7 +14,7 @@ template case and command line args. If a run_script is present it will
 attempt to update it to match parameters
 
 Written By: Matthew stadelman
-Date Written: 2016/08/04
+Date Written: 2016/10/11
 Last Modfied: 2016/10/18
 """
 usage_str = '%(prog)s [-hv] job_dir aper_map [job_name] [options]'
@@ -36,38 +36,46 @@ trans_group = parser.add_argument_group(title='Transport Properties')
 
 # adding non-grouped args
 parser.add_argument('job_dir', type=os.path.realpath,
-                    help="directory to output case to %(type)s")
+                    help="directory to output case to")
 parser.add_argument('job_name', nargs='?', default=None,
                     help="name of job in run script")
 parser.add_argument('-v', '--verbose', action='store_true',
-                    help="prints debug messages")
+                    help="prints debug messages (default: %(default)s)")
 parser.add_argument('--template', type=os.path.realpath,
                     default=os.path.realpath('template-case'),
-                    help="template case directory")
+                    help="template case directory (default ./template-case)")
 #
 map_group.add_argument('aper_map', type=os.path.realpath,
                        help="aperture map to use with case")
 map_group.add_argument('--avg-fact', type=int, default=1,
-                       help="horizontal averaging factor")
+                       help="horizontal averaging factor (default: %(default)s)")
 map_group.add_argument('--voxel-size', type=float, default=2.680E-5,
-                       help="voxel size in meters")
+                       help="voxel size in meters (default: %(default)s)")
 #
-bc_group.add_argument('--inlet-side', default='bottom')
-bc_group.add_argument('--outlet-side', default='top')
-bc_group.add_argument('--inlet-q', default=None, nargs=4, help="u v w [units]")
-bc_group.add_argument('--outlet-q', default=None, nargs=4, help="u v w [units]")
-bc_group.add_argument('--inlet-p', default=None, nargs=2, help="value [units]")
-bc_group.add_argument('--outlet-p', default=None, nargs=2, help="value [units]")
+bc_group.add_argument('--inlet-side', default='bottom',
+                      help="(default: %(default)s)")
+bc_group.add_argument('--outlet-side', default='top',
+                      help="(default: %(default)s)")
+bc_group.add_argument('--inlet-q', default=None, nargs=4,
+                      metavar=('    u', 'v',  'w', '[units]'))
+bc_group.add_argument('--outlet-q', default=None, nargs=4,
+                      metavar=('    u', 'v',  'w', '[units]'))
+bc_group.add_argument('--inlet-p', default=None, nargs=2,
+                      metavar=('    value', '[units]'))
+bc_group.add_argument('--outlet-p', default=None, nargs=2,
+                      metavar=('    value', '[units]'))
 #
 sys_group.add_argument('--end-time', default=750, type=int,
-                       help="number of iterations to perform")
+                       help="number of iterations to perform (default: %(default)s)")
 sys_group.add_argument('--num-cores', default=64, type=int,
-                       help="number of cpus to utilize")
+                       help="number of cpus to utilize (default: %(default)s)")
 #
 trans_group.add_argument('--viscosity',default=[0.001, 'pa*s'], nargs=2,
-                         help='value [units]')
+                         metavar=('    value', '[units]'),
+                         help='(default: 0.001 pa*s)')
 trans_group.add_argument('--density',default=[1000, 'kg/m^3'], nargs=2,
-                         help='value [units]')
+                         metavar=('    value', '[units]'),
+                         help='(default: 1000 kg/m^3)')
 #
 ###############################################################################
 
