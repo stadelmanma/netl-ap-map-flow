@@ -74,6 +74,8 @@ def apm_bulk_run():
         bulk_run.start()
     else:
         bulk_run.dry_run()
+        print('Add "--start" flag to begin simulations')
+
 
 #
 if __name__ == '__main__':
