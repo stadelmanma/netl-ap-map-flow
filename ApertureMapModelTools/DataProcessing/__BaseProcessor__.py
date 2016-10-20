@@ -24,9 +24,9 @@ class BaseProcessor(object):
         self.infile = field.infile
         self.data_vector = None
         self.data_map = None
-        self.outfile_name = ''
+        self.outfile_name = None
         self.outfile_content = None
-        self.output_key = ''
+        self.output_key = None
         self.processed_data = None
 
         # copying field data
