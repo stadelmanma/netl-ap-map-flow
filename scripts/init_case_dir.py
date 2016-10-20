@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
+r""" Commandline tool to generate openFoam cases for the HPCEE """
 #
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
+from shutil import rmtree
 import os
 from ApertureMapModelTools import _get_logger, set_main_logger_level, DataField
 from ApertureMapModelTools.OpenFoam import OpenFoamFile
@@ -10,14 +12,15 @@ from ApertureMapModelTools.UnitConversion import convert_value
 #
 desc_str = r"""
 Description: Automatically sets up an OpenFoam case based on the chosen
-template case and command line args. If a run_script is present it will
-attempt to update it to match parameters
+template case and command line args. This script was designed to generate
+a full case and run_script for use on the NETL Joule Supercomputer. The
+run_script is assumed to be inside the directory being used as a template case
 
 Written By: Matthew stadelman
 Date Written: 2016/10/11
-Last Modfied: 2016/10/18
+Last Modfied: 2016/10/20
 """
-usage_str = '%(prog)s [-hv] job_dir aper_map [job_name] [options]'
+usage_str = '%(prog)s [-hvf] job_dir aper_map [job_name] [options]'
 
 #
 # fetching logger
@@ -41,9 +44,15 @@ parser.add_argument('job_name', nargs='?', default=None,
                     help="name of job in run script")
 parser.add_argument('-v', '--verbose', action='store_true',
                     help="prints debug messages (default: %(default)s)")
+parser.add_argument('-f', '--force', action='store_true',
+                    help="removes existing case directory (default: %(default)s)")
+parser.add_argument('--no-hpcee', action='store_true',
+                    help="allow any number of cores and doesn't format run_script")
 parser.add_argument('--template', type=os.path.realpath,
                     default=os.path.realpath('template-case'),
-                    help="template case directory (default ./template-case)")
+                    help="template case directory (default: ./template-case)")
+parser.add_argument('--script-name', default='run_openfoam',
+                    help="hpcee run script (default: %(default)s)")
 #
 map_group.add_argument('aper_map', type=os.path.realpath,
                        help="aperture map to use with case")
@@ -57,9 +66,9 @@ bc_group.add_argument('--inlet-side', default='bottom',
 bc_group.add_argument('--outlet-side', default='top',
                       help="(default: %(default)s)")
 bc_group.add_argument('--inlet-q', default=None, nargs=4,
-                      metavar=('    qx', 'qy',  'qz', '[units]'))
+                      metavar=('    qx', 'qy', 'qz', '[units]'))
 bc_group.add_argument('--outlet-q', default=None, nargs=4,
-                      metavar=('    qx', 'qy',  'qz', '[units]'))
+                      metavar=('    qx', 'qy', 'qz', '[units]'))
 bc_group.add_argument('--inlet-p', default=None, nargs=2,
                       metavar=('    value', '[units]'))
 bc_group.add_argument('--outlet-p', default=None, nargs=2,
@@ -70,10 +79,10 @@ sys_group.add_argument('--end-time', default=750, type=int,
 sys_group.add_argument('--num-cores', default=64, type=int,
                        help="number of cpus to utilize (default: %(default)s)")
 #
-trans_group.add_argument('--viscosity',default=[0.001, 'pa*s'], nargs=2,
+trans_group.add_argument('--viscosity', default=[0.001, 'pa*s'], nargs=2,
                          metavar=('    value', '[units]'),
                          help='(default: 0.001 pa*s)')
-trans_group.add_argument('--density',default=[1000, 'kg/m^3'], nargs=2,
+trans_group.add_argument('--density', default=[1000, 'kg/m^3'], nargs=2,
                          metavar=('    value', '[units]'),
                          help='(default: 1000 kg/m^3)')
 #
@@ -84,16 +93,55 @@ def init_case_dir():
     r"""
     Parses command line arguments and delegates tasks to helper functions
     """
-    global args
-    args = parser.parse_args()
     arg_dict = args.__dict__
 
-    # checking some args
+    # checking args
     if args.verbose:
         set_main_logger_level('debug')
+    check_args()
+
+    # creating job directory
+    try:
+        os.makedirs(args.job_dir)
+    except FileExistsError as err:
+        if args.force:
+            rmtree(args.job_dir)
+            os.makedirs(args.job_dir)
+        else:
+            raise err
+
+    # copying contents of template directory to job_dir
+    os.system('cp -r {}/* {}'.format(args.template, args.job_dir))
+
+    # copying over the aperture map and updating args
+    os.system('cp {} {}'.format(args.aper_map, args.job_dir))
+    args.aper_map = os.path.join(args.job_dir, os.path.basename(args.aper_map))
+
     #
-    if args.num_cores % 16 > 0:
-        parser.error('num-cores must be a multiple of 16')
+    update_system_files(**arg_dict)
+    update_transport_props(**arg_dict)
+    update_u_file(**arg_dict)
+    update_p_file(**arg_dict)
+
+    #
+    # updating run script
+    if args.no_hpcee is False:
+        with open(os.path.join(args.job_dir, args.script_name), 'r+') as run:
+            content = run.read()
+            content = content.format(**arg_dict)
+            run.seek(0)
+            run.truncate()
+            run.write(content)
+
+
+def check_args():
+    r"""
+    Ensures a valid combination of arguments was supplied.
+    """
+    #
+    if args.num_cores % 16 > 0 and args.no_hpcee is False:
+        msg = 'num-cores must be a multiple of 16 unless using --no-hpcee flag'
+        parser.error(msg)
     #
     if args.job_name is None:
         args.job_name = os.path.basename(args.job_dir)
@@ -117,91 +165,78 @@ def init_case_dir():
     if args.outlet_p is None and args.outlet_q is None:
         parser.error(msg.format('outlet-p', 'outlet-q'))
 
-    # creating job directory
-    try:
-        os.makedirs(args.job_dir)
-    except FileExistsError:
-        print('remove this except block later on')
 
-    # copying contents of template directory to job_dir
-    os.system('cp -r {}/* {}'.format(args.template, args.job_dir))
-
-    # copying over the aperture map and updating args
-    os.system('cp {} {}'.format(args.aper_map, args.job_dir))
-    args.aper_map = os.path.join(args.job_dir, os.path.basename(args.aper_map))
-
-    #
-    update_system_files(**arg_dict)
-    update_transport_props(**arg_dict)
-    update_u_file(**arg_dict)
-    update_p_file(**arg_dict)
-
-    #
-    # updating job script
-    with open(os.path.join(args.job_dir, 'run_openfoam'), 'r+') as f:
-        content = f.read()
-        content = content.format(**arg_dict)
-        f.seek(0)
-        f.truncate()
-        f.write(content)
-
-
-def update_system_files(job_dir, end_time=None, num_cores=None, **kwargs):
+def update_system_files(job_dir, **kwargs):
     r"""
     Updates the controlDict and decomposeParDict
     """
     #
     foam_file = OpenFoamFile(os.path.join(job_dir, 'system', 'controlDict'))
-    foam_file['endTime'] = end_time
+    foam_file['endTime'] = kwargs['end_time']
     foam_file.write_foam_file(path=job_dir, overwrite=True)
     #
-    foam_file = OpenFoamFile(os.path.join(job_dir, 'system', 'decomposeParDict'))
-    foam_file['numberOfSubdomains'] = num_cores
+    foam_file = os.path.join(job_dir, 'system', 'decomposeParDict')
+    foam_file = OpenFoamFile(foam_file)
+    foam_file['numberOfSubdomains'] = kwargs['num_cores']
     foam_file.write_foam_file(path=job_dir, overwrite=True)
 
-def update_transport_props(job_dir, viscosity=None, density=None, **kwargs):
-    r"""
-    Updates the constant/transportProperties file. Updates the args object to have
-    SI values for density and viscosity.
-    """
-    global args
 
-    # loading file and converting values to SI
-    foam_file = OpenFoamFile(os.path.join(job_dir, 'constant', 'transportProperties'))
+def update_transport_props(job_dir, **kwargs):
+    r"""
+    Updates the constant/transportProperties file. Updates the args object
+    to have SI values for density and viscosity.
+    """
+    # loading file
+    foam_file = os.path.join(job_dir, 'constant', 'transportProperties')
+    foam_file = OpenFoamFile(foam_file)
+
+    # converting values to SI
+    density = kwargs['density']
     density = [convert_value(float(density[0]), density[1]), 'kg/m^3']
+    #
+    viscosity = kwargs['viscosity']
     viscosity = [convert_value(float(viscosity[0]), viscosity[1]), 'pa*s']
+
+    # ouputting SI values to global args object
     args.density = density
     args.viscosity = viscosity
     viscosity = viscosity[0]/density[0]
-    density = density[0]
 
     # setting kinematic viscosity values
     fmt = 'nu  [ 0  2 -1 0 0 0 0 ] {:0.6e};'
     foam_file['nu'] = fmt.format(viscosity)
-    foam_file['CrossPowerLawCoeffs']['nu0'] = 'nu0 [ 0 2 -1 0 0 0 0 ] {:0.6e}'.format(viscosity)
-    foam_file['CrossPowerLawCoeffs']['nuInf'] = 'nuInf [ 0 2 -1 0 0 0 0 ] {:0.6e}'.format(viscosity)
-    foam_file['BirdCarreauCoeffs']['nu0'] = 'nu0 [ 0 2 -1 0 0 0 0 ] {:0.6e}'.format(viscosity)
-    foam_file['BirdCarreauCoeffs']['nuInf'] = 'nuInf [ 0 2 -1 0 0 0 0 ] {:0.6e}'.format(viscosity)
+    #
+    fmt = 'nu0 [ 0 2 -1 0 0 0 0 ] {:0.6e}'
+    foam_file['CrossPowerLawCoeffs']['nu0'] = fmt.format(viscosity)
+    foam_file['BirdCarreauCoeffs']['nu0'] = fmt.format(viscosity)
+    #
+    fmt = 'nuInf [ 0 2 -1 0 0 0 0 ] {:0.6e}'
+    foam_file['CrossPowerLawCoeffs']['nuInf'] = fmt.format(viscosity)
+    foam_file['BirdCarreauCoeffs']['nuInf'] = fmt.format(viscosity)
 
     # setting density value
     fmt = 'rho  [ 1  -3 0 0 0 0 0 ] {:0.6e}'
-    foam_file['rho'] = fmt.format(density)
+    foam_file['rho'] = fmt.format(density[0])
     foam_file.write_foam_file(path=job_dir, overwrite=True)
 
 
-def update_u_file(job_dir, aper_map, inlet_side=None, outlet_side=None, **kwargs):
+def update_u_file(job_dir, **kwargs):
     r"""
     Updates the 0/U file
     """
-    aper_map = DataField(aper_map)
+    aper_map = DataField(kwargs['aper_map'])
     p_file = OpenFoamFile(os.path.join(job_dir, '0', 'p'))
     u_file = OpenFoamFile(os.path.join(job_dir, '0', 'U'))
+    inlet_side = kwargs['inlet_side']
+    outlet_side = kwargs['outlet_side']
+    vox = kwargs['voxel_size']
+    avg = kwargs['avg_fact']
     #
     area_dict = {
-        'left': sum(aper_map.data_map[:, 0] * kwargs['voxel_size']**2 * kwargs['avg_fact']),
-        'right': sum(aper_map.data_map[:, -1] * kwargs['voxel_size']**2 * kwargs['avg_fact']),
-        'top': sum(aper_map.data_map[-1, :] * kwargs['voxel_size']**2 * kwargs['avg_fact']),
-        'bottom': sum(aper_map.data_map[0, :] * kwargs['voxel_size']**2 * kwargs['avg_fact'])
+        'left': sum(aper_map.data_map[:, 0] * vox**2 * avg),
+        'right': sum(aper_map.data_map[:, -1] * vox**2 * avg),
+        'top': sum(aper_map.data_map[-1, :] * vox**2 * avg),
+        'bottom': sum(aper_map.data_map[0, :] * vox**2 * avg)
     }
 
     # calculating SI velocities
@@ -209,9 +244,11 @@ def update_u_file(job_dir, aper_map, inlet_side=None, outlet_side=None, **kwargs
         vel = kwargs['inlet_q'][0:3]
         vel = [convert_value(float(v), kwargs['inlet_q'][3]) for v in vel]
         vel = vel/area_dict[inlet_side]
+        vel = 'uniform ({} {} {})'.format(*vel)
         #
         u_file['boundaryField'][inlet_side]['type'] = 'fixedValue'
-        u_file['boundaryField'][inlet_side]['value'] = 'uniform ({} {} {})'.format(*vel)
+        u_file['boundaryField'][inlet_side]['value'] = vel
+        #
         p_file['boundaryField'][inlet_side]['type'] = 'zeroGradient'
         p_file['boundaryField'][inlet_side].pop('value', None)
     #
@@ -219,9 +256,10 @@ def update_u_file(job_dir, aper_map, inlet_side=None, outlet_side=None, **kwargs
         vel = kwargs['outlet_q'][0:3]
         vel = [convert_value(float(v), kwargs['outlet_q'][3]) for v in vel]
         vel = vel/area_dict[outlet_side]
+        vel = 'uniform ({} {} {})'.format(*vel)
         #
         u_file['boundaryField'][outlet_side]['type'] = 'fixedValue'
-        u_file['boundaryField'][outlet_side]['value'] = 'uniform ({} {} {})'.format(*vel)
+        u_file['boundaryField'][outlet_side]['value'] = vel
         p_file['boundaryField'][outlet_side]['type'] = 'zeroGradient'
         p_file['boundaryField'][outlet_side].pop('value', None)
     #
@@ -229,8 +267,7 @@ def update_u_file(job_dir, aper_map, inlet_side=None, outlet_side=None, **kwargs
     u_file.write_foam_file(path=job_dir, overwrite=True)
 
 
-
-def update_p_file(job_dir, aper_map, inlet_side=None, outlet_side=None, **kwargs):
+def update_p_file(job_dir, inlet_side=None, outlet_side=None, **kwargs):
     r"""
     Updates the 0/p file
     """
@@ -242,8 +279,11 @@ def update_p_file(job_dir, aper_map, inlet_side=None, outlet_side=None, **kwargs
     if kwargs['inlet_p']:
         p_val = convert_value(float(kwargs['inlet_p'][0]), kwargs['inlet_p'][1])
         p_val = p_val/kwargs['density'][0]
+        p_val = 'uniform {}'.format(p_val)
+        #
         p_file['boundaryField'][inlet_side]['type'] = 'fixedValue'
-        p_file['boundaryField'][inlet_side]['value'] = 'uniform {}'.format(p_val)
+        p_file['boundaryField'][inlet_side]['value'] = p_val
+        #
         u_file['boundaryField'][inlet_side]['type'] = 'zeroGradient'
         u_file['boundaryField'][inlet_side].pop('value', None)
 
@@ -251,8 +291,11 @@ def update_p_file(job_dir, aper_map, inlet_side=None, outlet_side=None, **kwargs
     if kwargs['outlet_p']:
         p_val = convert_value(float(kwargs['outlet_p'][0]), kwargs['outlet_p'][1])
         p_val = p_val/kwargs['density'][0]
+        p_val = 'uniform {}'.format(p_val)
+        #
         p_file['boundaryField'][outlet_side]['type'] = 'fixedValue'
-        p_file['boundaryField'][outlet_side]['value'] = 'uniform {}'.format(p_val)
+        p_file['boundaryField'][outlet_side]['value'] = p_val
+        #
         u_file['boundaryField'][outlet_side]['type'] = 'zeroGradient'
         u_file['boundaryField'][outlet_side].pop('value', None)
 
@@ -262,5 +305,5 @@ def update_p_file(job_dir, aper_map, inlet_side=None, outlet_side=None, **kwargs
 
 
 if __name__ == '__main__':
-    args = None
+    args = parser.parse_args()
     init_case_dir()
