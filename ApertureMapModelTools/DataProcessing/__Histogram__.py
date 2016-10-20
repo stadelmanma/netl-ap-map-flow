@@ -4,7 +4,7 @@ super class for variants of a simple histogram.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/29
-Last Modifed: 2016/06/13
+Last Modifed: 2016/10/20
 #
 """
 from ApertureMapModelTools.__core__ import _get_logger, calc_percentile
