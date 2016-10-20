@@ -51,7 +51,7 @@ class TestHistogram:
         hist.data_vector = sp.ravel(hist.data_map)
         hist.bins = [(0, 2), (2, 4), (4, 6), (6, 8), (8, 10.01)]
         #
-        hist.process_data()
+        hist._process_data()
         for bounds, data_bin in zip(hist.bins, hist.processed_data):
             assert len(data_bin) == 3
             assert data_bin[0] == bounds[0]
@@ -61,7 +61,7 @@ class TestHistogram:
         # testing perserve bins
         hist.data_vector = sp.array([-1, 1, 2, 3])
         hist.bins = [(0, 5), (5, 10)]
-        hist.process_data(preserve_bins=True)
+        hist._process_data(preserve_bins=True)
         assert len(hist.bins) == 2
 
     def test_output_data(self, data_field_class):
@@ -72,5 +72,5 @@ class TestHistogram:
         hist.infile = os.path.join(TEMP_DIR, 'hist-test.csv')
         hist.processed_data = [(0, 2, 10), (2, 4, 10), (4, 6, 10), (6, 8, 10), (8, 10.01, 10)]
         #
-        hist.output_data()
+        hist._output_data()
         assert hist.outfile_content

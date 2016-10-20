@@ -58,7 +58,7 @@ class Histogram(BaseProcessor):
         # slight increase to prevent last point being excluded
         self.bins.append((low, self.data_vector[-1]*1.0001))
 
-    def process_data(self, preserve_bins=False, **kwargs):
+    def _process_data(self, preserve_bins=False, **kwargs):
         r"""
         Calculates a histogram from a range of data. This uses the 1st and
         99th percentiles as limits when defining bins
@@ -95,7 +95,7 @@ class Histogram(BaseProcessor):
                 self.processed_data.append((data_bin[0], data_bin[1], num_vals))
                 num_vals = 0  # setting to 0 for all subsequent bins
 
-    def output_data(self, filename=None, delim=',', **kwargs):
+    def _output_data(self, filename=None, delim=',', **kwargs):
         r"""
         Creates the output content for histograms
         """
