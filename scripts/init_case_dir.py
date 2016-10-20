@@ -57,9 +57,9 @@ bc_group.add_argument('--inlet-side', default='bottom',
 bc_group.add_argument('--outlet-side', default='top',
                       help="(default: %(default)s)")
 bc_group.add_argument('--inlet-q', default=None, nargs=4,
-                      metavar=('    u', 'v',  'w', '[units]'))
+                      metavar=('    qx', 'qy',  'qz', '[units]'))
 bc_group.add_argument('--outlet-q', default=None, nargs=4,
-                      metavar=('    u', 'v',  'w', '[units]'))
+                      metavar=('    qx', 'qy',  'qz', '[units]'))
 bc_group.add_argument('--inlet-p', default=None, nargs=2,
                       metavar=('    value', '[units]'))
 bc_group.add_argument('--outlet-p', default=None, nargs=2,
