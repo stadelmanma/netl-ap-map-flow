@@ -3,7 +3,7 @@ Handles testing of the Profile class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
-Last Modifed: 2016/06/12
+Last Modifed: 2016/10/20
 #
 """
 import os
@@ -19,10 +19,11 @@ class TestProfile:
         r"""
         Testing class initialization
         """
-        prof = Profile(data_field_class())
-        assert len(prof.arg_processors.keys()) == 2
-        assert prof.arg_processors['locs']
-        assert prof.arg_processors['dir']
+        prof = Profile(data_field_class(), )
+        assert not prof.args
+        #
+        prof = Profile(data_field_class(), locs=[1, 2, 3])
+        assert prof.args['locs'] == [1, 2, 3]
 
     def test_process_data(self, data_field_class):
         r"""
@@ -30,20 +31,20 @@ class TestProfile:
         """
         fmt = '{:4.2f}'
         prof = Profile(data_field_class())
-        prof.args = {'dir': 'x', 'locs': [0, 50, 100]}
-        prof.process_data()
+        prof.args = {'axis': 'x', 'locs': [0, 50, 100]}
+        prof._process_data()
         assert sp.all(prof.processed_data[fmt.format(0)] == prof.data_map[0, :])
         assert sp.all(prof.processed_data[fmt.format(50)] == prof.data_map[5, :])
         assert sp.all(prof.processed_data[fmt.format(100)] == prof.data_map[9, :])
         #
-        prof.args = {'dir': 'z', 'locs': [0, 50, 100]}
-        prof.process_data()
+        prof.args = {'axis': 'z', 'locs': [0, 50, 100]}
+        prof._process_data()
         assert sp.all(prof.processed_data[fmt.format(0)] == prof.data_map[:, 0])
         assert sp.all(prof.processed_data[fmt.format(50)] == prof.data_map[:, 5])
         assert sp.all(prof.processed_data[fmt.format(100)] == prof.data_map[:, 9])
         #
-        prof.args = {'dir': 'y', 'locs': [0, 50, 100]}
-        prof.process_data()
+        prof.args = {'axis': 'y', 'locs': [0, 50, 100]}
+        prof._process_data()
         assert prof.processed_data is None
 
     def test_output_data(self, data_field_class):
@@ -53,7 +54,7 @@ class TestProfile:
         fmt = '{:4.2f}'
         prof = Profile(data_field_class())
         prof.infile = os.path.join(TEMP_DIR, 'test-profile.txt')
-        prof.args = {'dir': 'x', 'locs': [0, 50, 100]}
+        prof.args = {'axis': 'x', 'locs': [0, 50, 100]}
         #
         start_ids = [(int(l/100.0*prof.nz)+1) for l in prof.args['locs']]
         prof.loc_ids = {fmt.format(loc): sid for loc, sid in zip(prof.args['locs'], start_ids)}
@@ -63,4 +64,5 @@ class TestProfile:
         prof.processed_data[fmt.format(50)] = prof.data_map[5, :]
         prof.processed_data[fmt.format(100)] = prof.data_map[9, :]
         #
-        prof.output_data(delim='\t')
+        prof._output_data(delim='\t')
+        assert prof.outfile_content
