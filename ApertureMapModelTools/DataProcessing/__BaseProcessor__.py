@@ -32,7 +32,6 @@ class BaseProcessor(object):
         # copying field data
         field.copy_data(self)
 
-
     def setup(self, **kwargs):
         r"""
         Sets or resets arguments

@@ -31,13 +31,16 @@ class TestHistogram:
         """
         hist = Histogram(data_field_class())
         hist.args = {'num_bins': 10}
+        hist.nz = 100
+        hist.nx = 100
         hist.data_map = sp.ones((hist.nz, hist.nx), dtype=int)
         for i in range(hist.nz):
             hist.data_map[i, :] = 1 * (i+1)
+        hist.data_map[0] = -1
         hist.data_vector = sp.ravel(hist.data_map)
         #
         hist.define_bins()
-        assert len(hist.bins) == hist.args['num_bins']
+        assert len(hist.bins) == hist.args['num_bins'] + 1
 
     def test_process_data(self, data_field_class):
         r"""
