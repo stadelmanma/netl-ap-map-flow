@@ -4,10 +4,9 @@ Inherits most of it's structure from Histogram
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/07
-Last Modifed: 2016/06/13
+Last Modifed: 2016/10/20
 #
 """
-from ApertureMapModelTools.__core__ import ArgProcessor
 from .__Histogram__ import Histogram
 
 
@@ -17,36 +16,15 @@ class HistogramLogscale(Histogram):
     based on the supplied scale factor. If there are negative values then
     the first bin contains everything below 0, the next bin will contain
     everything between 0 and 1.
-    """
-    usage = 'hist_logscale [flags] scale_fact=## files=file1,file2,..'
-    help_message = __doc__+'\n    '+'-'*80
-    help_message += r"""
-    Usage:
-        apm_process_data_map.py {}
-
-    Arguments:
+    kwargs include:
         scale_fact - numeric value to generate axis scale for bins. A
             scale fact of 10 creates bins: 0-1, 1-10, 10-100, etc.
-        files      - comma separated list of filenames
-
-    Outputs:
-        A file saved as (input_file)+'-histogram_logscale'+(extension)
-
-    """.format(usage)
-    help_message += '-'*80+'\n'
-
+    """
     def __init__(self, field, **kwargs):
-        super().__init__(field, **kwargs)
+        super().__init__(field)
+        self.args.update(kwargs)
         self.output_key = 'hist_logscale'
         self.action = 'histogram_logscale'
-        self.arg_processors = {
-            'scale_fact': ArgProcessor('scale_fact',
-                                       map_func=lambda x: float(x),
-                                       min_num_vals=1,
-                                       out_type='single',
-                                       expected='##',
-                                       err_desc_str='to have a numeric value')
-        }
 
     def define_bins(self, **kwargs):
         r"""
