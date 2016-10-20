@@ -7,8 +7,9 @@ Date Written: 2016/02/29
 Last Modifed: 2016/06/13
 #
 """
-from ApertureMapModelTools.__core__ import ArgProcessor, calc_percentile
+from ApertureMapModelTools.__core__ import _get_logger, calc_percentile
 from .__BaseProcessor__ import BaseProcessor
+logger = _get_logger(__name__)
 
 
 class Histogram(BaseProcessor):
@@ -17,36 +18,14 @@ class Histogram(BaseProcessor):
     desired. The first bin contains all values below the 1st percentile
     and the last bin contains all values above the 99th percentile to keep
     axis scales from being bloated by extrema.
-    """
-    usage = 'hist [flags] num_bins=## files=file1,file2'
-    help_message = __doc__+'\n    '+'-'*80
-    help_message += r"""
-    Usage:
-        apm_process_data_map.py {}
-
-    Arguments:
+    kwargs include:
         num_bins - integer value for the total number of bins
-        files    - comma separated list of filenames
-
-    Outputs:
-        A file saved as (input_file)+'-histogram'+(extension)
-
-    """.format(usage)
-    help_message += '-'*80+'\n'
-
+    """
     def __init__(self, field, **kwargs):
-        super().__init__(field, **kwargs)
+        super().__init__(field)
+        self.args.update(kwargs)
         self.output_key = 'hist'
         self.action = 'histogram'
-        self.arg_processors = {
-            'num_bins': ArgProcessor('num_bins',
-                                     map_func=lambda x: int(x),
-                                     min_num_vals=1,
-                                     out_type='single',
-                                     expected='##',
-                                     err_desc_str='to have a numeric value')
-
-        }
         self.bins = []
 
     def define_bins(self, **kwargs):
@@ -57,13 +36,17 @@ class Histogram(BaseProcessor):
         num_bins = self.args['num_bins']
         perc = 1.00
         min_val = self.data_vector[0]
+        #
         # ensuring the upper limit is greater than data_map[0]
         while (min_val <= self.data_vector[0]):
             min_val = calc_percentile(perc, self.data_vector)
             perc += 0.050
-        print('Upper limit of first bin adjusted to percentile: '+str(perc))
+        #
+        msg = 'Upper limit of first bin adjusted to percentile: {}'
+        logger.info(msg.format(perc))
         max_val = calc_percentile(99.0, self.data_vector)
         step = (max_val - min_val)/(num_bins - 2)
+
         #
         self.bins = [(self.data_vector[0], min_val)]
         low = min_val
@@ -71,6 +54,7 @@ class Histogram(BaseProcessor):
             high = low + step
             self.bins.append((low, high))
             low = high
+
         # slight increase to prevent last point being excluded
         self.bins.append((low, self.data_vector[-1]*1.0001))
 
@@ -90,23 +74,25 @@ class Histogram(BaseProcessor):
         bins = self.bins.__iter__()
         try:
             val = data.__next__()
-            bin = bins.__next__()
+            data_bin = bins.__next__()
             b = 0
             while True:
-                if val < bin[0]:
+                if val < data_bin[0]:
                     val = data.__next__()
-                elif ((val >= bin[0]) and (val < bin[1])):
+                elif val >= data_bin[0] and val < data_bin[1]:
                     num_vals += 1
                     val = data.__next__()
                 else:
-                    self.processed_data.append((bin[0], bin[1], num_vals))
+                    data_bin = (data_bin[0], data_bin[1], num_vals)
+                    self.processed_data.append(data_bin)
                     num_vals = 0
-                    bin = bins.__next__()
+                    data_bin = bins.__next__()
                     b += 1
+
         except StopIteration:
             for b in range(b, len(self.bins)):
-                bin = self.bins[b]
-                self.processed_data.append((bin[0], bin[1], num_vals))
+                data_bin = self.bins[b]
+                self.processed_data.append((data_bin[0], data_bin[1], num_vals))
                 num_vals = 0  # setting to 0 for all subsequent bins
 
     def output_data(self, filename=None, delim=',', **kwargs):

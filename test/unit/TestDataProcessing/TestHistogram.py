@@ -3,7 +3,7 @@ Handles testing of the Histogram class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
-Last Modifed: 2016/06/12
+Last Modifed: 2016/10/20
 #
 """
 import os
@@ -17,15 +17,13 @@ class TestHistogram:
     """
     def test_initialization(self, data_field_class):
         r"""
-        Checking args so an error is generated if they change and the test does not
+        Testing class initialization
         """
-        hist = Histogram(data_field_class())
-        args = list(hist.arg_processors.keys())
-        args.sort()
+        pctle = Histogram(data_field_class(), )
+        assert not pctle.args
         #
-        assert len(args) == 1
-        for arg, test in zip(args, ['num_bins']):
-            assert arg == test
+        pctle = Histogram(data_field_class(), num_bins=10)
+        assert pctle.args['num_bins'] == 10
 
     def test_define_bins(self, data_field_class):
         r"""
@@ -75,3 +73,4 @@ class TestHistogram:
         hist.processed_data = [(0, 2, 10), (2, 4, 10), (4, 6, 10), (6, 8, 10), (8, 10.01, 10)]
         #
         hist.output_data()
+        assert hist.outfile_content
