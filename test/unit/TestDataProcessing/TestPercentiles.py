@@ -3,11 +3,10 @@ Handles testing of the Percentiles class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
-Last Modifed: 2016/06/12
+Last Modifed: 2016/10/20
 #
 """
 import os
-import scipy as sp
 from ApertureMapModelTools.DataProcessing.__Percentiles__ import Percentiles
 
 
