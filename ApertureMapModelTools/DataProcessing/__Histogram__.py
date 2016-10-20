@@ -29,7 +29,7 @@ class Histogram(BaseProcessor):
         self.action = 'histogram'
         self.bins = []
 
-    def define_bins(self, **kwargs):
+    def define_bins(self):
         r"""
         This defines the bins for a regular histogram
         """
@@ -50,44 +50,26 @@ class Histogram(BaseProcessor):
         #
         self.bins = [bin_ for bin_ in zip(low, high)]
 
-    def _process_data(self, preserve_bins=False, **kwargs):
+    def _process_data(self, preserve_bins=False):
         r"""
         Calculates a histogram from a range of data. This uses the 1st and
         99th percentiles as limits when defining bins
         """
         #
-        self.processed_data = []
         if not preserve_bins:
             self.define_bins()
         #
         # populating bins
-        num_vals = 0
-        data = self.data_vector.__iter__()
-        bins = self.bins.__iter__()
-        try:
-            val = data.__next__()
-            data_bin = bins.__next__()
-            b = 0
-            while True:
-                if val < data_bin[0]:
-                    val = data.__next__()
-                elif val >= data_bin[0] and val < data_bin[1]:
-                    num_vals += 1
-                    val = data.__next__()
-                else:
-                    data_bin = (data_bin[0], data_bin[1], num_vals)
-                    self.processed_data.append(data_bin)
-                    num_vals = 0
-                    data_bin = bins.__next__()
-                    b += 1
+        edges = sp.array(self.bins[0][0])
+        edges = sp.append(edges, sp.array(self.bins)[:, 1])
+        data, edges = sp.histogram(self.data_vector, bins=edges)
+        #
+        # storing data
+        self.processed_data = []
+        for (low, high), count in zip(self.bins, data):
+            self.processed_data.append((low, high, count))
 
-        except StopIteration:
-            for b in range(b, len(self.bins)):
-                data_bin = self.bins[b]
-                self.processed_data.append((data_bin[0], data_bin[1], num_vals))
-                num_vals = 0  # setting to 0 for all subsequent bins
-
-    def _output_data(self, filename=None, delim=',', **kwargs):
+    def _output_data(self, filename=None, delim=','):
         r"""
         Creates the output content for histograms
         """
