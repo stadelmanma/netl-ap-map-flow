@@ -7,6 +7,7 @@ Date Written: 2016/02/29
 Last Modifed: 2016/10/20
 #
 """
+import scipy as sp
 from ApertureMapModelTools.__core__ import _get_logger, calc_percentile
 from .__BaseProcessor__ import BaseProcessor
 logger = _get_logger(__name__)
@@ -34,29 +35,20 @@ class Histogram(BaseProcessor):
         """
         self.data_vector.sort()
         num_bins = self.args['num_bins']
-        perc = 1.00
-        min_val = self.data_vector[0]
+        min_val = calc_percentile(1.0, self.data_vector, False)
+        max_val = calc_percentile(99.0, self.data_vector, False)
         #
-        # ensuring the upper limit is greater than data_map[0]
-        while (min_val <= self.data_vector[0]):
-            min_val = calc_percentile(perc, self.data_vector)
-            perc += 0.050
+        # creating initial bins
+        low = list(sp.linspace(min_val, max_val, num_bins))
+        high = list(sp.linspace(min_val, max_val, num_bins))[1:]
+        high.append(self.data_vector[-1]*1.0001)
         #
-        msg = 'Upper limit of first bin adjusted to percentile: {}'
-        logger.info(msg.format(perc))
-        max_val = calc_percentile(99.0, self.data_vector)
-        step = (max_val - min_val)/(num_bins - 2)
-
+        # adding lower bin if needed
+        if self.data_vector[0] < min_val:
+            low.insert(0, self.data_vector[0])
+            high.insert(0, min_val)
         #
-        self.bins = [(self.data_vector[0], min_val)]
-        low = min_val
-        while (low < max_val):
-            high = low + step
-            self.bins.append((low, high))
-            low = high
-
-        # slight increase to prevent last point being excluded
-        self.bins.append((low, self.data_vector[-1]*1.0001))
+        self.bins = [bin_ for bin_ in zip(low, high)]
 
     def _process_data(self, preserve_bins=False, **kwargs):
         r"""

@@ -7,6 +7,7 @@ Date Written: 2016/03/07
 Last Modifed: 2016/10/20
 #
 """
+import scipy as sp
 from .__Histogram__ import Histogram
 
 
@@ -32,17 +33,18 @@ class HistogramLogscale(Histogram):
         """
         self.data_vector.sort()
         sf = self.args['scale_fact']
+        num_bins = int(sp.logn(sf, self.data_vector[-1]) + 1)
         #
-        # Adding "catch all" bins for anything less than 0 and between 0 - 1
-        self.bins = []
-        if (self.data_vector[0] < 0.0):
-            self.bins.append((self.data_vector[0], 0.0))
-        self.bins.append((0.0, 1.0))
+        # generating initial bins from 1 - sf**num_bins
+        low = list(sp.logspace(0, num_bins, num_bins + 1, base=sf))[:-1]
+        high = list(sp.logspace(0, num_bins, num_bins + 1, base=sf))[1:]
         #
-        low = 1.0
-        exp = 1.0
-        while (low < self.data_vector[-1]):
-            high = sf**exp
-            self.bins.append((low, high))
-            low = high
-            exp += 1.0
+        # Adding "catch all" bins for anything between 0 - 1 and less than 0
+        if self.data_vector[0] < 1.0:
+            low.insert(0, 0.0)
+            high.insert(0, 1.0)
+        if self.data_vector[0] < 0.0:
+            low.insert(0, self.data_vector[0])
+            high.insert(0, 0.0)
+        #
+        self.bins = [bin_ for bin_ in zip(low, high)]
