@@ -19,9 +19,11 @@ class TestPercentiles:
         r"""
         Testing class initialization
         """
-        pctle = Percentiles(data_field_class())
-        assert len(pctle.arg_processors.keys()) == 1
-        assert pctle.arg_processors['perc']
+        pctle = Percentiles(data_field_class(), )
+        assert not pctle.args
+        #
+        pctle = Percentiles(data_field_class(), perc=[1, 2, 3])
+        assert pctle.args['perc'] == [1, 2, 3]
 
     def test_process_data(self, data_field_class):
         r"""
@@ -30,7 +32,7 @@ class TestPercentiles:
         pctle = Percentiles(data_field_class())
         pctle.args = {'perc': [0, 10, 50, 90, 100]}
         #
-        pctle.process_data()
+        pctle._process_data()
         for perc in pctle.args['perc']:
             assert pctle.processed_data['{:4.2f}'.format(perc)] is not None
         #
@@ -45,4 +47,4 @@ class TestPercentiles:
         pctle.infile = os.path.join(TEMP_DIR, 'test-pctle.csv')
         pctle.processed_data = {'10.00': 10, '0.00': 0, '100.00': 99, '90.00': 90, '50.00': 50}
         #
-        pctle.output_data()
+        pctle._output_data()
