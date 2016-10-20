@@ -3,11 +3,13 @@ Evaluates channelization in flow data based on the number and widths of channels
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2016/06/13
+Last Modifed: 2016/10/20
 #
 """
 #
+from ..__core__ import _get_logger
 from .__BaseProcessor__ import BaseProcessor
+logger = _get_logger(__name__)
 
 
 class EvalChannels(BaseProcessor):
@@ -41,7 +43,7 @@ class EvalChannels(BaseProcessor):
             span = self.nz
             step = self.nx
         else:
-            print('error - invalid direction supplied, can only be x or z')
+            logger.error('invalid direction supplied, can only be x or z')
             return
         #
         self.processed_data = dict()
