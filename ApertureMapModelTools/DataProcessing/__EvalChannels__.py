@@ -7,7 +7,6 @@ Last Modifed: 2016/06/13
 #
 """
 #
-from ApertureMapModelTools.__core__ import ArgProcessor
 from .__BaseProcessor__ import BaseProcessor
 
 
@@ -16,44 +15,17 @@ class EvalChannels(BaseProcessor):
     Evaluates channelization in flow data based on the number and widths
     of channels. More work needs to be done on this class to make it
     not dependent on a specfic direction.
-    """
-    usage = 'eval_chans [flags] thresh=## dir=(x or z) files=file1,file2,..'
-    help_message = __doc__+'\n    '+'-'*80
-    help_message += r"""
-    Usage:
-        apm_process_data_map.py {}
-
-    Arguments:
+    kwargs include:
         thresh - minimum numeric value considered to be part of a flow channel
-        dir    - (x or z) specifies which axis to export along
-        files  - comma separated list of filenames
-
-    Outputs:
-        A file saved as (input_file)+'-channel_data-'+(dir)+'-axis'+(extension)
-
-    """.format(usage)
-    help_message += '-'*80+'\n'
-
+        dir - (x or z) specifies which axis to export along
+    """
     def __init__(self, field, **kwargs):
-        super().__init__(field, **kwargs)
+        super().__init__(field)
+        self.args.update(kwargs)
         self.output_key = 'eval_chan'
         self.action = 'evaluate channels'
-        self.arg_processors = {
-            'thresh': ArgProcessor('thresh',
-                                   map_func=lambda x: float(x),
-                                   min_num_vals=1,
-                                   out_type='single',
-                                   expected='##',
-                                   err_desc_str='to be a numeric value'),
-            'dir': ArgProcessor('dir',
-                                map_func=lambda x: x,
-                                min_num_vals=1,
-                                out_type='single',
-                                expected='str',
-                                err_desc_str='value is either x or z')
-        }
 
-    def process_data(self, **kwargs):
+    def _process_data(self, **kwargs):
         r"""
         Examines the dataset along one axis to determine the number and
         width of channels.
@@ -115,7 +87,7 @@ class EvalChannels(BaseProcessor):
         self.processed_data['chan_widths_per_row'] = channel_widths
         self.processed_data['avg_chan_width_per_row'] = avg_channel_width
 
-    def output_data(self, filename=None, delim=',', **kwargs):
+    def _output_data(self, filename=None, delim=',', **kwargs):
         r"""
         creates the output content for channelization
         """

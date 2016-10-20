@@ -48,3 +48,4 @@ class TestPercentiles:
         pctle.processed_data = {'10.00': 10, '0.00': 0, '100.00': 99, '90.00': 90, '50.00': 50}
         #
         pctle._output_data()
+        assert pctle.outfile_content

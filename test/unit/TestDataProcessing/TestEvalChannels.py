@@ -16,16 +16,11 @@ class TestEvalChannels:
     Testing each method of the EvalChannels class
     """
     def test_initialization(self, data_field_class):
-        r"""
-        Checking args so an error is generated if they change and the test does not
-        """
         eval_chans = EvalChannels(data_field_class())
-        args = list(eval_chans.arg_processors.keys())
-        args.sort()
+        assert not eval_chans.args
         #
-        assert len(args) == 2
-        for arg, test in zip(args, ['dir', 'thresh']):
-            assert arg == test
+        eval_chans = EvalChannels(data_field_class(), thresh='x')
+        assert eval_chans.args['thresh'] == 'x'
 
     def test_process_data(self, data_field_class):
         r"""
@@ -42,7 +37,7 @@ class TestEvalChannels:
             'dir': 'x',
             'thresh': 100
         }
-        eval_chans.process_data()
+        eval_chans._process_data()
         #
         # creating vertical channels
         eval_chans = EvalChannels(data_field_class())
@@ -54,13 +49,13 @@ class TestEvalChannels:
             'dir': 'z',
             'thresh': 100
         }
-        eval_chans.process_data()
+        eval_chans._process_data()
         #
         eval_chans.args = {
             'dir': 'y',
             'thresh': 100
         }
-        eval_chans.process_data()
+        eval_chans._process_data()
 
     def test_output_data(self, data_field_class):
         #
@@ -82,4 +77,5 @@ class TestEvalChannels:
         eval_chans.processed_data['chan_widths_per_row'] = [[2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3], [2, 3]]
         eval_chans.processed_data['avg_chan_width_per_row'] = [2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5, 2.5]
         #
-        eval_chans.output_data()
+        eval_chans._output_data()
+        assert eval_chans.outfile_content
