@@ -43,6 +43,7 @@ class HistogramRange(Histogram):
         min_val = calc_percentile(min_val, self.data_vector, False)
         max_val = calc_percentile(max_val, self.data_vector, False)
         #
-        low = list(sp.linspace(min_val, max_val, num_bins + 1))[:-1]
-        high = list(sp.linspace(min_val, max_val, num_bins + 1))[1:]
+        low = list(sp.linspace(min_val, max_val, num_bins))[:-1]
+        high = list(sp.linspace(min_val, max_val, num_bins))[1:]
+        #
         self.bins = [bin_ for bin_ in zip(low, high)]

@@ -3,7 +3,7 @@ Handles testing of the HistogramRange class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
-Last Modifed: 2016/06/12
+Last Modifed: 2016/10/20
 #
 """
 import scipy as sp
@@ -16,15 +16,13 @@ class TestHistogramLogscale:
     """
     def test_initialization(self, data_field_class):
         r"""
-        Checking args so an error is generated if they change and the test does not
+        Testing class initialization
         """
-        hist = HistogramRange(data_field_class())
-        args = list(hist.arg_processors.keys())
-        args.sort()
+        hist = HistogramRange(data_field_class(), )
+        assert not hist.args
         #
-        assert len(args) == 2
-        for arg, test in zip(args, ['num_bins', 'range']):
-            assert arg == test
+        hist = HistogramRange(data_field_class(), range=[5, 95])
+        assert hist.args['range'] == [5, 95]
 
     def test_define_bins(self, data_field_class):
         r"""
