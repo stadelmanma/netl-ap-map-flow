@@ -267,11 +267,11 @@ In addition to updating arguments you can also apply a set of filename formats t
 .. code-block:: python
 
     # setting the formats dict up
-    # Format replacements are recognized by %KEYWORD% in the filename
+    # Format replacements are recognized by {KEYWORD} in the filename
     name_formats = {
-        'SUMMARY-FILE': '%APMAP%-SUMMARY-VISC-%FLUID-VISCOSITY%CP.TXT',
-        'STAT-FILE': '%APMAP%-STAT-VISC-%FLUID-VISCOSITY%CP.CSV',
-        'VTK-FILE': '%APMAP%-VTK-VISC-%FLUID-VISCOSITY%CP.vtk'
+        'SUMMARY-FILE': '{APMAP}-SUMMARY-VISC-{FLUID-VISCOSITY}CP.TXT',
+        'STAT-FILE': '{APMAP}-STAT-VISC-{FLUID-VISCOSITY}CP.CSV',
+        'VTK-FILE': '{APMAP}-VTK-VISC-{FLUID-VISCOSITY}CP.vtk'
     }
 
     # recycling our existing input file object
