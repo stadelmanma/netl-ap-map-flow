@@ -54,6 +54,10 @@ class TestBaseProcessor:
         #
         #
         with pytest.raises(NotImplementedError):
+            base_proc._add_subparser(None)
+        #
+        #
+        with pytest.raises(NotImplementedError):
             base_proc.process()
             base_proc.args = True
             base_proc.process()

@@ -32,6 +32,15 @@ class BaseProcessor(object):
         # copying field data
         field.copy_data(self)
 
+    def _add_subparser(self, arg_parser):
+        r"""
+        Adds a specific action based sub-parser to the supplied arg_parser
+        instance.
+        """
+        msg = 'This method must be implemented by a specific '
+        msg += 'data processing class'
+        raise NotImplementedError(msg)
+
     def setup(self, **kwargs):
         r"""
         Sets or resets arguments
