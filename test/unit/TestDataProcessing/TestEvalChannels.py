@@ -8,6 +8,7 @@ Last Modifed: 2016/10/25
 """
 import argparse
 import os
+import pytest
 import scipy as sp
 from ApertureMapModelTools.DataProcessing.__EvalChannels__ import EvalChannels
 
@@ -40,6 +41,10 @@ class TestEvalChannels:
         #
         assert args.axis == 'z'
         assert args.thresh == 5.0
+        #
+        cargs = 'chans y 5'.split()
+        with pytest.raises(SystemExit):
+            args = parser.parse_args(cargs)
 
     def test_process_data(self, data_field_class):
         r"""

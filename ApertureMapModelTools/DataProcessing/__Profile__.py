@@ -3,7 +3,7 @@ Outputs a set of data profiles along either the X or Z axis
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/07
-Last Modifed: 2016/10/20
+Last Modifed: 2016/10/25
 #
 """
 from collections import OrderedDict
@@ -25,6 +25,23 @@ class Profile(BaseProcessor):
         self.args.update(kwargs)
         self.output_key = 'profile'
         self.action = 'profile'
+
+    @classmethod
+    def _add_subparser(cls, subparsers, parent):
+        r"""
+        Adds a specific action based sub-parser to the supplied arg_parser
+        instance.
+        """
+        parser = subparsers.add_parser(cls.__name__,
+                                     aliases=['prof'],
+                                     parents=[parent],
+                                     help='''exports profiles along an axis
+                                     at specified locations''')
+        #
+        parser.add_argument('axis', choices=['x', 'z'],
+                          help='x or z for the corresponding axis')
+        parser.add_argument('locations', nargs='+', type=float,
+                            help='location as percent distance from axis')
 
     def _process_data(self, **kwargs):
         r"""

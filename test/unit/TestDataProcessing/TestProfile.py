@@ -3,10 +3,12 @@ Handles testing of the Profile class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
-Last Modifed: 2016/10/20
+Last Modifed: 2016/10/25
 #
 """
+import argparse
 import os
+import pytest
 import scipy as sp
 from ApertureMapModelTools.DataProcessing.__Profile__ import Profile
 
@@ -24,6 +26,28 @@ class TestProfile:
         #
         prof = Profile(data_field_class(), locs=[1, 2, 3])
         assert prof.args['locs'] == [1, 2, 3]
+
+    def test_add_sub_parser(self):
+        # setting up required parsers
+        parser = argparse.ArgumentParser()
+        parent = argparse.ArgumentParser(add_help=False)
+        subparsers = parser.add_subparsers()
+
+        # adding percentiles subparser
+        Profile._add_subparser(subparsers, parent)
+
+        # testing parser
+        cargs = 'Profile x 10'.split()
+        args = parser.parse_args(cargs)
+        cargs = 'prof z 5 20 50'.split()
+        args = parser.parse_args(cargs)
+        #
+        assert args.axis == 'z'
+        assert args.locations == [5, 20, 50]
+        #
+        cargs = 'prof y 5'.split()
+        with pytest.raises(SystemExit):
+            args = parser.parse_args(cargs)
 
     def test_process_data(self, data_field_class):
         r"""

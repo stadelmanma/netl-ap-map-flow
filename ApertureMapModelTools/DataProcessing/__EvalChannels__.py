@@ -38,7 +38,7 @@ class EvalChannels(BaseProcessor):
                                      parents=[parent],
                                      help='evaluates channelization of flow data')
         #
-        parser.add_argument('axis',
+        parser.add_argument('axis', choices=['x', 'z'],
                           help='x or z for the corresponding axis')
         parser.add_argument('thresh', type=float,
                           help='minimum value to consider as part of a channel')
