@@ -27,6 +27,20 @@ class HistogramLogscale(Histogram):
         self.output_key = 'hist_logscale'
         self.action = 'histogram_logscale'
 
+    @classmethod
+    def _add_subparser(cls, subparsers, parent):
+        r"""
+        Adds a specific action based sub-parser to the supplied arg_parser
+        instance.
+        """
+        parser = subparsers.add_parser(cls.__name__,
+                                     aliases=['histlog'],
+                                     parents=[parent],
+                                     help='calculates logscale histogram of data')
+        #
+        parser.add_argument('scale_fact', type=int, nargs='?', default=10,
+                            help='base to generate logscale from')
+
     def define_bins(self, **kwargs):
         r"""
         This defines the bins for a logscaled histogram
