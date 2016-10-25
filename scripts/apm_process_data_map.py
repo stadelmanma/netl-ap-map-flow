@@ -44,7 +44,7 @@ subparsers = parser.add_subparsers(dest='processor',
                                    title='Data Processing Commands',
                                    metavar='{command}')
 
-classes = [k for k in DataProcessing.__dict__.keys() if not re.match('^__',k)]
+classes = [k for k in DataProcessing.__dict__.keys() if not re.match('^__', k)]
 for cls in classes:
     DataProcessing.__dict__[cls]._add_subparser(subparsers, subparse_parent)
 
@@ -62,7 +62,6 @@ def apm_process_data_map():
     if args.verbose:
         set_main_logger_level('debug')
     #
-    print(args)
     process_files(args)
 
 
