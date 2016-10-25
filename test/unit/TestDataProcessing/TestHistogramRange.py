@@ -3,16 +3,17 @@ Handles testing of the HistogramRange class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
-Last Modifed: 2016/10/20
+Last Modifed: 2016/10/25
 #
 """
+import argparse
 import scipy as sp
 from ApertureMapModelTools.DataProcessing.__HistogramRange__ import HistogramRange
 
 
-class TestHistogramLogscale:
+class TestHistogramRange:
     r"""
-    Testing each method of the HistogramLogscale class
+    Testing each method of the HistogramRange class
     """
     def test_initialization(self, data_field_class):
         r"""
@@ -23,6 +24,34 @@ class TestHistogramLogscale:
         #
         hist = HistogramRange(data_field_class(), range=[5, 95])
         assert hist.args['range'] == [5, 95]
+
+    def test_add_sub_parser(self):
+        # setting up required parsers
+        parser = argparse.ArgumentParser()
+        parent = argparse.ArgumentParser(add_help=False)
+        subparsers = parser.add_subparsers()
+
+        # adding percentiles subparser
+        HistogramRange._add_subparser(subparsers, parent)
+
+        # testing parser
+        cargs = 'HistogramRange 10'.split()
+        args = parser.parse_args(cargs)
+        #
+        assert args.num_bins == 10
+        assert args.range == [1.0, 99.0]
+        #
+        cargs = 'histrng 13 -r 0 100'.split()
+        args = parser.parse_args(cargs)
+        #
+        assert args.num_bins == 13
+        assert args.range == [0.0, 100.0]
+        #
+        cargs = 'histrng 7 --range 5 95'.split()
+        args = parser.parse_args(cargs)
+        #
+        assert args.num_bins == 7
+        assert args.range == [5.0, 95.0]
 
     def test_define_bins(self, data_field_class):
         r"""

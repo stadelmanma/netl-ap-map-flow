@@ -4,7 +4,7 @@ Inherits most of it's structure from Histogram
 #
 Written By: Matthew Stadelman
 Date Written: 2016/03/07
-Last Modifed: 2016/10/20
+Last Modifed: 2016/10/25
 #
 """
 import scipy as sp
@@ -30,6 +30,22 @@ class HistogramRange(Histogram):
         self.args.update(kwargs)
         self.output_key = 'hist'
         self.action = 'histogram_range'
+
+    @classmethod
+    def _add_subparser(cls, subparsers, parent):
+        r"""
+        Adds a specific action based sub-parser to the supplied arg_parser
+        instance.
+        """
+        parser = subparsers.add_parser(cls.__name__,
+                                     aliases=['histrng'],
+                                     parents=[parent],
+                                     help='calculates histogram of a data range')
+        #
+        parser.add_argument('num_bins', type=int,
+                            help='number of bins to utilze in histogram')
+        parser.add_argument('-r', '--range', nargs=2, type=float, default=[1.0, 99.0],
+                            help='percentile range to use %(deafault)s')
 
     def define_bins(self, **kwargs):
         r"""
