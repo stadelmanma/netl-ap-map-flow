@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
+r""" Loads and processes data maps using the requested processor class """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
 import re
-import sys
 from ApertureMapModelTools import _get_logger, set_main_logger_level, DataField
 from ApertureMapModelTools import DataProcessing
 #
@@ -82,10 +82,9 @@ def process_files(args):
         # writing data if -W was not used
         if not args.no_write:
             processor.gen_output(delim=',')
-            if (os.path.exists(processor.outfile_name) and not args.force):
+            if os.path.exists(processor.outfile_name) and not args.force:
                 msg = '{} already exists, use "-f" option to overwrite'
                 raise FileExistsError(msg.format(processor.outfile_name))
-                continue
             processor.write_data()
 
 if __name__ == '__main__':
