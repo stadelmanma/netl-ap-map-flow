@@ -14,7 +14,7 @@ The Local Cubic Law (LCL) flow model by default is named :code:`APM-MODEL.EXE`, 
 The Input Parameters File
 =========================
 
-A template of the input parameters file can be found in `here <APM-MODEL-INPUT-FILE-TEMPLATE.INP>`_. An additional sample of the input file is located in `test/fixtures <../test/fixtures/TEST_INIT.INP>`_. Editing the input file in `test/fixtures` is not recommended because it will interfere with testing of the model and module. The input file is parsed by a special routine in the model that treats semicolons :code:`;` as comments and one or more spaces as delimiters. A value enclosed in double quotations will have any internal spaces ignored. ApertureMapModelTools also reads the input files when needed and for consistency it is recommended you append a colon :code:`:` onto the end of keywords. Nearly all of the input parameters have default values and they are defined in `APM_SUBROUTINES.F <../source/APM_SUBROUTINES.F>`_ in the first subroutine :code:`INITIALIZE_RUN`
+A template of the input parameters file can be found in `here <apm-model-inputs-template.inp>`_. The input file is parsed by a special routine in the model that treats all text after a semicolon, :code:`;`, as comments and one or more spaces as delimiters. A value enclosed in double quotations will have any internal spaces ignored. ApertureMapModelTools also reads the input files when needed and for consistency it is recommended you append a colon :code:`:` onto the end of keywords. Nearly all of the input parameters have default values and they are defined in `APM_SUBROUTINES.F <../source/APM_SUBROUTINES.F>`_ in the first subroutine :code:`INITIALIZE_RUN`
 
 **Important Notes**
  * There must be at least one space separating keyword and value.
