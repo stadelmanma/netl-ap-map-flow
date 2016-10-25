@@ -32,7 +32,8 @@ class BaseProcessor(object):
         # copying field data
         field.copy_data(self)
 
-    def _add_subparser(self, arg_parser):
+    @classmethod
+    def _add_subparser(cls, subparser):
         r"""
         Adds a specific action based sub-parser to the supplied arg_parser
         instance.
