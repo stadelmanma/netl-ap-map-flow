@@ -3,9 +3,10 @@ Handles testing of the HistogramLogscale class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
-Last Modifed: 2016/06/12
+Last Modifed: 2016/10/20
 #
 """
+import argparse
 import scipy as sp
 from ApertureMapModelTools.DataProcessing.__HistogramLogscale__ import HistogramLogscale
 
@@ -16,15 +17,31 @@ class TestHistogramLogscale:
     """
     def test_initialization(self, data_field_class):
         r"""
-        Checking args so an error is generated if they change and the test does not
+        Testing class initialization
         """
-        hist = HistogramLogscale(data_field_class())
-        args = list(hist.arg_processors.keys())
-        args.sort()
+        hist = HistogramLogscale(data_field_class(), )
+        assert not hist.args
         #
-        assert len(args) == 1
-        for arg, test in zip(args, ['scale_fact']):
-            assert arg == test
+        hist = HistogramLogscale(data_field_class(), scale_fact=5)
+        assert hist.args['scale_fact'] == 5
+
+    def test_add_sub_parser(self):
+        # setting up required parsers
+        parser = argparse.ArgumentParser()
+        parent = argparse.ArgumentParser(add_help=False)
+        subparsers = parser.add_subparsers()
+
+        # adding percentiles subparser
+        HistogramLogscale._add_subparser(subparsers, parent)
+
+        # testing parser
+        cargs = 'HistogramLogscale'.split()
+        args = parser.parse_args(cargs)
+        assert args.scale_fact == 10.0
+        #
+        cargs = 'histlog 5'.split()
+        args = parser.parse_args(cargs)
+        assert args.scale_fact == 5.0
 
     def test_define_bins(self, data_field_class):
         r"""

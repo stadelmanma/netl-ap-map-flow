@@ -3,12 +3,13 @@ Evaluates channelization in flow data based on the number and widths of channels
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2016/06/13
+Last Modifed: 2016/10/25
 #
 """
 #
-from ApertureMapModelTools.__core__ import ArgProcessor
+from ..__core__ import _get_logger
 from .__BaseProcessor__ import BaseProcessor
+logger = _get_logger(__name__)
 
 
 class EvalChannels(BaseProcessor):
@@ -16,50 +17,40 @@ class EvalChannels(BaseProcessor):
     Evaluates channelization in flow data based on the number and widths
     of channels. More work needs to be done on this class to make it
     not dependent on a specfic direction.
-    """
-    usage = 'eval_chans [flags] thresh=## dir=(x or z) files=file1,file2,..'
-    help_message = __doc__+'\n    '+'-'*80
-    help_message += r"""
-    Usage:
-        apm_process_data_map.py {}
-
-    Arguments:
+    kwargs include:
         thresh - minimum numeric value considered to be part of a flow channel
-        dir    - (x or z) specifies which axis to export along
-        files  - comma separated list of filenames
-
-    Outputs:
-        A file saved as (input_file)+'-channel_data-'+(dir)+'-axis'+(extension)
-
-    """.format(usage)
-    help_message += '-'*80+'\n'
-
+        axis - (x or z) specifies which axis to export along
+    """
     def __init__(self, field, **kwargs):
-        super().__init__(field, **kwargs)
+        super().__init__(field)
+        self.args.update(kwargs)
         self.output_key = 'eval_chan'
         self.action = 'evaluate channels'
-        self.arg_processors = {
-            'thresh': ArgProcessor('thresh',
-                                   map_func=lambda x: float(x),
-                                   min_num_vals=1,
-                                   out_type='single',
-                                   expected='##',
-                                   err_desc_str='to be a numeric value'),
-            'dir': ArgProcessor('dir',
-                                map_func=lambda x: x,
-                                min_num_vals=1,
-                                out_type='single',
-                                expected='str',
-                                err_desc_str='value is either x or z')
-        }
 
-    def process_data(self, **kwargs):
+    @classmethod
+    def _add_subparser(cls, subparsers, parent):
+        r"""
+        Adds a specific action based sub-parser to the supplied arg_parser
+        instance.
+        """
+        parser = subparsers.add_parser(cls.__name__,
+                                       aliases=['chans'],
+                                       parents=[parent],
+                                       help=cls.__doc__)
+        #
+        parser.add_argument('axis', choices=['x', 'z'],
+                            help='x or z for the corresponding axis')
+        parser.add_argument('thresh', type=float,
+                            help='minimum value to consider as part of a channel')
+        parser.set_defaults(func=cls)
+
+    def _process_data(self, **kwargs):
         r"""
         Examines the dataset along one axis to determine the number and
         width of channels.
         """
         #
-        direction = self.args['dir']
+        direction = self.args['axis']
         min_val = self.args['thresh']
         #
         if (direction.lower() == 'x'):
@@ -69,7 +60,7 @@ class EvalChannels(BaseProcessor):
             span = self.nz
             step = self.nx
         else:
-            print('error - invalid direction supplied, can only be x or z')
+            logger.error('invalid direction supplied, can only be x or z')
             return
         #
         self.processed_data = dict()
@@ -115,7 +106,7 @@ class EvalChannels(BaseProcessor):
         self.processed_data['chan_widths_per_row'] = channel_widths
         self.processed_data['avg_chan_width_per_row'] = avg_channel_width
 
-    def output_data(self, filename=None, delim=',', **kwargs):
+    def _output_data(self, filename=None, delim=',', **kwargs):
         r"""
         creates the output content for channelization
         """
@@ -127,13 +118,13 @@ class EvalChannels(BaseProcessor):
         ldot = filename.rfind('.')
         #
         # naming ouput file
-        dir_ = self.args['dir'].upper()
+        dir_ = self.args['axis'].upper()
         name = filename[:ldot]+'-channel_data-'+dir_+'-axis'+filename[ldot:]
         self.outfile_name = name
         #
         # outputting data
         content = 'Channelization data from file: '+self.infile+'\n'
-        content += (self.args['dir']+'-index'+delim+'Number of Channels' +
+        content += (self.args['axis']+'-index'+delim+'Number of Channels' +
                     delim+'Average Width'+delim+'Channel Widths\n')
         #
         num_channels = list(self.processed_data['chans_per_row'])

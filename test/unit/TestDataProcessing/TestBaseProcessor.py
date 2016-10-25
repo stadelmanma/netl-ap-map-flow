@@ -3,11 +3,12 @@ Handles testing of the BaseProcessor class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
-Last Modifed: 2016/06/12
+Last Modifed: 2016/10/25
 #
 """
 import os
 import pytest
+import scipy as sp
 from ApertureMapModelTools.DataProcessing.__BaseProcessor__ import BaseProcessor
 
 
@@ -19,73 +20,30 @@ class TestBaseProcessor:
         r"""
         Hitting the init method specifically
         """
-        base_proc = BaseProcessor(data_field_class())
+        field = data_field_class()
+        base_proc = BaseProcessor(field)
         #
         # checking native attributes
         assert base_proc.action == 'base'
+        assert base_proc.infile == field.infile
+        assert (base_proc.data_vector == field.data_vector).all()
+        assert (base_proc.data_map == field.data_map).all()
         assert not base_proc.args
-        assert not base_proc.arg_processors
         assert not base_proc.outfile_name
         assert not base_proc.outfile_content
         assert not base_proc.output_key
         assert not base_proc.processed_data
-        assert not base_proc.validated
 
-    def test_set_args(self, data_field_class):
+    def test_setup(self, data_field_class):
         r"""
         Hitting set_args
         """
         base_proc = BaseProcessor(data_field_class())
         #
-        base_proc.set_args({})
-        base_proc.set_args({}, skip_validation=True)
-
-    def test_validate_args(self, data_field_class, arg_processor_class):
-        r"""
-        Hitting validate args testing valid and invalid inputs. This
-        also will cover the input_error class
-        """
-        base_proc = BaseProcessor(data_field_class())
-        #
-        # testing valid args
-        base_proc.args = {
-            'test-single': 'pass',
-            'test-list': 'pass1,pass2'
-        }
-        base_proc.arg_processors = {
-            'test-single': arg_processor_class('test-single'),
-            'test-list': arg_processor_class('test-list', min_num_vals=2, out_type='list')
-        }
-        base_proc.validated = base_proc.validate_args()
-        assert base_proc.validated
-        #
-        # checking if repeated validation is skipped
-        base_proc.validated = base_proc.validate_args()
-        assert base_proc.validated is None
-        #
-        # checking bad arguments
-        base_proc.args = {
-            'bad-single': '',
-            'bad-list': 'should-be-list',
-            'bad-value': 'should-be-number'
-        }
-        base_proc.arg_processors = {
-            'bad-single': arg_processor_class('bad-single'),
-            'bad-list': arg_processor_class('bad-list', min_num_vals=2, out_type='list'),
-            'bad-value': arg_processor_class('bad-value', map_func=lambda x: int(x)),
-            'missing-arg': arg_processor_class('missing-arg')
-        }
-        base_proc.validated = base_proc.validate_args()
-        assert not base_proc.validated
-        #
-        base_proc.args = {
-            'unhandled-err': '0'
-        }
-        base_proc.arg_processors = {
-            'unhandled-err': arg_processor_class('bad-value', map_func=lambda x: 1/int(x))
-        }
-        with pytest.raises(ZeroDivisionError):
-            base_proc.validated = base_proc.validate_args()
+        base_proc.setup(param1='value1', param2=2, param3=[1, 2, 3])
+        assert base_proc.args['param1'] == 'value1'
+        assert base_proc.args['param2'] == 2
+        assert base_proc.args['param3'] == [1, 2, 3]
 
     def test_notimplemented_methods(self, data_field_class):
         r"""
@@ -96,8 +54,12 @@ class TestBaseProcessor:
         #
         #
         with pytest.raises(NotImplementedError):
+            base_proc._add_subparser(None)
+        #
+        #
+        with pytest.raises(NotImplementedError):
             base_proc.process()
-            base_proc.validated = True
+            base_proc.args = True
             base_proc.process()
         #
         #

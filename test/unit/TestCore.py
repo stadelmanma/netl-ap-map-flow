@@ -82,13 +82,6 @@ class TestCore:
         stat_file = amt.StatFile(fname)
         assert stat_file.map_file
 
-    def test_arg_processor(self):
-        r"""
-        Builds an ArgProcessor object
-        """
-        arg = amt_core.ArgProcessor(True)
-        assert arg.field
-
     def test_toplevel_logger(self):
         r"""
         Tests te configuation of the top level logger

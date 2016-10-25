@@ -4,11 +4,13 @@ super class for variants of a simple histogram.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/29
-Last Modifed: 2016/06/13
+Last Modifed: 2016/10/25
 #
 """
-from ApertureMapModelTools.__core__ import ArgProcessor, calc_percentile
+import scipy as sp
+from ApertureMapModelTools.__core__ import _get_logger, calc_percentile
 from .__BaseProcessor__ import BaseProcessor
+logger = _get_logger(__name__)
 
 
 class Histogram(BaseProcessor):
@@ -17,99 +19,72 @@ class Histogram(BaseProcessor):
     desired. The first bin contains all values below the 1st percentile
     and the last bin contains all values above the 99th percentile to keep
     axis scales from being bloated by extrema.
-    """
-    usage = 'hist [flags] num_bins=## files=file1,file2'
-    help_message = __doc__+'\n    '+'-'*80
-    help_message += r"""
-    Usage:
-        apm_process_data_map.py {}
-
-    Arguments:
+    kwargs include:
         num_bins - integer value for the total number of bins
-        files    - comma separated list of filenames
-
-    Outputs:
-        A file saved as (input_file)+'-histogram'+(extension)
-
-    """.format(usage)
-    help_message += '-'*80+'\n'
-
+    """
     def __init__(self, field, **kwargs):
-        super().__init__(field, **kwargs)
+        super().__init__(field)
+        self.args.update(kwargs)
         self.output_key = 'hist'
         self.action = 'histogram'
-        self.arg_processors = {
-            'num_bins': ArgProcessor('num_bins',
-                                     map_func=lambda x: int(x),
-                                     min_num_vals=1,
-                                     out_type='single',
-                                     expected='##',
-                                     err_desc_str='to have a numeric value')
-
-        }
         self.bins = []
 
-    def define_bins(self, **kwargs):
+    @classmethod
+    def _add_subparser(cls, subparsers, parent):
+        r"""
+        Adds a specific action based sub-parser to the supplied arg_parser
+        instance.
+        """
+        parser = subparsers.add_parser(cls.__name__,
+                                       aliases=['hist'],
+                                       parents=[parent],
+                                       help=cls.__doc__)
+        #
+        parser.add_argument('num_bins', type=int,
+                            help='number of bins to utilze in histogram')
+        parser.set_defaults(func=cls)
+
+    def define_bins(self):
         r"""
         This defines the bins for a regular histogram
         """
         self.data_vector.sort()
         num_bins = self.args['num_bins']
-        perc = 1.00
-        min_val = self.data_vector[0]
-        # ensuring the upper limit is greater than data_map[0]
-        while (min_val <= self.data_vector[0]):
-            min_val = calc_percentile(perc, self.data_vector)
-            perc += 0.050
-        print('Upper limit of first bin adjusted to percentile: '+str(perc))
-        max_val = calc_percentile(99.0, self.data_vector)
-        step = (max_val - min_val)/(num_bins - 2)
+        min_val = calc_percentile(1.0, self.data_vector, False)
+        max_val = calc_percentile(99.0, self.data_vector, False)
         #
-        self.bins = [(self.data_vector[0], min_val)]
-        low = min_val
-        while (low < max_val):
-            high = low + step
-            self.bins.append((low, high))
-            low = high
-        # slight increase to prevent last point being excluded
-        self.bins.append((low, self.data_vector[-1]*1.0001))
+        # creating initial bins
+        low = list(sp.linspace(min_val, max_val, num_bins))
+        high = list(sp.linspace(min_val, max_val, num_bins))[1:]
+        high.append(self.data_vector[-1]*1.0001)
+        #
+        # adding lower bin if needed
+        if self.data_vector[0] < min_val:
+            low.insert(0, self.data_vector[0])
+            high.insert(0, min_val)
+        #
+        self.bins = [bin_ for bin_ in zip(low, high)]
 
-    def process_data(self, preserve_bins=False, **kwargs):
+    def _process_data(self, preserve_bins=False):
         r"""
         Calculates a histogram from a range of data. This uses the 1st and
         99th percentiles as limits when defining bins
         """
         #
-        self.processed_data = []
         if not preserve_bins:
             self.define_bins()
         #
         # populating bins
-        num_vals = 0
-        data = self.data_vector.__iter__()
-        bins = self.bins.__iter__()
-        try:
-            val = data.__next__()
-            bin = bins.__next__()
-            b = 0
-            while True:
-                if val < bin[0]:
-                    val = data.__next__()
-                elif ((val >= bin[0]) and (val < bin[1])):
-                    num_vals += 1
-                    val = data.__next__()
-                else:
-                    self.processed_data.append((bin[0], bin[1], num_vals))
-                    num_vals = 0
-                    bin = bins.__next__()
-                    b += 1
-        except StopIteration:
-            for b in range(b, len(self.bins)):
-                bin = self.bins[b]
-                self.processed_data.append((bin[0], bin[1], num_vals))
-                num_vals = 0  # setting to 0 for all subsequent bins
+        edges = sp.array(self.bins[0][0])
+        edges = sp.append(edges, sp.array(self.bins)[:, 1])
+        data, edges = sp.histogram(self.data_vector, bins=edges)
+        #
+        # storing data
+        self.processed_data = []
+        for (low, high), count in zip(self.bins, data):
+            self.processed_data.append((low, high, count))
 
-    def output_data(self, filename=None, delim=',', **kwargs):
+    def _output_data(self, filename=None, delim=','):
         r"""
         Creates the output content for histograms
         """

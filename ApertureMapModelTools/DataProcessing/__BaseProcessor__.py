@@ -1,112 +1,65 @@
 """
-This is a basic template that is used to add additional processors to
+This is a template that is used to add additional processors to
 the package.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2016/06/13
+Last Modifed: 2016/10/25
 #
 """
+from ..__core__ import _get_logger
+logger = _get_logger(__name__)
 
 
-class BaseProcessor:
+class BaseProcessor(object):
     r"""
     Only required parameter is a data field object, initializes properties
     defined by subclassses.
     """
-    help_message = 'Help message needs to be implemented by subclasses.'
 
-    def __init__(self, field, **kwargs):
-        field.copy_data(self)
+    def __init__(self, field):
+        # initializing properties
         self.action = 'base'
         self.args = {}
-        self.arg_processors = {}
-        self.outfile_name = ''
-        self.outfile_content = False
-        self.output_key = ''
-        self.processed_data = False
-        self.validated = False
+        self.infile = field.infile
+        self.data_vector = None
+        self.data_map = None
+        self.outfile_name = None
+        self.outfile_content = None
+        self.output_key = None
+        self.processed_data = None
 
-    def set_args(self, arg_dict, skip_validation=False):
-        #
-        self.args = dict(arg_dict)
-        self.validated = skip_validation
-        #
-        if not self.validated:
-            self.validated = self.validate_args()
+        # copying field data
+        field.copy_data(self)
 
-    def validate_args(self):
+    @classmethod
+    def _add_subparser(cls, subparser):
         r"""
-        This steps over the arg processor keys to verify a valid set of
-        arguments have been passed to the class.
+        Adds a specific action based sub-parser to the supplied arg_parser
+        instance.
         """
-        # preventing a rerun since validation would fail
-        if (self.validated):
-            return
-        #
-        valid = True
-        for arg in self.arg_processors.keys():
-            processor = self.arg_processors[arg]
-            try:
-                if (processor.out_type == 'single'):
-                    input_val = processor.map_func(self.args[arg])
-                    if (input_val == ''):
-                        raise IndexError
-                    self.args[arg] = input_val
-                else:
-                    input_list = list(filter(None, self.args[arg].split(',')))
-                    input_list = list(map(processor.map_func, input_list))
-                    #
-                    if (len(input_list) < processor.min_num_vals):
-                        raise IndexError
-                    self.args[arg] = input_list
-            #
-            except Exception as err:
-                recv = ('' if isinstance(err, KeyError) else self.args[arg])
-                self.input_error(err, received=recv, **processor.__dict__)
-                valid = False
-        #
-        return valid
+        msg = 'This method must be implemented by a specific '
+        msg += 'data processing class'
+        raise NotImplementedError(msg)
 
-    def input_error(self,
-                    err=KeyError,
-                    field='',
-                    received='',
-                    expected='',
-                    err_desc_str='',
-                    **kwargs):
+    def setup(self, **kwargs):
         r"""
-        Outputs a useful error message if an input has a missing or invalid entry
+        Sets or resets arguments
         """
-        if (isinstance(err, KeyError)):
-            msg = 'Error - {} requires {}={} argument.'
-            msg = msg.format(self.action, field, expected)
-        elif (isinstance(err, IndexError)):
-            msg = 'Error - {} requires {}={} {}. recieved: "{}"'
-            msg = msg.format(self.action, field, expected, err_desc_str, received)
-        elif (isinstance(err, ValueError)):
-            msg = 'Error - {} requires {}={} {}. recieved: "{}"'
-            msg = msg.format(self.action, field, expected, err_desc_str, received)
-        else:
-            print('Unhandled error type encountered.')
-            raise err
-        #
-        print(msg)
+        self.args.update(kwargs)
 
     def process(self, **kwargs):
         r"""
         Calls the subclassed routine process_data to create outfile content
         """
-        if (not self.validated):
-            msg = 'Error arguments have not been validated. '
-            msg += 'Run .set_args(arg_dict) method first.'
-            print(msg)
+        if not self.args:
+            msg = 'No arguments have been set, use setup(**kwargs) method'
+            logger.error(msg)
             return
         #
-        self.process_data(**kwargs)
-        #
+        self._process_data(**kwargs)
 
-    def process_data(self, **kwargs):
+    def _process_data(self, **kwargs):
         r"""
         Not implemented
         """
@@ -118,14 +71,14 @@ class BaseProcessor:
         r"""
         Calls the subclassed routine output_data to create outfile content
         """
-        if (not self.processed_data):
-            print('Error no data has been processed. Run .process() method first')
+        if not self.processed_data:
+            msg = 'No data has been processed. Run process() method'
+            logger.error(msg)
             return
         #
-        self.output_data(**kwargs)
-        #
+        self._output_data(**kwargs)
 
-    def output_data(self, **kwargs):
+    def _output_data(self, filename=None, delim=','):
         r"""
         Not implemented
         """
@@ -136,10 +89,12 @@ class BaseProcessor:
     def copy_processed_data(self, data_dict, alt_key=False):
         r"""
         Copys the current processed data array to a dict object using a
-        key defined in the subclass initialization. If alt key is specifi
+        key defined in the subclass initialization or a key supplied by the
+        alt_key keyword.
         """
-        if (not self.processed_data):
-            print('Error no data has been processed. Run .process() method first')
+        if not self.processed_data:
+            msg = 'No data has been processed. Run process() method'
+            logger.error(msg)
             return
         #
         key = alt_key if alt_key else self.output_key
@@ -150,9 +105,8 @@ class BaseProcessor:
         Writes the data processor's data the screen
         """
         if (not self.outfile_content):
-            msg = 'Error output content has not been generated. '
-            msg += 'Run .gen_output() method first'
-            print(msg)
+            msg = 'No output content. Run gen_output() method'
+            logger.error(msg)
             return
         #
         print(self.outfile_content)
@@ -163,11 +117,11 @@ class BaseProcessor:
         Writes the data processor's data to its outfile
         """
         if (not self.outfile_content):
-            msg = 'Error output content has not been generated. '
-            msg += 'Run .gen_output() method first'
-            print(msg)
+            msg = 'No output content. Run gen_output() method'
+            logger.error(msg)
             return
         #
         with open(self.outfile_name, 'w') as f:
             f.write(self.outfile_content)
-        print('Output saved as: '+self.outfile_name)
+        #
+        logger.info('Output saved as: '+self.outfile_name)

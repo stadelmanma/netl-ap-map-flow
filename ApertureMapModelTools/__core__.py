@@ -22,26 +22,6 @@ from scipy import sparse as sprs
 ########################################################################
 
 
-class ArgProcessor(object):
-    r"""
-    Generalizes the processing of an input argument
-    """
-
-    def __init__(self, field,
-                 map_func=lambda x: x,
-                 min_num_vals=1,
-                 out_type='single',
-                 expected='str',
-                 err_desc_str='to have a value'):
-        #
-        self.field = field
-        self.map_func = map_func
-        self.min_num_vals = min_num_vals
-        self.out_type = out_type
-        self.expected = expected
-        self.err_desc_str = err_desc_str
-
-
 class DataField(object):
     r"""
     Base class to store raw data from a 2-D field data file and

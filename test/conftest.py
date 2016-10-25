@@ -51,35 +51,6 @@ def temp_directory(request, setup_temp_directory):
 
 
 @pytest.fixture
-def arg_processor_class():
-    r"""
-    Returns a pseudo ArgProcessor class object with the proper methods
-    and placeholder data
-    """
-
-    class PseudoArgProcessor:
-        r"""
-        Handles testing of the data field object without needing to create one
-        """
-        def __init__(self,
-                     field,
-                     map_func=lambda x: x,
-                     min_num_vals=1,
-                     out_type='single',
-                     expected='str',
-                     err_desc_str='to have a value'):
-            #
-            self.field = field
-            self.map_func = map_func
-            self.min_num_vals = min_num_vals
-            self.out_type = out_type
-            self.expected = expected
-            self.err_desc_str = err_desc_str
-
-    return PseudoArgProcessor
-
-
-@pytest.fixture
 def data_field_class():
     r"""
     Returns a pseudo DataField class object with the proper methods
