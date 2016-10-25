@@ -24,8 +24,8 @@ class TestProfile:
         prof = Profile(data_field_class(), )
         assert not prof.args
         #
-        prof = Profile(data_field_class(), locs=[1, 2, 3])
-        assert prof.args['locs'] == [1, 2, 3]
+        prof = Profile(data_field_class(), locations=[1, 2, 3])
+        assert prof.args['locations'] == [1, 2, 3]
 
     def test_add_sub_parser(self):
         # setting up required parsers
@@ -55,19 +55,19 @@ class TestProfile:
         """
         fmt = '{:4.2f}'
         prof = Profile(data_field_class())
-        prof.args = {'axis': 'x', 'locs': [0, 50, 100]}
+        prof.args = {'axis': 'x', 'locations': [0, 50, 100]}
         prof._process_data()
         assert sp.all(prof.processed_data[fmt.format(0)] == prof.data_map[0, :])
         assert sp.all(prof.processed_data[fmt.format(50)] == prof.data_map[5, :])
         assert sp.all(prof.processed_data[fmt.format(100)] == prof.data_map[9, :])
         #
-        prof.args = {'axis': 'z', 'locs': [0, 50, 100]}
+        prof.args = {'axis': 'z', 'locations': [0, 50, 100]}
         prof._process_data()
         assert sp.all(prof.processed_data[fmt.format(0)] == prof.data_map[:, 0])
         assert sp.all(prof.processed_data[fmt.format(50)] == prof.data_map[:, 5])
         assert sp.all(prof.processed_data[fmt.format(100)] == prof.data_map[:, 9])
         #
-        prof.args = {'axis': 'y', 'locs': [0, 50, 100]}
+        prof.args = {'axis': 'y', 'locations': [0, 50, 100]}
         prof._process_data()
         assert prof.processed_data is None
 
@@ -78,10 +78,10 @@ class TestProfile:
         fmt = '{:4.2f}'
         prof = Profile(data_field_class())
         prof.infile = os.path.join(TEMP_DIR, 'test-profile.txt')
-        prof.args = {'axis': 'x', 'locs': [0, 50, 100]}
+        prof.args = {'axis': 'x', 'locations': [0, 50, 100]}
         #
-        start_ids = [(int(l/100.0*prof.nz)+1) for l in prof.args['locs']]
-        prof.loc_ids = {fmt.format(loc): sid for loc, sid in zip(prof.args['locs'], start_ids)}
+        start_ids = [(int(l/100.0*prof.nz)+1) for l in prof.args['locations']]
+        prof.loc_ids = {fmt.format(loc): sid for loc, sid in zip(prof.args['locations'], start_ids)}
         prof.processed_data = {}
         #
         prof.processed_data[fmt.format(0)] = prof.data_map[0, :]
