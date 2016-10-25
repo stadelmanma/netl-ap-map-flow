@@ -15,7 +15,7 @@ class Percentiles(BaseProcessor):
     r"""
     Automatic method to calculate and output a list of data percentiles.
     kwargs include:
-       perc : list of percentiles to calculate (required)
+       percentiles : list of percentiles to calculate (required)
        key_format : format to write percentile dictionary keys in (optional)
        value_format : format to write percentile values in (optional)
 
@@ -35,7 +35,7 @@ class Percentiles(BaseProcessor):
         parser = subparsers.add_parser(cls.__name__,
                                        aliases=['perc'],
                                        parents=[parent],
-                                       help='calculate data percentiles')
+                                       help=cls.__doc__)
         #
         parser.add_argument('percentiles', nargs='+', type=float,
                             help='percentile values to calculate')
@@ -45,13 +45,14 @@ class Percentiles(BaseProcessor):
         parser.add_argument('--value-format', '-v', default='{}',
                             help='''python format string to write percentile
                             values as (default: %(default)s)''')
+        parser.set_defaults(func=cls)
 
     def _process_data(self):
         r"""
         Takes a list of percentiles specified in self.args and generates
         the corresponding set of values.
         """
-        perc_list = self.args['perc']
+        perc_list = self.args['percentiles']
         perc_list.sort()
         key_fmt = self.args.get('key_format', '{:4.2f}')
         #

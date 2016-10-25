@@ -35,13 +35,13 @@ class Profile(BaseProcessor):
         parser = subparsers.add_parser(cls.__name__,
                                        aliases=['prof'],
                                        parents=[parent],
-                                       help='''exports profiles along an axis
-                                       at specified locations''')
+                                       help=cls.__doc__)
         #
         parser.add_argument('axis', choices=['x', 'z'],
                             help='x or z for the corresponding axis')
         parser.add_argument('locations', nargs='+', type=float,
                             help='location as percent distance from axis')
+        parser.set_defaults(func=cls)
 
     def _process_data(self, **kwargs):
         r"""

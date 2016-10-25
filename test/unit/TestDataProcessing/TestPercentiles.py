@@ -22,8 +22,8 @@ class TestPercentiles:
         pctle = Percentiles(data_field_class(), )
         assert not pctle.args
         #
-        pctle = Percentiles(data_field_class(), perc=[1, 2, 3])
-        assert pctle.args['perc'] == [1, 2, 3]
+        pctle = Percentiles(data_field_class(), percentiles=[1, 2, 3])
+        assert pctle.args['percentiles'] == [1, 2, 3]
 
     def test_add_sub_parser(self):
         # setting up required parsers
@@ -49,14 +49,14 @@ class TestPercentiles:
         Testing the process data method
         """
         pctle = Percentiles(data_field_class())
-        pctle.args = {'perc': [0, 10, 50, 90, 100]}
+        pctle.args = {'percentiles': [0, 10, 50, 90, 100]}
         #
         pctle._process_data()
-        for perc in pctle.args['perc']:
+        for perc in pctle.args['percentiles']:
             assert pctle.processed_data['{:4.2f}'.format(perc)] is not None
         #
-        assert pctle.processed_data['{:4.2f}'.format(pctle.args['perc'][0])] == pctle.data_vector[0]
-        assert pctle.processed_data['{:4.2f}'.format(pctle.args['perc'][-1])] == pctle.data_vector[-1]
+        assert pctle.processed_data['{:4.2f}'.format(pctle.args['percentiles'][0])] == pctle.data_vector[0]
+        assert pctle.processed_data['{:4.2f}'.format(pctle.args['percentiles'][-1])] == pctle.data_vector[-1]
 
     def test_output_data(self, data_field_class):
         r"""

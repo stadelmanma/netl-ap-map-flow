@@ -38,10 +38,11 @@ class Histogram(BaseProcessor):
         parser = subparsers.add_parser(cls.__name__,
                                        aliases=['hist'],
                                        parents=[parent],
-                                       help='calculates histogram of data')
+                                       help=cls.__doc__)
         #
         parser.add_argument('num_bins', type=int,
                             help='number of bins to utilze in histogram')
+        parser.set_defaults(func=cls)
 
     def define_bins(self):
         r"""
