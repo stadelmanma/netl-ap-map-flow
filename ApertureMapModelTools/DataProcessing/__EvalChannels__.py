@@ -19,7 +19,7 @@ class EvalChannels(BaseProcessor):
     not dependent on a specfic direction.
     kwargs include:
         thresh - minimum numeric value considered to be part of a flow channel
-        dir - (x or z) specifies which axis to export along
+        axis - (x or z) specifies which axis to export along
     """
     def __init__(self, field, **kwargs):
         super().__init__(field)
@@ -27,13 +27,29 @@ class EvalChannels(BaseProcessor):
         self.output_key = 'eval_chan'
         self.action = 'evaluate channels'
 
+    @classmethod
+    def _add_subparser(cls, subparsers, parent):
+        r"""
+        Adds a specific action based sub-parser to the supplied arg_parser
+        instance.
+        """
+        parser = subparsers.add_parser(cls.__name__,
+                                     aliases=['chans'],
+                                     parents=[parent],
+                                     help='evaluates channelization of flow data')
+        #
+        parser.add_argument('axis',
+                          help='x or z for the corresponding axis')
+        parser.add_argument('thresh', type=float,
+                          help='minimum value to consider as part of a channel')
+
     def _process_data(self, **kwargs):
         r"""
         Examines the dataset along one axis to determine the number and
         width of channels.
         """
         #
-        direction = self.args['dir']
+        direction = self.args['axis']
         min_val = self.args['thresh']
         #
         if (direction.lower() == 'x'):
@@ -101,13 +117,13 @@ class EvalChannels(BaseProcessor):
         ldot = filename.rfind('.')
         #
         # naming ouput file
-        dir_ = self.args['dir'].upper()
+        dir_ = self.args['axis'].upper()
         name = filename[:ldot]+'-channel_data-'+dir_+'-axis'+filename[ldot:]
         self.outfile_name = name
         #
         # outputting data
         content = 'Channelization data from file: '+self.infile+'\n'
-        content += (self.args['dir']+'-index'+delim+'Number of Channels' +
+        content += (self.args['axis']+'-index'+delim+'Number of Channels' +
                     delim+'Average Width'+delim+'Channel Widths\n')
         #
         num_channels = list(self.processed_data['chans_per_row'])

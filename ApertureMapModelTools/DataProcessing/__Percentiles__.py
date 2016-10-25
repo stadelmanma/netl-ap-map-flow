@@ -32,17 +32,17 @@ class Percentiles(BaseProcessor):
         Adds a specific action based sub-parser to the supplied arg_parser
         instance.
         """
-        perc = subparsers.add_parser(cls.__name__,
+        parser = subparsers.add_parser(cls.__name__,
                                      aliases=['perc'],
                                      parents=[parent],
                                      help='calculate data percentiles')
         #
-        perc.add_argument('percentiles', nargs='+', type=float,
+        parser.add_argument('percentiles', nargs='+', type=float,
                           help='percentile values to calculate')
-        perc.add_argument('--key-format', '-k', default='{:4.2f}',
+        parser.add_argument('--key-format', '-k', default='{:4.2f}',
                           help='''python format string to write percentiles
                           as (default: %(default)s)''')
-        perc.add_argument('--value-format', '-v', default='{}',
+        parser.add_argument('--value-format', '-v', default='{}',
                           help='''python format string to write percentile
                           values as (default: %(default)s)''')
 

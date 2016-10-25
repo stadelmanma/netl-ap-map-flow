@@ -3,9 +3,10 @@ Handles testing of the EvalChannels class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
-Last Modifed: 2016/10/20
+Last Modifed: 2016/10/25
 #
 """
+import argparse
 import os
 import scipy as sp
 from ApertureMapModelTools.DataProcessing.__EvalChannels__ import EvalChannels
@@ -22,6 +23,24 @@ class TestEvalChannels:
         eval_chans = EvalChannels(data_field_class(), thresh='x')
         assert eval_chans.args['thresh'] == 'x'
 
+    def test_add_sub_parser(self):
+        # setting up required parsers
+        parser = argparse.ArgumentParser()
+        parent = argparse.ArgumentParser(add_help=False)
+        subparsers = parser.add_subparsers()
+
+        # adding percentiles subparser
+        EvalChannels._add_subparser(subparsers, parent)
+
+        # testing parser
+        cargs = 'EvalChannels x 10.0'.split()
+        args = parser.parse_args(cargs)
+        cargs = 'chans z 5'.split()
+        args = parser.parse_args(cargs)
+        #
+        assert args.axis == 'z'
+        assert args.thresh == 5.0
+
     def test_process_data(self, data_field_class):
         r"""
         checking if the process data method works
@@ -34,7 +53,7 @@ class TestEvalChannels:
         eval_chans.data_map[6:9, :] = 255
         eval_chans.data_vector = sp.ravel(eval_chans.data_map)
         eval_chans.args = {
-            'dir': 'x',
+            'axis': 'x',
             'thresh': 100
         }
         eval_chans._process_data()
@@ -46,13 +65,13 @@ class TestEvalChannels:
         eval_chans.data_map[:, 6:9] = 255
         eval_chans.data_vector = sp.ravel(eval_chans.data_map)
         eval_chans.args = {
-            'dir': 'z',
+            'axis': 'z',
             'thresh': 100
         }
         eval_chans._process_data()
         #
         eval_chans.args = {
-            'dir': 'y',
+            'axis': 'y',
             'thresh': 100
         }
         eval_chans._process_data()
@@ -62,7 +81,7 @@ class TestEvalChannels:
         eval_chans = EvalChannels(data_field_class())
         eval_chans.infile = os.path.join(TEMP_DIR, 'eval-chans')
         eval_chans.args = {
-            'dir': 'z',
+            'axis': 'z',
             'thresh': 100
         }
         eval_chans.processed_data = {}

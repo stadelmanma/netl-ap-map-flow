@@ -3,7 +3,7 @@ Handles testing of the Percentiles class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
-Last Modifed: 2016/10/20
+Last Modifed: 2016/10/25
 #
 """
 import argparse
@@ -37,7 +37,8 @@ class TestPercentiles:
         # testing parser
         cargs = 'Percentiles 10 20 30 40 50 --key-format {:6f} --value-format {:10f}'.split()
         args = parser.parse_args(cargs)
-
+        cargs = 'perc 10 20 30 40 50 --key-format {:6f} --value-format {:10f}'.split()
+        args = parser.parse_args(cargs)
         #
         assert args.percentiles == [10, 20, 30, 40, 50]
         assert args.key_format == '{:6f}'
