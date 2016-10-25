@@ -4,7 +4,7 @@ super class for variants of a simple histogram.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/29
-Last Modifed: 2016/10/20
+Last Modifed: 2016/10/25
 #
 """
 import scipy as sp
@@ -28,6 +28,20 @@ class Histogram(BaseProcessor):
         self.output_key = 'hist'
         self.action = 'histogram'
         self.bins = []
+
+    @classmethod
+    def _add_subparser(cls, subparsers, parent):
+        r"""
+        Adds a specific action based sub-parser to the supplied arg_parser
+        instance.
+        """
+        parser = subparsers.add_parser(cls.__name__,
+                                     aliases=['hist'],
+                                     parents=[parent],
+                                     help='calculates histogram of data')
+        #
+        parser.add_argument('num_bins', type=int,
+                            help='number of bins to utilze in histogram')
 
     def define_bins(self):
         r"""

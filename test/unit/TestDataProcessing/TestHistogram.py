@@ -3,9 +3,10 @@ Handles testing of the Histogram class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/12
-Last Modifed: 2016/10/20
+Last Modifed: 2016/10/25
 #
 """
+import argparse
 import os
 import scipy as sp
 from ApertureMapModelTools.DataProcessing.__Histogram__ import Histogram
@@ -24,6 +25,23 @@ class TestHistogram:
         #
         pctle = Histogram(data_field_class(), num_bins=10)
         assert pctle.args['num_bins'] == 10
+
+    def test_add_sub_parser(self):
+        # setting up required parsers
+        parser = argparse.ArgumentParser()
+        parent = argparse.ArgumentParser(add_help=False)
+        subparsers = parser.add_subparsers()
+
+        # adding percentiles subparser
+        Histogram._add_subparser(subparsers, parent)
+
+        # testing parser
+        cargs = 'Histogram 10'.split()
+        args = parser.parse_args(cargs)
+        cargs = 'hist 5'.split()
+        args = parser.parse_args(cargs)
+        #
+        assert args.num_bins == 5
 
     def test_define_bins(self, data_field_class):
         r"""

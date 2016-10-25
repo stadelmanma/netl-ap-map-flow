@@ -4,7 +4,7 @@ the package.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2016/10/20
+Last Modifed: 2016/10/25
 #
 """
 from ..__core__ import _get_logger

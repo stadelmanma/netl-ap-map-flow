@@ -3,7 +3,7 @@ Calculates a set of percentiles for a dataset
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2016/10/20
+Last Modifed: 2016/10/25
 #
 """
 from collections import OrderedDict
@@ -33,18 +33,18 @@ class Percentiles(BaseProcessor):
         instance.
         """
         parser = subparsers.add_parser(cls.__name__,
-                                     aliases=['perc'],
-                                     parents=[parent],
-                                     help='calculate data percentiles')
+                                       aliases=['perc'],
+                                       parents=[parent],
+                                       help='calculate data percentiles')
         #
         parser.add_argument('percentiles', nargs='+', type=float,
-                          help='percentile values to calculate')
+                            help='percentile values to calculate')
         parser.add_argument('--key-format', '-k', default='{:4.2f}',
-                          help='''python format string to write percentiles
-                          as (default: %(default)s)''')
+                            help='''python format string to write percentiles
+                            as (default: %(default)s)''')
         parser.add_argument('--value-format', '-v', default='{}',
-                          help='''python format string to write percentile
-                          values as (default: %(default)s)''')
+                            help='''python format string to write percentile
+                            values as (default: %(default)s)''')
 
     def _process_data(self):
         r"""
