@@ -6,6 +6,7 @@ Date Written: 2016/06/12
 Last Modifed: 2016/10/20
 #
 """
+import argparse
 import os
 from ApertureMapModelTools.DataProcessing.__Percentiles__ import Percentiles
 
@@ -23,6 +24,24 @@ class TestPercentiles:
         #
         pctle = Percentiles(data_field_class(), perc=[1, 2, 3])
         assert pctle.args['perc'] == [1, 2, 3]
+
+    def test_add_sub_parser(self):
+        # setting up required parsers
+        parser = argparse.ArgumentParser()
+        parent = argparse.ArgumentParser(add_help=False)
+        subparsers = parser.add_subparsers()
+
+        # adding percentiles subparser
+        Percentiles._add_subparser(subparsers, parent)
+
+        # testing parser
+        cargs = 'Percentiles 10 20 30 40 50 --key-format {:6f} --value-format {:10f}'.split()
+        args = parser.parse_args(cargs)
+
+        #
+        assert args.percentiles == [10, 20, 30, 40, 50]
+        assert args.key_format == '{:6f}'
+        assert args.value_format == '{:10f}'
 
     def test_process_data(self, data_field_class):
         r"""
