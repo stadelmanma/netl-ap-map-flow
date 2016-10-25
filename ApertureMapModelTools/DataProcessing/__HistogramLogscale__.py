@@ -34,9 +34,9 @@ class HistogramLogscale(Histogram):
         instance.
         """
         parser = subparsers.add_parser(cls.__name__,
-                                     aliases=['histlog'],
-                                     parents=[parent],
-                                     help='calculates logscale histogram of data')
+                                       aliases=['histlog'],
+                                       parents=[parent],
+                                       help='calculates logscale histogram of data')
         #
         parser.add_argument('scale_fact', type=int, nargs='?', default=10,
                             help='base to generate logscale from')

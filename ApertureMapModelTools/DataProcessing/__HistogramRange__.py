@@ -38,13 +38,14 @@ class HistogramRange(Histogram):
         instance.
         """
         parser = subparsers.add_parser(cls.__name__,
-                                     aliases=['histrng'],
-                                     parents=[parent],
-                                     help='calculates histogram of a data range')
+                                       aliases=['histrng'],
+                                       parents=[parent],
+                                       help='calculates histogram of a data range')
         #
         parser.add_argument('num_bins', type=int,
                             help='number of bins to utilze in histogram')
-        parser.add_argument('-r', '--range', nargs=2, type=float, default=[1.0, 99.0],
+        parser.add_argument('-r', '--range', nargs=2, type=float,
+                            default=[1.0, 99.0],
                             help='percentile range to use %(deafault)s')
 
     def define_bins(self, **kwargs):

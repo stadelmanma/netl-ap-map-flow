@@ -5,7 +5,7 @@ import os
 import re
 import sys
 from ApertureMapModelTools import _get_logger, set_main_logger_level, DataField
-from ApertureMapModelTools import DataProcessing as dat_proc
+from ApertureMapModelTools import DataProcessing
 #
 ########################################################################
 #
@@ -44,7 +44,9 @@ subparse_parent.add_argument('-files', type=os.path.realpath, required=True,
 subparsers = parser.add_subparsers(dest='processor',
                                    title='Data Processing Commands',
                                    metavar='')
-dat_proc.Percentiles._add_subparser(subparsers, subparse_parent)
+for cls in DataProcessing:
+    print(cls)
+    cls._add_subparser(subparsers, subparse_parent)
 
 
 cmd_str = r"""
