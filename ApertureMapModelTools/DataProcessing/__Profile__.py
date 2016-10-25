@@ -17,7 +17,7 @@ class Profile(BaseProcessor):
     Automatic method to export data vectors for a range of distances
     along a specified axis. Locations are given as percentages from the
     bottom or left edge of the 2-D data map
-        locs  -  list of numbers, ex: [10, 25, 50, 75, 90]
+        locations  -  list of numbers, ex: [10, 25, 50, 75, 90]
         axis   - (x or z) specifies which axis to export along
     """
     def __init__(self, field, **kwargs):
@@ -50,7 +50,7 @@ class Profile(BaseProcessor):
         """
         #
         axis = self.args['axis']
-        locs = self.args['locs']
+        locs = self.args['locations']
         locs.sort()
         #
         if axis.lower() == 'x':
