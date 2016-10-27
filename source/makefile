@@ -38,7 +38,7 @@ all: modules
 	mv $(MODELNAME) ..
 
 debug: modules
-	$(COMPILER) -o $(MODELNAME) $(LINKED_MODULES) $(MODELFILES) $(FFLAGS) $(OS) $(WFLAGS)
+	$(COMPILER) -o $(MODELNAME) $(LINKED_MODULES) $(MODELFILES) QUIT.F $(FFLAGS) $(OS) $(WFLAGS)
 	mv $(MODELNAME) ..
 
 modules:
