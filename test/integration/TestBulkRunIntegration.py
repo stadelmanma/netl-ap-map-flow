@@ -65,6 +65,7 @@ class TestBulkRun:
         test_bulk_run.start()
         #
         # checking that some files were created
-        assert os.path.isfile(os.path.join(TEMP_DIR, 'parallel-plate-01vox-RF1.00-400PA-STAT.CSV'))
+        assert os.path.isfile(os.path.join(TEMP_DIR, 'parallel-plate-01vox-RF1.00-400PA-STAT.csv'))
+        assert os.path.isfile(os.path.join(TEMP_DIR, 'parallel-plate-01vox-RF1.00-400PA-STAT.yaml'))
         assert os.path.isfile(os.path.join(TEMP_DIR, 'parallel-plate-10vox-RF1.00-700PA-LOG.TXT'))
         assert os.path.isfile(os.path.join(TEMP_DIR, 'Fracture1ApertureMap-10avg-RF0.00-300PA-INIT.INP'))

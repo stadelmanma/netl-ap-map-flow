@@ -206,18 +206,17 @@ class DataField(object):
         self.data_vector = sp.ravel(self.data_map)
 
 
-class StatFile:
+class StatFile(dict):
     r"""
     Parses and stores information from a simulation statisitics file. This
     class helps facilitate data mining of simulation results.
     """
 
     def __init__(self, infile):
+        super().__init__()
         self.infile = infile
         self.map_file = ''
         self.pvt_file = ''
-        self.data_dict = {}
-        self.unit_dict = {}
         self.parse_stat_file()
 
     def parse_stat_file(self, stat_file=None):
@@ -234,26 +233,30 @@ class StatFile:
             content_arr = [re.sub(r'^#.*', '', l) for l in content_arr]
             content_arr = [l for l in content_arr if l]
         #
-        # adding the space prevents a possible index error
-        self.map_file = content_arr.pop(0)
-        self.pvt_file = content_arr.pop(0)
-        self.map_file = re.split(r'\s', self.map_file+' ', 1)[1]
-        self.pvt_file = re.split(r'\s', self.pvt_file+' ', 1)[1]
+        # pulling out aperture map and pvt file key-value pairs
+        map_line = content_arr.pop(0).split(',')
+        pvt_line = content_arr.pop(0).split(',')
+        self.map_file = map_line[1].strip()
+        self.pvt_file = pvt_line[1].strip()
+        self[map_line[0].replace(':', '').strip()] = self.map_file
+        self[pvt_line[0].replace(':', '').strip()] = self.pvt_file
         #
         # stepping through pairs of lines to get key -> values
         for i in range(0, len(content_arr), 2):
             key_list = re.split(r',', content_arr[i])
             key_list = [k.strip() for k in key_list]
-            val_list = re.split(r',', content_arr[i+1])
+            val_list = re.split(r',', content_arr[i + 1])
             val_list = [float(v) for v in val_list]
             #
             for key, val in zip(key_list, val_list):
                 m = re.search(r'\[(.*?)\]$', key)
                 unit = (m.group(1) if m else '-')
                 key = re.sub(r'\[.*?\]$', '', key).strip()
-                self.data_dict[key] = val
-                self.unit_dict[key] = unit
-
+                self[key] = [val, unit]
+        #
+        # modifiying NX and NZ keys to just be an integer instead of list
+        self['NX'] = self['NX'][0]
+        self['NZ'] = self['NZ'][0]
 #
 ########################################################################
 #  Basic functions

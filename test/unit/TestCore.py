@@ -81,6 +81,12 @@ class TestCore:
         fname = os.path.join(FIXTURE_DIR, 'TEST-STAT-FILE.CSV')
         stat_file = amt.StatFile(fname)
         assert stat_file.map_file
+        assert stat_file.pvt_file
+        assert stat_file.keys()
+        assert stat_file.values()
+        assert stat_file['NX'] == 136
+        assert stat_file['NZ'] == 138
+        assert stat_file['INLET PRESS'] == [1000, 'PA']
 
     def test_toplevel_logger(self):
         r"""
