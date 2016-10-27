@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 import os
+import re
+from subprocess import Popen, PIPE
 import sys
 #
 # setting path to module
@@ -15,19 +17,34 @@ RETURN_CODE = 0
 # -----------------------------------------------------------------------------
 
 
-def run_model_wrapper(inp_file):
+def run_model_wrapper(inp_file, expected_code=0, stdout_pat=None):
+    r"""
+    Handles running of the model and checking the completed process for
+    the expected return code and can also search the stdout with a regexp
+    pattern
+    """
     global RETURN_CODE
+    success = True
     proc = run_model(inp_file, synchronous=True, show_stdout=False)
     #
-    if proc.returncode != 0:
-        print(proc.stdout_content)
-        RETURN_CODE = proc.returncode
+    if proc.returncode != expected_code:
+        success = False
     #
-    if proc.stderr_content:
+    if stdout_pat and not stdout_pat.search(proc.stdout_content):
+        success = False
+    #
+    if not success:
+        print('='*80)
+        print(proc.stdout_content)
         print('')
         print(proc.stderr_content)
+        print('='*80)
+        #
+        RETURN_CODE = proc.returncode
 
 # -----------------------------------------------------------------------------
+#
+# running cases that should succeed
 #
 # building test input file
 file_formats = {
@@ -42,15 +59,17 @@ inp_file['EXE-FILE'].update_value(exe_path, False)
 # setting parameters
 pvt_path = os.path.join(FIXTURE_DIR, 'H2O_TEMP_058F.CSV')
 inp_file['PVT-FILE'].update_value(pvt_path)
-map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
+map_path = os.path.join(FIXTURE_DIR, 'ParallelPlate-1vox.txt')
 inp_file['APER-MAP'].update_value(map_path)
 inp_file['OVERWRITE'].commented_out = True
 inp_file['BAD-INPUT'] = ArgInput('BAD-INPUT: VALUE')
 #
 # running initial liquid sim with everything to set up base coverage
-run_model_wrapper(inp_file)
+run_model_wrapper(inp_file, stdout_pat=re.compile('WARNING - USING AVERAGE VISC'))
 #
 # commenting/ uncommenting some inputs so they don't cause issue
+map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
+inp_file['APER-MAP'].update_value(map_path)
 inp_file['SUMMARY-FILE'].commented_out = True
 inp_file['OVERWRITE'].commented_out = False
 inp_file['FRAC-PRESS'].commented_out = True
@@ -71,7 +90,7 @@ inp_file['OUTLET-PRESS'].commented_out = True
 inp_file['FLUID-TYPE'].update_value('LIQUID')
 inp_file['INLET-PRESS'].update_value('2000000')
 inp_file['OUTLET-RATE'].update_value('1.0')
-run_model_wrapper(inp_file)
+run_model_wrapper(inp_file, stdout_pat=re.compile('USING AVERAGE LIQUID VISCOSITY'))
 #
 # running all four boundary sides with inlet rate control
 inp_file['INLET-PRESS'].commented_out = True
@@ -81,5 +100,80 @@ inp_file['OUTLET-PRESS'].update_value('0.0')
 for side in ['TOP', 'BOTTOM', 'LEFT', 'RIGHT']:
     inp_file['OUTLET-SIDE'].update_value(side)
     run_model_wrapper(inp_file)
+#
+# -----------------------------------------------------------------------------
+#
+# running failing cases
+#
+# running it with no input file
+cmd = (os.path.abspath(inp_file['EXE-FILE'].value),)
+proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+proc.stdout_content, proc.stderr_content = proc.communicate()
+if not re.search('FATAL ERROR - NO INPUT FILE', proc.stdout_content):
+    RETURN_CODE = 1
+if proc.returncode == 0:
+    RETURN_CODE = 1
+#
+# bad VTK-FILE value
+inp_file['VTK-FILE'].update_value('')
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('INSUFFICIENT'))
+inp_file['VTK-FILE'].commented_out = True
+#
+# no aperture map
+inp_file['APER-MAP'].commented_out = True
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('FATAL ERROR - NO APERTURE MAP'))
+inp_file['APER-MAP'].commented_out = False
+#
+# trying to run sim that overwrites some files without permission given
+inp_file['OVERWRITE'].commented_out = True
+os.remove(inp_file['SUMMARY-FILE'].value)
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('SPECIFY "OVERWRITE" IN THE'))
+inp_file['OVERWRITE'].commented_out = False
+#
+# trying to run sim that writes a file to a non-existant location
+inp_file['VTK-FILE'].update_value('/non/existant/root/path/test.txt')
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('IO ERROR:\s*\d+'))
+inp_file['VTK-FILE'].commented_out = True
+#
+# bad fluid type
+inp_file['FLUID-TYPE'].update_value('SOLID')
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('INVALID FLUID TYPE'))
+inp_file['FLUID-TYPE'].update_value('LIQUID')
+#
+# hitting errors when processing initialization file, missing and invalid field
+inp_file['OUTLET-PRESS'].update_value('')
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('INSUFFICIENT'))
+inp_file['OUTLET-PRESS'].update_value('ABC')
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('FIELD\s*\d+\s*ON THE'))
+inp_file['OUTLET-PRESS'].commented_out = True
+#
+# bad aperture map
+map_path = os.path.join(FIXTURE_DIR, 'BadApertureMap.txt')
+inp_file['APER-MAP'].update_value(map_path)
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('FIELD\s*\d+\s*ON THE'))
+map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
+inp_file['APER-MAP'].update_value(map_path)
+#
+# too large of a map along either axis
+inp_file['MAXIMUM'].update_value(135)
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('MAXIMUM NUMBER OF HORIZONTAL'))
+inp_file['MAXIMUM'].update_value(137)
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('MAXIMUM NUMBER OF VERTICAL'))
+inp_file['MAXIMUM'].update_value(500)
+#
+# gas sim without PVT
+inp_file['FLUID-TYPE'].update_value('GAS')
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('PVT.*REQUIRED FOR GAS SIMULATIONS'))
+inp_file['FLUID-TYPE'].update_value('LIQUID')
+#
+# liquid sim with invalid visc
+inp_file['FLUID-VISCOSITY'].update_value('-1.0')
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('ERROR - NONE OR INVAILD VISCOSITY'))
+inp_file['FLUID-VISCOSITY'].update_value('1.0')
+#
+# invalid outlet side
+inp_file['OUTLET-SIDE'].update_value('CENTER')
+run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('INVALID OUTLET SIDE ENTERED'))
+inp_file['OUTLET-SIDE'].update_value('TOP')
 #
 sys.exit(RETURN_CODE)
