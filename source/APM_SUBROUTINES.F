@@ -228,7 +228,6 @@ C
 C     DEFAULT FILE NAMES
       PATH = '.'
       PVT_FILE = 'NONE PROVIDED'
-      APM_FILE = 'NONE PROVIDED'
       WRITE(SUM_FILE,2100)TRIM(PATH),SEP,'fracture-log.txt'
       WRITE(STAT_FILE,2100)TRIM(PATH),SEP,'fracture-stat.csv'
       WRITE(MAP_FILE,2100)TRIM(PATH),SEP,'fracture-aperture.csv'
