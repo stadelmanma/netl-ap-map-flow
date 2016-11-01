@@ -65,21 +65,22 @@ def apm_subtract_data_maps():
     if args.verbose:
         set_main_logger_level('debug')
     #
-    aper_map, data_map1, data_map2 = prepare_maps(args)
-    result = process_maps(aper_map, data_map1, data_map2, args)
-    #
-    # writing out final data map
+    # testing output map path
     if os.path.exists(args.out_name) and not args.force:
         msg = '{} already exists, use "-f" option to overwrite'
         raise FileExistsError(msg.format(args.out_name))
     #
+    aper_map, data_map1, data_map2 = prepare_maps(args)
+    result = process_maps(aper_map, data_map1, data_map2, args)
+    #
+    # writing out resultant data map
     sp.savetxt(args.out_name, result.data_map, delimiter='\t')
 
 
 def prepare_maps(args):
     r"""
     loads the aperture map and data maps and then masks zero aperture zones
-    as well as performs pre-subtraction normaliation is desired.
+    as well as performs pre-subtraction normalization if desired.
     """
     #
     # loading files
@@ -88,17 +89,12 @@ def prepare_maps(args):
     data_map2 = DataField(args.data_file2)
     #
     # generating percentiles of each data field
-    print('Percentiles of the first data map') # stack columns of raw, abs, abs+norm
-    pctle = Percentiles(data_map1, percentiles=args.perc)
-    pctle.process()
-    pctle.gen_output(delim='\t')
-    pctle.print_data()
+    msg = 'Percentiles of data map: '
+    print(msg + os.path.basename(args.data_file1))
+    output_percentile_set(data_map1, args)
     #
-    print('Percentiles of the second data map') # stack columns of raw, abs, abs+norm
-    pctle = Percentiles(data_map2, percentiles=args.perc)
-    pctle.process()
-    pctle.gen_output(delim='\t')
-    pctle.print_data()
+    print(msg + os.path.basename(args.data_file2))
+    output_percentile_set(data_map2, args)
     #
     # masking zero aperture zones
     data_map1 = data_map1.data_vector
@@ -133,36 +129,70 @@ def process_maps(aper_map, data_map1, data_map2, args):
     result.infile = args.out_name
     result.outfile = args.out_name
     #
-    # outputting percentiles of initial subtraction to screen
-    pctle = Percentiles(result, percentiles=args.perc)
-    #
-    print('Percentiles after initial subtraction') # stack columns of raw, abs, abs+norm
-    pctle.process()
-    pctle.gen_output(delim='\t')
-    pctle.print_data()
+    print('Percentiles of data_map1 - data_map2')
+    output_percentile_set(result, args)
     #
     # checking if data is to be normalized and/or absolute
     if args.post_abs:
         result.data_map = sp.absolute(result.data_map)
         result.data_vector = sp.absolute(result.data_vector)
-        pctle = Percentiles(result, percentiles=args.perc)
-        #
-        print('Percentiles of absolute valued data')
-        pctle.process()
-        pctle.gen_output(delim='\t')
-        pctle.print_data()
     #
     if args.post_normalize:
         result.data_map = result.data_map/sp.amax(sp.absolute(result.data_map))
         result.data_vector = sp.ravel(result.data_map)
-        pctle = Percentiles(result, percentiles=args.perc)
-        #
-        print('Percentiles of normalized data')
-        pctle.process()
-        pctle.gen_output(delim='\t')
-        pctle.print_data()
     #
     return result
+
+
+def output_percentile_set(data_field, args):
+    r"""
+    Does three sets of percentiles and stacks them as columns: raw data,
+    absolute value data, normalized+absolute value
+    """
+    data = {}
+    #
+    # outputting percentiles of initial subtraction to screen
+    field = data_field.clone()
+    pctle = Percentiles(field, percentiles=args.perc)
+    pctle.process()
+    data['raw'] = pctle.processed_data
+    #
+    # normalizing data
+    field = data_field.clone()
+    field.data_map = field.data_map/sp.amax(sp.absolute(field.data_map))
+    field.data_vector = sp.ravel(field.data_map)
+    pctle = Percentiles(field, percentiles=args.perc)
+    pctle.process()
+    data['norm'] = pctle.processed_data
+    #
+    # taking absolute value of data
+    field = data_field.clone()
+    field.data_map = sp.absolute(field.data_map)
+    field.data_vector = sp.absolute(field.data_vector)
+    pctle = Percentiles(field, percentiles=args.perc)
+    pctle.process()
+    data['abs'] = pctle.processed_data
+    #
+    # absolute value + normed
+    field.data_map = field.data_map/sp.amax(field.data_map)
+    field.data_vector = sp.ravel(field.data_map)
+    pctle = Percentiles(field, percentiles=args.perc)
+    pctle.process()
+    data['abs+norm'] = pctle.processed_data
+    #
+    # outputting stacked percentiles
+    fmt = '    {:>6.2f}\t{: 0.6e}\t{: 0.6e}\t{: 0.6e}\t{: 0.6e}\n'
+    content = 'Percentile\tRaw Data\tAbsolute\tNormalized\tNorm+abs\n'
+    data = zip(args.perc, data['raw'].values(),
+               data['abs'].values(),
+               data['norm'].values(),
+               data['abs+norm'].values())
+    #
+    for row in data:
+        content += fmt.format(*row)
+    content += '\n'
+    print(content)
+
 
 if __name__ == '__main__':
     apm_subtract_data_maps()
