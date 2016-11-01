@@ -73,6 +73,23 @@ class TestCore:
         field.threshold_data(max_value=900)
         assert sp.all(field.data_vector[low_inds] == -1)
         assert sp.all(sp.isnan(field.data_vector[high_inds]))
+        #
+        # testing VTK file generation
+        field.infile = os.path.join(TEMP_DIR, 'test-export.csv')
+        field.export_vtk()
+        fname = os.path.join(TEMP_DIR, 'test-export.vtk')
+        assert os.path.isfile(fname)
+        #
+        with open(fname, 'r') as file:
+            content = file.read()
+            assert re.search('DATASET STRUCTURED_GRID', content)
+            assert re.search('DIMENSIONS 101 2 101', content)
+            assert re.search('POINTS 20402 float', content)
+            assert re.search('CELL_DATA 10000', content)
+            assert re.search('SCALARS data float', content)
+        #
+        with pytest.raises(FileExistsError):
+            field.export_vtk()
 
     def test_stat_file(self):
         r"""
@@ -110,9 +127,12 @@ class TestCore:
         """
         #
         logger = logging.getLogger('AMT')
-        amt_core.set_main_logger_level('debug')
         #
+        amt_core.set_main_logger_level('debug')
         assert logger.getEffectiveLevel() == logging.DEBUG
+        #
+        amt_core.set_main_logger_level(logging.INFO)
+        assert logger.getEffectiveLevel() == logging.INFO
 
     def test_files_from_directory(self):
         r"""
