@@ -18,7 +18,7 @@ calculated data map is output.
 
 Written By: Matthew stadelman
 Date Written: 2016/10/27
-Last Modfied: 2016/10/27
+Last Modfied: 2016/11/01
 """
 
 # setting up logger
