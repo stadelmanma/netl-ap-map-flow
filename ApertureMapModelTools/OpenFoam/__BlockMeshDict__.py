@@ -63,7 +63,7 @@ class BlockMeshDict(OpenFoamFile):
         field.copy_data(self)
         #
         # creating offset field
-        self.offset_points = sp.zeros(self.point_data.shape)
+        self.offset_points = -self.point_data/2.0
         if offset_field is not None:
             if offset_field.point_data is None:
                 offset_field.create_point_data()
@@ -111,7 +111,7 @@ class BlockMeshDict(OpenFoamFile):
         #
         # creating temporary arrays to handle vertices
         indices = [0, 1, 1, 0, 3, 2, 2, 3]
-        offsets = [0, 0, 1, 1, 0, 0, 1, 1]
+        ind_offsets = [0, 0, 1, 1, 0, 0, 1, 1]
         vertices = []
         vert_map = sp.zeros((self.nz+1, self.nx+1, 4), dtype=int)
         vert_map[:] = sp.nan
@@ -120,20 +120,20 @@ class BlockMeshDict(OpenFoamFile):
         vert_index = 0
         if map_mask[0, 0]:
             vert_map[0, 0, 0] = 0
-            ydist = self.point_data[0, 0, 0]/2.0
+            ydist = self.point_data[0, 0, 0]
             offset = self.offset_points[0, 0, 0]
             #
-            vertices.append([0.0, offset-ydist, 0.0])
+            vertices.append([0.0, offset, 0.0])
             vertices.append([0.0, offset+ydist, 0.0])
             vert_index = 2
         #
         for iz in range(self.nz):
             if map_mask[iz, 0] or map_mask[iz+1, 0]:
                 zdist = (iz + 1.0) * self.avg_fact
-                ydist = self.point_data[iz, 0, 3]/2.0
+                ydist = self.point_data[iz, 0, 3]
                 offset = self.offset_points[iz, 0, 3]
                 #
-                vertices.append([0.0, offset-ydist, zdist])
+                vertices.append([0.0, offset, zdist])
                 vert_map[iz, 0, 3] = vert_index
                 vert_map[iz+1, 0, 0] = vert_index
                 vert_index += 1
@@ -143,10 +143,10 @@ class BlockMeshDict(OpenFoamFile):
         for ix in range(self.nx):
             if map_mask[0, ix] or map_mask[0, ix+1]:
                 xdist = (ix + 1.0) * self.avg_fact
-                ydist = self.point_data[0, ix, 1]/2.0
+                ydist = self.point_data[0, ix, 1]
                 offset = self.offset_points[0, ix, 1]
                 #
-                vertices.append([xdist, offset-ydist, 0.0])
+                vertices.append([xdist, offset, 0.0])
                 vert_map[0, ix, 1] = vert_index
                 vert_map[0, ix+1, 0] = vert_index
                 vert_index += 1
@@ -158,11 +158,11 @@ class BlockMeshDict(OpenFoamFile):
             ix = index % self.nx
             if sp.any(map_mask[iz:iz+2, ix:ix+2]):
                 xdist = (ix + 1.0) * self.avg_fact
-                ydist = self.point_data[iz, ix, 2]/2.0
+                ydist = self.point_data[iz, ix, 2]
                 zdist = (iz + 1.0) * self.avg_fact
                 offset = self.offset_points[iz, ix, 2]
                 #
-                vertices.append([xdist, offset-ydist, zdist])
+                vertices.append([xdist, offset, zdist])
                 vert_map[iz, ix, 2] = vert_index
                 vert_map[iz+1, ix, 1] = vert_index
                 vert_map[iz, ix+1, 3] = vert_index
@@ -177,9 +177,9 @@ class BlockMeshDict(OpenFoamFile):
         for index in sp.where(cell_mask)[0]:
             iz = int(index/self.nx)
             ix = index % self.nx
-            self._blocks.append(vert_map[iz, ix, indices] + offsets)
+            self._blocks.append(vert_map[iz, ix, indices] + ind_offsets)
         #
-        # coverting lists to scipy arrays
+        # converting lists to scipy arrays
         self._vertices = sp.array(vertices, ndmin=2, dtype=float)
         self._blocks = sp.array(self._blocks, ndmin=2, dtype=int)
 
