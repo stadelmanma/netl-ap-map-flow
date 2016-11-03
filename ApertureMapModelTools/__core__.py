@@ -227,18 +227,29 @@ POINTS {npts:d} float
     def export_vtk(self,
                    filename=None,
                    y_values=None,
+                   y_offsets=None,
                    voxel_size=1.0,
                    avg_fact=1.0,
                    cell_data=None,
                    overwrite=False):
         r"""
         Exports an ASCII legacy format VTK file to be read by ParaView.
-        The X and Z coordinates are inferred from the data map dimensions
-        and the Y coordinate defaults to the data map values themselves.
-        Alternatively the y-coordinate values can be supplied as a 2-D ndarray.
-        Additional data maps can be suplied as a list of tuples under the
-        cell_data keyword "cell_data=[('name', ndarray)]". The ndarrays used
-        must be 1-D and have the same size as the parent DataField.
+        The X and Z coordinates are inferred from the data map dimensions.
+        Values for the y coordinate if not supplied default to DataField's
+        own data map. All ndarray inputs need to have the appropriate size
+        and shape to match the DataField data. All coordinates are multiplied
+        by the voxel_size.
+
+        Arguments
+        ---------
+        filename : string, name of the vtk file to output (optional)
+        y_values : 2-D ndarray, data map to use as the y-coordinate (optional)
+        y_offsets : 2-D ndarray, data map to shift y-values by (optional)
+        voxel_size : float, voxel size of a cell in desired units (optional)
+        avg_fact : float, X and Z axis scaling factor
+        cell_data : list, a list of tuples to add as cell data to the VTK
+            file of the form [('name', 1-D ndarray), ...].
+        overwrite : bool, allows the method to replace an existing file.
         """
         #
         # processing arguments
@@ -247,6 +258,9 @@ POINTS {npts:d} float
         #
         y_values = self.data_map if y_values is None else y_values
         cell_data = [] if cell_data is None else cell_data
+        #
+        if y_offsets is None:
+            y_offsets = y_values/-2.0
         #
         # checking if file exists
         if not overwrite and os.path.exists(filename):
@@ -260,43 +274,38 @@ POINTS {npts:d} float
         #
         # setting up y coordinate map
         y_coords = self._cell_to_point_data(y_values, self.nx, self.nz)
+        y_coords = y_coords * voxel_size
+        y_offsets = self._cell_to_point_data(y_offsets, self.nx, self.nz)
+        y_offsets = y_offsets * voxel_size
         #
         # writing points to VTK file
         fmt = '{:14.6E} {:14.6E} {:14.6E}\n'
         for iz in range(self.nz):
             # lower face
-            x = 0.0
-            y = y_coords[iz, 0, 0]/2.0 * voxel_size
             z = iz * voxel_size * avg_fact
-            content += fmt.format(x, -y, z)
+            content += fmt.format(0.0, y_offsets[iz, 0, 0], z)
             for ix in range(self.nx):
                 x = ix * voxel_size * avg_fact
-                y = y_coords[iz, ix, 1]/2.0 * voxel_size
-                content += fmt.format(x, -y, z)
+                content += fmt.format(x, y_offsets[iz, ix, 1], z)
             # upper face
-            x = 0.0
-            y = y_coords[iz, 0, 0]/2.0 * voxel_size
-            content += fmt.format(x, y, z)
+            y = y_offsets[iz, 0, 0] + y_coords[iz, 0, 0]
+            content += fmt.format(0.0, y, z)
             for ix in range(self.nx):
                 x = ix * voxel_size * avg_fact
-                y = y_coords[iz, ix, 1]/2.0 * voxel_size
+                y = y_offsets[iz, ix, 1] + y_coords[iz, ix, 1]
                 content += fmt.format(x, y, z)
-        # final top edge of map
-        x = 0.0
-        y = y_coords[-1, 0, 3]/2.0 * voxel_size
+        # final top lower edge of map
         z = self.nz * voxel_size * avg_fact
-        content += fmt.format(x, -y, z)
+        content += fmt.format(0.0, y_offsets[-1, 0, 3], z)
         for ix in range(self.nx):
             x = ix * voxel_size * avg_fact
-            y = y_coords[-1, ix, 2]/2.0 * voxel_size
-            content += fmt.format(x, -y, z)
-        # upper face
-        x = 0.0
-        y = y_coords[-1, 0, 3]/2.0 * voxel_size
-        content += fmt.format(x, y, z)
+            content += fmt.format(x, y_offsets[-1, ix, 2], z)
+        # upper edge
+        y = y_offsets[-1, 0, 3] + y_coords[-1, 0, 3]
+        content += fmt.format(0.0, y, z)
         for ix in range(self.nx):
             x = ix * voxel_size * avg_fact
-            y = y_coords[-1, ix, 2]/2.0 * voxel_size
+            y = y_offsets[-1, ix, 2] + y_coords[-1, ix, 2]
             content += fmt.format(x, y, z)
         #
         # writing cell data to file
