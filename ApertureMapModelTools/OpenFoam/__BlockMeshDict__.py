@@ -320,15 +320,13 @@ class BlockMeshDict(OpenFoamFile):
         self._field.copy_data(self)
         #
         adj_matrix = self._field.create_adjacency_matrix()
-        num_cs, cs_ids = csgraph.connected_components(csgraph=adj_matrix,
+        cs_num, cs_ids = csgraph.connected_components(csgraph=adj_matrix,
                                                       directed=False)
         # only saving the largest cluster
-        if num_cs > 1:
-            cs_count = sp.zeros(num_cs, dtype=int)
-            for cs_num in cs_ids:
-                cs_count[cs_num] += 1
-            self.data_vector[sp.where(cs_ids != sp.argmax(cs_count))[0]] = 0.0
-            self.data_map = sp.reshape(self.data_vector, (self.nz, self.nx))
+        cs_num, counts = sp.unique(cs_ids, return_counts=True)
+        cs_num = cs_num[sp.argsort(counts)][-1]
+        self.data_vector[sp.where(cs_ids != cs_num)[0]] = 0.0
+        self.data_map = sp.reshape(self.data_vector, (self.nz, self.nx))
         #
         self._field.data_map = self.data_map
         self._field.data_vector = sp.ravel(self.data_map)
