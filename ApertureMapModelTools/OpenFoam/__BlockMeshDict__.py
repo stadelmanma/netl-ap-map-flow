@@ -11,6 +11,7 @@ import os
 import re
 import scipy as sp
 from scipy.sparse import csgraph
+from ..__core__ import DataField
 from .__openfoam_core__ import OpenFoamFile, OpenFoamDict, OpenFoamList
 #
 ########################################################################
@@ -74,7 +75,9 @@ class BlockMeshDict(OpenFoamFile):
         self.avg_fact = avg_fact
         self.mesh_params = dict(BlockMeshDict.DEFAULT_PARAMS)
         self.face_labels = {}
-        self._field = field.clone()
+        #
+        self._field = DataField(field.data_map)
+        self._field.point_data = sp.copy(field.point_data)
         self._vertices = None
         self._blocks = None
         self._edges = None
@@ -328,8 +331,7 @@ class BlockMeshDict(OpenFoamFile):
         self.data_vector[sp.where(cs_ids != cs_num)[0]] = 0.0
         self.data_map = sp.reshape(self.data_vector, (self.nz, self.nx))
         #
-        self._field.data_map = self.data_map
-        self._field.data_vector = sp.ravel(self.data_map)
+        self._field._data_map = self.data_map
         #
         # generating blocks and vertices
         mask = self.data_map > 0.0

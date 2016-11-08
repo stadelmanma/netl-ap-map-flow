@@ -36,22 +36,12 @@ class DataFieldRegion(DataField):
     def __init__(self, data, point_data):
         #
         # setting up the region
-        super().__init__(None)
         if data.shape != point_data.shape[0:2]:
             msg = 'data and point_data have different dimensions: {} != {}'
             raise ValueError(msg.format(data.shape, point_data.shape[:2]))
         #
-        self.nz, self.nx = data.shape
-        self.data_map = sp.copy(data)
-        self.data_vector = sp.ravel(data)
+        super().__init__(data)
         self.point_data = sp.copy(point_data)
-        #
-        self._raw_data = sp.copy(data)
-        self._define_cell_interfaces()
-
-    def parse_data_file(self, delim='auto', **kwargs):
-        msg = 'DataFieldRegions cannot read new data use a DataField instead'
-        raise NotImplementedError(msg)
 
     def create_point_data(self):
         msg = 'DataFieldRegions cannot have point_data recalculated'
@@ -239,7 +229,8 @@ class ParallelMeshGen(object):
         self.data_vector = field.data_vector
         self.data_map = field.data_map
         self.point_data = field.point_data
-        self._field = field.clone()
+        self._field = DataField(field.data_map)
+        self._field.point_data = sp.copy(field.point_data)
         self._mask = sp.ones(self.data_map.shape, dtype=bool)
         #
         self.offset_map = sp.zeros(self.data_map.shape)

@@ -94,7 +94,7 @@ POINTS {npts:d} float
         r"""
         Populates the DataField attributes based on the supplied data_map
         """
-        self._data_map = data_map
+        self._data_map = sp.copy(data_map)
         #
         # defining cell interfaces used in adjacency matrix
         self._define_cell_interfaces()

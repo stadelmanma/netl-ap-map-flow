@@ -6,6 +6,7 @@ Date Written: 2016/06/09
 Last Modifed: 2016/06/10
 #
 """
+from argparse import Namespace
 from collections import namedtuple
 from imp import reload
 import logging
@@ -47,26 +48,21 @@ class TestCore:
         fname = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', map_file)
         field = amt.DataField(fname)
         field.create_point_data()
-        field.copy_data(field)
         #
-        assert field.nx == 100
-        assert field.nz == 100
-        assert field.data_map.size == 10000
-        assert field.point_data.size == 40000
+        obj = Namespace()
+        field.copy_data(obj)
         #
-        # testing clone method returns proper data and class reference
-        cloned_field = field.clone()
-        assert isinstance(cloned_field, field.__class__)
-        assert sp.all(cloned_field.data_map == field.data_map)
-        assert sp.all(cloned_field._raw_data == field._raw_data)
+        assert obj.nx == 100
+        assert obj.nz == 100
+        assert obj.data_map.size == 10000
+        assert obj.point_data.size == 40000
         #
         # testing adjacency matrix
         matrix = field.create_adjacency_matrix()
         assert matrix is not None
         #
         # testing thresholding
-        field.data_map = sp.arange(field.nz*field.nx, dtype=float).reshape(field.nz, field.nx)
-        field.data_vector = sp.ravel(field.data_map)
+        field._data_map = sp.arange(field.nz*field.nx, dtype=float).reshape(field.nz, field.nx)
         low_inds = sp.where(field.data_vector <= 100)
         high_inds = sp.where(field.data_vector >= 900)
         field.threshold_data(min_value=100, repl=-1)

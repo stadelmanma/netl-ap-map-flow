@@ -19,9 +19,7 @@ def test_parallel_mesh_gen():
     #
     infile = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'Fracture1ApertureMap-10avg.txt')
     field = DataField(infile)
-    offset_field = field.clone()
-    offset_field.data_map = sp.ones(offset_field.data_map.shape)
-    offset_field.data_vector = sp.ravel(offset_field.data_map)
+    offset_field = DataField(sp.ones(field.data_map.shape))
     #
     # adding a fake boundary file to the mesh-region0 directory
     # this will be overwritten if testing with real OpenFoam programs

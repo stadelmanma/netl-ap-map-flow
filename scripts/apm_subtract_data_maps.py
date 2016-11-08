@@ -123,9 +123,8 @@ def process_maps(aper_map, data_map1, data_map2, args):
     """
     #
     # creating resultant map from clone of aperture map
-    result = aper_map.clone()
-    result.data_map = data_map1 - data_map2
-    result.data_vector = sp.ravel(result.data_map)
+    result = data_map1 - data_map2
+    result = DataField(result)
     result.infile = args.out_name
     result.outfile = args.out_name
     #

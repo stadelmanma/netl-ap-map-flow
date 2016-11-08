@@ -37,9 +37,6 @@ class TestParallelMeshGen:
                             data_field.point_data[0:5, 0:7, :])
         #
         with pytest.raises(NotImplementedError):
-            region.parse_data_file()
-        #
-        with pytest.raises(NotImplementedError):
             region.create_point_data()
 
     def test_block_mesh_region(self, data_field_class):
@@ -137,10 +134,9 @@ class TestParallelMeshGen:
         assert sp.all(pmg._mask)
         #
         # checking pmg only has references to data initially, new references are
-        # created if the 'threashold' method was used because it resets the arrays
+        # created if the 'threshold' method was used because it resets the arrays
         # using the internal _field which was cloned and independent of the original
         assert id(pmg.data_map) == id(field.data_map)
-        assert id(pmg.data_vector) == id(field.data_vector)
         assert id(pmg.point_data) == id(field.point_data)
         assert id(pmg._field) != id(field)
         #
