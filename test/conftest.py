@@ -64,12 +64,8 @@ def data_field_class():
         def __init__(self):
             self.infile = 'pytest-DataFeld-fixture'
             self.outfile = ''
-            self.nx = 10
-            self.nz = 10
             self.data_map = sp.arange(100).reshape(10, 10)
-            self.data_vector = sp.arange(100)
             self.point_data = None
-            self._raw_data = None
             self._cell_interfaces = None
             self.output_data = dict()
             #
