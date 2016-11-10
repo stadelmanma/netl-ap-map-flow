@@ -14,6 +14,7 @@ from scipy import sparse as sprs
 from scipy.sparse import csgraph
 from scipy.interpolate import griddata
 from ApertureMapModelTools import _get_logger, set_main_logger_level
+from ApertureMapModelTools import DataField, calc_percentile
 
 #
 desc_str = r"""
@@ -104,14 +105,21 @@ def apm_calculate_offset_map():
 
     # saving processed image
     if namespace.img_stack_dirname is not None:
-        save_image_stack(nonzero_locs, img_dims, stack_path)
+        save_image_stack(nonzero_locs,
+                         img_dims,
+                         stack_path,
+                         overwrite=namespace.force)
 
     # creating offset map and filling gaps left from zero aperture regions
     offset_map = generate_offset_map(nonzero_locs, img_dims)
+    #
+    logger.info('interpolating missing data due to zero aperture zones')
     offset_map = patch_holes(offset_map)
-
+    offset_map = filter_high_gradients(offset_map)
+    #
     # saving map
-    sp.savetxt(map_path, offset_map.T, fmt='%d', delimiter='\t')
+    logger.info('saving offsets file')
+    sp.savetxt(map_path, offset_map.T, fmt='%f', delimiter='\t')
 
 
 def load_image_data(image_file, invert):
@@ -133,7 +141,7 @@ def load_image_data(image_file, invert):
         data_array.append(frame)
     #
     data_array = sp.stack(data_array, axis=2)
-    logger.debug('    image dimensions: {} {} {}'.format(*data_array.shape))
+    logger.debug('\timage dimensions: {} {} {}'.format(*data_array.shape))
     #
     return data_array
 
@@ -146,7 +154,7 @@ def locate_nonzero_data(data_array):
     logger.info('flattening array and locating non-zero voxels...')
     data_vector = sp.ravel(data_array)
     nonzero_locs = sp.where(data_vector)[0]
-    logger.debug('    {} non-zero voxels'.format(nonzero_locs.size))
+    logger.debug('\t{} non-zero voxels'.format(nonzero_locs.size))
     #
     return nonzero_locs
 
@@ -186,7 +194,7 @@ def generate_node_connectivity_array(index_map, data_array):
     slice_list[-1] = slice(slice_list[-1].start, index_map.shape[0])
     #
     conns = sp.ones((0, 2), dtype=sp.uint32)
-    logger.debug('    number of slices to process: {}'.format(len(slice_list)))
+    logger.debug('\tnumber of slices to process: {}'.format(len(slice_list)))
     for sect in slice_list:
         # getting coordinates of nodes and their neighbors
         nodes = index_map[sect]
@@ -225,7 +233,7 @@ def generate_node_connectivity_array(index_map, data_array):
     dtype = sp.dtype((sp.void, conns.dtype.itemsize*conns.shape[1]))
     dim1 = conns.shape[1]
     conns = sp.unique(conns.view(dtype)).view(conns.dtype).reshape(-1, dim1)
-    logger.debug('    removed {} duplicates'.format(dim0 - conns.shape[0]))
+    logger.debug('\tremoved {} duplicates'.format(dim0 - conns.shape[0]))
     #
     return conns
 
@@ -271,20 +279,20 @@ def remove_isolated_clusters(conns, nonzero_locs, num_to_keep):
     groups = groups[order]
     counts = counts[order]
     #
-    msg = '    {} component groups for {} total nodes'
+    msg = '\t{} component groups for {} total nodes'
     logger.debug(msg.format(groups.size, cs_ids.size))
-    msg = '    largest group number: {}, size {}'
+    msg = '\tlargest group number: {}, size {}'
     logger.debug(msg.format(groups[0], counts[0]))
-    msg = '    {} % of nodes contained in largest group'
+    msg = '\t{} % of nodes contained in largest group'
     logger.debug(msg.format(counts[0]/cs_ids.size*100))
-    msg = '    {} % of nodes contained in {} retained groups'
+    msg = '\t{} % of nodes contained in {} retained groups'
     num = sp.sum(counts[0:num_to_keep])/cs_ids.size*100
     logger.debug(msg.format(num, num_to_keep))
     #
     inds = sp.where(sp.in1d(cs_ids, groups[0:num_to_keep]))[0]
     num = nonzero_locs.size
     nonzero_locs = nonzero_locs[inds]
-    msg = '    removed {} disconnected nodes'
+    msg = '\tremoved {} disconnected nodes'
     logger.debug(msg.format(num - nonzero_locs.size))
     #
     return nonzero_locs
@@ -333,35 +341,81 @@ def generate_offset_map(nonzero_locs, shape):
     data = sp.ones(shape, dtype=sp.uint16)*sp.iinfo(sp.int16).max
     data[x_coords, y_coords, z_coords] = y_coords
     #
-    offset_map = sp.zeros((shape[0], shape[2]), dtype=sp.int16)
+    offset_map = sp.zeros((shape[0], shape[2]), dtype=float)
     for z_index in range(shape[2]):
         offset_map[:, z_index] = sp.amin(data[:, :, z_index], axis=1)
-        offset_map[:, z_index][offset_map[:, z_index] > shape[1]] = -1
+        offset_map[:, z_index][offset_map[:, z_index] > shape[1]] = sp.nan
     #
     return offset_map
 
 
 def patch_holes(data_map):
     r"""
-    Fills in any areas with a value of -1 by taking a linear average of
+    Fills in any areas with a non finite value by taking a linear average of
     the nearest non-zero values along each axis
     """
     #
-    logger.info('interpolating missing data due to zero aperture zones')
-    #
     # getting coordinates of all valid data points
     data_vector = sp.ravel(data_map)
-    inds = sp.where(data_vector >= 0)[0]
+    inds = sp.where(sp.isfinite(data_vector))[0]
     points = sp.unravel_index(inds, data_map.shape)
     values = data_vector[inds]
     #
-    # setting up to interpolate over all data coordinates
-    intrp = sp.arange(data_map.size, dtype=int)
-    intrp = sp.unravel_index(intrp, data_map.shape)
+    # linearly interpolating data to fill gaps
+    xi = sp.where(~sp.isfinite(data_vector))[0]
+    msg = '\tattempting to fill %d values with a linear interpolation'
+    logger.debug(msg, xi.size)
+    xi = sp.unravel_index(xi, data_map.shape)
+    intrp = griddata(points, values, xi, fill_value=sp.nan, method='linear')
+    data_map[xi[0], xi[1]] = intrp
     #
-    # interpolating data to fill gaps and creating the new data map
-    data_vector = griddata(points, values, intrp, method='nearest')
+    # performing a nearest interpolation any remaining regions
+    data_vector = sp.ravel(data_map)
+    xi = sp.where(~sp.isfinite(data_vector))[0]
+    msg = '\tfilling %d remaining values with a nearest interpolation'
+    logger.debug(msg, xi.size)
+    xi = sp.unravel_index(xi, data_map.shape)
+    intrp = griddata(points, values, xi, fill_value=0, method='nearest')
+    data_map[xi[0], xi[1]] = intrp
+    #
+    return data_map
+
+
+def filter_high_gradients(data_map):
+    r"""
+    Filters the offset field to reduce the number of very steep gradients.
+    The magnitude of the gradient is taken and all values less than or
+    greater than +-99th percentile are removed and recalculated.
+    """
+    #
+    logger.info('filtering offset map to remove steeply sloped cells')
+    #
+    zdir_grad, xdir_grad = sp.gradient(data_map)
+    mag = sp.sqrt(zdir_grad**2 + xdir_grad**2)
+    data_map += 1
+    data_vector = sp.ravel(data_map)
+    #
+    # setting regions outside of 99th percentile to 0 for cluster removal
+    val = calc_percentile(99, sp.ravel(mag))
+    data_map[zdir_grad < -val] = 0
+    data_map[zdir_grad > val] = 0
+    data_map[xdir_grad < -val] = 0
+    data_map[xdir_grad > val] = 0
+    #
+    logger.debug('\tremoving clusters isolated by high gradients')
+    offsets = DataField(data_map)
+    adj_mat = offsets.create_adjacency_matrix()
+    cs_num, cs_ids = csgraph.connected_components(csgraph=adj_mat,
+                                                  directed=False)
+    cs_num, counts = sp.unique(cs_ids, return_counts=True)
+    cs_num = cs_num[sp.argsort(counts)][-1]
+    #
+    data_vector[sp.where(cs_ids != cs_num)[0]] = sp.nan
     data_map = sp.reshape(data_vector, data_map.shape)
+    #
+    # re-interpolating for the nan regions
+    logger.debug('\tpatching holes left by cluster removal')
+    patch_holes(data_map)
     #
     return data_map
 
