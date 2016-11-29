@@ -15,7 +15,9 @@ set -e
 
 # Building the flow model from source
 cd "$REPO_HOME/source"
-make $1
+make $1 MODELNAME=APM-MODEL.EXE
+cd "$REPO_HOME"
+mv source/APM-MODEL.EXE .
 
 # adding module to python path
 PY_SITE=$(python3 -m site --user-site)

@@ -2,8 +2,7 @@
 # defining variables
 COMPILER = gfortran
 OPTIMIZE = -O3
-MODELNAME = APM-MODEL.EXE
-MV = mv
+MODELNAME ?= APM-MODEL.EXE
 RM = rm -f
 
 # files and objects
@@ -26,10 +25,8 @@ TEST_FLAGS = -coverage -DUNITTESTING
 # setting OS flag
 ifdef SystemRoot
 	OS = -DWIN64=1
-	MV = MOVE
 else ifdef SYSTEMROOT
 	OS = -DWIN64=1
-	MV = MOVE
 else
 	OS = -DWIN64=0
 endif
@@ -37,11 +34,9 @@ endif
 # default action
 all: modules
 	$(COMPILER) -o $(MODELNAME) $(LINKED_MODULES) $(MODELFILES) $(OPTIMIZE) $(OS)
-	$(MV) $(MODELNAME) ..
 
 debug: modules
 	$(COMPILER) -o $(MODELNAME) $(LINKED_MODULES) $(MODELFILES) QUIT.F $(FFLAGS) $(OS) $(WFLAGS)
-	$(MV) $(MODELNAME) ..
 
 modules:
 	$(COMPILER) -c $(MODULES)
