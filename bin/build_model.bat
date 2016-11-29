@@ -18,7 +18,6 @@ if /I "%errorlevel%" == "0" (
 )
 :: checking if directory is actually a repository
 if DEFINED USE_GIT (
-    echo %errorlevel%
     if /I "%errorlevel%" NEQ "0" (
         set USE_GIT=
     )
@@ -26,15 +25,13 @@ if DEFINED USE_GIT (
 if DEFINED USE_GIT (
     for /f %%i in ('git rev-parse --show-toplevel') do set REPO_HOME=%%i
 )
-echo %REPO_HOME%
 
 ::
 :: building flow model from source
 cd "%REPO_HOME%/source"
 make %1 MODELNAME=APM-MODEL.EXE
-cd %REPO_HOME%
-move source\APM-MODEL.EXE .
-
+move APM-MODEL.EXE ..
+cd ..
 ::
 :: handles creating a directory junction for the module if needed
 :: this allows global import ApertureMapModelTools statments
