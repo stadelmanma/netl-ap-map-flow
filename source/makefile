@@ -3,8 +3,8 @@
 COMPILER = gfortran
 OPTIMIZE = -O3
 MODELNAME = APM-MODEL.EXE
+MV = mv
 RM = rm -f
-RM_TEMP = find . -type f -name "*~" -delete
 
 # files and objects
 MODULES = STRING_MODULE.F APM_MODULE.F APM_SOLVER_MODULE.F UNIT_CONVERSION_MODULE.F PVT_MODULE.F
@@ -26,8 +26,10 @@ TEST_FLAGS = -coverage -DUNITTESTING
 # setting OS flag
 ifdef SystemRoot
 	OS = -DWIN64=1
+	MV = MOVE
 else ifdef SYSTEMROOT
 	OS = -DWIN64=1
+	MV = MOVE
 else
 	OS = -DWIN64=0
 endif
@@ -35,11 +37,11 @@ endif
 # default action
 all: modules
 	$(COMPILER) -o $(MODELNAME) $(LINKED_MODULES) $(MODELFILES) $(OPTIMIZE) $(OS)
-	mv $(MODELNAME) ..
+	$(MV) $(MODELNAME) ..
 
 debug: modules
 	$(COMPILER) -o $(MODELNAME) $(LINKED_MODULES) $(MODELFILES) QUIT.F $(FFLAGS) $(OS) $(WFLAGS)
-	mv $(MODELNAME) ..
+	$(MV) $(MODELNAME) ..
 
 modules:
 	$(COMPILER) -c $(MODULES)
@@ -73,5 +75,3 @@ clean:
 	$(RM) *.gcno
 	$(RM) *.gcda
 	$(RM) *.gcov
-	#
-	cd ..; $(RM_TEMP)
