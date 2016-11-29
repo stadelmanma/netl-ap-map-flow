@@ -31,9 +31,9 @@ echo %REPO_HOME%
 ::
 :: building flow model from source
 cd "%REPO_HOME%/source"
-make "%1" MODELNAME=APM-MODEL.EXE
+make %1 MODELNAME=APM-MODEL.EXE
 cd %REPO_HOME%
-move source/APM-MODEL.EXE .
+move source\APM-MODEL.EXE .
 
 ::
 :: handles creating a directory junction for the module if needed
