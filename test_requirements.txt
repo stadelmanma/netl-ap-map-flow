@@ -1,7 +1,7 @@
 codecov
 coverage
 pep8
-pytest
+pytest==3.0.3
 pytest-cache
 pytest-cov
 pytest-pep8

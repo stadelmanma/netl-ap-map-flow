@@ -37,6 +37,8 @@ Linux and OSX
 ~~~~~~~~~~~~~
 Getting the model and module up and running is a very straight forward process on Linux and OSX. Simply download and install a Python3.4+ package from `Anaconda <http://continuum.io/downloads#all?>`_ to setup the Python environment. If you already have a significantly customized Python environment the dependencies listed in `<requirements.txt>`_ can be manually installed. To run the testing suite as well, install the dependencies in `<test_requirements.txt>`_. The next step is to install a Fortran compiler and GNU make, :code:`gfortran` is the expected compiler name in the makefile. Linux may already have both, you will likely need to install them on OS X. The final step is to clone or download the repository into your chosen location and then run :code:`./bin/build_model` from the toplevel directory. That will build the flow model from source and link the ApertureMapModelTools module to the installed version of python3.
 
+
+
 Windows
 ~~~~~~~
 1. Download and install the 64 bit version of `Anaconda <https://www.continuum.io/downloads#windows>`_ for Windows
