@@ -37,7 +37,26 @@ Linux and OSX
 ~~~~~~~~~~~~~
 Getting the model and module up and running is a very straight forward process on Linux and OSX. Simply download and install a Python3.4+ package from `Anaconda <http://continuum.io/downloads#all?>`_ to setup the Python environment. If you already have a significantly customized Python environment the dependencies listed in `<requirements.txt>`_ can be manually installed. To run the testing suite as well, install the dependencies in `<test_requirements.txt>`_. The next step is to install a Fortran compiler and GNU make, :code:`gfortran` is the expected compiler name in the makefile. Linux may already have both, you will likely need to install them on OS X. The final step is to clone or download the repository into your chosen location and then run :code:`./bin/build_model` from the toplevel directory. That will build the flow model from source and link the ApertureMapModelTools module to the installed version of python3.
 
-
+MacOS/ OSX
+~~~~~~~~~~
+1. Install Xcode from the App Store
+    A. Open Xcode once it is install and allow it to install additional components, this includes the Command Line Tools (CLT)
+2. Install `homebrew <http://brew.sh>`_
+    A. After installation :code:`brew install gcc` to install gfortran and many other useful tools
+        * It may take awhile on the :code:`make bootstrap` step, my complete installation took approximately 90 minutes.
+3. Download and install the 64 bit version of `Anaconda <https://www.continuum.io/downloads#osx>`_ for MacOS
+    A. Choose the "Install for Me Only" option when prompted
+    B. Open or create the ~/.bashrc (or equivalent for your shell i.e. ~/.zshrc) file and preappend :code:`$HOME/anaconda/bin:` to the :code:`$PATH` variable. 
+        * If you need to create the ~/.bashrc file or there is no $PATH line in the file, the following line should work: :code:`export PATH=$HOME/anaconda/bin:$PATH`
+        * Be careful not to forget the :code:`:` between directory paths or to export the PATH variable i.e. :code:`export $PATH`. 
+        * If you edited the ~/.bashrc file in the terminal or have an open window run :code:`source ~/.bashrc` to apply changes, alternatively close and open a term terminal window. 
+    C. In a terminal window run :code:`python3 --version` to ensure Anaconda was installed properly
+        * :code:`python` will likely also bring up the Anaconda version of 3.5, to regain access to the system version of Python delete the :code:`python` symlink in :code:`~/anaconda/bin`
+    D. Optional: run :code:`pip install -r test_requirements.txt` to enable running the test suite.
+4. Open a terminal or cd into the directory you want to install the AP_MAP_FLOW package in
+    A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`
+    B. Run the command :code:`cd netl-AP_MAP_FLOW`
+    C. Finally run :code:`./bin/build_model` which will build the model and link the ApertureMapModelTools module to the python3 user site
 
 Windows
 ~~~~~~~
