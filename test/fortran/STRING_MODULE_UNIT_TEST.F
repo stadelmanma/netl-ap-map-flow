@@ -118,7 +118,9 @@ C-----------------------------------------------------------------------
         USE STRING_MODULE
         IMPLICIT NONE
         INTEGER :: I, NFLD, STRLEN
+        INTEGER :: LFLD(MAXFLD)
         CHARACTER(80) :: TEST_STR, TEST_ARR(4), CORR_ARR(4)
+        CHARACTER(MAXLEN) :: CFLD(MAXFLD)
         !
         CALL INIT_TEST
         !
