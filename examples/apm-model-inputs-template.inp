@@ -12,7 +12,7 @@
 ; When populating fields be sure to remove the parentheses and semicolons for the input
 ; to be used by the model.
 ; Units are requried where appropriate and must be separated from the  value by at
-; least one space. Liquid simulations do not require PVT data if a viscosity is supplied.
+; least one space.
 ;
 ;
 ; THE EXE FILE MUST BE NAMED FOR THE PYTHON RUN MODULE TO WORK
@@ -20,7 +20,6 @@
 ;
 ;
 ; FILE PATHS AND NAMES
-;PVT-FILE:      "(PATH/TO/PVT-DATA.*)"
 ;APER-MAP: "(PATH/TO/FILE.*)"
 ;SUMMARY-FILE:  "(PATH\TO\FILE.TXT)"
 ;STAT-FILE:  "(PATH\TO\FILE.CSV)"
@@ -38,12 +37,9 @@
 ;OUTLET-SIDE:  (LEFT, RIGHT, TOP OR BOTTOM)
 ;
 ; MODEL PROPERTIES
-;FLUID-TYPE:    (LIQUID OR GAS)
 ;FLUID-DENSITY: (DENSITY) (UNIT)
 ;FLUID-VISCOSITY: (VISCOSITY) (UNIT)
 ;MAXIMUM MAP DIMENSION: (MAX NUMBER OF BLOCKS ALONG X OR Z AXIS)
-;STD-TEMP:      273.15 K
-;STD-PRESS:       1.00 ATM
 ;
 ; OTHER PARAMETERS
 ;MAP AVERAGING FACTOR: (HORIZONTAL AVERAGING FACTOR)

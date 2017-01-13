@@ -24,7 +24,6 @@ class TestBulkRun:
         #
         # setting inputs for a full test
         file_formats = {
-            'PVT-FILE': os.path.join(FIXTURE_DIR, 'PVT', 'H2O_TEMP_058F.CSV'),
             'APER-MAP': os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', '{aper-map}.txt'),
             'SUMMARY-FILE': os.path.join(TEMP_DIR, '{aper-map}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-LOG.TXT'),
             'STAT-FILE': os.path.join(TEMP_DIR, '{aper-map}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-STAT.CSV'),
