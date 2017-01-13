@@ -57,15 +57,13 @@ exe_path = os.path.realpath(os.path.join('.', inp_file['EXE-FILE'].value))
 inp_file['EXE-FILE'].update_value(exe_path, False)
 #
 # setting parameters
-pvt_path = os.path.join(FIXTURE_DIR, 'H2O_TEMP_058F.CSV')
-inp_file['PVT-FILE'].update_value(pvt_path)
 map_path = os.path.join(FIXTURE_DIR, 'ParallelPlate-1vox.txt')
 inp_file['APER-MAP'].update_value(map_path)
 inp_file['OVERWRITE'].commented_out = True
 inp_file['BAD-INPUT'] = ArgInput('BAD-INPUT: VALUE')
 #
 # running initial liquid sim with everything to set up base coverage
-run_model_wrapper(inp_file, stdout_pat=re.compile('WARNING - USING AVERAGE VISC'))
+run_model_wrapper(inp_file, stdout_pat=re.compile('WARNING: UNRECOGNIZED INPUT: BAD-INPUT: VALUE'))
 #
 # commenting/ uncommenting some inputs so they don't cause issue
 map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
@@ -77,17 +75,9 @@ inp_file['OUTFLOW-SIDE'].commented_out = True
 inp_file['MANIFOLD'].commented_out = True
 inp_file['SOLVER'].commented_out = True
 #
-# running gas sim with PVT and no AVG_VISC
-inp_file['FLUID-VISCOSITY'].commented_out = True
-inp_file['FLUID-TYPE'].update_value('GAS')
-run_model_wrapper(inp_file)
-#
-# running liquid sim with no PVT, AVG_VISC and outlet rate control
-inp_file['PVT-FILE'].commented_out = True
-inp_file['FLUID-VISCOSITY'].commented_out = False
+# running sim with outlet rate control
 inp_file['INLET-RATE'].commented_out = True
 inp_file['OUTLET-PRESS'].commented_out = True
-inp_file['FLUID-TYPE'].update_value('LIQUID')
 inp_file['INLET-PRESS'].update_value('2000000')
 inp_file['OUTLET-RATE'].update_value('1.0')
 run_model_wrapper(inp_file, stdout_pat=re.compile('USING AVERAGE LIQUID VISCOSITY'))
@@ -135,11 +125,6 @@ inp_file['VTK-FILE'].update_value('/non/existant/root/path/test.txt')
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('IO ERROR:\s*\d+'))
 inp_file['VTK-FILE'].commented_out = True
 #
-# bad fluid type
-inp_file['FLUID-TYPE'].update_value('SOLID')
-run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('INVALID FLUID TYPE'))
-inp_file['FLUID-TYPE'].update_value('LIQUID')
-#
 # hitting errors when processing initialization file, missing and invalid field
 inp_file['OUTLET-PRESS'].update_value('')
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('INSUFFICIENT'))
@@ -160,11 +145,6 @@ run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('MAXIMUM NUMB
 inp_file['MAXIMUM'].update_value(137)
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('MAXIMUM NUMBER OF VERTICAL'))
 inp_file['MAXIMUM'].update_value(500)
-#
-# gas sim without PVT
-inp_file['FLUID-TYPE'].update_value('GAS')
-run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('PVT.*REQUIRED FOR GAS SIMULATIONS'))
-inp_file['FLUID-TYPE'].update_value('LIQUID')
 #
 # liquid sim with invalid visc
 inp_file['FLUID-VISCOSITY'].update_value('-1.0')
