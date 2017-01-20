@@ -48,8 +48,6 @@
              99.000           10.403000         0.278800399
             100.000           24.525000         0.657269998
 
- READING PVT DATA
-
 
  DEFINING BOUNDARY CELL TRANSMISSIBILIES
 
