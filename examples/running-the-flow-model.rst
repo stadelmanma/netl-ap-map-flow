@@ -37,7 +37,6 @@ This is where the path of input and output files are defined. If the line :code:
 
 Input Files
 ~~~~~~~~~~~
-  - :code:`PVT-FILE:` File storing state data for liquids or gases, required if :code:`FLUID-TYPE: GAS` is present. Only iso-thermal data is accepted.
   - :code:`APER-MAP:` File that stores the aperture map data.
 
 Output Files
@@ -52,7 +51,7 @@ Output Files
 Boundary Conditions
 -------------------
 
-Defines the boundary conditions for the model, the model does no internal checking to see if the BCs supplied create a valid solvable problem. It is the user's resposiblity to ensure a valid combination is supplied; two Dirichlet (pressure) conditions or one Dirichlet and one Nuemann (flow rate) condition on the inlet and outlet.
+Defines the boundary conditions for the model, the model does no internal checking to see if the BCs supplied create a valid solvable problem. It is the user's resposiblity to ensure a valid combination is supplied; two Dirichlet (pressure) conditions or one Dirichlet and one Neumann (flow rate) condition on the inlet and outlet.
 
  * :code:`INLET-PRESS:` value unit ;The pressure value to use at the inlet
  * :code:`INLET-RATE:`  value unit ;The flow rate to apply at the inlet
@@ -65,12 +64,9 @@ Model Properties
 
 Sets various fluid and model properties.
 
- * :code:`FLUID-TYPE:` [LIQUID or GAS] ;determines the type of simulation to run. Gas simulations require full set of isothermal PVT data
  * :code:`FLUID-DENSITY:` value unit ;Density of liquid to use in Reynolds number calculation
- * :code:`FLUID-VISCOSITY:` value unit ;Viscosity of liquid, if this is supplied PVT data can be neglected for liquid simulations.
+ * :code:`FLUID-VISCOSITY:` value unit ;Viscosity of liquid
  * :code:`MAXIMUM MAP DIMENSION:` value ;Maximum number of blocks along either axis. Values close to actual axis size slightly improve runtime memory conservation relative to much larger values.
- * :code:`STD-TEMP:` value unit ;User defined standard (or surface) temperature used in gas simulations
- * :code:`STD-PRESS:` value unit ;User defined standard (or surface) pressure used in gas simulations
 
 Other Parameters
 ----------------
@@ -87,55 +83,6 @@ Sets other important miscellaneous runtime parameters.
 This tells the model what units you want the data output in. Commenting out or omitting this line will output everything in SI (pascals, meters and meters^3/second)
 
  * :code:`OUTPUT-UNITS:` pressure unit, distance unit, flow rate unit
-
-Blank Input File
-----------------
-
-This can be copy and pasted into a blank text document to quickly create a new input file. The inputs you want to use will need to be uncommented. Remember to keep at least one space between the keyword and the value. Some default values have been left in place.
-
-.. code-block:: Scheme
-
-	;
-	;EXE-FILE: APM-MODEL.EXE
-	;
-	;
-	; FILE PATHS AND NAMES
-	;PVT-FILE:
-	;APER-MAP:
-	;SUMMARY-FILE:
-	;STAT-FILE:
-	;APER-FILE:
-	;FLOW-FILE:
-	;PRESS-FILE:
-	;VTK-FILE:
-	;OVERWRITE EXISTING FILES
-	;
-	; BOUNDARY CONDITIONS
-	;INLET-PRESS:
-	;INLET-RATE:
-	;OUTLET-PRESS:
-	;OUTLET-RATE:
-	;OUTLET-SIDE:
-	;
-	; MODEL PROPERTIES
-	;FLUID-TYPE: LIQUID
-	;FLUID-DENSITY:
-	;FLUID-VISCOSITY:
-	;MAXIMUM MAP DIMENSION: 1500
-	;STD-TEMP:      273.15 K
-	;STD-PRESS:       1.00 ATM
-	;
-	; OTHER PARAMETERS
-	;MAP AVERAGING FACTOR: 1.0
-	;VOXEL SIZE:
-	;ROUGHNESS REDUCTION: 0.00 ;IN VOXELS
-	;CALCULATE PERCENTILES: 0,1,5,10,15,20,25,30,40,50,60,70,75,80,85,90,95,99,100
-	;HIGH-MASK:
-	;LOW-MASK:
-	;
-	; DEFINE SPECIFIC OUTPUT UNITS TO USE
-	; REQUIRED FIELD ORDER: PRESSURE,DISTANCE,FLOW RATE
-	;OUTPUT-UNITS:
 
 Running the Model
 =================
@@ -172,7 +119,6 @@ Open model-input-params.inp with your favorite text editor and copy and paste th
 	OUTLET-SIDE: TOP
 	;
 	; MODEL PROPERTIES
-	FLUID-TYPE: LIQUID
 	FLUID-DENSITY: 1000.0 KG/M^3
 	FLUID-VISCOSITY: 0.890 CP
 	;
