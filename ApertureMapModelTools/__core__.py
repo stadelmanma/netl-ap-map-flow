@@ -349,7 +349,9 @@ POINTS {npts:d} float
 class StatFile(dict):
     r"""
     Parses and stores information from a simulation statisitics file. This
-    class helps facilitate data mining of simulation results.
+    class helps facilitate data mining of legacy simulation results. If
+    available the YAML formatted file should be used instead as it can be
+    directly parsed into a dictionary by the yaml module.
     """
 
     def __init__(self, infile):
@@ -374,12 +376,15 @@ class StatFile(dict):
             content_arr = [l for l in content_arr if l]
         #
         # pulling out aperture map and pvt file key-value pairs
-        map_line = content_arr.pop(0).split(',')
-        pvt_line = content_arr.pop(0).split(',')
-        self.map_file = map_line[1].strip()
-        self.pvt_file = pvt_line[1].strip()
-        self[map_line[0].replace(':', '').strip()] = self.map_file
-        self[pvt_line[0].replace(':', '').strip()] = self.pvt_file
+        if (re.match('APER', content_arr[0])):
+            map_line = content_arr.pop(0).split(',')
+            self.map_file = map_line[1].strip()
+            self[map_line[0].replace(':', '').strip()] = self.map_file
+        #
+        if (re.match('PVT', content_arr[0])):
+            pvt_line = content_arr.pop(0).split(',')
+            self.pvt_file = pvt_line[1].strip()
+            self[pvt_line[0].replace(':', '').strip()] = self.pvt_file
         #
         # stepping through pairs of lines to get key -> values
         for i in range(0, len(content_arr), 2):
