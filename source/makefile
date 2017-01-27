@@ -38,7 +38,7 @@ ${OBJDIR}:
 	mkdir -p $(OBJDIR)
 
 ${OBJDIR}%.o : %.F | ${OBJDIR}
-	$(CC) -c $(FLAGS) $(TEST_FLAGS) -o $@ $< 
+	$(CC) -c $(FLAGS) $(TEST_FLAGS) -o $@ $<
 
 
 ${OBJDIR}${MODELNAME}: ${MODULE_OBJS} ${MODEL_OBJS}
@@ -48,4 +48,3 @@ debug: clean ${OBJDIR}${MODELNAME}
 
 clean:
 	$(RM) $(OBJDIR) *.o *.mod *.EXE *.gcno *.gcda *.gcov
-

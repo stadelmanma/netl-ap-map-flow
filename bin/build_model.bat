@@ -30,7 +30,7 @@ if DEFINED USE_GIT (
 :: building flow model from source
 cd "%REPO_HOME%/source"
 make %1 MODELNAME=APM-MODEL.EXE
-move APM-MODEL.EXE ..
+move dist\APM-MODEL.EXE ..
 cd ..
 ::
 :: handles creating a directory junction for the module if needed
@@ -48,7 +48,7 @@ if /I "%errorlevel%" NEQ "0" (
 )
 :: storing path to Python user site directory
 for /f %%i in ('python -m site --user-site') do set SITE_PATH=%%i
-:: Creating site directory first if necessary 
+:: Creating site directory first if necessary
 if NOT EXIST "%SITE_PATH%" (
     mkdir "%SITE_PATH%"
 )
