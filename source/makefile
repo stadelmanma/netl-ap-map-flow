@@ -5,14 +5,17 @@ OPTIMIZE ?= -O3
 MODELNAME ?= APM-MODEL.EXE
 OBJDIR = dist/
 RM = rm -rf
+MKDIR = mkdir -p $(OBJDIR)
 .DEFAULT_GOAL:= $(OBJDIR)$(MODELNAME)
 
 # setting OS flag
 OS = -DWIN64=0
 ifdef SystemRoot
 	OS = -DWIN64=1
+	MKDIR = echo "Manually create source/dist directory if needed"
 else ifdef SYSTEMROOT
 	OS = -DWIN64=1
+	MKDIR = echo "Manually create source/dist directory if needed"
 endif
 
 # setting variables
@@ -35,11 +38,10 @@ debug test: FLAGS += $(OS) -J$(OBJDIR) -I$(OBJDIR)
 
 
 ${OBJDIR}:
-	mkdir -p $(OBJDIR)
+	$(MKDIR)
 
 ${OBJDIR}%.o : %.F | ${OBJDIR}
 	$(CC) -c $(FLAGS) $(TEST_FLAGS) -o $@ $<
-
 
 ${OBJDIR}${MODELNAME}: ${MODULE_OBJS} ${MODEL_OBJS}
 	$(CC) $(FLAGS) $(TEST_FLAGS) $^ -o $@
