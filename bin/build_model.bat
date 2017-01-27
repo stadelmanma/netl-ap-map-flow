@@ -28,10 +28,12 @@ if DEFINED USE_GIT (
 
 ::
 :: building flow model from source
-cd "%REPO_HOME%/source"
-make %1 MODELNAME=APM-MODEL.EXE
-move dist\APM-MODEL.EXE ..
-cd ..
+cd "%REPO_HOME%"
+if NOT EXIST "source\dist" (
+    mkdir "source\dist"
+)
+make %1 MODELNAME=APM-MODEL.EXE -C source
+move source\dist\APM-MODEL.EXE .
 ::
 :: handles creating a directory junction for the module if needed
 :: this allows global import ApertureMapModelTools statments
