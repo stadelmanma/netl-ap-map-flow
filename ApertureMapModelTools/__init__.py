@@ -3,7 +3,7 @@ Automatically imports several modules.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2016/06/14
+Last Modifed: 2017/02/03
 #
 """
 #
@@ -12,8 +12,8 @@ import os as _os
 import sys as _sys
 #
 # checking python version
-if _sys.version_info < (3, 3):
-    raise Exception('ApertureMapModelTools requires Python 3.3 or greater')
+if _sys.version_info < (3, 4):
+    raise Exception('ApertureMapModelTools requires Python 3.4 or greater')
 
 #
 from .__core__ import DataField, FractureImageStack, StatFile
