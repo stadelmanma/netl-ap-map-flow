@@ -4,7 +4,7 @@ ApertureMapModelTools module.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2016/08/10
+Last Modifed: 2017/02/02
 #
 """
 #
@@ -15,6 +15,7 @@ import os
 import re
 import subprocess
 import scipy as sp
+from PIL import Image
 from scipy import sparse as sprs
 #
 ########################################################################
@@ -344,6 +345,71 @@ POINTS {npts:d} float
             content += '{:14.6e}\n'.format(value)
         #
         return content
+
+
+class FractureImageStack:
+    def __init__(self, image_filename, invert=False):
+        r""" Reads image data, fracture pixels are assumed to be truthy
+        (i.e. > 0) and rock pixels false (i.e. == 0)"""
+        # TODO allow initialization from data
+        logger.info('loading image...')
+        img = Image.open(image_filename)
+        #
+        # creating full image array
+        logger.info('creating image array...')
+        self.image_data = []
+        for frame in range(img.n_frames):
+            img.seek(frame)
+            frame = sp.array(img, dtype=bool).transpose()
+            self.image_data.append(frame)
+        #
+        # stacking frames into a single 3 dimensional array
+        self.image_data = sp.stack(self.image_data, axis=2)
+        if invert:
+            self.invert()
+
+    @property
+    def nx(self):
+        r"""returns number of columns"""
+        return self._data_map.shape[0]
+
+    @property
+    def ny(self):
+        r"""returns number of rows"""
+        return self._data_map.shape[1]
+
+    @property
+    def nz(self):
+        r"""returns number of slices"""
+        return self._data_map.shape[2]
+
+    def invert(self):
+        r""" Inverts image data map so black becomes white, vice versa"""
+        self.image_data = ~self.image_data
+
+    @staticmethod
+    def save_image_stack(fname, image_data, overwrite=False, **kwargs):
+        r""" Saves a multi-frame image using supplied image data,
+        using Image.save from the PIL library"""
+        #
+        # checking if file exists
+        if not overwrite and os.path.exists(fname):
+            msg = 'Error - there is already a file at ' + fname + '.'
+            msg += ' Specify "overwrite=True" to replace it'
+            raise FileExistsError(msg)
+        #
+        # saving image using PIL's Image.save abstraction
+        img = Image.fromarray(image_data)
+        img.save(fname, save_all=True, **kwargs)
+
+    def save(self, fname, overwrite=False, **kwargs):
+        r""" Saves a multiframe stack under the desired filename,
+        for TIF stacks PIL must be >= 4.0.0"""
+        #
+        #  passing instance data to static method after type conversion
+        kwargs['overwrite'] = overwrite
+        img_data = sp.array(self.image_data, dtype=sp.uint8) * 255
+        self.save_image_stack(fname, self.image_data, **kwargs)
 
 
 class StatFile(dict):
