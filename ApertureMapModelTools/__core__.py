@@ -16,6 +16,7 @@ import re
 import subprocess
 import scipy as sp
 from PIL import Image
+from PIL.TiffImagePlugin import AppendingTiffWriter
 from scipy import sparse as sprs
 #
 ########################################################################
@@ -388,7 +389,7 @@ class FractureImageStack:
         self.image_data = ~self.image_data
 
     @staticmethod
-    def save_image_stack(fname, image_data, overwrite=False, **kwargs):
+    def save_image_stack(fname, image_data, overwrite=False):
         r""" Saves a multi-frame image using supplied image data,
         using Image.save from the PIL library"""
         #
@@ -398,18 +399,21 @@ class FractureImageStack:
             msg += ' Specify "overwrite=True" to replace it'
             raise FileExistsError(msg)
         #
-        # saving image using PIL's Image.save abstraction
-        img = Image.fromarray(image_data)
-        img.save(fname, save_all=True, **kwargs)
+        # generating an array from each z-axis slice
+        with open(fname, 'w+b') as fp:
+            with AppendingTiffWriter(fp) as tf:
+                for frame in range(image_data.shape[2]):
+                    frame = Image.fromarray(image_data[:, :, frame].T)
+                    frame.save(tf, format='TIFF', filename=fname)
+                    tf.newFrame()
 
-    def save(self, fname, overwrite=False, **kwargs):
-        r""" Saves a multiframe stack under the desired filename,
-        for TIF stacks PIL must be >= 4.0.0"""
+    def save(self, fname, overwrite=False):
+        r""" Saves a multiframe tiff stack under the desired filename
+        as 8 bit grey scale, PIL version must be >= 3.4.0"""
         #
         #  passing instance data to static method after type conversion
-        kwargs['overwrite'] = overwrite
         img_data = sp.array(self.image_data, dtype=sp.uint8) * 255
-        self.save_image_stack(fname, self.image_data, **kwargs)
+        self.save_image_stack(fname, img_data, overwrite=overwrite)
 
 
 class StatFile(dict):
