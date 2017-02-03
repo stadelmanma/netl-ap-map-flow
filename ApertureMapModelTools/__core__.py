@@ -410,6 +410,7 @@ class FractureImageStack(sp.ndarray):
         #  passing instance data to static method after type conversion
         img_data = sp.array(self)
         if self.dtype == bool:
+            logger.debug('converting datatype of output array to sp.uint8')
             img_data = sp.array(self, dtype=sp.uint8) * 255
         #
         self.save_image_stack(fname, img_data, overwrite=overwrite)
