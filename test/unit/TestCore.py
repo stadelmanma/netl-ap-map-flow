@@ -87,6 +87,44 @@ class TestCore:
         with pytest.raises(FileExistsError):
             field.export_vtk()
 
+    def test_fracture_image_stack(self):
+        r"""
+        Loads and builds an image stack to test its properties
+        """
+        #
+        # testing initialization from image file and basic methods
+        fname = os.path.join(FIXTURE_DIR, 'binary-fracture.tif')
+        fracture_stack = amt.FractureImageStack(fname)
+        assert issubclass(fracture_stack.__class__, sp.ndarray)
+        assert fracture_stack.dtype == bool
+        assert fracture_stack.shape == (847, 66, 700)
+        assert fracture_stack.nx == fracture_stack.shape[0]
+        assert fracture_stack.ny == fracture_stack.shape[1]
+        assert fracture_stack.nz == fracture_stack.shape[2]
+        #
+        # testing initialization from data array
+        img_data = sp.ones((10, 11, 12))
+        fracture_stack = amt.FractureImageStack(img_data, dtype=sp.uint8)
+        assert issubclass(fracture_stack.__class__, sp.ndarray)
+        assert fracture_stack.dtype == sp.uint8
+        assert fracture_stack.shape == img_data.shape
+        assert fracture_stack.size == img_data.size
+        #
+        # saving a fracture stack and then re-reading it to ensure equality
+        fname = os.path.join(FIXTURE_DIR, 'binary-fracture.tif')
+        fracture_stack = amt.FractureImageStack(fname)
+        #
+        fname = os.path.join(TEMP_DIR, 'test.tif')
+        fracture_stack.save(fname)
+        new_stack = amt.FractureImageStack(fname)
+        assert sp.all(fracture_stack == new_stack)
+        #
+        # testing overwrite parameter
+        with pytest.raises(FileExistsError):
+            fracture_stack.save(fname)
+        #
+        fracture_stack.save(fname, overwrite=True)
+
     def test_stat_file(self):
         r"""
         Builds a stat file and test its properties

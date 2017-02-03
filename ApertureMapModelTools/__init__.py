@@ -16,7 +16,8 @@ if _sys.version_info < (3, 3):
     raise Exception('ApertureMapModelTools requires Python 3.3 or greater')
 
 #
-from .__core__ import DataField, StatFile, _get_logger, set_main_logger_level
+from .__core__ import DataField, FractureImageStack, StatFile
+from .__core__ import _get_logger, set_main_logger_level
 from .__core__ import files_from_directory, load_infile_list
 from .__core__ import calc_percentile, calc_percentile_num, get_data_vect
 from . import UnitConversion

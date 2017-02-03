@@ -365,14 +365,14 @@ class FractureImageStack(sp.ndarray):
             image_data = []
             for frame in range(image.n_frames):
                 image.seek(frame)
-                frame = sp.array(image, dtype=bool).transpose()
+                frame = sp.array(image, dtype=dtype).transpose()
                 image_data.append(frame)
             #
             # stacking frames into a single 3 dimensional array
             image_data = sp.stack(image_data, axis=2)
         except AttributeError:
             logger.debug('initialized image from data array')
-            image_data = sp.array(image, ndmin=3)
+            image_data = sp.array(image, ndmin=3, dtype=dtype)
         #
         # returning a conversion of regular ndarray into my sybclass
         return sp.asarray(image_data).view(cls)
@@ -410,7 +410,7 @@ class FractureImageStack(sp.ndarray):
         #  passing instance data to static method after type conversion
         img_data = sp.array(self)
         if self.dtype == bool:
-            img_data = sp.array(self, dtype=sp.unit8) * 255
+            img_data = sp.array(self, dtype=sp.uint8) * 255
         #
         self.save_image_stack(fname, img_data, overwrite=overwrite)
 
