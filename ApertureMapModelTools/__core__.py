@@ -348,45 +348,41 @@ POINTS {npts:d} float
         return content
 
 
-class FractureImageStack:
-    def __init__(self, image_filename, invert=False):
+class FractureImageStack(sp.ndarray):
+    r"""
+    Reads a 3-D image stack of the binary fracture data and stores it as
+    a scipy ndarray.
+    """
+    def __new__(cls, image, dtype=bool, *args, **kwargs):
         r""" Reads image data, fracture pixels are assumed to be truthy
-        (i.e. > 0) and rock pixels false (i.e. == 0)"""
-        # TODO allow initialization from data
-        logger.info('loading image...')
-        img = Image.open(image_filename)
+        (i.e. > 0) and rock pixels false (i.e. == 0)
+        """
         #
-        # creating full image array
-        logger.info('creating image array...')
-        self.image_data = []
-        for frame in range(img.n_frames):
-            img.seek(frame)
-            frame = sp.array(img, dtype=bool).transpose()
-            self.image_data.append(frame)
+        # either reads the image data from a file or image is a scipy array
+        try:
+            image = Image.open(image)
+            logger.debug('loaded image from file or file like object')
+            image_data = []
+            for frame in range(image.n_frames):
+                image.seek(frame)
+                frame = sp.array(image, dtype=bool).transpose()
+                image_data.append(frame)
+            #
+            # stacking frames into a single 3 dimensional array
+            image_data = sp.stack(image_data, axis=2)
+        except AttributeError:
+            logger.debug('initialized image from data array')
+            image_data = sp.array(image, ndmin=3)
         #
-        # stacking frames into a single 3 dimensional array
-        self.image_data = sp.stack(self.image_data, axis=2)
-        if invert:
-            self.invert()
+        # returning a conversion of regular ndarray into my sybclass
+        return sp.asarray(image_data).view(cls)
 
-    @property
-    def nx(self):
-        r"""returns number of columns"""
-        return self._data_map.shape[0]
+    def __array_finalize__(self, obj):
+        pass
 
-    @property
-    def ny(self):
-        r"""returns number of rows"""
-        return self._data_map.shape[1]
-
-    @property
-    def nz(self):
-        r"""returns number of slices"""
-        return self._data_map.shape[2]
-
-    def invert(self):
-        r""" Inverts image data map so black becomes white, vice versa"""
-        self.image_data = ~self.image_data
+    nx = property(lambda self: self.shape[0])
+    ny = property(lambda self: self.shape[1])
+    nz = property(lambda self: self.shape[2])
 
     @staticmethod
     def save_image_stack(fname, image_data, overwrite=False):
@@ -412,7 +408,10 @@ class FractureImageStack:
         as 8 bit grey scale, PIL version must be >= 3.4.0"""
         #
         #  passing instance data to static method after type conversion
-        img_data = sp.array(self.image_data, dtype=sp.uint8) * 255
+        img_data = sp.array(self)
+        if self.dtype == bool:
+            img_data = sp.array(self, dtype=sp.unit8) * 255
+        #
         self.save_image_stack(fname, img_data, overwrite=overwrite)
 
 
