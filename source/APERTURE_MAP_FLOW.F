@@ -54,3 +54,215 @@ C
       IF (.NOT. BOK) STOP(1)
 C
       END PROGRAM
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE INITIALIZE_RUN(BOK)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     PROGRAM DESCRIPTION: CONTROLS CALLING OF THE MODEL INITALIZATION
+C     ROUTINES AND SETS DEFAULT MODEL PARAMETERS.
+C
+C     SUBROUTINE CALLS: ASSIGN_IO, READ_MASTER, READ_AP_MAP,
+C                       COEF, FLOW_BOUNDARY, INIT_OUTPUT
+C
+C     LAST MODIFIED: 2016/10/27
+C
+C ---------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
+C
+C ---------------------------------------------------------------------
+C
+      USE APM_MODULE
+      USE UNIT_CONVERSION_MODULE
+C
+      IMPLICIT NONE
+      LOGICAL :: BOK
+C
+C     DEFAULT VALUES
+      IOUT = 6 !SETTING TO STDOUT INITIALLY
+      ! DEFAULT PERCENTILE SETTINGS
+      PERCENTILE = .FALSE.
+      ALLOCATE(PERC_ARR(2,9))
+      NPCT = 9
+      PERC_ARR(1,1:9) = [1,5,10,25,50,75,90,95,99]
+      ! DEFAULT TO PRESSURE BOUNDARY CONDITION
+      RATEC  = .FALSE.
+      PRESC  = .FALSE.
+      INLPB    = -1.0
+      OUTPB  = -1.0
+      OUTRATE = -1.0
+      INJRATE = -1.0
+      ! DEFAULT LIQUID PROPERIES
+      RHO    = 1.0
+      AVG_VISC = -1.0
+      ! DEFAULT APERTURE MAP PROPERTIES
+      MAXDIM    = 500
+      AVG_FACT  = 1.0
+      R_FACT    = 0.0
+      VOX_MET   = 1.0
+      HIGH_MASK = 10000.0
+      LOW_MASK  = 1E-6
+      OUTLET_SIDE   = 'TOP'
+      UNIT(:)     = 'SI'
+      UNIT_IN(1)  = 'PA'
+      UNIT_IN(2)  = 'M'
+      UNIT_IN(3)  = 'K'
+      UNIT_IN(4)  = 'SEC'
+      UNIT_IN(5)  = 'M^3/SEC'
+      UNIT_IN(6)  = 'PA*SEC'
+      UNIT_IN(7)  = 'KG/M^3'
+      UNIT_OUT(1) = 'PA'
+      UNIT_OUT(2) = 'M'
+      UNIT_OUT(3) = 'K'
+      UNIT_OUT(4) = 'SEC'
+      UNIT_OUT(5) = 'M^3/SEC'
+      UNIT_OUT(6) = 'PA*SEC'
+      UNIT_OUT(7) = 'KG/M^3'
+C
+C     INITIALIZING IO
+      CALL OPEN_IO(BOK)
+      IF (.NOT. BOK) GOTO 1000
+C
+C     READING INPUT FILE
+      CALL READ_MASTER(BOK)
+      IF (.NOT. BOK) GOTO 1000
+C
+C     CHECKING IF BOTH INLET AND OUTLET PRESSURE CONDITION WERE SUPPLIED
+      IF ((INLPB .GE. 0) .AND. (OUTPB .GE. 0)) THEN
+        PRESC = .TRUE.
+        CALL MESSAGE("     FRACTURE FLOW IS PRESSURE CONTROLLED")
+      ELSE
+        PRESC = .FALSE.
+        CALL MESSAGE("     FRACTURE FLOW IS RATE CONTROLLED")
+      END IF
+C
+C     CHECKING VISCOSITY VALUE PROVIDED
+      IF (AVG_VISC > 0) THEN
+        WRITE(CVAR,2000) AVG_VISC/VISC_CONV,TRIM(UNIT_IN(6))
+        CALL MESSAGE(CVAR)
+      ELSE
+        WRITE(CVAR,2010) AVG_VISC/VISC_CONV
+        CALL MESSAGE(CVAR)
+        GOTO 1000
+      END IF
+C
+C     SETTING CONVERSION VALUES
+      CALL CALC_CONV_FACT('PRES',UNIT_IN(1),UNIT(1),PRES_CONV,BOK)
+      CALL CALC_CONV_FACT('DIST',UNIT_IN(2),UNIT(2),DIM_CONV,BOK)
+      CALL CALC_CONV_FACT('TIME',UNIT_IN(4),UNIT(4),TIME_CONV,BOK)
+      CALL CALC_CONV_FACT('RATE',UNIT_IN(5),UNIT(5),RATE_CONV,BOK)
+      CALL CALC_CONV_FACT('VISC',UNIT_IN(6),UNIT(6),VISC_CONV,BOK)
+      CALL CALC_CONV_FACT('DENS',UNIT_IN(7),UNIT(7),RHO_CONV,BOK)
+      IF (.NOT. BOK) GOTO 1000
+C
+C     READING APERTURE MAP
+      CALL READ_AP_MAP(BOK)
+      IF (.NOT. BOK) GOTO 1000
+C
+C     INITIALIZING FRACTURE PROPERTIES
+      CALL COEF
+C
+C     CREATING FLOW AND PRESSURE BOUNDARIES
+      CALL FLOW_BOUNDARY(BOK)
+      IF (.NOT. BOK) GOTO 1000
+C
+C     CLOSING INPUT FILES
+      CLOSE(IINP)
+      CLOSE(IAPM)
+      CALL BLANK
+      CALL MESSAGE(" INPUT FILES CLOSED")
+C
+      RETURN
+C
+C
+ 1000 BOK = .FALSE.
+C
+ 2000 FORMAT(5X,'AVERAGE LIQUID VISCOSITY USED ',G12.6,1X,A)
+C
+ 2010 FORMAT(1X,'ERROR - NONE OR INVAILD VISCOSITY PROVIDED ',G15.6)
+C
+      RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE FRAC_FLOW
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     DATE WRITTEN:  2015/03/02
+C     LAST MODIFIED: 2016/02/08
+C
+C     PROGRAM DESCRIPTION: SOLVES FOR THE STEADY STATE FLOW THROUGH THE
+C         FRACTURE.
+C
+C     SUBROUTINE CALLS: SOLVER, PS_TO_PR
+C
+C ---------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       Q(1:4,:) - STORES THE STEADY STATE FLOW THROUGH A CELL IN ORDER OF LEFT,RIGHT,BOTTON,TOP
+C       Q(5,:) - STORES THE FINAL NET MASS GAIN/LOSS FOR A CELL
+C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
+C
+C ---------------------------------------------------------------------
+C
+      USE APM_MODULE
+C
+      IMPLICIT NONE
+      INTEGER :: I,IX,IZ
+C
+C     SOLVING FOR STEADY STATE FLOW PRESSURE DISTRIBUTION
+      CALL SOLVER
+C
+C     HANDLING EACH OUTFLOW SIDE CASE TO SET BOUNDARY PRESSURES
+      IF (INDEX(OUTLET_SIDE,'LEFT') > 0) THEN
+        FRAC_PR(:,0) = OUTPB !EXTRA LEFT COUMN
+        FRAC_PR(:,NX+1) = INLPB !EXTRA RIGHT COLUMN
+        FRAC_PR(0,:) = INLPB !EXTRA BOTTOM ROW
+        FRAC_PR(NZ+1,:) = INLPB !EXTRA TOP ROW
+      ELSE IF (INDEX(OUTLET_SIDE,'RIGHT') > 0) THEN
+        FRAC_PR(:,0) = INLPB !EXTRA LEFT COUMN
+        FRAC_PR(:,NX+1) = OUTPB !EXTRA RIGHT COLUMN
+        FRAC_PR(0,:) = INLPB !EXTRA BOTTOM ROW
+        FRAC_PR(NZ+1,:) = INLPB !EXTRA TOP ROW
+      ELSE IF (INDEX(OUTLET_SIDE,'TOP') > 0) THEN
+        FRAC_PR(:,0) = INLPB !EXTRA LEFT COUMN
+        FRAC_PR(:,NX+1) = INLPB !EXTRA RIGHT COLUMN
+        FRAC_PR(0,:) = INLPB !EXTRA BOTTOM ROW
+        FRAC_PR(NZ+1,:) = OUTPB !EXTRA TOP ROW
+      ELSE IF (INDEX(OUTLET_SIDE,'BOTTOM') > 0) THEN
+        FRAC_PR(:,0) = INLPB !EXTRA LEFT COUMN
+        FRAC_PR(:,NX+1) = INLPB !EXTRA RIGHT COLUMN
+        FRAC_PR(0,:) = OUTPB !EXTRA BOTTOM ROW
+        FRAC_PR(NZ+1,:) = INLPB !EXTRA TOP ROW
+      END IF
+C
+C     CALCULATING THE FINAL FLOW RATES FOR CELLS IN THE FRACTURE
+      Q(:,:) = 0.0
+      DO IZ = 1,NZ
+        DO IX = 1,NX
+          I = (IZ-1)*NX+IX
+          Q(1,I) = -TRX(IZ,IX-1)*(FRAC_PR(IZ,IX)-FRAC_PR(IZ,IX-1))!LEFT
+          Q(2,I) = -TRX(IZ,IX)*(FRAC_PR(IZ,IX+1) - FRAC_PR(IZ,IX))!RIGHT
+          Q(3,I) = -TRZ(IZ-1,IX)*(FRAC_PR(IZ,IX)-FRAC_PR(IZ-1,IX))!BOTTOM
+          Q(4,I) = -TRZ(IZ,IX)*(FRAC_PR(IZ+1,IX) - FRAC_PR(IZ,IX))!TOP
+          Q(5,I) = ((Q(1,I)-Q(2,I))+(Q(3,I)-Q(4,I))) !NET RES
+        END DO
+      END DO
+C
+      RETURN
+C
+      RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
