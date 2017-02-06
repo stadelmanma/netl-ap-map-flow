@@ -23,10 +23,13 @@ C ----------------------------------------------------------------------
 C
       USE APM_MODULE
       USE APM_SOLVER_MODULE
+      USE IO_MODULE, ONLY : BLANK, MESSAGE
+      USE STRING_MODULE, ONLY : MAXLEN
 C
       IMPLICIT NONE
       REAL(8) :: ST,EN
       INTEGER :: I,IX,IZ
+      CHARACTER(MAXLEN) :: CVAR
 C
 C     ALLOCATING VECTORS
       CALL ALLOCATE_COEF(NX*NZ)
@@ -169,6 +172,7 @@ C
 C ----------------------------------------------------------------------
 C
       USE APM_SOLVER_MODULE
+      USE IO_MODULE, ONLY : BLANK, MESSAGE
 C
       IMPLICIT NONE
       REAL(8), ALLOCATABLE :: NEW_CC(:),NEW_TT(:,:),NEW_RHS(:)
@@ -262,6 +266,7 @@ C
 C ----------------------------------------------------------------------
 C
       USE APM_SOLVER_MODULE
+      USE IO_MODULE, ONLY : BLANK, MESSAGE
 C
       IMPLICIT NONE
       REAL(8) :: BC_VALUE

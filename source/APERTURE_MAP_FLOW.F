@@ -20,15 +20,10 @@ C
 C ----------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE IO_MODULE, ONLY : BLANK, MESSAGE, CLOSE_IO
 C
       IMPLICIT NONE
       LOGICAL :: BOK = .TRUE.
-C
-C     CONDITIONAL COMPILATION TO DETERMINE OS
-      SYS_OS = "UNIX"
-      IF (WIN64 == 1) THEN
-        SYS_OS = "WINDOWS"
-      ENDIF
 C
 C     INITIALIZING THE MODEL
       CALL INITIALIZE_RUN(BOK)
@@ -69,7 +64,7 @@ C
 C     SUBROUTINE CALLS: ASSIGN_IO, READ_MASTER, READ_AP_MAP,
 C                       COEF, FLOW_BOUNDARY, INIT_OUTPUT
 C
-C     LAST MODIFIED: 2016/10/27
+C     LAST MODIFIED: 2017/02/05
 C
 C ---------------------------------------------------------------------
 C     VARIABLE DESCRIPTION:
@@ -78,10 +73,13 @@ C
 C ---------------------------------------------------------------------
 C
       USE APM_MODULE
-      USE UNIT_CONVERSION_MODULE
+      USE IO_MODULE, ONLY : IINP, IAPM, IOUT, OPEN_IO, MESSAGE
+      USE STRING_MODULE, ONLY : MAXLEN
+      USE UNIT_CONVERSION_MODULE, ONLY : VOX_MET, CALC_CONV_FACT
 C
       IMPLICIT NONE
       LOGICAL :: BOK
+      CHARACTER(MAXLEN) :: CVAR
 C
 C     DEFAULT VALUES
       IOUT = 6 !SETTING TO STDOUT INITIALLY
@@ -129,7 +127,7 @@ C     INITIALIZING IO
       IF (.NOT. BOK) GOTO 1000
 C
 C     READING INPUT FILE
-      CALL READ_MASTER(BOK)
+      CALL READ_MASTER(BOK, IINP)
       IF (.NOT. BOK) GOTO 1000
 C
 C     CHECKING IF BOTH INLET AND OUTLET PRESSURE CONDITION WERE SUPPLIED
@@ -161,7 +159,7 @@ C     SETTING CONVERSION VALUES
       IF (.NOT. BOK) GOTO 1000
 C
 C     READING APERTURE MAP
-      CALL READ_AP_MAP(BOK)
+      CALL READ_AP_MAP(BOK, IAPM)
       IF (.NOT. BOK) GOTO 1000
 C
 C     INITIALIZING FRACTURE PROPERTIES
@@ -170,12 +168,6 @@ C
 C     CREATING FLOW AND PRESSURE BOUNDARIES
       CALL FLOW_BOUNDARY(BOK)
       IF (.NOT. BOK) GOTO 1000
-C
-C     CLOSING INPUT FILES
-      CLOSE(IINP)
-      CLOSE(IAPM)
-      CALL BLANK
-      CALL MESSAGE(" INPUT FILES CLOSED")
 C
       RETURN
 C
@@ -193,6 +185,202 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
+      SUBROUTINE READ_MASTER(BOK, IUNIT)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     PROGRAM DESCRIPTION: READS THE INITIALIZATION FILE
+C
+C     LAST MODIFIED: 2016/03/07
+C
+C     SUBROUTINE CALLS: LNPROC, UNIT_CONV
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       NFLD - NUMBER OF FIELDS IN CFLD AND LFLD AFTER A PROCESSING A LINE
+C       OUTPUT_UNIT - BOOLEAN STATING IF OUTPUT UNITS HAVE BEEN DEFINED
+C       BOK - CONTROL VARIABLE USED TO HALT PROGRAM IF A FATAL ERROR IS ENCOUNTERED
+C
+C ----------------------------------------------------------------------
+C
+      USE APM_MODULE
+      USE IO_MODULE, ONLY : MESSAGE, INSUFFICIENT_ERROR, FIELD_ERROR
+      USE STRING_MODULE, ONLY : MAXFLD, MAXLEN, LNPROC
+      USE UNIT_CONVERSION_MODULE, ONLY : VOX_MET,
+     &                                   CONVERT_VALUE, CALC_CONV_FACT
+C
+      IMPLICIT NONE
+      INTEGER :: IUNIT, IFLD, NFLD, LFLD(MAXFLD)
+      LOGICAL :: BOK, OUTPUT_UNIT = .FALSE.
+      CHARACTER(MAXLEN) :: CVAR, CFLD(MAXFLD)
+C
+C     READING IN MASTER INPUT FILE
+      CALL LNPROC(IUNIT, MAXFLD, MAXLEN, CVAR, CFLD, LFLD, NFLD)
+      DO WHILE (NFLD > 0)
+        ! DEPRECATED KEYWORDS
+        ! READING INITAL FRACTURE PRESSURE
+        IF (INDEX(CFLD(1), 'FRAC-PRESS') > 0) THEN
+          CALL MESSAGE("NOTICE - KEYWORD 'FRAC-PRESS' IS DEPRECATED")
+          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          READ(CFLD(IFLD), "(F100.0)", ERR = 910) INLPB
+          IFLD = 3
+          READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_IN(1)
+          CALL CONVERT_VALUE('PRES', UNIT_IN(1), UNIT(1), INLPB, BOK)
+        ! READING OUTFLOW SIDE
+        ELSEIF (INDEX(CFLD(1), 'OUTFLOW-SIDE') > 0) THEN
+          CALL MESSAGE("NOTICE - KEYWORD 'OUTFLOW-SIDE' IS DEPRECATED")
+          IFLD = 2
+          IF (NFLD < IFLD) GOTO 905
+          OUTLET_SIDE = CFLD(IFLD)
+        !
+        ! READING INLET PRESSURE
+        ELSEIF (INDEX(CFLD(1), 'INLET-PRESS') > 0) THEN
+          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          READ(CFLD(IFLD), "(F100.0)", ERR = 910) INLPB
+          IFLD = 3
+          READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_IN(1)
+          CALL CONVERT_VALUE('PRES', UNIT_IN(1), UNIT(1), INLPB, BOK)
+        ! READING OUTLET PRESSURE
+        ELSEIF (INDEX(CFLD(1), 'OUTLET-PRES') > 0) THEN
+          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          READ(CFLD(IFLD), "(F100.0)", ERR = 910) OUTPB
+          IFLD = 3
+          READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_IN(1)
+          CALL CONVERT_VALUE('PRES', UNIT_IN(1), UNIT(1), OUTPB, BOK)
+        ! READING OUTLET FLOW RATE
+        ELSEIF (INDEX(CFLD(1), 'OUTLET-RATE') > 0) THEN
+          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          READ(CFLD(IFLD), "(F100.0)", ERR = 910) OUTRATE
+          IFLD = 3
+          READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_IN(5)
+          RATEC = .TRUE.
+          CALL CONVERT_VALUE('RATE', UNIT_IN(5), UNIT(5), OUTRATE, BOK)
+        ELSEIF (INDEX(CFLD(1), 'INLET-RATE') > 0) THEN
+          IF (NFLD < 3) GOTO 905
+          IFLD = 2
+          READ(CFLD(IFLD), "(F100.0)", ERR = 910) INJRATE
+          IFLD = 3
+          READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_IN(5)
+          RATEC = .TRUE.
+          CALL CONVERT_VALUE('RATE', UNIT_IN(5), UNIT(5), INJRATE, BOK)
+        ! READING FLUID DENSITY
+        ELSEIF (INDEX(CFLD(1), 'FLUID-DENSITY') > 0) THEN
+          IFLD = 2
+          IF (NFLD < IFLD) GOTO 905
+          READ(CFLD(IFLD), "(F100.0)", ERR = 910) RHO
+          IFLD = 3
+          READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_IN(7)
+          CALL CONVERT_VALUE('DENS', UNIT_IN(7), UNIT(7), RHO, BOK)
+        ! READING FLUID VISCOSITY
+        ELSEIF (INDEX(CFLD(1), 'FLUID-VISCOSITY') > 0) THEN
+          IFLD = 2
+          IF (NFLD < IFLD) GOTO 905
+          READ(CFLD(IFLD), "(F100.0)", ERR = 910) AVG_VISC
+          IFLD = 3
+          READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_IN(6)
+          CALL CALC_CONV_FACT('VISC',UNIT_IN(6),UNIT(6),VISC_CONV,BOK)
+          CALL CONVERT_VALUE('VISC', UNIT_IN(6), UNIT(6), AVG_VISC, BOK)
+        ! READING OUTLET SIDE
+        ELSEIF (INDEX(CFLD(1), 'OUTLET-SIDE') > 0) THEN
+          IFLD = 2
+          IF (NFLD < IFLD) GOTO 905
+          OUTLET_SIDE = CFLD(IFLD)
+        ! READING VOXEL SIZE
+        ELSEIF (INDEX(CFLD(1), 'VOXEL') > 0) THEN
+          IFLD = 3
+          IF (NFLD < 4) GOTO 905
+          READ(CFLD(IFLD), "(F10.0)", ERR = 910) VOX_MET
+          CFLD(5) = 'SI'
+          CALL CONVERT_VALUE('DIST', CFLD(4), UNIT(2), VOX_MET, BOK)
+        ! READING ROUGHNESS COEFFICIENT TO APPLY
+        ELSEIF (INDEX(CFLD(1), 'ROUGH') > 0) THEN
+          IFLD  = 3
+          IF (NFLD < IFLD) GOTO 905
+          READ(CFLD(IFLD), "(F10.0)", ERR = 910) R_FACT
+        ! READING MAP AVERAGING FACTOR
+        ELSEIF (INDEX(CFLD(1), 'MAP') > 0) THEN
+          IFLD = 4
+          IF (NFLD < IFLD) GOTO 905
+          READ(CFLD(IFLD), "(F10.0)", ERR = 910) AVG_FACT
+        ! READING IF TO OUTPUT PERCENTILES OF DATA
+        ELSEIF (INDEX(CFLD(1), 'CALCULATE') > 0) THEN
+          IFLD = 2
+          IF (NFLD < IFLD) GOTO 905
+          IF (INDEX(CFLD(2), 'PERCENT') > 0) PERCENTILE = .TRUE.
+          ! POPULATING PERCENTILE ARRAY
+          IF (NFLD >= 3) THEN
+            ! REALLOCATING PERCENTILE ARRAY FROM DEFAULT SETTINGS
+            DEALLOCATE(PERC_ARR)
+            ALLOCATE(PERC_ARR(2, NFLD))
+            PERC_ARR(:, :) = 0
+            NPCT = NFLD - 2
+            DO IFLD = 3, NFLD
+              READ(CFLD(IFLD), "(F10.0)", ERR = 910)PERC_ARR(1, IFLD-2)
+            END DO
+          END IF
+        ! READING HIGH MASK TO APPLY TO FRACTURE
+        ELSEIF (INDEX(CFLD(1), 'HIGH-MASK') > 0) THEN
+          IFLD = 2
+          IF (NFLD < 2) GOTO 905
+          READ(CFLD(IFLD), *, ERR = 910) HIGH_MASK
+        ! READING LOW MASK TO APPLY TO FRACTURE
+        ELSEIF (INDEX(CFLD(1), 'LOW-MASK') > 0) THEN
+          IFLD = 2
+          IF (NFLD < 2) GOTO 905
+          READ(CFLD(IFLD), *, ERR = 910) LOW_MASK
+        ! READING MAXIMUM MAP DIMENSION
+        ELSEIF (INDEX(CFLD(1), 'MAXIMUM') > 0) THEN
+          IFLD = 4
+          IF (NFLD < IFLD) GOTO 905
+          READ(CFLD(IFLD), "(I4)", ERR = 910) MAXDIM
+        ! READING OUTPUT UNIT TO CONVERT TO
+        ELSEIF (INDEX(CFLD(1), 'OUTPUT-UNITS') > 0) THEN
+          IF (NFLD < 4) GOTO 905
+          IFLD = 2
+          READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_OUT(1)
+          IFLD = 3
+          READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_OUT(2)
+          IFLD = 4
+          READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_OUT(5)
+          OUTPUT_UNIT = .TRUE.
+        ELSE
+          CVAR = TRIM(CVAR(1:120)) !SHORTENING LENGTH TO PREVENT OVERFLOW
+          CVAR = " ** WARNING: UNRECOGNIZED INPUT: "//TRIM(CVAR)//" **"
+          CALL MESSAGE(CVAR)
+        END IF
+        CALL LNPROC(IUNIT, MAXFLD, MAXLEN, CVAR, CFLD, LFLD, NFLD)
+      END DO
+C
+C     SETTING OUTPUT UNITS IF NONE PROVIDED
+      IF (.NOT. OUTPUT_UNIT) UNIT_OUT = UNIT_IN
+C
+C     CLOSING INPUT FILES
+      CLOSE(IUNIT)
+C
+      RETURN
+C
+  905 CALL INSUFFICIENT_ERROR("INITIALIZATION")
+      CALL MESSAGE(CVAR)
+      GOTO 1000
+C
+  910 CALL FIELD_ERROR("INITIALIZATION", IFLD)
+      CALL MESSAGE(CVAR)
+      GOTO 1000
+C
+ 1000 BOK = .FALSE.
+      RETURN
+C
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+
       SUBROUTINE FRAC_FLOW
 C
 C     WRITTEN BY: MATTHEW STADELMAN

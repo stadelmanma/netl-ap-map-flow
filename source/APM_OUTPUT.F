@@ -24,6 +24,9 @@ C
 C ----------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE IO_MODULE, ONLY : BLANK, MESSAGE, IMAP, IPRES, IVTK,
+     &                      IFLOX, IFLOZ, IFLOM
+      USE STRING_MODULE, ONLY : MAXLEN
 C
       IMPLICIT NONE
       REAL(8), ALLOCATABLE :: PQX_OUT(:),PQZ_OUT(:),PQM_OUT(:),PRES(:)
@@ -31,6 +34,7 @@ C
       REAL(8) :: FLOW,X,Y,Z
       INTEGER :: I,N,IX,IZ,IC,LB
       LOGICAL :: BOK
+      CHARACTER(MAXLEN) :: CVAR
 C
 C     INITIALIZING VARIABLES
       LB = NX*NZ
@@ -186,10 +190,10 @@ C
 C     CREATING THE CELL DATA TABLES
       WRITE(IVTK,"(' ')")
       WRITE(IVTK,"('CELL_DATA ',I0)") NX*NZ*1
-      CALL WRITE_VTK_DATA('APERTURE',UNIT_OUT(2),'float',WIDTH)
-      CALL WRITE_VTK_DATA('PRESSURE',UNIT_OUT(1),'float',PRES)
-      CALL WRITE_VTK_DATA('REYNOLDS_NUMBER','-','float',REN)
-      CALL WRITE_VTK_DATA('NORMALIZED_RESIDUALS','-','float',RES)
+      CALL WRITE_VTK_DATA(IVTK,'APERTURE',UNIT_OUT(2),'float',WIDTH)
+      CALL WRITE_VTK_DATA(IVTK,'PRESSURE',UNIT_OUT(1),'float',PRES)
+      CALL WRITE_VTK_DATA(IVTK,'REYNOLDS_NUMBER','-','float',REN)
+      CALL WRITE_VTK_DATA(IVTK,'NORMALIZED_RESIDUALS','-','float',RES)
 C
       WRITE(IVTK,"(' ')")
       WRITE(IVTK,"('VECTORS FLOW[',A,'] float')")TRIM(UNIT_OUT(5))
@@ -243,12 +247,15 @@ C
 C ----------------------------------------------------------------------
 C
       USE APM_MODULE
-      USE UNIT_CONVERSION_MODULE
+      USE IO_MODULE, ONLY : BLANK, MESSAGE
+      USE STRING_MODULE, ONLY : MAXLEN
+      USE UNIT_CONVERSION_MODULE, ONLY : CALC_CONV_FACT
 C
       IMPLICIT NONE
       REAL(8) :: CONV(7)
       INTEGER :: I
       LOGICAL :: BOK
+      CHARACTER(MAXLEN) :: CVAR
 C
       CONV(1) = PRES_CONV
       CONV(2) = DIM_CONV
@@ -342,6 +349,7 @@ C       HOM_TRANS - AVERAGE FRACTURE TRANSMISSIBILITY
 C ----------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE IO_MODULE, ONLY : APM_FILE, ISTATC, ISTATY
 C
       IMPLICIT NONE
       REAL(8) :: FLOW,NFQ,HOM_TRANS,BULK_REN,AVG_CORR, DP
@@ -489,12 +497,14 @@ C       TITLE - HEADER OF THE PERCENTILE TABLE
 C
 C ----------------------------------------------------------------------
 C
-      USE APM_MODULE, ONLY : PERC_ARR, NPCT, CVAR
+      USE APM_MODULE, ONLY : PERC_ARR, NPCT
+      USE IO_MODULE, ONLY : BLANK, MESSAGE
+      USE STRING_MODULE, ONLY : MAXLEN
 C
       IMPLICIT NONE
       INTEGER :: I
       CHARACTER(*) :: TITLE, UNIT
-      CHARACTER(80) :: UNIT_STR
+      CHARACTER(MAXLEN) :: UNIT_STR, CVAR
 C
       WRITE(UNIT_STR,"('[',A,']')") TRIM(UNIT)
 C
@@ -570,7 +580,7 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE WRITE_VTK_DATA(FNAME,UNIT,DTYPE,DATA_ARRAY)
+      SUBROUTINE WRITE_VTK_DATA(IUNIT,FNAME,UNIT,DTYPE,DATA_ARRAY)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
@@ -582,25 +592,28 @@ C     SUBROUTINE CALLS: WRITE_ONED_ARRAY
 C
 C ----------------------------------------------------------------------
 C     VARIABLE DESCRIPTION:
+C       IUNIT - FILE UNIT NUMBER TO WRITE TO
 C       FNAME - FIELD NAME
 C       UNIT - PHYSICAL UNITS OF DATA
 C       DTYPE - PARAVEW DATA TYPE
 C
 C ----------------------------------------------------------------------
 C
-      USE APM_MODULE, ONLY : IVTK, NX, NZ
+      USE APM_MODULE, ONLY : NX, NZ
+      USE IO_MODULE, ONLY : MESSAGE
 C
       IMPLICIT NONE
+      INTEGER :: IUNIT
       REAL(8) :: DATA_ARRAY(*)
       CHARACTER(*) :: FNAME, UNIT, DTYPE
       CHARACTER(80) :: FMT_STR = "(*(1(E14.6,:,' '), /, :))"
 C
 C     CREATING THE DATA TABLE
-      WRITE(IVTK,"(' ')")
-      WRITE(IVTK,2000) TRIM(FNAME),TRIM(UNIT),TRIM(DTYPE)
-      WRITE(IVTK,"('LOOKUP_TABLE default')")
+      WRITE(IUNIT,"(' ')")
+      WRITE(IUNIT,2000) TRIM(FNAME),TRIM(UNIT),TRIM(DTYPE)
+      WRITE(IUNIT,"('LOOKUP_TABLE default')")
 C
-      CALL WRITE_ONED_ARRAY(IVTK,DATA_ARRAY,NX,NZ,FMT_STR)
+      CALL WRITE_ONED_ARRAY(IUNIT,DATA_ARRAY,NX,NZ,FMT_STR)
       CALL MESSAGE("         "//TRIM(FNAME)//" DATA OUTPUT TO VTK FILE")
 C
       RETURN
