@@ -380,6 +380,108 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
+      SUBROUTINE SOLVER
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C     LAST MODIFIED: 2017/02/06
+C
+C     SUBROUTINE DESCRIPTION: CREATES THE COEFFICENT MATRIX AND SOLVES FOR THE
+C         PRESSURE.
+C
+C     SUBROUTINE CALLS: ALLOCATE_COEF,DEFINE_BOUNDARY_CONDITINS,
+C                       D4_REORDER, D4_SOLVER, DEALLOCATE_COEFF
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       X - STORES THE FINAL SOLUTIONS TO THE LINEAR SYSTEM
+C       NEUMANNG_X - STORES THE SOLUTION TO THE GROUP BC CELL
+C
+C ----------------------------------------------------------------------
+C
+      USE APM_MODULE
+      USE D4_SOLVER_MODULE, ONLY : CC, TT, INIT_SOLVER, D4_SOLVER,
+     &                             ADD_DIRICHLET_BOUND_COND,
+     &                             ADD_NUEMANNG_BOUND_COND
+      USE IO_MODULE, ONLY : BLANK, MESSAGE
+C
+      IMPLICIT NONE
+      REAL(8) :: NEUMANNG_X, ST, EN
+      REAL(8), ALLOCATABLE :: X(:)
+      INTEGER :: I,IX,IZ
+      CHARACTER(80) :: CVAR
+C
+C     INITIALIZING SOLVER
+      CALL INIT_SOLVER(NX, NZ)
+C
+C     SWEEPING GRID TO POPULATE COEFFICIENT ARRAYS
+      I = 0
+      DO IZ = 1,NZ
+        DO IX = 1,NX
+          I = (IZ-1)*NX + IX
+          TT(I,1) = -TRX(IZ,IX-1) !LEFT
+          TT(I,2) = -TRX(IZ,IX)   !RIGHT
+          TT(I,3) = -TRZ(IZ-1,IX) !DOWN
+          TT(I,4) = -TRZ(IZ,IX)   !TOP
+          CC(I) = -SUM(TT(I,:))
+        END DO
+      END DO
+C
+C     SETTING PRESSURE BCs
+      IF (OUTPB .GE. 0) THEN
+        CALL ADD_DIRICHLET_BOUND_COND(OUTLET_SIDE, OUTPB)
+      END IF
+      !
+      IF (INLPB .GE. 0) THEN
+        CALL ADD_DIRICHLET_BOUND_COND(INLET_SIDE, INLPB)
+      END IF
+C
+C     DEFINING GROUP FLOW BCs
+      IF (INJRATE .GT. 0.0) THEN !INLET FLOW RATE BC
+        CALL ADD_NUEMANNG_BOUND_COND(INLET_SIDE, INJRATE)
+      END IF
+      !
+      IF (OUTRATE .GT. 0.0) THEN !OUTLET FLOW RATE BC
+        CALL ADD_NUEMANNG_BOUND_COND(OUTLET_SIDE, -OUTRATE)
+      END IF
+C
+C
+C     CALLING THE SOLVER ALGORITHM
+      CALL BLANK
+      CALL MESSAGE('     USING D4 GAUSS SOLVER')
+      CALL CPU_TIME(ST)
+      CALL D4_SOLVER(X, NEUMANNG_X)
+      CALL CPU_TIME(EN)
+      WRITE(CVAR,"(5X,'REQUIRED TIME FOR SOLUTION: ',F13.6)")(EN-ST)
+      CALL MESSAGE(CVAR)
+C
+C     UPDATING THE FRACTURE PRESSURE
+      DO IZ = 1,NZ
+        DO IX = 1,NX
+          I = (IZ - 1)*NX + IX
+          FRAC_PR(IZ,IX) = X(I)
+        END DO
+      END DO
+C
+C     SETTING FLOW RATE DETERMINED INLET OR OUTLET PRESSURE
+      IF (.NOT. PRESC) THEN
+        IF (INJRATE .GT. 0.0) THEN !INLET FLOW RATE BC
+          INLPB = NEUMANNG_X
+        END IF
+        !
+        IF (OUTRATE .GT. 0.0) THEN !OUTLET FLOW RATE BC
+          OUTPB = NEUMANNG_X
+        END IF
+      END IF
+C
+C
+      DEALLOCATE(X)
+      RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
 
       SUBROUTINE FRAC_FLOW
 C
