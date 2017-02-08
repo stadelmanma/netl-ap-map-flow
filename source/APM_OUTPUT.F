@@ -26,7 +26,6 @@ C
       USE APM_MODULE
       USE IO_MODULE, ONLY : BLANK, MESSAGE, IMAP, IPRES, IVTK,
      &                      IFLOX, IFLOZ, IFLOM
-      USE MAP_MODULE, ONLY : NX ,NZ, DX, DZ, WIDTH, AP_MAP, AP_POINT_MAP
       USE STRING_MODULE, ONLY : MAXLEN
 C
       IMPLICIT NONE
@@ -350,7 +349,6 @@ C       HOM_TRANS - AVERAGE FRACTURE TRANSMISSIBILITY
 C ----------------------------------------------------------------------
 C
       USE APM_MODULE
-      USE MAP_MODULE
       USE IO_MODULE, ONLY : APM_FILE, ISTATC, ISTATY
 C
       IMPLICIT NONE
@@ -601,7 +599,7 @@ C       DTYPE - PARAVEW DATA TYPE
 C
 C ----------------------------------------------------------------------
 C
-      USE MAP_MODULE, ONLY : NX, NZ
+      USE APM_MODULE, ONLY : NX, NZ
       USE IO_MODULE, ONLY : MESSAGE
 C
       IMPLICIT NONE
