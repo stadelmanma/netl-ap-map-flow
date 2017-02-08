@@ -304,9 +304,9 @@ C     CALCULATING THE RMS OF THE FRACTURE APERTURE
           SMS = SMS + (DATA_MAP(IZ,IX) - AVG_APER)**2
         END DO
       END DO
-      SM = (SM * SM) * (REAL(NX*NZ, 8)**(-1)) !change these to 8 later on
-      MAP_RMS = MAP_RMS * (REAL(NX*NZ, 8)**(-1))
-      MAP_VAR = (SMS - SM)*(REAL(NX*NZ-1, 8)**(-1))
+      SM = (SM * SM) * REAL(NX*NZ, 8)**(-1)
+      MAP_RMS = MAP_RMS * REAL(NX*NZ, 8)**(-1)
+      MAP_VAR = (SMS - SM) * REAL(NX*NZ-1, 8)**(-1)
       MAP_RMS = SQRT(MAP_RMS)
       MAP_DEV = SQRT(MAP_VAR)
 C

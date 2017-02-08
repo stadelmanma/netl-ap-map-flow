@@ -26,6 +26,7 @@ C
       USE APM_MODULE
       USE IO_MODULE, ONLY : BLANK, MESSAGE, IMAP, IPRES, IVTK,
      &                      IFLOX, IFLOZ, IFLOM
+      USE MAP_MODULE, ONLY : NX ,NZ, DX, DZ, WIDTH, AP_MAP, AP_POINT_MAP
       USE STRING_MODULE, ONLY : MAXLEN
 C
       IMPLICIT NONE
@@ -86,17 +87,17 @@ C     CREATING FLATTENED PRESSURE ARRAY
       END DO
 C
 C     CONVERTING VALUES IN INTERNAL UNITS TO OUTPUT UNITS
-      AP_MAP = AP_MAP*DIM_CONV
-      PRES = PRES*PRES_CONV
-      INLPB = INLPB*PRES_CONV
-      OUTPB = OUTPB*PRES_CONV
-      DX = DX*DIM_CONV
-      DZ = DZ*DIM_CONV
-      WIDTH = WIDTH*DIM_CONV
-      OUTRATE = OUTRATE*RATE_CONV
-      PQX_OUT = PQX_OUT*RATE_CONV
-      PQZ_OUT = PQZ_OUT*RATE_CONV
-      PQM_OUT = PQM_OUT*RATE_CONV
+      AP_MAP = AP_MAP * DIM_CONV
+      PRES = PRES * PRES_CONV
+      INLPB = INLPB * PRES_CONV
+      OUTPB = OUTPB * PRES_CONV
+      DX = DX * DIM_CONV
+      DZ = DZ * DIM_CONV
+      WIDTH = WIDTH * DIM_CONV
+      OUTRATE = OUTRATE * RATE_CONV
+      PQX_OUT = PQX_OUT * RATE_CONV
+      PQZ_OUT = PQZ_OUT * RATE_CONV
+      PQM_OUT = PQM_OUT * RATE_CONV
 C
 C     LOGGING FINAL PRESSURES, FLOW RATES AND RESIDUAL TO SCREEN
       CALL BLANK
@@ -160,24 +161,24 @@ C     OUTPUTTING BOTTOM AND TOP SURFACE POINTS FOR THE GRID
         Z = 0.0
         DO IZ = 1,NZ
           X = 0.0
-          Y = N*AP_MAP(IZ,1,1)/2.0
+          Y = N * AP_POINT_MAP(IZ,1,1) / 2.0
           WRITE(IVTK,"(3(E14.6,:,' '))")X,Y,Z
           DO IX = 1,NX
             I = (IZ - 1)*NX + IX
             X = X + DX(I)
-            Y = N*AP_MAP(IZ,IX,2)/2.0
+            Y = N * AP_POINT_MAP(IZ,IX,2) / 2.0
             WRITE(IVTK,"(3(E14.6,:,' '))")X,Y,Z
           END DO
           Z = Z + DZ(I)
         END DO
         !
         X = 0.0
-        Y = N*AP_MAP(NZ,1,4)/2.0
+        Y = N * AP_POINT_MAP(NZ,1,4) / 2.0
         WRITE(IVTK,"(3(E14.6,:,' '))")X,Y,Z
         DO IX = 1,NX
           I = (NZ - 1)*NX + IX
           X = X + DX(I)
-          Y = N*AP_MAP(NZ,IX,3)/2.0
+          Y = N * AP_POINT_MAP(NZ,IX,3) / 2.0
           WRITE(IVTK,"(3(E14.6,:,' '))")X,Y,Z
         END DO
       END DO
@@ -349,6 +350,7 @@ C       HOM_TRANS - AVERAGE FRACTURE TRANSMISSIBILITY
 C ----------------------------------------------------------------------
 C
       USE APM_MODULE
+      USE MAP_MODULE
       USE IO_MODULE, ONLY : APM_FILE, ISTATC, ISTATY
 C
       IMPLICIT NONE
@@ -599,7 +601,7 @@ C       DTYPE - PARAVEW DATA TYPE
 C
 C ----------------------------------------------------------------------
 C
-      USE APM_MODULE, ONLY : NX, NZ
+      USE MAP_MODULE, ONLY : NX, NZ
       USE IO_MODULE, ONLY : MESSAGE
 C
       IMPLICIT NONE
