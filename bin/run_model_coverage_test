@@ -31,8 +31,8 @@ echo "Running UNIT_CONVERSION_MODULE unit tests."
 EXIT_CODE=$((EXIT_CODE + $?))
 
 echo ""
-echo "Running APM_SUBROUTINES unit tests."
-./TEST_APM_SUBROUTINES.EXE
+echo "Running IO_MODULE unit tests."
+./TEST_IO_MOD.EXE
 EXIT_CODE=$((EXIT_CODE + $?))
 
 # building the coverage report
