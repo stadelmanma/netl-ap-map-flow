@@ -257,7 +257,6 @@ C     CALCULATING HORIZONTAL VARIOGRAM DATA TO GET X - CORRELATION LENGTH
         VARG(K,3) =  VARG(K,2)/(VARG(K,1))
         MAP_X_CORR = REAL(K, 8)
         TEST(1) = ABS(VARG(K,3)/MAP_VAR - 0.90)
-        print *,TEST(3), VARG(K,3), MAP_VAR , VARG(K,3)/MAP_VAR
         IF (VARG(K,3)/MAP_VAR > 0.90) THEN
           IF (TEST(2) < TEST(1)) MAP_X_CORR = TEST(3)
           EXIT
