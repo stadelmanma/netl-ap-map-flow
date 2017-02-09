@@ -187,8 +187,6 @@ C       MV_SLICE - STORES THE INDICIES NEEDED TO MAP OLD VALUES TO NEW ARRAY DIM
 C
 C ----------------------------------------------------------------------
 C
-      USE IO_MODULE, ONLY : MESSAGE
-C
       IMPLICIT NONE
       REAL(8), ALLOCATABLE :: NEW_CC(:),NEW_TT(:,:),NEW_RHS(:)
       REAL(8) :: BC_VALUE
@@ -226,7 +224,7 @@ C     DETERMINING NEW DIMENSIONS OF SOLVER ARRAYS
           FORALL(IB = 1:OLD_NX) MV_SLICE(IZ*OLD_NX+IB)=IZ*SOLV_NX+IB
         END DO
       ELSE
-        CALL MESSAGE('INVALID BOUNDARY SIDE GIVEN: '//SIDE)
+        WRITE(*, 'INVALID BOUNDARY SIDE GIVEN: ' / /SIDE)
         RETURN
       END IF
 C
@@ -281,8 +279,6 @@ C       BC_SLICE - STORES THE INDICIES OF CELLS THAT CONNECT TO THE GROUP NODE
 C
 C ----------------------------------------------------------------------
 C
-      USE IO_MODULE, ONLY : MESSAGE
-C
       IMPLICIT NONE
       REAL(8) :: BC_VALUE
       INTEGER, ALLOCATABLE :: BC_SLICE(:)
@@ -307,7 +303,7 @@ C     DETERMINING INDICIES TO CONNECT TO
         ID = 2
         FORALL (IB = 0:SOLV_NZ-1) BC_SLICE(IB+1) = IB*SOLV_NX+SOLV_NX
       ELSE
-        CALL MESSAGE('INVALID BOUNDARY SIDE GIVEN: '//SIDE)
+        WRITE(*, 'INVALID BOUNDARY SIDE GIVEN: ' / /SIDE)
         RETURN
       END IF
 C
