@@ -9,18 +9,46 @@ C               ---- VARIABLE DESCRIPTIONS ----
 C
 C ----------------------------------------------------------------------
 C
+      PRIVATE
+C
+      INTERFACE CALC_PERCENTILE
+        MODULE PROCEDURE CALC_PERCENTILE_1D, CALC_PERCENTILE_2D
+      END INTERFACE
+C
+C     MODULE EXPORTS
+      PUBLIC CALC_PERCENTILE
+C
       CONTAINS
 C
 C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
+      SUBROUTINE CALC_PERCENTILE_2D(DATA_MAP, PERC_ARR)
+        !
+        ! FLATTENS 2-D DATA MAP INTO A VECTOR AND PASSES IT OFF
+        !
+        IMPLICIT NONE
+        REAL(8), INTENT(IN) :: DATA_MAP(:, :)
+        REAL(8), INTENT(INOUT) :: PERC_ARR(:, :)
+        REAL(8), ALLOCATABLE :: VECTOR(:)
+        INTEGER :: NVALS
+        !
+        NVALS = SIZE(DATA_MAP)
+        ALLOCATE(VECTOR(NVALS))
+        !
+        ! ORDER DOESN'T MATTER HERE SO RESHAPE IS SAFE TO USE
+        VECTOR = RESHAPE(DATA_MAP, [NVALS])
+        CALL CALC_PERCENTILE(VECTOR, PERC_ARR)
+        !
+        RETURN
+      END SUBROUTINE
 C
 C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE CALC_PERCENTILE(VECTOR, PERC_ARR)
+      SUBROUTINE CALC_PERCENTILE_1D(VECTOR, PERC_ARR)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C
@@ -47,7 +75,8 @@ C
 C ----------------------------------------------------------------------
 C
       IMPLICIT NONE
-      REAL(8) :: VECTOR(:), PERC_ARR(:, :)
+      REAL(8), INTENT(IN) :: VECTOR(:)
+      REAL(8), INTENT(INOUT) :: PERC_ARR(:, :)
       REAL(8), ALLOCATABLE :: SORT(:), COUNTS(:), COUNT_VAL(:)
       INTEGER :: I ,J, K, IV, N, TOT, NVALS, NPCT
       NVALS = SIZE(VECTOR)
