@@ -374,4 +374,24 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
+      SUBROUTINE WRITE_VTK_DATA(IUNIT, FNAME, UNIT, DTYPE, DATA_ARR)
+        !
+        ! ACTS AS AN INTEFACE TO SIMPLIFY CALLING WRITE_VTK_DATA
+        !
+        USE OUTPUT_MODULE, ONLY : WRITE_DATA => WRITE_VTK_DATA
+        IMPLICIT NONE
+        !
+        REAL(8), INTENT(IN) :: DATA_ARR(:)
+        INTEGER, INTENT(IN) :: IUNIT
+        CHARACTER(*), INTENT(IN) :: FNAME, UNIT, DTYPE
+        !
+        CALL WRITE_DATA(IUNIT, FNAME, UNIT, DTYPE, DATA_ARR, NX, NZ)
+        !
+        RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
       END MODULE

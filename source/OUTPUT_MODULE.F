@@ -16,7 +16,8 @@ C
       END INTERFACE
 C
 C     MODULE EXPORTS
-      PUBLIC CALC_PERCENTILE, WRITE_PERCENTILE
+      PUBLIC :: CALC_PERCENTILE, WRITE_PERCENTILE
+      PUBLIC :: WRITE_ONED_ARRAY, WRITE_VTK_DATA
 C
       CONTAINS
 C
@@ -31,6 +32,7 @@ C
         IMPLICIT NONE
         REAL(8), INTENT(IN) :: DATA_MAP(:, :)
         REAL(8), INTENT(INOUT) :: PERC_ARR(:, :)
+        !
         REAL(8), ALLOCATABLE :: VECTOR(:)
         INTEGER :: NVALS
         !
@@ -77,6 +79,7 @@ C
       IMPLICIT NONE
       REAL(8), INTENT(IN) :: VECTOR(:)
       REAL(8), INTENT(INOUT) :: PERC_ARR(:, :)
+      !
       REAL(8), ALLOCATABLE :: SORT(:), COUNTS(:), COUNT_VAL(:)
       INTEGER :: I ,J, K, IV, N, TOT, NVALS, NPCT
       NVALS = SIZE(VECTOR)
@@ -145,8 +148,9 @@ C
 C
       IMPLICIT NONE
       REAL(8), INTENT(IN) :: PERC_ARR(:, :)
+      CHARACTER(*), INTENT(IN) :: TITLE, UNIT
+      !
       INTEGER :: I, NPCT
-      CHARACTER(*) :: TITLE, UNIT
       CHARACTER(80) :: UNIT_STR, CVAR
       !
       NPCT = SIZE(PERC_ARR, DIM=2)
@@ -203,7 +207,9 @@ C
 C ----------------------------------------------------------------------
 C
       IMPLICIT NONE
-      REAL(8) :: VECTOR(:), VAL
+      REAL(8), INTENT(INOUT) :: VECTOR(:)
+      !
+      REAL(8) :: VAL
       INTEGER :: I, J, L, N, IR
       N = SIZE(VECTOR)
       L = N/2+1
@@ -245,6 +251,95 @@ C
 C
       RETURN
       END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE WRITE_ONED_ARRAY(IUNIT, DATA_ARRAY, NX, NZ, FMT_STR)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     LAST MODIFIED: 2016/07/13
+C
+C     SUBROUTINE DESCRIPTION: OUTPUTS A VECTOR INTO A 2-D DATA MAP
+C
+C     SUBROUTINE CALLS: NONE
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       IUNIT - FILE UNIT NUMBER
+C       DATA_ARRAY - DATA VECTOR TO OUTPUT
+C       NX,NZ - DATA EXTENTS ALONG EACH AXIS
+C       FMT_STR - FORMAT STRING TO OUTPUT DATA WITH
+C
+C ----------------------------------------------------------------------
+C
+      IMPLICIT NONE
+      REAL(8), INTENT(IN) :: DATA_ARRAY(:)
+      INTEGER, INTENT(IN) :: IUNIT, NX, NZ
+      CHARACTER(*), INTENT(IN) :: FMT_STR
+      !
+      INTEGER :: IZ, I, J
+C
+      DO IZ = 0, NZ - 1
+        I = IZ * NX + 1
+        J = IZ * NX + NX
+        WRITE(IUNIT, FMT_STR) DATA_ARRAY(I:J)
+      END DO
+      !
+      RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE WRITE_VTK_DATA(IUNIT,FNAME,UNIT,DTYPE,DATA_ARRAY,NX,NZ)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     LAST MODIFIED: 2017/02/08
+C
+C     SUBROUTINE DESCRIPTION: OUTPUTS A DATA VECTOR INTO THE VTK FILE
+C
+C     SUBROUTINE CALLS: WRITE_ONED_ARRAY
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       IUNIT - FILE UNIT NUMBER TO WRITE TO
+C       FNAME - FIELD NAME
+C       UNIT - PHYSICAL UNITS OF DATA
+C       DTYPE - PARAVEW DATA TYPE
+C       DATA_ARRAY - DATA VECTOR TO OUTPUT
+C       NX,NZ - DATA EXTENTS ALONG EACH AXIS
+C
+C ----------------------------------------------------------------------
+C
+      USE IO_MODULE, ONLY : MESSAGE
+C
+      IMPLICIT NONE
+      REAL(8), INTENT(IN) :: DATA_ARRAY(:)
+      INTEGER, INTENT(IN) :: IUNIT, NX, NZ
+      CHARACTER(*), INTENT(IN) :: FNAME, UNIT, DTYPE
+      !
+      CHARACTER(80) :: FMT_STR
+      FMT_STR = "(*(1(E14.6,:,' '), /, :))"
+C
+C     CREATING THE DATA TABLE
+      WRITE(IUNIT, "(' ')")
+      WRITE(IUNIT, 2000) TRIM(FNAME), TRIM(UNIT), TRIM(DTYPE)
+      WRITE(IUNIT, "('LOOKUP_TABLE default')")
+C
+      CALL WRITE_ONED_ARRAY(IUNIT, DATA_ARRAY, NX, NZ, FMT_STR)
+      CALL MESSAGE("         "//TRIM(FNAME)//" DATA OUTPUT TO VTK FILE")
+C
+      RETURN
+C
+ 2000 FORMAT('SCALARS ', A, '[', A, '] ', A)
+C
+      END SUBROUTINE
+C
 C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
