@@ -82,6 +82,10 @@ inp_file['INLET-PRESS'].update_value('2000000')
 inp_file['OUTLET-RATE'].update_value('1.0')
 run_model_wrapper(inp_file, stdout_pat=re.compile('USING AVERAGE LIQUID VISCOSITY'))
 #
+# changing map to one with NX > NZ
+map_path = os.path.join(FIXTURE_DIR, 'Fracture3ApertureMap-10avg.txt')
+inp_file['APER-MAP'].update_value(map_path)
+#
 # running all four boundary sides with inlet rate control
 inp_file['INLET-PRESS'].commented_out = True
 inp_file['OUTLET-RATE'].commented_out = True
