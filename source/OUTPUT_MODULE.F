@@ -16,7 +16,7 @@ C
       END INTERFACE
 C
 C     MODULE EXPORTS
-      PUBLIC CALC_PERCENTILE
+      PUBLIC CALC_PERCENTILE, WRITE_PERCENTILE
 C
       CONTAINS
 C
@@ -117,6 +117,74 @@ C     CALCULATING PERCENTILES
       END DO
 C
       RETURN
+      END SUBROUTINE
+C
+C ----------------------------------------------------------------------
+C ######################################################################
+C ----------------------------------------------------------------------
+C
+      SUBROUTINE WRITE_PERCENTILE(PERC_ARR, TITLE, UNIT)
+C
+C     WRITTEN BY: MATTHEW STADELMAN
+C
+C     LAST MODIFIED: 2017/02/08
+C
+C     PROGRAM DESCRIPTION: OUTPUTS A PERCENTILE IN STANDARD FORMAT
+C
+C     SUBROUTINE CALLS: BLANK, MESSAGE
+C
+C ----------------------------------------------------------------------
+C     VARIABLE DESCRIPTION:
+C       UNIT - UNITS ON THE PERCENTILE VALUES
+C       TITLE - HEADER OF THE PERCENTILE TABLE
+C       PERC_ARR - 2-D ARRAY CONTAINING PERCENTILE % AND VALUE
+C
+C ----------------------------------------------------------------------
+C
+      USE IO_MODULE, ONLY : BLANK, MESSAGE
+C
+      IMPLICIT NONE
+      REAL(8), INTENT(IN) :: PERC_ARR(:, :)
+      INTEGER :: I, NPCT
+      CHARACTER(*) :: TITLE, UNIT
+      CHARACTER(80) :: UNIT_STR, CVAR
+      !
+      NPCT = SIZE(PERC_ARR, DIM=2)
+      WRITE(UNIT_STR,"('[',A,']')") TRIM(UNIT)
+C
+C     WRITING PERCENTLE HEADERS
+      CALL BLANK
+      WRITE(CVAR,2100)
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,2000) TRIM(TITLE)
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,2100)
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,2200) 'PERCENTILE', TRIM(UNIT_STR)
+      CALL MESSAGE(CVAR)
+      WRITE(CVAR,2100)
+      CALL MESSAGE(CVAR)
+C
+C     WRITING OUT PERCENTLE DATA
+      DO I = 1, NPCT
+        WRITE(CVAR,2300) PERC_ARR(1, I), PERC_ARR(2, I)
+        CALL MESSAGE(CVAR)
+      END DO
+      WRITE(CVAR,2100)
+      CALL MESSAGE(CVAR)
+C
+      RETURN
+C
+C     FORMATS
+C
+ 2000 FORMAT(9X,A,1X,'RANGES')
+C
+ 2100 FORMAT(9X,32('-'))
+C
+ 2200 FORMAT(1X,A18,3X,'|',A17)
+C
+ 2300 FORMAT(9X,'|',2X,F7.3,3X,'|',1X,F15.6,1X,'|')
+C
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------

@@ -317,7 +317,7 @@ C     READING IN MASTER INPUT FILE
           IF (NFLD >= 3) THEN
             ! REALLOCATING PERCENTILE ARRAY FROM DEFAULT SETTINGS
             DEALLOCATE(PERC_ARR)
-            ALLOCATE(PERC_ARR(2, NFLD))
+            ALLOCATE(PERC_ARR(2, NFLD - 2))
             PERC_ARR(:, :) = 0
             NPCT = NFLD - 2
             DO IFLD = 3, NFLD
