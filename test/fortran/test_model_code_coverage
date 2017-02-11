@@ -8,6 +8,7 @@ import sys
 sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))
 from ApertureMapModelTools.RunModel import InputFile, run_model
 from ApertureMapModelTools.RunModel.__run_model_core__ import ArgInput
+#
 # -----------------------------------------------------------------------------
 #
 # global constants
@@ -28,9 +29,11 @@ def run_model_wrapper(inp_file, expected_code=0, stdout_pat=None):
     proc = run_model(inp_file, synchronous=True, show_stdout=False)
     #
     if proc.returncode != expected_code:
+        print('Error: program exited with code: %d, expected code: %d' % (proc.returncode, expected_code))
         success = False
     #
     if stdout_pat and not stdout_pat.search(proc.stdout_content):
+        print('Error: pattern "%s" did not match stdout stream' % stdout_pat.pattern)
         success = False
     #
     if not success:
@@ -40,7 +43,7 @@ def run_model_wrapper(inp_file, expected_code=0, stdout_pat=None):
         print(proc.stderr_content)
         print('='*80)
         #
-        RETURN_CODE = proc.returncode
+        RETURN_CODE = 1
 
 # -----------------------------------------------------------------------------
 #
@@ -80,7 +83,7 @@ inp_file['INLET-RATE'].commented_out = True
 inp_file['OUTLET-PRESS'].commented_out = True
 inp_file['INLET-PRESS'].update_value('2000000')
 inp_file['OUTLET-RATE'].update_value('1.0')
-run_model_wrapper(inp_file, stdout_pat=re.compile('USING AVERAGE LIQUID VISCOSITY'))
+run_model_wrapper(inp_file)
 #
 # changing map to one with NX > NZ
 map_path = os.path.join(FIXTURE_DIR, 'Fracture3ApertureMap-10avg.txt')
@@ -96,10 +99,10 @@ for side in ['TOP', 'BOTTOM', 'LEFT', 'RIGHT']:
     run_model_wrapper(inp_file)
 #
 # -----------------------------------------------------------------------------
-#
 # running failing cases
+# -----------------------------------------------------------------------------
 #
-# running it with no input file
+# running with no input file
 cmd = (os.path.abspath(inp_file['EXE-FILE'].value),)
 proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
 proc.stdout_content, proc.stderr_content = proc.communicate()
