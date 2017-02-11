@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 r"""
-Script designed to take a TIF stack and determine the vertical offset of
-the fracture.
+Script designed to take a TIFF stack and process it to form a cleaned
+tiff image, aperture map and or vertical offset map.
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
-from glob import glob
 from itertools import product
-from PIL import Image
 import os
 import scipy as sp
 from scipy import sparse as sprs
 from scipy.sparse import csgraph
 from scipy.interpolate import griddata
 from ApertureMapModelTools import _get_logger, set_main_logger_level
-from ApertureMapModelTools import DataField, calc_percentile
+from ApertureMapModelTools import DataField, calc_percentile, FractureImageStack
 
 #
 desc_str = r"""
@@ -26,7 +24,7 @@ is the cleaned CT image stack.
 
 Written By: Matthew stadelman
 Date Written: 2016/08/30
-Last Modfied: 2016/09/06
+Last Modfied: 2017/02/11
 """
 # setting up logger
 set_main_logger_level('info')
@@ -47,103 +45,166 @@ parser.add_argument('-o', '--output-dir',
                     help='''outputs files to the specified
                     directory, sub-directories are created as needed''')
 
-parser.add_argument('-n', '--num-clusters', type=int, default=5,
-                    help='number of clusters to retain, ordered by size')
+parser.add_argument('-n', '--num-clusters', type=int, default=None,
+                    help='''number of clusters to retain, ordered by size
+                    is option is disabled by default''')
 
 parser.add_argument('-i', '--invert', action='store_true',
                     help='use this flag if your fracture is in black')
 
+parser.add_argument('--offset-map-name', default=None,
+                    help='alternate name to save the offset map as')
+
+parser.add_argument('--aper-map-name', default=None,
+                    help='alternate name to save the aperture map as')
+
+parser.add_argument('--img-stack-name', default=None,
+                    help='''alternate name to save the tiff stack as,
+                    has no effect if the -n # flag is omitted''')
+
+parser.add_argument('--no-aper-map', action='store_true',
+                    help='do not generate aperture map')
+
+parser.add_argument('--no-offset-map', action='store_true',
+                    help='do not generate offset map')
+
+parser.add_argument('--no-img-stack', action='store_true',
+                    help='''do not save a processed tif stack,
+                    has no effect when the -n # flag is omitted''')
+
 parser.add_argument('image_file', type=os.path.realpath,
-                    help='binary TIF stack image to process')
-
-parser.add_argument('offset_map_name',
-                    help='name to save the offset map under')
-
-parser.add_argument('img_stack_dirname', nargs='?', default=None,
-                    help='''directory to save processed image stack to,
-                    if omitted the stack is not saved''')
+                    help='binary TIFF stack image to process')
 
 
-def apm_calculate_offset_map():
+def apm_process_image_stack():
     r"""
-    Driver program to load an image and generate an offset map. Arrays
-    can be quite large and are explicity deleted to conserve RAM
+    Driver program to load an image and generate maps. Memory
+    requirements when processing a large TIFF stack can be very high.
     """
     # parsing commandline args
-    namespace = parser.parse_args()
-    if namespace.verbose:
+    args = parser.parse_args()
+    if args.verbose:
         set_main_logger_level('debug')
-
+    #
+    # initializing output filenames as needed and pre-appending the output path
+    img_basename = os.path.splitext(args.image_file)[0]
+    if args.aper_map_name is None:
+        args.aper_map_name = img_basename + '-aperture-map.txt'
+    #
+    if args.offset_map_name is None:
+        args.offset_map_name = img_basename + '-offset-map.txt'
+    #
+    if args.img_stack_name is None:
+        args.img_stack_name = img_basename + '-processed.tif'
+    #
+    aper_map_file = os.path.join(args.output_dir, args.aper_map_name)
+    offset_map_file = os.path.join(args.output_dir, args.offset_map_name)
+    img_stack_file = os.path.join(args.output_dir, args.img_stack_name)
+    #
     # checking paths
-    map_path = os.path.join(namespace.output_dir, namespace.offset_map_name)
+    if not args.no_aper_map:
+        if os.path.exists(aper_map_file) and not args.force:
+            msg = '{} already exists, use "-f" option to overwrite'
+            raise FileExistsError(msg.format(aper_map_file))
     #
-    if namespace.img_stack_dirname is not None:
-        stack_path = os.path.join(namespace.output_dir,
-                                  namespace.img_stack_dirname)
-        if os.path.exists(stack_path) and not namespace.force:
-            msg = 'Image Stack directory: {} already exists, '
-            msg += 'use "-f" option to overwrite'
-            raise FileExistsError(msg.format(stack_path))
+    if not args.no_offset_map:
+        if os.path.exists(offset_map_file) and not args.force:
+            msg = '{} already exists, use "-f" option to overwrite'
+            raise FileExistsError(msg.format(offset_map_file))
     #
-    if os.path.exists(map_path) and not namespace.force:
-        msg = '{} already exists, use "-f" option to overwrite'
-        raise FileExistsError(msg.format(map_path))
-
+    if not args.no_img_stack:
+        if os.path.exists(img_stack_file) and not args.force:
+            msg = '{} already exists, use "-f" option to overwrite'
+            raise FileExistsError(msg.format(img_stack_file))
+    #
     # loading image data
-    data_array = load_image_data(namespace.image_file, namespace.invert)
-    img_dims = data_array.shape
-    nonzero_locs = locate_nonzero_data(data_array)
-    index_map = generate_index_map(nonzero_locs, img_dims)
+    logger.info('loading image...')
+    img_data = FractureImageStack(args.image_file)
+    if args.invert:
+        logger.debug('inverting image data')
+        img_data = ~img_data
+    logger.debug('image dimensions: {} {} {}'.format(*img_data.shape))
+    #
+    # processing image stack based on connectivity
+    if args.num_clusters:
+        process_image(img_data, args.num_clusters)
 
+    #
+    # outputing aperture map
+    if not args.no_aper_map:
+        aper_map = img_data.create_aperture_map()
+        logger.info('saving aperture map file')
+        sp.savetxt(aper_map_file, aper_map, fmt='%d', delimiter='\t')
+        del aper_map
+    #
+    # outputing offset map
+    if not args.no_offset_map:
+        offset_map = calculate_offset_map(img_data)
+        #
+        # saving map
+        logger.info('saving offset map file')
+        sp.savetxt(offset_map_file, offset_map, fmt='%f', delimiter='\t')
+        del offset_map
+    #
+    # saving image data
+    if args.num_clusters and not args.no_img_stack:
+        logger.info('saving copy of processed image data')
+        img_data.save(img_stack_file, overwrite=args.force)
+
+
+def process_image(img_data, num_clusters):
+    r"""
+    Processes a tiff stack on retaining voxels based on node connectivity.
+    The clusters are sorted by size and the large N are retained.
+    """
+    #
+    img_dims = img_data.shape
+    nonzero_locs = locate_nonzero_data(img_data)
+    index_map = generate_index_map(nonzero_locs, img_dims)
+    #
     # determing connectivity and removing clusters
-    conns = generate_node_connectivity_array(index_map, data_array)
-    del data_array
-    del index_map
+    conns = generate_node_connectivity_array(index_map, img_data)
+    del img_data, index_map
     nonzero_locs = remove_isolated_clusters(conns,
                                             nonzero_locs,
-                                            namespace.num_clusters)
+                                            num_clusters)
+    # reconstructing 3-D array
+    logger.info('reconstructing processed data back into 3-D array')
+    #
+    img_data = sp.zeros(img_dims, dtype=bool)
+    x_coords, y_coords, z_coords = sp.unravel_index(nonzero_locs, img_dims)
+    #
+    del nonzero_locs
+    img_data[x_coords, y_coords, z_coords] = True
+    del x_coords, y_coords, z_coords
+    img_data = img_data.view(FractureImageStack)
 
-    # saving processed image
-    if namespace.img_stack_dirname is not None:
-        save_image_stack(nonzero_locs,
-                         img_dims,
-                         stack_path,
-                         overwrite=namespace.force)
 
-    # creating offset map and filling gaps left from zero aperture regions
-    offset_map = generate_offset_map(nonzero_locs, img_dims)
+def calculate_offset_map(img_data):
+    r"""
+    Handles calculation of an offset map based on image data
+    """
+    #
+    logger.info('creating initial offset map')
+    #
+    # locating non-zero data and setting offsets to y values
+    dims = img_data.shape
+    nonzero_locs = locate_nonzero_data(img_data)
+    x_coords, y_coords, z_coords = sp.unravel_index(nonzero_locs, dims)
+    data = sp.ones(dims, dtype=sp.uint16)*sp.iinfo(sp.int16).max
+    data[x_coords, y_coords, z_coords] = y_coords
+    del nonzero_locs, x_coords, y_coords, z_coords
+    #
+    offset_map = sp.zeros((dims[0], dims[2]), dtype=float)
+    for z_index in range(dims[2]):
+        offset_map[:, z_index] = sp.amin(data[:, :, z_index], axis=1)
+        offset_map[:, z_index][offset_map[:, z_index] > dims[1]] = sp.nan
     #
     logger.info('interpolating missing data due to zero aperture zones')
     offset_map = patch_holes(offset_map)
     offset_map = filter_high_gradients(offset_map)
     #
-    # saving map
-    logger.info('saving offsets file')
-    sp.savetxt(map_path, offset_map.T, fmt='%f', delimiter='\t')
-
-
-def load_image_data(image_file, invert):
-    r"""
-    Loads an image from a *.tiff stack and creates an array from it. The
-    fracture is assumed to be black and the solid is white.
-    """
-    logger.info('loading image...')
-    img_data = Image.open(image_file)
-    #
-    # creating full image array
-    logger.info('creating image array...')
-    data_array = []
-    for frame in range(img_data.n_frames):
-        img_data.seek(frame)
-        frame = sp.array(img_data, dtype=bool).transpose()
-        if invert:
-            frame = ~frame  # beacuse fracture is black, solid is white
-        data_array.append(frame)
-    #
-    data_array = sp.stack(data_array, axis=2)
-    logger.debug('\timage dimensions: {} {} {}'.format(*data_array.shape))
-    #
-    return data_array
+    return offset_map.T
 
 
 def locate_nonzero_data(data_array):
@@ -154,7 +215,7 @@ def locate_nonzero_data(data_array):
     logger.info('flattening array and locating non-zero voxels...')
     data_vector = sp.ravel(data_array)
     nonzero_locs = sp.where(data_vector)[0]
-    logger.debug('\t{} non-zero voxels'.format(nonzero_locs.size))
+    logger.debug('{} non-zero voxels'.format(nonzero_locs.size))
     #
     return nonzero_locs
 
@@ -298,57 +359,6 @@ def remove_isolated_clusters(conns, nonzero_locs, num_to_keep):
     return nonzero_locs
 
 
-def save_image_stack(nonzero_locs, img_dims, path, overwrite=False):
-    r"""
-    Saves a text image stack in a directory to be read by ImageJ
-    """
-    #
-    logger.info('saving image data as .bmp stack...')
-    #
-    img_data = 255*sp.ones(img_dims, dtype=sp.uint8)
-    x_coords, y_coords, z_coords = sp.unravel_index(nonzero_locs, img_dims)
-    img_data[x_coords, y_coords, z_coords] = 0
-    #
-    # creating any needed directories
-    try:
-        os.makedirs(path)
-    except FileExistsError:
-        if not overwrite:
-            msg = 'Image Stack destination already exists, '
-            msg += ' use "-f" option to overwrite'
-            raise FileExistsError(msg)
-        else:
-            files = glob(os.path.join(path, '*'))
-            for f in files:
-                os.remove(f)
-    #
-    # saving the image frames
-    for frame in range(img_data.shape[2]):
-        name = os.path.join(path, 'image-frame-{}.bmp'.format(frame))
-        frame = Image.fromarray(img_data[:, :, frame].transpose())
-        frame.save(name)
-
-
-def generate_offset_map(nonzero_locs, shape):
-    r"""
-    Creates a map storing the index of the lowest y-axis pixel in an
-    X-Z column.
-    """
-    #
-    logger.info('creating initial offset map')
-    #
-    x_coords, y_coords, z_coords = sp.unravel_index(nonzero_locs, shape)
-    data = sp.ones(shape, dtype=sp.uint16)*sp.iinfo(sp.int16).max
-    data[x_coords, y_coords, z_coords] = y_coords
-    #
-    offset_map = sp.zeros((shape[0], shape[2]), dtype=float)
-    for z_index in range(shape[2]):
-        offset_map[:, z_index] = sp.amin(data[:, :, z_index], axis=1)
-        offset_map[:, z_index][offset_map[:, z_index] > shape[1]] = sp.nan
-    #
-    return offset_map
-
-
 def patch_holes(data_map):
     r"""
     Fills in any areas with a non finite value by taking a linear average of
@@ -421,4 +431,4 @@ def filter_high_gradients(data_map):
 
 #
 if __name__ == '__main__':
-    apm_calculate_offset_map()
+    apm_process_image_stack()

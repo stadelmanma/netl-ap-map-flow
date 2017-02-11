@@ -17,7 +17,7 @@ Description: Generates a 2-D aperture map based on a binary CT image stack.
 
 Written By: Matthew stadelman
 Date Written: 2016/09/13
-Last Modfied: 2016/09/13
+Last Modfied: 2017/02/11
 """
 # setting up logger
 set_main_logger_level('info')
