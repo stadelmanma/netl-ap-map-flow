@@ -92,16 +92,6 @@ class TestCore:
         Loads and builds an image stack to test its properties
         """
         #
-        # testing initialization from image file and basic methods
-        fname = os.path.join(FIXTURE_DIR, 'binary-fracture.tif')
-        fracture_stack = amt.FractureImageStack(fname)
-        assert issubclass(fracture_stack.__class__, sp.ndarray)
-        assert fracture_stack.dtype == bool
-        assert fracture_stack.shape == (847, 66, 700)
-        assert fracture_stack.nx == fracture_stack.shape[0]
-        assert fracture_stack.ny == fracture_stack.shape[1]
-        assert fracture_stack.nz == fracture_stack.shape[2]
-        #
         # testing initialization from data array
         img_data = sp.ones((10, 11, 12))
         fracture_stack = amt.FractureImageStack(img_data, dtype=sp.uint8)
@@ -110,15 +100,29 @@ class TestCore:
         assert fracture_stack.shape == img_data.shape
         assert fracture_stack.size == img_data.size
         #
-        # saving a fracture stack and then re-reading it to ensure equality
+        # testing initialization from image file
         fname = os.path.join(FIXTURE_DIR, 'binary-fracture.tif')
         fracture_stack = amt.FractureImageStack(fname)
+        assert issubclass(fracture_stack.__class__, sp.ndarray)
+        assert fracture_stack.dtype == bool
+        assert fracture_stack.shape == (507, 46, 300)
+        assert fracture_stack.nx == fracture_stack.shape[0]
+        assert fracture_stack.ny == fracture_stack.shape[1]
+        assert fracture_stack.nz == fracture_stack.shape[2]
+        #
+        # testing aperture map output
+        fname = os.path.join(FIXTURE_DIR, 'binary-fracture-aperture-map.txt')
+        aper_map = fracture_stack.create_aperture_map()
+        data_map = sp.loadtxt(fname, delimiter='\t')
+        assert sp.all(aper_map == data_map)
+        del aper_map
+        del data_map
         #
         fname = os.path.join(TEMP_DIR, 'test.tif')
         fracture_stack.save(fname)
         new_stack = amt.FractureImageStack(fname)
         assert sp.all(fracture_stack == new_stack)
-        #
+        del new_stack
         # testing overwrite parameter
         with pytest.raises(FileExistsError):
             fracture_stack.save(fname)

@@ -384,6 +384,11 @@ class FractureImageStack(sp.ndarray):
     ny = property(lambda self: self.shape[1])
     nz = property(lambda self: self.shape[2])
 
+    def create_aperture_map(self, axis=1, dtype=int):
+        r""" Flattens the 3-D image data along the specified axis using
+        scipy.sum and returns a 2-D ndarray of the summed data"""
+        return sp.sum(self, axis=axis, dtype=dtype).T
+
     @staticmethod
     def save_image_stack(fname, image_data, overwrite=False):
         r""" Saves a multi-frame image using supplied image data,
