@@ -3,7 +3,7 @@ Handles testing of the core object and function module
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/09
-Last Modifed: 2016/06/10
+Last Modifed: 2017/02/12
 #
 """
 from argparse import Namespace
@@ -49,6 +49,12 @@ class TestCore:
         field = amt.DataField(fname)
         field.create_point_data()
         #
+        # testing initization from data
+        obj = amt.DataField(field.data_map)
+        assert obj.nx == 100
+        assert obj.nz == 100
+        assert obj.data_map.size == 10000
+        #
         obj = Namespace()
         field.copy_data(obj)
         #
@@ -78,11 +84,11 @@ class TestCore:
         #
         with open(fname, 'r') as file:
             content = file.read()
-            assert re.search('DATASET STRUCTURED_GRID', content)
-            assert re.search('DIMENSIONS 101 2 101', content)
-            assert re.search('POINTS 20402 float', content)
-            assert re.search('CELL_DATA 10000', content)
-            assert re.search('SCALARS data float', content)
+            assert re.search('DATASET STRUCTURED_GRID\n', content)
+            assert re.search('DIMENSIONS 101 2 101\n', content)
+            assert re.search('POINTS 20402 float\n', content)
+            assert re.search('CELL_DATA 10000\n', content)
+            assert re.search('SCALARS data float\n', content)
         #
         with pytest.raises(FileExistsError):
             field.export_vtk()

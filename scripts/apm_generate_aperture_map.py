@@ -5,7 +5,6 @@ from it.
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
-from PIL import Image
 import os
 import scipy as sp
 from ApertureMapModelTools import _get_logger, set_main_logger_level
@@ -47,6 +46,7 @@ parser.add_argument('image_file', type=os.path.realpath,
 parser.add_argument('aperture_map_name', nargs='?', default=None,
                     help='name to save the aperture map under')
 
+
 def apm_generate_aperture_map():
     r"""
     Driver function to generate an aperture map from a TIF image.
@@ -59,8 +59,8 @@ def apm_generate_aperture_map():
     # checking path to prevent accidental overwritting
     if not namespace.aperture_map_name:
         map_name = os.path.basename(namespace.image_file)
-        map_name = map_name.replace( os.path.splitext(map_name)[1], '-aperture-map.txt')
-        namespace.aperture_map_name = map_name
+        map_name = os.path.splitext(map_name)[0]
+        namespace.aperture_map_name = map_name + '-aperture-map.txt'
 
     #
     map_path = os.path.join(namespace.output_dir, namespace.aperture_map_name)
@@ -74,7 +74,7 @@ def apm_generate_aperture_map():
     if namespace.invert:
         logger.debug('inverting image data')
         img_data = ~img_data
-    logger.debug('    image dimensions: {} {} {}'.format(*img_data.shape))
+    logger.debug('image dimensions: {} {} {}'.format(*img_data.shape))
 
     # summing data array down into a 2-D map
     logger.info('creating 2-D aperture map...')

@@ -87,7 +87,8 @@ def apm_process_image_stack():
         set_main_logger_level('debug')
     #
     # initializing output filenames as needed and pre-appending the output path
-    img_basename = os.path.splitext(args.image_file)[0]
+    img_basename = os.path.basename(args.image_file)
+    img_basename = os.path.splitext(img_basename)[0]
     if args.aper_map_name is None:
         args.aper_map_name = img_basename + '-aperture-map.txt'
     #
