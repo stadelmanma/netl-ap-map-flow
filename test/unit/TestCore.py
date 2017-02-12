@@ -3,7 +3,7 @@ Handles testing of the core object and function module
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/09
-Last Modifed: 2016/06/10
+Last Modifed: 2017/02/12
 #
 """
 from argparse import Namespace
@@ -49,6 +49,12 @@ class TestCore:
         field = amt.DataField(fname)
         field.create_point_data()
         #
+        # testing initization from data
+        obj = amt.DataField(field.data_map)
+        assert obj.nx == 100
+        assert obj.nz == 100
+        assert obj.data_map.size == 10000
+        #
         obj = Namespace()
         field.copy_data(obj)
         #
@@ -78,14 +84,56 @@ class TestCore:
         #
         with open(fname, 'r') as file:
             content = file.read()
-            assert re.search('DATASET STRUCTURED_GRID', content)
-            assert re.search('DIMENSIONS 101 2 101', content)
-            assert re.search('POINTS 20402 float', content)
-            assert re.search('CELL_DATA 10000', content)
-            assert re.search('SCALARS data float', content)
+            assert re.search('DATASET STRUCTURED_GRID\n', content)
+            assert re.search('DIMENSIONS 101 2 101\n', content)
+            assert re.search('POINTS 20402 float\n', content)
+            assert re.search('CELL_DATA 10000\n', content)
+            assert re.search('SCALARS data float\n', content)
         #
         with pytest.raises(FileExistsError):
             field.export_vtk()
+
+    def test_fracture_image_stack(self):
+        r"""
+        Loads and builds an image stack to test its properties
+        """
+        #
+        # testing initialization from data array
+        img_data = sp.ones((10, 11, 12))
+        fracture_stack = amt.FractureImageStack(img_data, dtype=sp.uint8)
+        assert issubclass(fracture_stack.__class__, sp.ndarray)
+        assert fracture_stack.dtype == sp.uint8
+        assert fracture_stack.shape == img_data.shape
+        assert fracture_stack.size == img_data.size
+        #
+        # testing initialization from image file
+        fname = os.path.join(FIXTURE_DIR, 'binary-fracture.tif')
+        fracture_stack = amt.FractureImageStack(fname)
+        assert issubclass(fracture_stack.__class__, sp.ndarray)
+        assert fracture_stack.dtype == bool
+        assert fracture_stack.shape == (507, 46, 300)
+        assert fracture_stack.nx == fracture_stack.shape[0]
+        assert fracture_stack.ny == fracture_stack.shape[1]
+        assert fracture_stack.nz == fracture_stack.shape[2]
+        #
+        # testing aperture map output
+        fname = os.path.join(FIXTURE_DIR, 'binary-fracture-aperture-map.txt')
+        aper_map = fracture_stack.create_aperture_map()
+        data_map = sp.loadtxt(fname, delimiter='\t')
+        assert sp.all(aper_map == data_map)
+        del aper_map
+        del data_map
+        #
+        fname = os.path.join(TEMP_DIR, 'test.tif')
+        fracture_stack.save(fname)
+        new_stack = amt.FractureImageStack(fname)
+        assert sp.all(fracture_stack == new_stack)
+        del new_stack
+        # testing overwrite parameter
+        with pytest.raises(FileExistsError):
+            fracture_stack.save(fname)
+        #
+        fracture_stack.save(fname, overwrite=True)
 
     def test_stat_file(self):
         r"""

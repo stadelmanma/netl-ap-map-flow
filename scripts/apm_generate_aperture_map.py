@@ -5,10 +5,10 @@ from it.
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
-from PIL import Image
 import os
 import scipy as sp
 from ApertureMapModelTools import _get_logger, set_main_logger_level
+from ApertureMapModelTools import FractureImageStack
 
 #
 desc_str = r"""
@@ -16,7 +16,7 @@ Description: Generates a 2-D aperture map based on a binary CT image stack.
 
 Written By: Matthew stadelman
 Date Written: 2016/09/13
-Last Modfied: 2016/09/13
+Last Modfied: 2017/02/11
 """
 # setting up logger
 set_main_logger_level('info')
@@ -46,6 +46,7 @@ parser.add_argument('image_file', type=os.path.realpath,
 parser.add_argument('aperture_map_name', nargs='?', default=None,
                     help='name to save the aperture map under')
 
+
 def apm_generate_aperture_map():
     r"""
     Driver function to generate an aperture map from a TIF image.
@@ -58,8 +59,8 @@ def apm_generate_aperture_map():
     # checking path to prevent accidental overwritting
     if not namespace.aperture_map_name:
         map_name = os.path.basename(namespace.image_file)
-        map_name = map_name.replace( os.path.splitext(map_name)[1], '-aperture-map.txt')
-        namespace.aperture_map_name = map_name
+        map_name = os.path.splitext(map_name)[0]
+        namespace.aperture_map_name = map_name + '-aperture-map.txt'
 
     #
     map_path = os.path.join(namespace.output_dir, namespace.aperture_map_name)
@@ -68,39 +69,20 @@ def apm_generate_aperture_map():
         raise FileExistsError(msg.format(map_path))
 
     # loading image data
-    data_array = load_image_data(namespace.image_file, namespace.invert)
-    data_array = data_array.astype(sp.int8)
+    logger.info('loading image...')
+    img_data = FractureImageStack(namespace.image_file)
+    if namespace.invert:
+        logger.debug('inverting image data')
+        img_data = ~img_data
+    logger.debug('image dimensions: {} {} {}'.format(*img_data.shape))
 
     # summing data array down into a 2-D map
     logger.info('creating 2-D aperture map...')
-    aperture_map = sp.sum(data_array, axis=1, dtype=int)
+    aperture_map = img_data.create_aperture_map()
 
     # saving map
     logger.info('saving aperture map as {}'.format(map_path))
-    sp.savetxt(map_path, aperture_map.T, fmt='%d', delimiter='\t')
-
-def load_image_data(image_file, invert):
-    r"""
-    Loads an image from a *.tiff stack and creates an array from it. The
-    fracture is assumed to be black and the solid is white.
-    """
-    logger.info('loading image...')
-    img_data = Image.open(image_file)
-    #
-    # creating full image array
-    logger.info('creating image array...')
-    data_array = []
-    for frame in range(img_data.n_frames):
-        img_data.seek(frame)
-        frame = sp.array(img_data, dtype=bool).transpose()
-        if invert:
-            frame = ~frame  # beacuse fracture is black, solid is white
-        data_array.append(frame)
-    #
-    data_array = sp.stack(data_array, axis=2)
-    logger.debug('    image dimensions: {} {} {}'.format(*data_array.shape))
-    #
-    return data_array
+    sp.savetxt(map_path, aperture_map, fmt='%d', delimiter='\t')
 
 #
 if __name__ == '__main__':

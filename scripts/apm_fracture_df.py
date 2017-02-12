@@ -7,10 +7,10 @@ import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 from collections import namedtuple
 import os
-from PIL import Image
 import scipy as sp
 from scipy import stats as sp_stats
 from ApertureMapModelTools import _get_logger, set_main_logger_level
+from ApertureMapModelTools import FractureImageStack
 
 #
 desc_str = r"""
@@ -19,7 +19,7 @@ fractal dimension (Df) along either the X and/or Z axis.
 
 Written By: Matthew stadelman
 Date Written: 2016/11/17
-Last Modfied: 2016/11/17
+Last Modfied: 2017/02/12
 """
 # setting up logger
 set_main_logger_level('info')
@@ -138,7 +138,12 @@ def apm_fracture_df():
         traces.append('top')
     #
     # loading image data
-    image_data = load_image_data(args.image_file, args.invert)
+    logger.info('loading image...')
+    image_data = FractureImageStack(args.image_file)
+    if args.invert:
+        logger.debug('inverting image data')
+        image_data = ~image_data
+    logger.debug('image dimensions: {} {} {}'.format(*image_data.shape))
     #
     # processing data along each axis
     x_data = None
@@ -165,30 +170,6 @@ def apm_fracture_df():
     logger.info('saving fractal dimension exponent data to file')
     with open(args.data_filename, 'w') as outfile:
         output_data(outfile, traces, x_data=x_data, z_data=z_data)
-
-
-def load_image_data(image_file, invert):
-    r"""
-    Loads an image from a *.tiff stack and creates an array from it. The
-    fracture is assumed to be black and the solid is white.
-    """
-    logger.info('loading image...')
-    img_data = Image.open(image_file)
-    #
-    # creating full image array
-    logger.info('creating image array...')
-    data_array = []
-    for frame in range(img_data.n_frames):
-        img_data.seek(frame)
-        frame = sp.array(img_data, dtype=bool).transpose()
-        if invert:
-            frame = ~frame  # beacuse fracture is black, solid is white
-        data_array.append(frame)
-    #
-    data_array = sp.stack(data_array, axis=2).astype(int)
-    logger.debug('image dimensions: {} {} {}'.format(*data_array.shape))
-    #
-    return data_array
 
 
 def process_slice(slice_data, traces):
@@ -273,8 +254,8 @@ def calculate_df(line_trace):
     Df = 2 - H
 
     The method calculates the Hurst Exponent of a fracture profile using the
-    "Variable Bandwidth Method", wherein a window of size 's' is moved along the
-    fracture profile and the standard deviation of the displacement of the
+    "Variable Bandwidth Method", wherein a window of size 's' is moved along
+    the fracture profile and the standard deviation of the displacement of the
     profile at the ends of the window is calculated
 
                        N-s
