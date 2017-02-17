@@ -1,24 +1,44 @@
 #
-# defining variables
+# defining default variable names (assume POISX system)
 CC = gfortran
 OPTIMIZE ?= -O3
 MODELNAME ?= APM-MODEL.EXE
-OBJDIR = dist/
-RM = rm -rf
-MKDIR = mkdir -p $(OBJDIR)
-.DEFAULT_GOAL:= $(OBJDIR)$(MODELNAME)
+OBJDIR ?= dist
+OS_FLAG = -DWIN64=0
+MKDIR = mkdir -p
+RM = rm -f
+RMDIR = rm -rf
+OS_NAME =$(shell uname)
 
-# setting OS flag
-OS = -DWIN64=0
-ifdef SystemRoot
-	OS = -DWIN64=1
-	MKDIR = echo "Manually create source/dist directory if needed"
-else ifdef SYSTEMROOT
-	OS = -DWIN64=1
-	MKDIR = echo "Manually create source/dist directory if needed"
+override OBJDIR := $(strip $(OBJDIR))/
+
+# determining system type if not supplied
+ifndef SYS
+	ifneq (,$(findstring CYGWIN,$(OS_NAME)))
+		SYS = POSIX
+	else ifdef SystemRoot
+		SYS = WIN
+	else ifdef SYSTEMROOT
+		SYS = WIN
+	else
+		SYS = POSIX
+	endif
 endif
 
-# setting variables
+# updating some commands if system is windows
+ifeq ($(SYS),WIN)
+	SHELL=cmd.exe
+	OS_FLAG = -DWIN64=1
+	MKDIR = mkdir
+	RM = del /Q
+	RMDIR = rmdir /Q /S
+endif
+
+# setting default goal after setting object directory
+.DEFAULT_GOAL:= $(OBJDIR)$(MODELNAME)
+
+
+# setting up object variables
 MODEL_FILES := $(wildcard *.F)
 MODEL_OBJS = $(addprefix $(OBJDIR), $(MODEL_FILES:.F=.o))
 
@@ -34,14 +54,14 @@ MODULE_OBJS = $(addprefix $(OBJDIR), $(MODULE_FILES:.F=.o))
 #
 # determining flags to apply at compile time based on target
 # test flags are only defined when this file is included into the testing makefile
-FLAGS = $(OPTIMIZE) $(OS) -J$(OBJDIR)
+FLAGS = $(OPTIMIZE) $(OS_FLAG) -J$(OBJDIR)
 debug test: FLAGS = -fimplicit-none -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace -cpp -g -pg
 debug test: FLAGS += -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter
-debug test: FLAGS += $(OS) -J$(OBJDIR) -I$(OBJDIR)
+debug test: FLAGS += $(OS_FLAG) -J$(OBJDIR) -I$(OBJDIR)
 
 
 ${OBJDIR}:
-	$(MKDIR)
+	-$(MKDIR) $(OBJDIR:/=)
 
 ${OBJDIR}%.o : %.F | ${OBJDIR}
 	$(CC) -c $(FLAGS) $(TEST_FLAGS) -o $@ $<
@@ -52,4 +72,5 @@ ${OBJDIR}${MODELNAME}: ${MODULE_OBJS} ${MODEL_OBJS}
 debug: clean ${OBJDIR}${MODELNAME}
 
 clean:
-	$(RM) $(OBJDIR) *.o *.mod *.EXE *.gcno *.gcda *.gcov
+	$(RM) *.o *.mod *.EXE *.gcno *.gcda *.gcov
+	-$(RMDIR) $(OBJDIR:/=)
