@@ -1,24 +1,39 @@
 #
-# defining variables
+# defining default variable names (assume POISX system)
 CC = gfortran
 OPTIMIZE ?= -O3
 MODELNAME ?= APM-MODEL.EXE
-OBJDIR = dist/
-RM = rm -rf
-MKDIR = mkdir -p $(OBJDIR)
-.DEFAULT_GOAL:= $(OBJDIR)$(MODELNAME)
-
-# setting OS flag
+OBJDIR ?= dist
 OS = -DWIN64=0
+MKDIR = mkdir -p 
+RM = rm -f
+RMDIR = rm -rf
+
+# determining system type if not supplied
 ifdef SystemRoot
-	OS = -DWIN64=1
-	MKDIR = echo "Manually create source/dist directory if needed"
+	SYS ?=WIN
 else ifdef SYSTEMROOT
-	OS = -DWIN64=1
-	MKDIR = echo "Manually create source/dist directory if needed"
+	SYS ?=WIN
+else
+	SYS ?=POSIX
 endif
 
-# setting variables
+# updating some commands if system is windows
+ifeq ($(SYS),WIN)
+        OS = -DWIN64=1
+	override OBJDIR := $(strip $(OBJDIR))\\
+	MKDIR = mkdir
+	RM = del /Q
+	RMDIR = rmdir /Q /S
+else
+	override OBJDIR := $(strip $(OBJDIR))/
+endif
+
+# setting default goal after setting object directory
+.DEFAULT_GOAL:= $(OBJDIR)$(MODELNAME)
+
+
+# setting up object variables
 MODEL_FILES := $(wildcard *.F)
 MODEL_OBJS = $(addprefix $(OBJDIR), $(MODEL_FILES:.F=.o))
 
@@ -41,7 +56,7 @@ debug test: FLAGS += $(OS) -J$(OBJDIR) -I$(OBJDIR)
 
 
 ${OBJDIR}:
-	$(MKDIR)
+	$(MKDIR) $(OBJDIR)
 
 ${OBJDIR}%.o : %.F | ${OBJDIR}
 	$(CC) -c $(FLAGS) $(TEST_FLAGS) -o $@ $<
@@ -52,4 +67,5 @@ ${OBJDIR}${MODELNAME}: ${MODULE_OBJS} ${MODEL_OBJS}
 debug: clean ${OBJDIR}${MODELNAME}
 
 clean:
-	$(RM) $(OBJDIR) *.o *.mod *.EXE *.gcno *.gcda *.gcov
+	$(RM) *.o *.mod *.EXE *.gcno *.gcda *.gcov
+	$(RMDIR) $(OBJDIR)
