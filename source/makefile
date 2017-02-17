@@ -22,7 +22,8 @@ endif
 
 # updating some commands if system is windows
 ifeq ($(SYS),WIN)
-        OS_FLAG = -DWIN64=1
+	SHELL=cmd.exe
+	OS_FLAG = -DWIN64=1
 	MKDIR = mkdir
 	RM = del /Q
 	RMDIR = rmdir /Q /S
