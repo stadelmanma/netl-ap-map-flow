@@ -4,10 +4,12 @@ CC = gfortran
 OPTIMIZE ?= -O3
 MODELNAME ?= APM-MODEL.EXE
 OBJDIR ?= dist
-OS = -DWIN64=0
+OS_FLAG = -DWIN64=0
 MKDIR = mkdir -p 
 RM = rm -f
 RMDIR = rm -rf
+
+override OBJDIR := $(strip $(OBJDIR))/
 
 # determining system type if not supplied
 ifdef SystemRoot
@@ -20,13 +22,10 @@ endif
 
 # updating some commands if system is windows
 ifeq ($(SYS),WIN)
-        OS = -DWIN64=1
-	override OBJDIR := $(strip $(OBJDIR))\\
+        OS_FLAG = -DWIN64=1
 	MKDIR = mkdir
 	RM = del /Q
 	RMDIR = rmdir /Q /S
-else
-	override OBJDIR := $(strip $(OBJDIR))/
 endif
 
 # setting default goal after setting object directory
@@ -49,14 +48,14 @@ MODULE_OBJS = $(addprefix $(OBJDIR), $(MODULE_FILES:.F=.o))
 #
 # determining flags to apply at compile time based on target
 # test flags are only defined when this file is included into the testing makefile
-FLAGS = $(OPTIMIZE) $(OS) -J$(OBJDIR)
+FLAGS = $(OPTIMIZE) $(OS_FLAG) -J$(OBJDIR)
 debug test: FLAGS = -fimplicit-none -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace -cpp -g -pg
 debug test: FLAGS += -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter
-debug test: FLAGS += $(OS) -J$(OBJDIR) -I$(OBJDIR)
+debug test: FLAGS += $(OS_FLAG) -J$(OBJDIR) -I$(OBJDIR)
 
 
 ${OBJDIR}:
-	$(MKDIR) $(OBJDIR)
+	$(MKDIR) $(OBJDIR:/=)
 
 ${OBJDIR}%.o : %.F | ${OBJDIR}
 	$(CC) -c $(FLAGS) $(TEST_FLAGS) -o $@ $<
@@ -68,4 +67,4 @@ debug: clean ${OBJDIR}${MODELNAME}
 
 clean:
 	$(RM) *.o *.mod *.EXE *.gcno *.gcda *.gcov
-	$(RMDIR) $(OBJDIR)
+	$(RMDIR) $(OBJDIR:/=)
