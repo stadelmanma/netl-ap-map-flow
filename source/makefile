@@ -5,19 +5,24 @@ OPTIMIZE ?= -O3
 MODELNAME ?= APM-MODEL.EXE
 OBJDIR ?= dist
 OS_FLAG = -DWIN64=0
-MKDIR = mkdir -p 
+MKDIR = mkdir -p
 RM = rm -f
 RMDIR = rm -rf
+OS_NAME =$(shell uname)
 
 override OBJDIR := $(strip $(OBJDIR))/
 
 # determining system type if not supplied
-ifdef SystemRoot
-	SYS ?=WIN
-else ifdef SYSTEMROOT
-	SYS ?=WIN
-else
-	SYS ?=POSIX
+ifndef SYS
+	ifneq (,$(findstring CYGWIN,$(OS_NAME)))
+		SYS = POSIX
+	else ifdef SystemRoot
+		SYS = WIN
+	else ifdef SYSTEMROOT
+		SYS = WIN
+	else
+		SYS = POSIX
+	endif
 endif
 
 # updating some commands if system is windows
@@ -56,7 +61,7 @@ debug test: FLAGS += $(OS_FLAG) -J$(OBJDIR) -I$(OBJDIR)
 
 
 ${OBJDIR}:
-	$(MKDIR) $(OBJDIR:/=)
+	-$(MKDIR) $(OBJDIR:/=)
 
 ${OBJDIR}%.o : %.F | ${OBJDIR}
 	$(CC) -c $(FLAGS) $(TEST_FLAGS) -o $@ $<
@@ -68,4 +73,4 @@ debug: clean ${OBJDIR}${MODELNAME}
 
 clean:
 	$(RM) *.o *.mod *.EXE *.gcno *.gcda *.gcov
-	$(RMDIR) $(OBJDIR:/=)
+	-$(RMDIR) $(OBJDIR:/=)
