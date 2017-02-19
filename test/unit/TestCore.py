@@ -15,6 +15,7 @@ import pytest
 import re
 import sys
 import scipy as sp
+import PIL
 import ApertureMapModelTools as amt
 import ApertureMapModelTools.__core__ as amt_core
 
@@ -26,15 +27,25 @@ class TestCore:
     def setup_class(self):
         pass
 
-    def test_import(self):
+    def test_import(self, monkeypatch):
         r"""
         Tests that the main __init__ module method properly flags early
-        versions of python
+        versions of python and pillow
         """
         version = namedtuple('version', ['major', 'minor', 'micro', 'releaselevel', 'serial'])
+        orig_version = sys.version_info
         test_vers = version(major=2, minor=7, micro=5, releaselevel='final', serial='')
         #
-        sys.version_info = test_vers
+        monkeypatch.setattr(sys, 'version_info', test_vers)
+        with pytest.raises(Exception):
+            reload(amt)
+        sys.version_info = orig_version
+        #
+        monkeypatch.setattr(PIL, '__version__', '3.3.0')
+        monkeypatch.setattr(PIL, 'PILLOW_VERSION', '3.3.0')
+        with pytest.raises(Exception):
+            reload(amt)
+        monkeypatch.delattr(PIL, '__version__')
         with pytest.raises(Exception):
             reload(amt)
 
