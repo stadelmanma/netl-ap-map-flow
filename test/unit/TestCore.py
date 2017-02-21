@@ -8,7 +8,7 @@ Last Modifed: 2017/02/12
 """
 from argparse import Namespace
 from collections import namedtuple
-from imp import reload
+from importlib import reload
 import logging
 import os
 import pytest
@@ -34,7 +34,7 @@ class TestCore:
         """
         version = namedtuple('version', ['major', 'minor', 'micro', 'releaselevel', 'serial'])
         orig_version = sys.version_info
-        test_vers = version(major=2, minor=7, micro=5, releaselevel='final', serial='')
+        test_vers = version(major=3, minor=0, micro=0, releaselevel='final', serial='')
         #
         monkeypatch.setattr(sys, 'version_info', test_vers)
         with pytest.raises(Exception):
