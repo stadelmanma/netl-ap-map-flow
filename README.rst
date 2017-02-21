@@ -34,6 +34,8 @@ Setting up the Modeling Package
 -------------------------------
 These steps were followed on Ubuntu 14.04 & 16.04, OSX 10.9 & MacOS 10.12 and Windows 7. They are not guaranteed to remain updated however the general process should be relatively stable as all dependencies are being handled by large, community driven projects i.e. Anaconda, MinGW, GCC, etc. Running the test suite in Windows is possible but not without some manual adjustments and extra effort. 
 
+An extra step that may prevent unexpected errors would be to run :code:`sudo conda update --all` or :code:`sudo pip install -r requirements.txt --upgrade` after the final step especially if you are using an existing Anaconda install.
+
 Linux
 ~~~~~
 1. Install :code:`git` using the terminal command :code:`sudo apt-get install git`.
