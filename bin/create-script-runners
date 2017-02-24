@@ -33,7 +33,7 @@ content = '#!/bin/bash\npython3 {} $@\n'
 for script in script_files:
     runner = os.path.basename(script)
     runner = os.path.splitext(runner)[0]
-    runner = os.path.join(bin_dir, runner)
+    runner = '/'.join([bin_dir, runner])
     #
     print('Creating runner for script ' + script)
     with open(runner, 'w') as f:
@@ -46,23 +46,3 @@ for script in script_files:
     os.chmod(runner, perms.st_mode | stat.S_IXUSR | stat.S_IXGRP)
 
 print('Add all scripts to: ' + bin_dir)
-
-#DIR="$(pwd)"
-#for script in $DIR/scripts/apm_*; do
-#
-#    # pulling out filename from path, runner needs no extension
-#    runner=${script##*/}
-#    runner=${runner%.*}
-#    file=$(python -c 'import os; print(os.path.abspath("./scripts/apm_bulk_run.py"), end="")')
-#
-#    # creating runner file and setting as executable
-#    echo "Creating runner for script $runner.py"
-#    touch ~/bin/"$runner"
-#    chmod ug+x ~/bin/"$runner"
-#
-#    # echoing content into file
-#    echo "#!/bin/bash" > ~/bin/"$runner"
-#    echo "python3 \"$file\" "\$@"" >> ~/bin/"$runner"
-#done
-#
-#echo "Added all scripts to "~/"bin"
