@@ -14,9 +14,11 @@ except IndexError:
     sys.exit(1)
 
 # checking if it was run as sudo
-uid = int(os.environ.get('SUDO_UID'))
-gid = int(os.environ.get('SUDO_GID'))
+uid = os.environ.get('SUDO_UID')
+gid = os.environ.get('SUDO_GID')
 if uid is not None:
+    uid = int(uid)
+    gid = int(gid)
     sudo = True
 
 # changing from cwd to the scripts directory
