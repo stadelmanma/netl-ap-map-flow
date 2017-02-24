@@ -101,7 +101,7 @@ C
       RHO = 1.0
       AVG_VISC = -1.0
       ! DEFAULT APERTURE MAP PROPERTIES
-      MAXDIM = 500
+      MAXDIM = 2000
       AVG_FACT = 1.0
       R_FACT = 0.0
       VOX_MET = 1.0
