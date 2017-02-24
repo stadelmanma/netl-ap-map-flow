@@ -72,8 +72,10 @@ C
       USE STRING_MODULE, ONLY : MAXFLD, LNPROC, LOWER_CASE
 C
       IMPLICIT NONE
+      LOGICAL, INTENT(IN OUT) :: BOK
+      !
       INTEGER :: I, IFLD, NFLD, LFLD(MAXFLD)
-      LOGICAL :: BOK, APM, OVERWRITE
+      LOGICAL :: APM, OVERWRITE
       CHARACTER(1) :: SEP
       CHARACTER(MAXLEN) :: PATH
       CHARACTER(MAXLEN) :: MASTER
@@ -294,11 +296,15 @@ C
 C ----------------------------------------------------------------------
 C
       IMPLICIT NONE
-      INTEGER :: IUNIT, IO
-      LOGICAL :: OVERWRITE, BOK
+      INTEGER, INTENT(IN) :: IUNIT
+      CHARACTER(*), INTENT(IN) :: NAME
+      CHARACTER(*), INTENT(OUT) :: OPENED_FILES(*)
+      LOGICAL, INTENT(IN) :: OVERWRITE
+      LOGICAL, INTENT(IN OUT) :: BOK
+      !
+      INTEGER :: IO
       CHARACTER(80)  :: FSTAT
       CHARACTER(300) :: CVAR
-      CHARACTER(*)   :: NAME, OPENED_FILES(*)
 C
 C     SETTING VARS
       FSTAT = 'NEW'
@@ -359,7 +365,7 @@ C
 C ----------------------------------------------------------------------
 C
       IMPLICIT NONE
-      CHARACTER(*) :: C_OUT
+      CHARACTER(*), INTENT(IN) :: C_OUT
 C
       WRITE(*, '(A)') TRIM(C_OUT)
       IF (IOUT /= 6) WRITE(IOUT, '(A)') TRIM(C_OUT)
@@ -377,7 +383,7 @@ C     WRITTEN BY: W. NEAL SAMS
 C     DATE WRITTEN: 10/04/2013
 C
       IMPLICIT NONE
-      CHARACTER(1) C1
+      CHARACTER(1) :: C1
       DATA C1/' '/
 C
       CALL MESSAGE(C1)
@@ -395,7 +401,7 @@ C     WRITTEN BY: W. NEAL SAMS
 C     DATE WRITTEN: 03/07/2014
 C
       IMPLICIT NONE
-      CHARACTER(*) :: C_IN
+      CHARACTER(*), INTENT(IN) :: C_IN
       CHARACTER(MAXLEN) :: C_OUT
 C
       CALL BLANK
@@ -415,7 +421,7 @@ C     WRITTEN BY: W. NEAL SAMS
 C     DATE WRITTEN: 03/07/2014
 C
       IMPLICIT NONE
-      CHARACTER(*) CHAR_IN
+      CHARACTER(*), INTENT(IN) :: CHAR_IN
       CHARACTER(MAXLEN) :: C_OUT
 C
       CALL ERROR_WHERE(CHAR_IN)
@@ -437,8 +443,9 @@ C     WRITTEN BY: W. NEAL SAMS
 C     DATE WRITTEN: 03/07/2014
 C
       IMPLICIT NONE
-      INTEGER :: IFLD
-      CHARACTER(*) CHAR_IN
+      INTEGER, INTENT(IN) :: IFLD
+      CHARACTER(*), INTENT(IN) :: CHAR_IN
+      !
       CHARACTER(MAXLEN) :: C_OUT
 C
       CALL ERROR_WHERE(CHAR_IN)
