@@ -804,7 +804,7 @@ C
 C ----------------------------------------------------------------------
 C
       USE APM_MODULE
-      USE IO_MODULE, ONLY : BLANK, MESSAGE, IMAP, IPRES,
+      USE IO_MODULE, ONLY : BLANK, MESSAGE, IMAP, IPRES, IVTK,
      &                      IFLOX, IFLOZ, IFLOM
       USE OUTPUT_MODULE, ONLY : CALC_PERCENTILE, WRITE_PERCENTILE,
      &                          WRITE_ONED_ARRAY
@@ -922,7 +922,7 @@ C     OUTPUTTING THE FRACTURE PRESSURE DISTRIBUTION
       CALL MESSAGE("     PRESSURE FILE COMPLETED")
 C
 C     WRITTING VTK FILE
-      CALL WRITE_VTK_FILE(QX_OUT, QZ_OUT, PRES, REN, RES)
+      CALL WRITE_VTK_FILE(IVTK, QX_OUT, QZ_OUT, PRES, REN, RES)
 C
 C     DEALLOCATING ARRAYS
       DEALLOCATE(QX_OUT, QZ_OUT, QM_OUT, PRES, REN, RES)
@@ -1215,13 +1215,14 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE WRITE_VTK_FILE(QX, QZ, PRES, REN, RES)
+      SUBROUTINE WRITE_VTK_FILE(IUNIT, QX, QZ, PRES, REN, RES)
 C
 C     WRITES MODEL DATA TO THE VTK FILE
 C
       USE APM_MODULE
-      USE IO_MODULE, ONLY : IVTK, BLANK, MESSAGE
+      USE IO_MODULE, ONLY : BLANK, MESSAGE
       IMPLICIT NONE
+      INTEGER, INTENT(IN) :: IUNIT
       !
       REAL(8) :: QX(NX*NZ),QZ(NX*NZ), PRES(NX*NZ), REN(NX*NZ),RES(NX*NZ)
       REAL(8) :: X, Y, Z
@@ -1230,12 +1231,12 @@ C
 C     WRITE VTK FILE HEADER
       CALL BLANK
       CALL MESSAGE("     CREATING THE VTK FILE...")
-      WRITE(IVTK, "('# vtk DataFile Version 3.0')")
-      WRITE(IVTK, "('vtk output')")
-      WRITE(IVTK, "('ASCII')")
-      WRITE(IVTK, "('DATASET STRUCTURED_GRID')")
-      WRITE(IVTK, "('DIMENSIONS ',I0,1X,I0,1X,I0)") NX + 1, NZ + 1, 2
-      WRITE(IVTK, "('POINTS ',I0,' float')") (NX + 1) * (NZ + 1) * 2
+      WRITE(IUNIT, "('# vtk DataFile Version 3.0')")
+      WRITE(IUNIT, "('vtk output')")
+      WRITE(IUNIT, "('ASCII')")
+      WRITE(IUNIT, "('DATASET STRUCTURED_GRID')")
+      WRITE(IUNIT, "('DIMENSIONS ',I0,1X,I0,1X,I0)") NX + 1, NZ + 1, 2
+      WRITE(IUNIT, "('POINTS ',I0,' float')") (NX + 1) * (NZ + 1) * 2
 C
 C     OUTPUTTING BOTTOM AND TOP SURFACE GRID POINTS
       DO N = -1, 1, 2
@@ -1243,24 +1244,24 @@ C     OUTPUTTING BOTTOM AND TOP SURFACE GRID POINTS
         DO IZ = 1, NZ
           X = 0.0
           Y = N * AP_POINT_MAP(IZ, 1, 1) / 2.0
-          WRITE(IVTK, "(3(E14.6,:,' '))") X, Y, Z
+          WRITE(IUNIT, "(3(E14.6,:,' '))") X, Y, Z
           DO IX = 1, NX
             I = (IZ - 1)*NX + IX
             X = X + DX(I)
             Y = N * AP_POINT_MAP(IZ, IX, 2) / 2.0
-            WRITE(IVTK, "(3(E14.6,:,' '))") X, Y, Z
+            WRITE(IUNIT, "(3(E14.6,:,' '))") X, Y, Z
           END DO
           Z = Z + DZ(I)
         END DO
         !
         X = 0.0
         Y = N * AP_POINT_MAP(NZ, 1, 4) / 2.0
-        WRITE(IVTK,"(3(E14.6,:,' '))")X, Y, Z
+        WRITE(IUNIT,"(3(E14.6,:,' '))")X, Y, Z
         DO IX = 1,NX
           I = (NZ - 1)*NX + IX
           X = X + DX(I)
           Y = N * AP_POINT_MAP(NZ, IX, 3) / 2.0
-          WRITE(IVTK,"(3(E14.6,:,' '))") X, Y, Z
+          WRITE(IUNIT,"(3(E14.6,:,' '))") X, Y, Z
         END DO
       END DO
       CALL MESSAGE("         VTK POINTS OUTPUT TO FILE")
@@ -1270,19 +1271,19 @@ C     OUTPUTTING SIMULATION DATA INTO THE VTK FILE
       CALL MESSAGE("     OUTPUTTING DATA TO THE VTK FILE...")
 C
 C     CREATING THE CELL DATA TABLES
-      WRITE(IVTK, "(' ')")
-      WRITE(IVTK, "('CELL_DATA ', I0)") NX * NZ * 1
-      CALL WRITE_VTK_DATA(IVTK, 'APERTURE', UNIT_OUT(2), 'float', WIDTH)
-      CALL WRITE_VTK_DATA(IVTK, 'PRESSURE', UNIT_OUT(1), ' float', PRES)
-      CALL WRITE_VTK_DATA(IVTK, 'REYNOLDS_NUMBER', '-', 'float', REN)
-      CALL WRITE_VTK_DATA(IVTK, 'NORMALIZED_RESIDUAL', '-','float', RES)
+      WRITE(IUNIT, "(' ')")
+      WRITE(IUNIT, "('CELL_DATA ', I0)") NX * NZ * 1
+      CALL WRITE_VTK_DATA(IUNIT, 'APERTURE', UNIT_OUT(2), 'float',WIDTH)
+      CALL WRITE_VTK_DATA(IUNIT, 'PRESSURE', UNIT_OUT(1), ' float',PRES)
+      CALL WRITE_VTK_DATA(IUNIT, 'REYNOLDS_NUMBER', '-', 'float', REN)
+      CALL WRITE_VTK_DATA(IUNIT, 'NORMALIZED_RESIDUAL', '-','float',RES)
 C
-      WRITE(IVTK, "(' ')")
-      WRITE(IVTK, "('VECTORS FLOW[',A,'] float')") TRIM(UNIT_OUT(5))
+      WRITE(IUNIT, "(' ')")
+      WRITE(IUNIT, "('VECTORS FLOW[',A,'] float')") TRIM(UNIT_OUT(5))
       DO IZ = 1, NZ
         DO IX = 1, NX
           I = (IZ - 1) * NX + IX
-          WRITE(IVTK, "(3(E14.6,:,' '))") QX(I), 0.0, QZ(I)
+          WRITE(IUNIT, "(3(E14.6,:,' '))") QX(I), 0.0, QZ(I)
         END DO
       END DO
       CALL MESSAGE("         VECTOR FLOW DATA OUTPUT TO VTK FILE")
