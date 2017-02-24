@@ -24,14 +24,16 @@ C
       CONTAINS
 C
 C     ------------------------------------------------------------------
-      SUBROUTINE UPPER_CASE(C_IN,C_OUT)
+      SUBROUTINE UPPER_CASE(C_IN, C_OUT)
         !
         ! WRITTEN BY: W. NEAL SAMS
         ! DATE WRITTEN: 10/04/2013
         !
         IMPLICIT NONE
+        CHARACTER(*), INTENT(IN) :: C_IN
+        CHARACTER(*), INTENT(OUT) :: C_OUT
+        !
         INTEGER :: I,NC
-        CHARACTER(*) :: C_IN,C_OUT
         !
         DO I = 1,LEN_TRIM(C_IN)
          NC = ICHAR(C_IN(I:I))
@@ -48,8 +50,10 @@ C     ------------------------------------------------------------------
         ! DATE WRITTEN: 10/04/2013
         !
         IMPLICIT NONE
+        CHARACTER(*), INTENT(IN) :: C_IN
+        CHARACTER(*), INTENT(OUT) :: C_OUT
+        !
         INTEGER :: I,NC
-        CHARACTER(*) :: C_IN,C_OUT
         !
         DO I = 1,LEN_TRIM(C_IN)
          NC = ICHAR(C_IN(I:I))
@@ -60,14 +64,18 @@ C     ------------------------------------------------------------------
         RETURN
       END SUBROUTINE
 C     ------------------------------------------------------------------
-      SUBROUTINE R_JUST(C_IN,C_OUT,NC)
+      SUBROUTINE R_JUST(C_IN, C_OUT, NC)
         !
         ! WRITTEN BY: MATTHEW STADELMAN
         ! DATE WRITTEN: 2015/09/17
         !
         IMPLICIT NONE
-        INTEGER :: I,NC,NW
-        CHARACTER(NC) :: C_IN,C_OUT,CVAR
+        INTEGER, INTENT(IN) :: NC
+        CHARACTER(NC), INTENT(IN) :: C_IN
+        CHARACTER(NC), INTENT(OUT) :: C_OUT
+        !
+        INTEGER :: I, NW
+        CHARACTER(NC) :: CVAR
        !
         NW = NC - LEN_TRIM(C_IN)
         DO I = 1,NW
@@ -106,12 +114,15 @@ C     ------------------------------------------------------------------
         ! LAST MODIFIED: 07/12/2016
         !
         IMPLICIT NONE
-        INTEGER :: IN,MAXFLD,MAXLEN,NFLD,LENG,I
-        INTEGER :: LFLD(*)
+        !
+        INTEGER, INTENT(IN) :: IN,MAXFLD,MAXLEN
+        INTEGER, INTENT(OUT) :: NFLD, LFLD(:)
+        CHARACTER(*), INTENT(OUT) :: CFLD(:), CVAR
+        CHARACTER(*), INTENT(IN), OPTIONAL :: CASE
+        !
+        INTEGER :: LENG, I
         LOGICAL :: QUOTED = .FALSE.
         CHARACTER(80) :: SET_CASE
-        CHARACTER(*),INTENT(IN),OPTIONAL :: CASE
-        CHARACTER(*) :: CFLD(*),CVAR
         CHARACTER(1) :: C1
         !
         SET_CASE = 'UPPER'
