@@ -212,9 +212,10 @@ C
      &                                   CONVERT_VALUE, CALC_CONV_FACT
 C
       IMPLICIT NONE
+      REAL(8) :: TMP
       INTEGER :: IUNIT, IFLD, NFLD, LFLD(MAXFLD)
       LOGICAL :: BOK, OUTPUT_UNIT = .FALSE.
-      CHARACTER(MAXLEN) :: CVAR, CFLD(MAXFLD)
+      CHARACTER(MAXLEN) :: CVAR, CFLD(MAXFLD), TMP_UNIT
 C
 C     READING IN MASTER INPUT FILE
       CALL LNPROC(IUNIT, MAXFLD, MAXLEN, CVAR, CFLD, LFLD, NFLD)
@@ -342,12 +343,28 @@ C     READING IN MASTER INPUT FILE
         ! READING OUTPUT UNIT TO CONVERT TO
         ELSEIF (INDEX(CFLD(1), 'OUTPUT-UNITS') > 0) THEN
           IF (NFLD < 4) GOTO 905
+          !
+          ! READ AND CHECK PRESSURE UNITS
           IFLD = 2
+          TMP_UNIT = 'SI'
           READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_OUT(1)
+          CALL CALC_CONV_FACT('PRES', UNIT_OUT(1), TMP_UNIT, TMP, BOK)
+          IF (.NOT. BOK) GOTO 910
+          !
+          ! READ AND CHECK DISTANCE UNITS
           IFLD = 3
+          TMP_UNIT = 'SI'
           READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_OUT(2)
+          CALL CALC_CONV_FACT('DIST', UNIT_OUT(2), TMP_UNIT, TMP, BOK)
+          IF (.NOT. BOK) GOTO 910
+          !
+          ! READ AND CHECK FLOW RATE UNITS
           IFLD = 4
+          TMP_UNIT = 'SI'
           READ(CFLD(IFLD), "(A)", ERR = 910) UNIT_OUT(5)
+          CALL CALC_CONV_FACT('FLOW', UNIT_OUT(5), TMP_UNIT, TMP, BOK)
+          IF (.NOT. BOK) GOTO 910
+          !
           OUTPUT_UNIT = .TRUE.
         ELSE
           CVAR = TRIM(CVAR(1:120)) !SHORTENING LENGTH TO PREVENT OVERFLOW
