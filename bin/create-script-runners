@@ -13,10 +13,6 @@ except IndexError:
     print('Error: An output path must be provided')
     sys.exit(1)
 
-if not os.path.isdir(bin_dir):
-    print('Error: Specified path does not exist ' + os.path.abspath(bin_dir))
-    sys.exit(1)
-
 # checking if it was run as sudo
 uid = int(os.environ.get('SUDO_UID'))
 gid = int(os.environ.get('SUDO_GID'))
