@@ -14,16 +14,17 @@ if [ ! $REPO_HOME ]; then
     REPO_HOME=$(pwd)
 fi
 set -e
-echo $REPO_HOME
 
-for script in $REPO_HOME/scripts/apm_*; do
+# looping over all scritps with apm_ prefix
+cd $REPO_HOME
+for script in ./scripts/apm_*; do
 
     # pulling out filename from path, runner needs no extension
     runner=${script##*/}
     runner=${runner%.*}
-    #file=$(python -c "import os, sys; sys.stdout.write(os.path.abspath('$REPO_HOME/scripts/$script'))")
-    file="$REPO_HOME/scripts/$script"
-    echo $file
+
+    # using python allows proper resolution of Cygwin and regular paths
+    file=$(python -c "import os, sys; sys.stdout.write(os.path.abspath('$script'))")
 
     # creating runner file and setting as executable
     echo "Creating runner for script $runner.py"
