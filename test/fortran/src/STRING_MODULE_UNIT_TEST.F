@@ -64,7 +64,7 @@ C
         WRITE(TEST_STR,*) 'all uppercase'
         WRITE(CORR_STR,*) 'ALL UPPERCASE'
         CALL UPPER_CASE(TEST_STR)
-        CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'UPPER_CASE')
+        CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'UPPER_CASE-INPLC')
         !
         CALL END_TEST('TEST_UPPER_CASE')
         !
@@ -98,7 +98,7 @@ C-----------------------------------------------------------------------
         WRITE(TEST_STR,*) 'ALL LOWERCASE'
         WRITE(CORR_STR,*) 'all lowercase'
         CALL LOWER_CASE(TEST_STR)
-        CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'LOWER_CASE')
+        CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'LOWER_CASE-INPLC')
         !
         CALL END_TEST('TEST_LOWER_CASE')
         !
@@ -114,15 +114,25 @@ C-----------------------------------------------------------------------
         USE UNIT_TEST_MODULE
         USE STRING_MODULE
         IMPLICIT NONE
-        CHARACTER(10) :: TEST_STR, CORR_STR
+        CHARACTER(10) :: ORIG_STR, TEST_STR, CORR_STR
         !
         CALL INIT_TEST
         !
+        ! TESTING THAT TEXT WAS RIGHT JUSTIFIED
+        WRITE(ORIG_STR,*) 'RIGHT    '
+        WRITE(CORR_STR,*) '    RIGHT'
+        CALL R_JUST(ORIG_STR, TEST_STR)
+        CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'R_JUST')
+        !
+        ! CHECKING THAT ORIGINAL VARIABLE WAS NOT MODIFIED
+        WRITE(CORR_STR,*) 'RIGHT    '
+        CALL ASSERT_EQUALS(ORIG_STR, CORR_STR, 'R_JUST')
+        !
+        ! TESTING IN PLACE CHANGE OF VARIABLE
         WRITE(TEST_STR,*) 'RIGHT    '
         WRITE(CORR_STR,*) '    RIGHT'
-        CALL R_JUST(TEST_STR, TEST_STR, 10)
-        !
-        CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'R_JUST')
+        CALL R_JUST(TEST_STR)
+        CALL ASSERT_EQUALS(TEST_STR, CORR_STR, 'R_JUST-INPLC')
         !
         CALL END_TEST('TEST_R_JUST')
         !

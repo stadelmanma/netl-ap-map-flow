@@ -82,24 +82,31 @@ C     ------------------------------------------------------------------
         RETURN
       END SUBROUTINE
 C     ------------------------------------------------------------------
-      SUBROUTINE R_JUST(C_IN, C_OUT, NC)
+      SUBROUTINE R_JUST(C_IN, C_OUT)
         !
         ! WRITTEN BY: MATTHEW STADELMAN
         ! DATE WRITTEN: 2015/09/17
+        ! LAST MODIFIED: 2017/02/25
         !
         IMPLICIT NONE
-        INTEGER, INTENT(IN) :: NC
-        CHARACTER(NC), INTENT(IN) :: C_IN
-        CHARACTER(NC), INTENT(OUT) :: C_OUT
+        CHARACTER(*), INTENT(IN OUT) :: C_IN
+        CHARACTER(*), INTENT(OUT), OPTIONAL :: C_OUT
         !
         INTEGER :: I, NW
-        CHARACTER(NC) :: CVAR
-       !
-        NW = NC - LEN_TRIM(C_IN)
-        DO I = 1,NW
-          CVAR(I:I) = ' '
-        END DO
-        C_OUT = CVAR(1:NW)//TRIM(C_IN)
+        CHARACTER(LEN(C_IN)) :: TMP
+        !
+        ! ADDING WHITESPACE TO FRONT OF STRING
+        NW = LEN(C_IN) - LEN_TRIM(C_IN)
+        FORALL(I = 1:NW) TMP(I:I) = ' '
+        !
+        ! APPENDING REMAINDER OF STRING
+        TMP = TMP(1:NW) // TRIM(C_IN)
+        !
+        IF (.NOT. PRESENT(C_OUT)) THEN
+          C_IN = TMP
+        ELSE
+          C_OUT = TMP
+        END IF
         !
         RETURN
       END SUBROUTINE
