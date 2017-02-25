@@ -78,7 +78,7 @@ C ----------------------------------------------------------------------
 C
       IMPLICIT NONE
       REAL(8), INTENT(IN) :: VECTOR(:)
-      REAL(8), INTENT(INOUT) :: PERC_ARR(:, :)
+      REAL(8), INTENT(IN OUT) :: PERC_ARR(:, :)
       !
       REAL(8), ALLOCATABLE :: SORT(:), COUNTS(:), COUNT_VAL(:)
       INTEGER :: I ,J, K, IV, N, TOT, NVALS, NPCT
@@ -207,7 +207,7 @@ C
 C ----------------------------------------------------------------------
 C
       IMPLICIT NONE
-      REAL(8), INTENT(INOUT) :: VECTOR(:)
+      REAL(8), INTENT(IN OUT) :: VECTOR(:)
       !
       REAL(8) :: VAL
       INTEGER :: I, J, L, N, IR

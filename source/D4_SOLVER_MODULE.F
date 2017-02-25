@@ -67,7 +67,7 @@ C ----------------------------------------------------------------------
 C @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE ALLOCATE_COEF(NX ,NZ)
+      SUBROUTINE ALLOCATE_COEF(NX, NZ)
 C
 C     WRITTEN BY: MATTHEW STADELMAN
 C     LAST MODIFIED: 2017/02/06
@@ -75,7 +75,8 @@ C
 C     ALLOCATES THE SOLVER'S COEFFICIENT ARRAY
 C
       IMPLICIT NONE
-      INTEGER :: NX, NZ, NUM_BLK
+      INTEGER, INTENT(IN) :: NX, NZ
+      INTEGER :: NUM_BLK
       NUM_BLK = NX * NZ
       !
       ALLOCATE (NEUMANNG_ROW(NUM_BLK), NEUMANNG_COL(NUM_BLK))
@@ -114,7 +115,7 @@ C
 C     INITIALIZES THE SOLVER MODULE ARRAYS AND COEFFICENTS
 C
       IMPLICIT NONE
-      INTEGER :: NX ,NZ
+      INTEGER, INTENT(IN) :: NX, NZ
       !
       CALL ALLOCATE_COEF(NX, NZ)
       CALL RESET_COEF
@@ -188,11 +189,12 @@ C
 C ----------------------------------------------------------------------
 C
       IMPLICIT NONE
+      REAL(8), INTENT(IN) :: BC_VALUE
+      CHARACTER(*), INTENT(IN) :: SIDE
+      !
       REAL(8), ALLOCATABLE :: NEW_CC(:),NEW_TT(:,:),NEW_RHS(:)
-      REAL(8) :: BC_VALUE
       INTEGER, ALLOCATABLE :: BC_SLICE(:), MV_SLICE(:)
       INTEGER :: IB, IZ, OLD_NX, OLD_NZ, NXZ
-      CHARACTER(*) :: SIDE
 C
 C     DETERMINING NEW DIMENSIONS OF SOLVER ARRAYS
       OLD_NX = SOLV_NX
@@ -280,10 +282,11 @@ C
 C ----------------------------------------------------------------------
 C
       IMPLICIT NONE
-      REAL(8) :: BC_VALUE
+      REAL(8), INTENT(IN) :: BC_VALUE
+      CHARACTER(*), INTENT(IN) :: SIDE
+      !
       INTEGER, ALLOCATABLE :: BC_SLICE(:)
       INTEGER :: I, IB, ID
-      CHARACTER(*) :: SIDE
 C
 C     DETERMINING INDICIES TO CONNECT TO
       IF (INDEX(SIDE,'BOTTOM') > 0) THEN
@@ -460,12 +463,14 @@ C
 C ----------------------------------------------------------------------
 C
       IMPLICIT NONE
-      REAL(8), ALLOCATABLE :: NG_D4COL(:),NG_D4ROW(:),ROW(:)
-      REAL(8), ALLOCATABLE :: TEMP(:),X(:)
-      REAL(8) :: TEMP_RHS,TEMP_NGCOL,FACTOR
-      REAL(8) :: NEUMANNG_X
-      INTEGER :: IBR,IBRU,JBR,IB,IBU,IX,IZ,NXZ
-      INTEGER :: ICOL,JCOL,IL,ID,JD,IUP
+      REAL(8), ALLOCATABLE, INTENT(OUT) :: X(:)
+      REAL(8), INTENT(OUT) :: NEUMANNG_X
+      !
+      REAL(8), ALLOCATABLE :: NG_D4COL(:), NG_D4ROW(:), ROW(:)
+      REAL(8), ALLOCATABLE :: TEMP(:)
+      REAL(8) :: TEMP_RHS, TEMP_NGCOL, FACTOR
+      INTEGER :: IBR, IBRU, JBR, IB, IBU, IX, IZ, NXZ
+      INTEGER :: ICOL, JCOL, IL, ID, JD, IUP
 C
 C     REORDING COEFFICENTS FROM LEXOGRAPHICAL TO D4
       CALL D4_REORDER

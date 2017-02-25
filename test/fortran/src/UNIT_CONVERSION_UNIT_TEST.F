@@ -58,6 +58,7 @@ C
         IMPLICIT NONE
         REAL(8) :: TEST_VAL, CORR_VAL
         LOGICAL :: BOK
+        CHARACTER(10) :: UNIT
         !
         CALL INIT_TEST
         !
@@ -65,23 +66,27 @@ C
         TEST_VAL = 1.0D0
         CORR_VAL = 1000
         BOK = .TRUE.
-        CALL CONVERT_VALUE('DIST','M','MM',TEST_VAL,BOK)
+        UNIT = 'MM'
+        CALL CONVERT_VALUE('DIST','M',UNIT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'COVERT_VALUE')
         !
         ! TEMPERATURE CONVERSIONS
         TEST_VAL = 0.0D0
         CORR_VAL = 459.67D0
         BOK = .TRUE.
-        CALL CONVERT_VALUE('TEMP','F','R',TEST_VAL,BOK)
+        UNIT = 'R'
+        CALL CONVERT_VALUE('TEMP','F',UNIT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'COVERT_VALUE-TEMP')
         !
         ! HITTING FAILING CASES
         BOK = .TRUE.
-        CALL CONVERT_VALUE('DIST','BAD UNIT','MM',TEST_VAL,BOK)
+        UNIT = 'MM'
+        CALL CONVERT_VALUE('DIST','BAD UNIT',UNIT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'COVERT_VALUE-FAIL1')
         !
         BOK = .TRUE.
-        CALL CONVERT_VALUE('TEMP','K','BAD UNIT',TEST_VAL,BOK)
+        UNIT = 'BAD UNIT'
+        CALL CONVERT_VALUE('TEMP','K',UNIT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'COVERT_VALUE-FAIL2')
         !
         CALL END_TEST('TEST_COVERT_VALUE')
@@ -108,8 +113,8 @@ C ----------------------------------------------------------------------
         ! CONVERSION FACTOR TO SI
         TEST_VAL = 1.0D0
         CORR_VAL = 1.0D-3
-        WRITE(UOUT,"(A)") 'SI'
         BOK = .TRUE.
+        UOUT = 'SI'
         CALL CALC_CONV_FACT('DIST','MM',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'CALC_CONV_FACT-SI_VAL')
         CALL ASSERT_EQUALS(UOUT, 'M', 'CALC_CONV_FACT-SI_USTR')
@@ -118,25 +123,29 @@ C ----------------------------------------------------------------------
         TEST_VAL = 1.0D0
         CORR_VAL = 12.0D0
         BOK = .TRUE.
-        CALL CALC_CONV_FACT('DIST','FT','IN',TEST_VAL,BOK)
+        UOUT = 'IN'
+        CALL CALC_CONV_FACT('DIST','FT',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(TEST_VAL,CORR_VAL,'CALC_CONV_FACT-NONSI_VAL')
         !
         ! HITTING FAILING CASES
         BOK = .TRUE.
-        CALL CALC_CONV_FACT('BAD TYPE','SI','SI',TEST_VAL,BOK)
+        UOUT = 'SI'
+        CALL CALC_CONV_FACT('BAD TYPE','SI',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'CALC_CONV_FACT-TYPE_FAIL')
         !
-        WRITE(UOUT,"(A)") 'SI'
         BOK = .TRUE.
+        UOUT = 'SI'
         CALL CALC_CONV_FACT('DIST','BAD UNIT',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'CALC_CONV_FACT-SI_FAIL')
         !
         BOK = .TRUE.
-        CALL CALC_CONV_FACT('DIST','BAD UNIT','IN',TEST_VAL,BOK)
+        UOUT = 'IN'
+        CALL CALC_CONV_FACT('DIST','BAD UNIT',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'CALC_CONV_FACT-NONSI_FAIL1')
         !
         BOK = .TRUE.
-        CALL CALC_CONV_FACT('DIST','FT','BAD UNIT',TEST_VAL,BOK)
+        UOUT = 'BAD UNIT'
+        CALL CALC_CONV_FACT('DIST','FT',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'CALC_CONV_FACT-NONSI_FAIL2')
         !
         CALL END_TEST('TEST_CALC_CONV_FACT')
@@ -322,40 +331,47 @@ C ----------------------------------------------------------------------
         IMPLICIT NONE
         REAL(8) :: TEST_VAL, CORR_VAL
         LOGICAL :: BOK
+        CHARACTER(10) :: UOUT
         !
         CALL INIT_TEST
         !
         TEST_VAL = 0.0D0
         CORR_VAL = 459.67D0
         BOK = .TRUE.
-        CALL CONV_TEMP('F','R',TEST_VAL,BOK)
+        UOUT = 'R'
+        CALL CONV_TEMP('F',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'CONV_TEMP: F->R')
         !
         TEST_VAL = 0.0D0
         CORR_VAL = -459.67D0
         BOK = .TRUE.
-        CALL CONV_TEMP('R','F',TEST_VAL,BOK)
+        UOUT = 'F'
+        CALL CONV_TEMP('R',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'CONV_TEMP: R->F')
         !
         TEST_VAL = 0.0D0
         CORR_VAL = 273.15D0
         BOK = .TRUE.
-        CALL CONV_TEMP('C','K',TEST_VAL,BOK)
+        UOUT = 'K'
+        CALL CONV_TEMP('C',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'CONV_TEMP: C->K')
         !
         TEST_VAL = 0.0D0
         CORR_VAL = -273.15D0
         BOK = .TRUE.
-        CALL CONV_TEMP('K','C',TEST_VAL,BOK)
+        UOUT = 'C'
+        CALL CONV_TEMP('K',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'CONV_TEMP K->C')
         !
         ! HITTING FAILING CASES
         BOK = .TRUE.
-        CALL CONV_TEMP('BAD UNIT','K',TEST_VAL,BOK)
+        UOUT = 'K'
+        CALL CONV_TEMP('BAD UNIT',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'CONV_TEMP-FAIL1')
         !
         BOK = .TRUE.
-        CALL CONV_TEMP('K','BAD UNIT',TEST_VAL,BOK)
+        UOUT = 'BAD UNIT'
+        CALL CONV_TEMP('K',UOUT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'CONV_TEMP-FAIL2')
         !
         CALL END_TEST('TEST_CONV_TEMP')

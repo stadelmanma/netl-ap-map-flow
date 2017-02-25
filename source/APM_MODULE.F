@@ -105,12 +105,13 @@ C ----------------------------------------------------------------------
 C ######################################################################
 C ----------------------------------------------------------------------
 C
-      SUBROUTINE ALLOCATE_FRAC(NX,NZ)
+      SUBROUTINE ALLOCATE_FRAC(NX, NZ)
       !
       ! SETS UP VECTORS AND ARRAYS FOR THE FRACTURE PROPERTIES
       !
       IMPLICIT NONE
-      INTEGER :: N, NX, NZ
+      INTEGER, INTENT(IN) :: NX, NZ
+      INTEGER :: N
       N = 5
       !
       ALLOCATE(AP_MAP(NZ, NX), AP_POINT_MAP(NZ, NX, 6))
@@ -278,8 +279,9 @@ C
       USE IO_MODULE, ONLY : BLANK, MESSAGE
 C
       IMPLICIT NONE
+      LOGICAL, INTENT(IN OUT) :: BOK
+      !
       INTEGER :: IX,IZ
-      LOGICAL :: BOK
 C
 C
       CALL BLANK
