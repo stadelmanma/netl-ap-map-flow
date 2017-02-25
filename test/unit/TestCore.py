@@ -135,6 +135,21 @@ class TestCore:
         del aper_map
         del data_map
         #
+        # test fetching of fracture voxels
+        voxels = fracture_stack.get_fracture_voxels()
+        assert voxels.size == 733409
+        del voxels
+        #
+        # checking all coordinates are between 0 and maximum axis size
+        x_c, y_c, z_c = fracture_stack.get_fracture_voxels(coordinates=True)
+        assert x_c.size == y_c.size == z_c.size == 733409
+        assert sp.all(x_c < fracture_stack.nx)
+        assert sp.all(~x_c < 0)
+        assert sp.all(y_c < fracture_stack.ny)
+        assert sp.all(~y_c < 0)
+        assert sp.all(z_c < fracture_stack.nz)
+        assert sp.all(~z_c < 0)
+        #
         fname = os.path.join(TEMP_DIR, 'test.tif')
         fracture_stack.save(fname)
         new_stack = amt.FractureImageStack(fname)
