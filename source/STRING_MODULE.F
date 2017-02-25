@@ -4,7 +4,7 @@ C     WRITTEN BY: MATTHEW STADELMAN
 C     FILE DESCRIPTION: STORES VARIABLES AND SUBROUTINES FOR
 C         MANIPULATING STRINGS.
 C
-C     LAST MODIFIED: 2016/07/12
+C     LAST MODIFIED: 2017/02/25
 C ----------------------------------------------------------------------
 C               ---- VARIABLE DESCRIPTIONS ----
 C   LNPROC PARAMETERS
@@ -28,38 +28,56 @@ C     ------------------------------------------------------------------
         !
         ! WRITTEN BY: W. NEAL SAMS
         ! DATE WRITTEN: 10/04/2013
+        ! MODIFIED BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 02/25/2017
         !
         IMPLICIT NONE
-        CHARACTER(*), INTENT(IN) :: C_IN
-        CHARACTER(*), INTENT(OUT) :: C_OUT
+        CHARACTER(*), INTENT(IN OUT) :: C_IN
+        CHARACTER(*), INTENT(OUT), OPTIONAL :: C_OUT
+        CHARACTER(LEN_TRIM(C_IN)) :: TMP
         !
         INTEGER :: I,NC
         !
         DO I = 1,LEN_TRIM(C_IN)
          NC = ICHAR(C_IN(I:I))
          IF(97 <= NC .AND. NC <=122) NC = NC - 32
-         C_OUT(I:I) = CHAR(NC)
+         TMP(I:I) = CHAR(NC)
         ENDDO
+        !
+        IF (.NOT. PRESENT(C_OUT)) THEN
+          C_IN = TMP
+        ELSE
+          C_OUT = TMP
+        END IF
         !
         RETURN
       END SUBROUTINE
 C     ------------------------------------------------------------------
-      SUBROUTINE LOWER_CASE(C_IN,C_OUT)
+      SUBROUTINE LOWER_CASE(C_IN, C_OUT)
         !
         ! WRITTEN BY: W. NEAL SAMS
         ! DATE WRITTEN: 10/04/2013
+        ! MODIFIED BY: MATTHEW STADELMAN
+        ! LAST MODIFIED: 02/25/2017
         !
         IMPLICIT NONE
-        CHARACTER(*), INTENT(IN) :: C_IN
-        CHARACTER(*), INTENT(OUT) :: C_OUT
+        CHARACTER(*), INTENT(IN OUT) :: C_IN
+        CHARACTER(*), INTENT(OUT), OPTIONAL :: C_OUT
+        CHARACTER(LEN_TRIM(C_IN)) :: TMP
         !
         INTEGER :: I,NC
         !
         DO I = 1,LEN_TRIM(C_IN)
          NC = ICHAR(C_IN(I:I))
          IF(65 <= NC .AND. NC <=90) NC = NC + 32
-         C_OUT(I:I) = CHAR(NC)
+         TMP(I:I) = CHAR(NC)
         ENDDO
+        !
+        IF (.NOT. PRESENT(C_OUT)) THEN
+          C_IN = TMP
+        ELSE
+          C_OUT = TMP
+        END IF
         !
         RETURN
       END SUBROUTINE
@@ -137,7 +155,7 @@ C     ------------------------------------------------------------------
         IF (INDEX(SET_CASE,'LO') > 0) CALL LOWER_CASE(CVAR,CVAR)
         !
         LENG = 0
-        DO I = 1,LEN(TRIM(CVAR))+1
+        DO I = 1,LEN_TRIM(CVAR)+1
           C1 = CVAR(I:I)
           !
           IF (QUOTED) THEN
