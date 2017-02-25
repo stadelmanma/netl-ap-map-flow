@@ -1,48 +1,23 @@
-#!/usr/bin/env python3
-import glob
-import os
-import stat
-import sys
+#!/bin/bash
 
-print('Warning: This script may need to be run with admin privilges')
+DIR="$(pwd)"
+out_dir="~/bin"
 
-# checking if ouput location was specified if not using /usr/local/bin
-try:
-    bin_dir = sys.argv[1]
-except IndexError:
-    print('Error: An output path must be provided')
-    sys.exit(1)
+for script in $DIR/scripts/apm_*; do
 
-# checking if it was run as sudo
-uid = os.environ.get('SUDO_UID')
-gid = os.environ.get('SUDO_GID')
-if uid is not None:
-    uid = int(uid)
-    gid = int(gid)
-    sudo = True
+    # pulling out filename from path, runner needs no extension
+    runner=${script##*/}
+    runner=${runner%.*}
+    file=$(python -c 'import os, sys; sys.stdout.write(os.path.abspath("./scripts/apm_bulk_run.py"))')
 
-# changing from cwd to the scripts directory
-main_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
-os.chdir(os.path.join(main_dir, 'scripts'))
+    # creating runner file and setting as executable
+    echo "Creating runner for script $runner.py"
+    touch "$out_dir$runner"
+    chmod ug+x "$out_dir$runner"
 
-# grabbing all scripts prefixed with 'apm_'
-script_files = glob.glob('apm_*')
+    # echoing content into file
+    echo "#!/bin/bash" > "$out_dir$runner"
+    echo "python3 \"$file\" "\$@"" >> "$out_dir$runner"
+done
 
-# looping over script files to create a runner for each one
-content = '#!/bin/bash\npython3 {} $@\n'
-for script in script_files:
-    runner = os.path.basename(script)
-    runner = os.path.splitext(runner)[0]
-    runner = '/'.join([bin_dir, runner])
-    #
-    print('Creating runner for script ' + script)
-    with open(runner, 'w') as f:
-        f.write(content.format(os.path.abspath(script)))
-    #
-    # changing ownership if need be and making executable
-    if sudo:
-        os.chown(runner, uid, gid)
-    perms = os.stat(runner)
-    os.chmod(runner, perms.st_mode | stat.S_IXUSR | stat.S_IXGRP)
-
-print('Add all scripts to: ' + bin_dir)
+echo "Added all scripts to "$out_dir
