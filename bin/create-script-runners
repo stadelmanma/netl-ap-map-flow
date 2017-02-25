@@ -1,23 +1,38 @@
 #!/bin/bash
 
-DIR="$(pwd)"
 out_dir="~/bin"
 
-for script in $DIR/scripts/apm_*; do
+# Determining top level of repository
+REPO_HOME=""
+if command -v git >/dev/null 2>&1;  then
+    echo "Using git to determine repository path"
+    REPO_HOME=$(git rev-parse --show-toplevel)
+fi
+if [ ! $REPO_HOME ]; then
+    echo ""
+    echo "Defaulting to assume scripts are located at ./scripts"
+    REPO_HOME=$(pwd)
+fi
+set -e
+echo $REPO_HOME
+
+for script in $REPO_HOME/scripts/apm_*; do
 
     # pulling out filename from path, runner needs no extension
     runner=${script##*/}
     runner=${runner%.*}
-    file=$(python -c 'import os, sys; sys.stdout.write(os.path.abspath("./scripts/apm_bulk_run.py"))')
+    #file=$(python -c "import os, sys; sys.stdout.write(os.path.abspath('$REPO_HOME/scripts/$script'))")
+    file="$REPO_HOME/scripts/$script"
+    echo $file
 
     # creating runner file and setting as executable
     echo "Creating runner for script $runner.py"
-    touch "$out_dir$runner"
-    chmod ug+x "$out_dir$runner"
+    echo touch "$out_dir$runner"
+    echo chmod ug+x "$out_dir$runner"
 
     # echoing content into file
-    echo "#!/bin/bash" > "$out_dir$runner"
-    echo "python3 \"$file\" "\$@"" >> "$out_dir$runner"
+    #echo "#!/bin/bash" > "$out_dir$runner"
+    #echo "python3 \"$file\" "\$@"" >> "$out_dir$runner"
 done
 
 echo "Added all scripts to "$out_dir
