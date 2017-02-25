@@ -1,6 +1,22 @@
 #!/bin/bash
 
-out_dir="~/bin"
+# check if output directory provided otherwise use default
+out_dir=~/.local/bin/
+if [ ! -z $1 ]; then
+    out_dir="$1"
+fi
+
+# check directory for trailing forward slash and append if needed
+i=$((${#out_dir}-1))
+if [ ! ${out_dir:$i:1} == '/' ]; then
+    out_dir="$out_dir/"
+fi
+
+# check if directory exists
+if [ ! -d "$out_dir" ]; then
+    echo "Error directory does not exist: $out_dir"
+    exit 1
+fi
 
 # Determining top level of repository
 REPO_HOME=""
