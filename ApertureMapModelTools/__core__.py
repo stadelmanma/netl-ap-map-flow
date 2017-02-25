@@ -392,6 +392,32 @@ class FractureImageStack(sp.ndarray):
         scipy.sum and returns a 2-D ndarray of the summed data"""
         return sp.sum(self, axis=axis, dtype=dtype).T
 
+    def create_offset_map(self, no_data_fill=0):
+        r"""
+        Creates an offset map by storing the lowest voxel in each X-Z
+        column.
+        Parameters:
+            no_data_fill (numeric) - a value to use as the offset when a
+            column has no fracture voxels, sp.nan or sp.inf can be used.
+        """
+        pass
+
+    def get_nonzero_indicies(self, coordinates=False):
+        r"""
+        Returns a vector or vectors containing all fracture voxels in
+        the image stack.
+        Parameters:
+            coordinates (boolean) - If False then a single vector is returned
+            with flattened indicies. If True then three vectors are returned
+            which are the X, Y and Z coordinates of each voxel.
+        """
+        nonzero_locs = sp.where(sp.ravel(self))[0]
+        logger.debug('{} non-zero voxels in image'.format(nonzero_locs.size))
+        if coordinates:
+            return sp.unravel_index(nonzero_locs, self.shape)
+        else:
+            return nonzero_locs
+
     @staticmethod
     def save_image_stack(fname, image_data, overwrite=False):
         r""" Saves a multi-frame image using supplied image data,
