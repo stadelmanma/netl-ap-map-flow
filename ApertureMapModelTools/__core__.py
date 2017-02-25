@@ -402,7 +402,7 @@ class FractureImageStack(sp.ndarray):
         """
         pass
 
-    def get_nonzero_indicies(self, coordinates=False):
+    def get_fracture_voxels(self, coordinates=False):
         r"""
         Returns a vector or vectors containing all fracture voxels in
         the image stack.
