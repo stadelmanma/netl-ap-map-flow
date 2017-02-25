@@ -400,7 +400,21 @@ class FractureImageStack(sp.ndarray):
             no_data_fill (numeric) - a value to use as the offset when a
             column has no fracture voxels, sp.nan or sp.inf can be used.
         """
-        pass
+        # getting coordinates of all fracture voxels
+        x_c, y_c, z_c = self.get_fracture_voxels(coordinates=True)
+        #
+        # recreating 3-D array with y coordinate as data values
+        data = sp.ones(self.shape, dtype=sp.uint16)*sp.iinfo(sp.int16).max
+        data[x_c, y_c, z_c] = y_c
+        del x_c, y_c, z_c
+        #
+        # generating offset map from data
+        offset_map = sp.zeros((self.nx, self.nz), dtype=float)
+        for z_ind in range(self.nz):
+            offset_map[:, z_ind] = sp.amin(data[:, :, z_ind], axis=1)
+            offset_map[:, z_ind][offset_map[:, z_ind] > self.ny] = no_data_fill
+        #
+        return offset_map.T
 
     def get_fracture_voxels(self, coordinates=False):
         r"""
