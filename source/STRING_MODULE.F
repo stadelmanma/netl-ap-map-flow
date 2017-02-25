@@ -142,8 +142,8 @@ C     ------------------------------------------------------------------
         !
         INTEGER, INTENT(IN) :: IN,MAXFLD,MAXLEN
         INTEGER, INTENT(OUT) :: NFLD, LFLD(:)
-        CHARACTER(*), INTENT(OUT) :: CFLD(:), CVAR
         CHARACTER(*), INTENT(IN), OPTIONAL :: CASE
+        CHARACTER(*), INTENT(OUT) :: CFLD(:), CVAR
         !
         INTEGER :: LENG, I
         LOGICAL :: QUOTED = .FALSE.
@@ -152,14 +152,14 @@ C     ------------------------------------------------------------------
         !
         SET_CASE = 'UPPER'
         IF (PRESENT(CASE)) SET_CASE = TRIM(CASE)
-        CALL UPPER_CASE(SET_CASE,SET_CASE)
+        CALL UPPER_CASE(SET_CASE)
         !
   100   NFLD = 0
         !
         ! READING AND SETTING CASE OF LINE
         IF(IN > 0) READ(IN,'(A)',END=950) CVAR
-        IF (INDEX(SET_CASE,'UP') > 0) CALL UPPER_CASE(CVAR,CVAR)
-        IF (INDEX(SET_CASE,'LO') > 0) CALL LOWER_CASE(CVAR,CVAR)
+        IF (INDEX(SET_CASE,'UP') > 0) CALL UPPER_CASE(CVAR)
+        IF (INDEX(SET_CASE,'LO') > 0) CALL LOWER_CASE(CVAR)
         !
         LENG = 0
         DO I = 1,LEN_TRIM(CVAR)+1
