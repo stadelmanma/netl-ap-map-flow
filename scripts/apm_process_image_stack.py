@@ -160,7 +160,7 @@ def process_image(img_data, num_clusters):
     """
     #
     img_dims = img_data.shape
-    nonzero_locs = locate_nonzero_data(img_data)
+    nonzero_locs = img_data.get_fracture_voxels()
     index_map = generate_index_map(nonzero_locs, img_dims)
     #
     # determing connectivity and removing clusters
@@ -187,38 +187,13 @@ def calculate_offset_map(img_data):
     """
     #
     logger.info('creating initial offset map')
-    #
-    # locating non-zero data and setting offsets to y values
-    dims = img_data.shape
-    nonzero_locs = locate_nonzero_data(img_data)
-    x_coords, y_coords, z_coords = sp.unravel_index(nonzero_locs, dims)
-    data = sp.ones(dims, dtype=sp.uint16)*sp.iinfo(sp.int16).max
-    data[x_coords, y_coords, z_coords] = y_coords
-    del nonzero_locs, x_coords, y_coords, z_coords
-    #
-    offset_map = sp.zeros((dims[0], dims[2]), dtype=float)
-    for z_index in range(dims[2]):
-        offset_map[:, z_index] = sp.amin(data[:, :, z_index], axis=1)
-        offset_map[:, z_index][offset_map[:, z_index] > dims[1]] = sp.nan
+    img_data.create_offset_map(no_data_fill=sp.nan)
     #
     logger.info('interpolating missing data due to zero aperture zones')
     offset_map = patch_holes(offset_map)
     offset_map = filter_high_gradients(offset_map)
     #
-    return offset_map.T
-
-
-def locate_nonzero_data(data_array):
-    r"""
-    Generates a vector of non-zero indicies for the flattened array
-    """
-    #
-    logger.info('flattening array and locating non-zero voxels...')
-    data_vector = sp.ravel(data_array)
-    nonzero_locs = sp.where(data_vector)[0]
-    logger.debug('{} non-zero voxels'.format(nonzero_locs.size))
-    #
-    return nonzero_locs
+    return offset_map
 
 
 def generate_index_map(nonzero_locs, shape):

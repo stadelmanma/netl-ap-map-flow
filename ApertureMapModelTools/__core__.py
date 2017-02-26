@@ -392,6 +392,46 @@ class FractureImageStack(sp.ndarray):
         scipy.sum and returns a 2-D ndarray of the summed data"""
         return sp.sum(self, axis=axis, dtype=dtype).T
 
+    def create_offset_map(self, no_data_fill=0):
+        r"""
+        Creates an offset map by storing the lowest voxel in each X-Z
+        column.
+        Parameters:
+            no_data_fill (numeric) - a value to use as the offset when a
+            column has no fracture voxels, sp.nan or sp.inf can be used.
+        """
+        # getting coordinates of all fracture voxels
+        x_c, y_c, z_c = self.get_fracture_voxels(coordinates=True)
+        #
+        # recreating 3-D array with y coordinate as data values
+        data = sp.ones(self.shape, dtype=sp.uint16)*sp.iinfo(sp.int16).max
+        data[x_c, y_c, z_c] = y_c
+        del x_c, y_c, z_c
+        #
+        # generating offset map from data
+        offset_map = sp.zeros((self.nx, self.nz), dtype=float)
+        for z_ind in range(self.nz):
+            offset_map[:, z_ind] = sp.amin(data[:, :, z_ind], axis=1)
+            offset_map[:, z_ind][offset_map[:, z_ind] > self.ny] = no_data_fill
+        #
+        return offset_map.T
+
+    def get_fracture_voxels(self, coordinates=False):
+        r"""
+        Returns a vector or vectors containing all fracture voxels in
+        the image stack.
+        Parameters:
+            coordinates (boolean) - If False then a single vector is returned
+            with flattened indicies. If True then three vectors are returned
+            which are the X, Y and Z coordinates of each voxel.
+        """
+        nonzero_locs = sp.where(sp.ravel(self))[0]
+        logger.debug('{} non-zero voxels in image'.format(nonzero_locs.size))
+        if coordinates:
+            return sp.unravel_index(nonzero_locs, self.shape)
+        else:
+            return nonzero_locs
+
     @staticmethod
     def save_image_stack(fname, image_data, overwrite=False):
         r""" Saves a multi-frame image using supplied image data,

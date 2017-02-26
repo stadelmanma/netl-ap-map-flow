@@ -127,14 +127,36 @@ class TestCore:
         assert fracture_stack.ny == fracture_stack.shape[1]
         assert fracture_stack.nz == fracture_stack.shape[2]
         #
+        # test fetching of fracture voxels
+        voxels = fracture_stack.get_fracture_voxels()
+        assert voxels.size == 733409
+        del voxels
+        #
+        # checking all coordinates are between 0 and maximum axis size
+        x_c, y_c, z_c = fracture_stack.get_fracture_voxels(coordinates=True)
+        assert x_c.size == y_c.size == z_c.size == 733409
+        assert sp.all(x_c < fracture_stack.nx)
+        assert sp.all(~x_c < 0)
+        assert sp.all(y_c < fracture_stack.ny)
+        assert sp.all(~y_c < 0)
+        assert sp.all(z_c < fracture_stack.nz)
+        assert sp.all(~z_c < 0)
+        #
         # testing aperture map output
         fname = os.path.join(FIXTURE_DIR, 'binary-fracture-aperture-map.txt')
-        aper_map = fracture_stack.create_aperture_map()
+        test_map = fracture_stack.create_aperture_map()
         data_map = sp.loadtxt(fname, delimiter='\t')
-        assert sp.all(aper_map == data_map)
-        del aper_map
+        assert sp.all(test_map == data_map)
+        #
+        # testing offset map output
+        fname = os.path.join(FIXTURE_DIR, 'binary-fracture-offset-map.txt')
+        test_map = fracture_stack.create_offset_map()
+        data_map = sp.loadtxt(fname, delimiter='\t')
+        assert sp.all(test_map == data_map)
+        del test_map
         del data_map
         #
+        # testing image stack saving
         fname = os.path.join(TEMP_DIR, 'test.tif')
         fracture_stack.save(fname)
         new_stack = amt.FractureImageStack(fname)
@@ -162,7 +184,7 @@ class TestCore:
 
     def test_toplevel_logger(self):
         r"""
-        Tests te configuation of the top level logger
+        Tests the configuation of the top level logger
         """
         logger = amt_core._get_logger('ApertureMapModelTools')
         assert logger.name == 'AMT'
