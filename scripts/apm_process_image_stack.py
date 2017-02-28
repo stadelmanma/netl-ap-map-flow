@@ -16,15 +16,19 @@ from ApertureMapModelTools import DataField, calc_percentile, FractureImageStack
 
 #
 desc_str = r"""
-Description: Generates a 2-D offset map based on the binary CT image stack.
-The offset map is based on the lower surface of the fracture after removing
-disconnected clusters and noise. Gaps in the data from zero aperture regions
-are interpolated based on the nearest neighbor. A by product of this routine
-is the cleaned CT image stack.
+Description: Processes a binary tif stack, with the option to remove
+disconnected voxels based on an undirected graph. The number of clusters
+to retain can be specified and connectivity is defined on a 26 point basis,
+i.e faces, edges and corners. Standard outputs include the processed
+tif image stack, an aperture map and offset map based on the processed image.
+Offset maps are filtered based on gradient steepness to provide a smoother
+surface. Data gaps left by zero apeture zones or filtering are filled by
+linear and nearest interpolation methods to prevent artificial features.
+
 
 Written By: Matthew stadelman
 Date Written: 2016/08/30
-Last Modfied: 2017/02/11
+Last Modfied: 2017/02/27
 """
 # setting up logger
 set_main_logger_level('info')
