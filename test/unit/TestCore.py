@@ -56,7 +56,7 @@ class TestCore:
         #
         # covering basic methods
         map_file = 'parallel-plate-01vox.txt'
-        fname = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', map_file)
+        fname = os.path.join(FIXTURE_DIR, 'maps', map_file)
         field = amt.DataField(fname)
         field.create_point_data()
         #
@@ -143,13 +143,13 @@ class TestCore:
         assert sp.all(~z_c < 0)
         #
         # testing aperture map output
-        fname = os.path.join(FIXTURE_DIR, 'binary-fracture-aperture-map.txt')
+        fname = os.path.join(FIXTURE_DIR, 'maps', 'binary-fracture-aperture-map.txt')
         test_map = fracture_stack.create_aperture_map()
         data_map = sp.loadtxt(fname, delimiter='\t')
         assert sp.all(test_map == data_map)
         #
         # testing offset map output
-        fname = os.path.join(FIXTURE_DIR, 'binary-fracture-offset-map.txt')
+        fname = os.path.join(FIXTURE_DIR, 'maps', 'binary-fracture-offset-map.txt')
         test_map = fracture_stack.create_offset_map()
         data_map = sp.loadtxt(fname, delimiter='\t')
         assert sp.all(test_map == data_map)
@@ -224,8 +224,8 @@ class TestCore:
         r"""
         Sends a list of infiles
         """
-        fname1 = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'parallel-plate-01vox.txt')
-        fname2 = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'parallel-plate-10vox.txt')
+        fname1 = os.path.join(FIXTURE_DIR, 'maps', 'parallel-plate-01vox.txt')
+        fname2 = os.path.join(FIXTURE_DIR, 'maps', 'parallel-plate-10vox.txt')
         infile_list = [fname1, fname2]
         #
         fields = amt.load_infile_list(infile_list)

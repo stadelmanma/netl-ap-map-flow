@@ -100,7 +100,7 @@ class TestRunCore:
         r"""
         Ensuring RAM req is being calculated
         """
-        map_file = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'parallel-plate-01vox.txt')
+        map_file = os.path.join(FIXTURE_DIR, 'maps', 'parallel-plate-01vox.txt')
         RunModel.estimate_req_RAM([map_file], 10)
         with pytest.raises(EnvironmentError):
             RunModel.estimate_req_RAM([map_file], 0)
@@ -118,7 +118,7 @@ class TestRunCore:
             inp_file.filename_formats[file] = os.path.join(TEMP_DIR, 'extra', file+'.RCTEST')
         inp_file.filename_formats['input_file'] = os.path.join(TEMP_DIR, 'TEST_INIT.INP')
         #
-        new_path = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'parallel-plate-01vox.txt')
+        new_path = os.path.join(FIXTURE_DIR, 'maps', 'parallel-plate-01vox.txt')
         inp_file['APER-MAP'].update_value(new_path)
         #
         inp_file.outfile_name = os.path.join(TEMP_DIR, 'TEST-INIT-run-model.INP')

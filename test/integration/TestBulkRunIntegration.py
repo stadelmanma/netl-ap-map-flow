@@ -24,7 +24,7 @@ class TestBulkRun:
         #
         # setting inputs for a full test
         file_formats = {
-            'APER-MAP': os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', '{aper-map}.txt'),
+            'APER-MAP': os.path.join(FIXTURE_DIR, 'maps', '{aper-map}.txt'),
             'SUMMARY-FILE': os.path.join(TEMP_DIR, '{aper-map}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-LOG.TXT'),
             'STAT-FILE': os.path.join(TEMP_DIR, '{aper-map}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-STAT.CSV'),
             'APER-FILE': os.path.join(TEMP_DIR, '{aper-map}-RF{ROUGHNESS}-{OUTLET-PRESS}PA-APER.CSV'),
