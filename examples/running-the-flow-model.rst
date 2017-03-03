@@ -14,7 +14,7 @@ The Local Cubic Law (LCL) flow model by default is named :code:`APM-MODEL.EXE`, 
 The Input Parameters File
 =========================
 
-A template of the input parameters file can be found in `here <apm-model-inputs-template.inp>`_. The input file is parsed by a special routine in the model that treats all text after a semicolon, :code:`;`, as comments and one or more spaces as delimiters. A value enclosed in double quotations will have any internal spaces ignored. ApertureMapModelTools also reads the input files when needed and for consistency it is recommended you append a colon :code:`:` onto the end of keywords. Nearly all of the input parameters have default values and they are defined in `APM_SUBROUTINES.F <../source/APM_SUBROUTINES.F>`_ in the first subroutine :code:`INITIALIZE_RUN`
+A template of the input parameters file can be found in `here <apm-model-inputs-template.inp>`_. The input file is parsed by a special routine in the model that treats all text after a semicolon, :code:`;`, as comments and one or more spaces as delimiters. A value enclosed in double quotations will have any internal spaces ignored. ApertureMapModelTools also reads the input files when needed and for consistency it is recommended you append a colon :code:`:` onto the end of keywords. Nearly all of the input parameters have default values and they are defined in `APERTURE_MAP_FLOW.F <../source/APERTURE_MAP_FLOW.F>`_ in the subroutine :code:`INITIALIZE_RUN`
 
 **Important Notes**
  * There must be at least one space separating keyword and value.
@@ -61,22 +61,16 @@ Defines the boundary conditions for the model, the model does no internal checki
 
 Model Properties
 ----------------
-
-Sets various fluid and model properties.
-
  * :code:`FLUID-DENSITY:` value unit ;Density of liquid to use in Reynolds number calculation
  * :code:`FLUID-VISCOSITY:` value unit ;Viscosity of liquid
- * :code:`MAXIMUM MAP DIMENSION:` value ;Maximum number of blocks along either axis. Values close to actual axis size slightly improve runtime memory conservation relative to much larger values.
+ * :code:`MAXIMUM MAP DIMENSION:` value ;Maximum number of blocks along either axis (default 2000)
 
 Other Parameters
 ----------------
-
-Sets other important miscellaneous runtime parameters.
-
  * :code:`MAP AVERAGING FACTOR:` value ;The number of voxels required to span an edge of a grid block along the X or Z direction. Grid blocks are assumed square in the X-Z plane.
  * :code:`VOXEL SIZE:` value unit ;Specifies the voxel to meter conversion factor
  * :code:`ROUGHNESS REDUCTION:` value ;**The value is in voxels** Amount to symmetrically bring the front and back fracture surfaces together by.
- * :code:`CALCULATE PERCENTILES:` value1,value2,value3 ;A comma separated list of percentiles to calculate of various quantities during runtime. Commenting this line out tells it to not calculate them at all
+ * :code:`CALCULATE PERCENTILES:` value1,value2,value3 ;A comma separated list of percentiles to calculate for various quantities during runtime. Commenting this line out tells it to not calculate them at all
  * :code:`HIGH-MASK:` value ;**The value is in voxels** All data values in the aperture map above this value will be reduced to this value.
  * :code:`LOW-MASK:` value ;**The value is in voxels** All data values in the aperture map below this value will be raised to this value
 
@@ -96,7 +90,7 @@ Before we actually run the model it will be helpful to have a place to store the
     cd model-testing
     touch model-input-params.inp
 
-Open model-input-params.inp with your favorite text editor and copy and paste the following block. Notice most of the inputs are **not** preceded by a semicolon here like they were in the blank file above.
+Open model-input-params.inp with your favorite text editor and copy and paste the following block. 
 
 .. code-block:: Scheme
 
@@ -265,7 +259,7 @@ The run_model Function
 The run_model function combines some higher level Python functionality for working with the system shell into a simple package. The model can be both run synchronously or asynchronously but in both cases it returns a `Popen <https://docs.python.org/3/library/subprocess.html#subprocess.Popen>`_ object. Running the model synchronously can take a long time when running large aperture maps.
 
 Argument - Type - Description
- * input_file_obj - InputFile - the input file object run with the model. Note: This file has to be written be careful to not overwrite existing files by accident
+ * input_file_obj - InputFile - the input file object run with the model. Note: This file has to be written to disk, be careful to not overwrite existing files by accident
  * synchronous - boolean - If True the function will halt execution of the script until the model finishes running. The default is False.
  * show_stdout - boolean - If True then stdout and stderr will be printed to the screen instead of being stored on the Popen object as stdout_content and stderr_content
 
