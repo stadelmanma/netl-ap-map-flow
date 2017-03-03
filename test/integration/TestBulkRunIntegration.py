@@ -48,7 +48,7 @@ class TestBulkRun:
             'parallel-plate-10vox': {'OUTLET-PRESS': ['800', '700', '600']},
         }
         #
-        inp_file = InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
+        inp_file = InputFile(os.path.join(FIXTURE_DIR, 'test-model-inputs.txt'))
         exe_path = os.path.realpath(os.path.join('.', inp_file['EXE-FILE'].value))
         inp_file['EXE-FILE'].update_value(exe_path, False)
         #
