@@ -172,7 +172,7 @@ class TestCore:
         r"""
         Builds a stat file and test its properties
         """
-        fname = os.path.join(FIXTURE_DIR, 'TEST-STAT-FILE.CSV')
+        fname = os.path.join(FIXTURE_DIR, 'test-stat-file.csv')
         stat_file = amt.StatFile(fname)
         assert stat_file.map_file
         assert stat_file.pvt_file
