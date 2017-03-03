@@ -53,13 +53,13 @@ Linux
     A. In a terminal, copy and paste the command :code:`bash ~/Downloads/Anaconda3-4.2.0-Linux-x86_64.sh` you may need to tweak the path and or filename if a new version of Anaconda is released. 
     B. Follow the instructions as the installation script runs and enter 'yes' when it prompts to update your :code:`$PATH` variable.
         * If using a different shell (i.e. zsh) you will likely need to manually update your :code:`$PATH` variable.
-    C. Close your existing terminal window and open a new one, enter :code:`python --version` to check if Anaconda has installed Python successfully.
+    C. Close your existing terminal window and open a new one, enter :code:`python3 --version` to check if Anaconda has installed Python successfully.
 3. Install :code:`gfortran` using the terminal command :code:`sudo apt-get install gfortran`.
     A. Run :code:`gfortran --version` in a new terminal window to check if it was installed properly.
 4. Open a terminal or cd into the directory you want to install the AP_MAP_FLOW package in.
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`.
     B. Run the command :code:`cd netl-AP_MAP_FLOW`.
-    C. Finally run :code:`./bin/build_model` which will build the model and link the ApertureMapModelTools module to the python3 user site.'    
+    C. Finally run :code:`./bin/build_model` which will build the model and link the ApertureMapModelTools module to the python3 installation.
 
 MacOS/ OSX
 ~~~~~~~~~~
@@ -77,7 +77,7 @@ MacOS/ OSX
 4. Open a terminal and cd into the directory you want to install the AP_MAP_FLOW package in
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`
     B. Run the command :code:`cd netl-AP_MAP_FLOW`
-    C. Finally run :code:`./bin/build_model` which will build the model and link the ApertureMapModelTools module to the python3 user site
+    C. Finally run :code:`./bin/build_model` which will build the model and link the ApertureMapModelTools module to the python3 installation.
 
 Windows
 ~~~~~~~
@@ -105,7 +105,6 @@ Windows with Babun
     A. Run :code:`nano ~/.zshrc` to edit the file and copy and paste the .zshrc code block below into the bottom of the file. 
         * Make sure you used the down arrow key to put your cursor at the bottom of the file
         * Once you've copied the block all you have to do in Babun is right click to paste, if you accidently highlighted something in Babun before pasting you will need to copy the block again.
-        * In Babun :code:`/cygdrive/c/` takes the place of the drive letter i.e. :code:`C:` and be sure you use forward slashes instead of back slashes. 
         * If you installed Anaconda somewhere else you will need to tweak the path to match.
     B. Hit Ctrl+O and then Enter to save the file and then Ctrl+X to exit nano.
     C. Run :code:`source ~/.zshrc` to reload everything and try to start Python by running :code:`python3`
@@ -119,7 +118,7 @@ Windows with Babun
     C. Run the command :code:`dos2unix ./bin/*`
         * This converts Windows line endings :code:`\r\n` into unix line endings :code:`\n`
     C. Run :code:`./bin/build_model` which will build the model and link the ApertureMapModelTools package Anaconda's Python3
-    D. Run :code:`./bin/create-script-runners` to allow usage of the apm\_\* scripts in the scripts directory within babun. 
+    D. Run :code:`./bin/create-script-runners` to allow usage of the files in the ./scripts directory within babun. 
         * Run :code:`source ~/.zshrc` or open a new Babun terminal so it registers the changes
         * To execute one of the runner scripts simply type :code:`apm_` and then hit tab to cycle through the options. Use :code:`(script name) -h` for usage information.
         * If you move the netl-Ap_MAP_FLOW directory you will need to re-run the command to update the runners
