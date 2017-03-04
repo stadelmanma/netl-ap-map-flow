@@ -159,7 +159,6 @@ run_model_wrapper(inp_file, stdout_pat=re.compile('WARNING: UNRECOGNIZED INPUT: 
 check_parallel_plate_error(0.0000111880, 9)
 test_outfile_loading('.*(?<!stats).csv')
 diff_compare_file_set('.*coverage_test.*')
-exit(1)
 #
 # commenting/ uncommenting some inputs so they don't cause issue
 map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
