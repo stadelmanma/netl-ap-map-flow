@@ -90,7 +90,7 @@ class TestOpenFoam:
         #
         # invalid file
         with pytest.raises(ValueError):
-            path = os.path.join(FIXTURE_DIR, 'TEST_INIT.INP')
+            path = os.path.join(FIXTURE_DIR, 'test-model-inputs.txt')
             of_file = OpenFoam.OpenFoamFile(path)
 
     def test_block_mesh_dict(self, data_field_class):

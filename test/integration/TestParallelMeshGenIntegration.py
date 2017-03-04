@@ -17,7 +17,7 @@ from ApertureMapModelTools.OpenFoam import ParallelMeshGen
 
 def test_parallel_mesh_gen():
     #
-    infile = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'Fracture1ApertureMap-10avg.txt')
+    infile = os.path.join(FIXTURE_DIR, 'maps', 'Fracture1ApertureMap-10avg.txt')
     field = DataField(infile)
     offset_field = DataField(sp.ones(field.data_map.shape))
     #

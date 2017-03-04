@@ -58,7 +58,7 @@ class TestRunCore:
 
     def test_input_file(self):
         #
-        inp_file = RunModel.InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
+        inp_file = RunModel.InputFile(os.path.join(FIXTURE_DIR, 'test-model-inputs.txt'))
         assert inp_file.keys()
         #
         # testing clone method
@@ -100,7 +100,7 @@ class TestRunCore:
         r"""
         Ensuring RAM req is being calculated
         """
-        map_file = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'parallel-plate-01vox.txt')
+        map_file = os.path.join(FIXTURE_DIR, 'maps', 'parallel-plate-01vox.txt')
         RunModel.estimate_req_RAM([map_file], 10)
         with pytest.raises(EnvironmentError):
             RunModel.estimate_req_RAM([map_file], 0)
@@ -110,18 +110,18 @@ class TestRunCore:
         Testing the method used to run a single instance of the model. This also
         hits the InputFile class pretty heavy
         """
-        inp_file = RunModel.InputFile(os.path.join(FIXTURE_DIR, 'TEST_INIT.INP'))
+        inp_file = RunModel.InputFile(os.path.join(FIXTURE_DIR, 'test-model-inputs.txt'))
         #
         # updating paths so they are absolute
         files = ['SUMMARY-FILE', 'STAT-FILE', 'APER-FILE', 'FLOW-FILE', 'PRESS-FILE', 'VTK-FILE']
         for file in files:
             inp_file.filename_formats[file] = os.path.join(TEMP_DIR, 'extra', file+'.RCTEST')
-        inp_file.filename_formats['input_file'] = os.path.join(TEMP_DIR, 'TEST_INIT.INP')
+        inp_file.filename_formats['input_file'] = os.path.join(TEMP_DIR, 'test-model-inputs.txt')
         #
-        new_path = os.path.join(FIXTURE_DIR, 'TEST-FRACTURES', 'parallel-plate-01vox.txt')
+        new_path = os.path.join(FIXTURE_DIR, 'maps', 'parallel-plate-01vox.txt')
         inp_file['APER-MAP'].update_value(new_path)
         #
-        inp_file.outfile_name = os.path.join(TEMP_DIR, 'TEST-INIT-run-model.INP')
+        inp_file.outfile_name = os.path.join(TEMP_DIR, 'test-run-model.inp')
         exe_path = os.path.realpath(os.path.join('.', inp_file['EXE-FILE'].value))
         inp_file['EXE-FILE'].update_value(exe_path, False)
         #

@@ -3,9 +3,11 @@ import os
 import re
 from subprocess import Popen, PIPE
 import sys
+import yaml
 #
 # setting path to module
 sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))
+from ApertureMapModelTools import files_from_directory, load_infile_list
 from ApertureMapModelTools.RunModel import InputFile, run_model
 from ApertureMapModelTools.RunModel.__run_model_core__ import ArgInput
 #
@@ -13,7 +15,6 @@ from ApertureMapModelTools.RunModel.__run_model_core__ import ArgInput
 #
 # global constants
 FIXTURE_DIR = os.path.realpath('fixtures')
-INIT_INP_FILE = os.path.join(FIXTURE_DIR, 'coverage_test.inp')
 RETURN_CODE = 0
 # -----------------------------------------------------------------------------
 
@@ -45,19 +46,112 @@ def run_model_wrapper(inp_file, expected_code=0, stdout_pat=None):
         #
         RETURN_CODE = 1
 
+def inialize_input_file():
+    r"""
+    initializes the input file used for all simulations
+    """
+    init_inp = os.path.join(FIXTURE_DIR, 'coverage_test.inp')
+    #
+    # building test input file
+    file_formats = {
+        'input_file': os.path.join('.', 'test_model_coverage.inp')
+    }
+    inp_file = InputFile(init_inp, file_formats)
+    #
+    # updating exe-file path so it is absolute
+    exe_path = os.path.realpath(os.path.join('.', inp_file['EXE-FILE'].value))
+    inp_file['EXE-FILE'].update_value(exe_path, False)
+    #
+    return inp_file
+
+def check_parallel_plate_error(expected_error, num_digits):
+    r"""
+    Checks the parallel plate error of the flow out to 9 decimal places. I want
+    to have a hard check because it should never change unless I tinker with the
+    numerics either in the code or at compile time
+    """
+    global RETURN_CODE
+    scale = 10**num_digits
+    #
+    # load YAML stat data to get parameters
+    with open('coverage_test_stats.yaml', 'r') as f:
+        data = yaml.load(f)
+    #
+    # calculate exact cublic law flow rate and normalized error
+    q_pp = (data['DIAMETER'][0] * data['MEAN APER'][0]**3)/(12 * data['AVG VISC'][0])
+    q_pp *= (data['PRESSURE DIFFERENTIAL'][0]/data['LENGTH'][0])
+    q_pp_err = abs((data['OUTLET RATE'][0] - q_pp)/q_pp)
+    q_pp_err = int(q_pp_err * scale)/scale
+    #
+    print('Parallel plate numerical error: {:0.6f}%'.format(q_pp_err * 100.0))
+    msg = 'Expected numerical error: {}, calculated numerical error: {}'
+    if int(q_pp_err * scale) != expected_error*scale:
+        print(msg.format(q_pp_err, expected_error))
+        RETURN_CODE = 1
+
+def test_outfile_loading(pat_str):
+    r"""
+    Loads a series of data maps to ensure they are still parse-able by the
+    Data field class and YAML loader
+    """
+    #
+    # load YAML stat data to get parameters
+    with open('coverage_test_stats.yaml', 'r') as f:
+        data = yaml.load(f)
+    #
+    # load series of data maps
+    files = files_from_directory(pattern=re.compile(pat_str), deep=False)
+    fields = load_infile_list(files)
+    for fld in fields:
+        assert fld, 'DataField loading error'
+        print('Successfully parsed data file: ' + os.path.split(fld.infile)[1])
+
+def diff_compare_file_set(pat_str):
+    r"""
+    Runs git diff --no-index on a set of outfiles comparing against a set of
+    static orginals
+    """
+    global RETURN_CODE
+    # defining allowed max diffs
+    max_diff = {
+        'coverage_test_log.txt': 2,
+        'coverage_test_stats.csv': 2,
+        'coverage_test_stats.yaml': 2
+    }
+    #
+    files = files_from_directory(pattern=re.compile(pat_str), deep=False)
+    for new_file in files:
+        # build original file string
+        orig_file = os.path.split(new_file)[1]
+        orig_file = '{}-orig{}'.format(*os.path.splitext(orig_file))
+        orig_file = os.path.join(FIXTURE_DIR, orig_file)
+        # setup and crate Popen object
+        cmd = ['git', 'diff', '--numstat', '--exit-code', '--no-index', orig_file, new_file]
+        proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
+        proc.stdout, proc.stderr = proc.communicate()
+        if  proc.stderr.strip():
+            print('git diff command failed')
+            print(proc.stderr)
+            RETURN_CODE = 1
+        # check stdout
+        if proc.stdout.strip():
+            data = proc.stdout.split('\t')
+            n = int(data[0]) + int(data[1])
+        else:
+            n = 0
+        #
+        if n > max_diff.get(os.path.split(new_file)[1], 0):
+            print('git diff test failed!')
+            cmd = ['git', 'diff', '--color', '--exit-code', '--no-index', orig_file, new_file]
+            proc = Popen(cmd, universal_newlines=True)
+            proc.communicate()
+            RETURN_CODE = 1
+        #
+        print('{} lines changed in file {}'.format(n, os.path.split(new_file)[1]))
+
 # -----------------------------------------------------------------------------
 #
-# running cases that should succeed
-#
-# building test input file
-file_formats = {
-    'input_file': os.path.join('.', 'test_model_coverage.inp')
-}
-inp_file = InputFile(INIT_INP_FILE, file_formats)
-#
-# updating exe-file path so it is absolute
-exe_path = os.path.realpath(os.path.join('.', inp_file['EXE-FILE'].value))
-inp_file['EXE-FILE'].update_value(exe_path, False)
+inp_file = inialize_input_file()
 #
 # setting parameters
 map_path = os.path.join(FIXTURE_DIR, 'ParallelPlate-1vox.txt')
@@ -67,6 +161,11 @@ inp_file['BAD-INPUT'] = ArgInput('BAD-INPUT: VALUE')
 #
 # running initial liquid sim with everything to set up base coverage
 run_model_wrapper(inp_file, stdout_pat=re.compile('WARNING: UNRECOGNIZED INPUT: BAD-INPUT: VALUE'))
+#
+# testing the net numerical error in the parallel plate simulation
+check_parallel_plate_error(0.0000111880, 9)
+test_outfile_loading('.*(?<!stats).csv')
+diff_compare_file_set('.*coverage_test.*')
 #
 # commenting/ uncommenting some inputs so they don't cause issue
 map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
@@ -85,7 +184,9 @@ inp_file['INLET-PRESS'].update_value('2000000')
 inp_file['OUTLET-RATE'].update_value('1.0')
 run_model_wrapper(inp_file)
 #
-# changing map to one with NX > NZ
+# running a diff check on all
+#
+# changing map to one with NX > NZ to hit solver logic
 map_path = os.path.join(FIXTURE_DIR, 'Fracture3ApertureMap-10avg.txt')
 inp_file['APER-MAP'].update_value(map_path)
 #
