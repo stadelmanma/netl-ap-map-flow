@@ -3,7 +3,7 @@ Handles testing of the core object and function module
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/09
-Last Modifed: 2017/02/12
+Last Modifed: 2017/03/03
 #
 """
 from argparse import Namespace
