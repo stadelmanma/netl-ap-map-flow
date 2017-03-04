@@ -1,0 +1,214 @@
+     IO INITIALIZED
+NOTICE - KEYWORD 'FRAC-PRESS' IS DEPRECATED
+NOTICE - KEYWORD 'OUTFLOW-SIDE' IS DEPRECATED
+ ** WARNING: UNRECOGNIZED INPUT: MANIFOLD: TRUE  ;DEPRECATED **
+ ** WARNING: UNRECOGNIZED INPUT: SOLVER TYPE: D4-GAUSS  ;DEPRECATED **
+ ** WARNING: UNRECOGNIZED INPUT: BAD-INPUT: VALUE **
+     FRACTURE FLOW IS PRESSURE CONTROLLED
+     AVERAGE LIQUID VISCOSITY USED  1.00000     PA*SEC
+
+ READING APERTURE MAP
+     CALCULATING APERTURE PERCENTILES OF MAP
+     CONVERTING 2-D MAP ARRAY IN VOX TO VECTOR IN SI
+     ROUGHNESS FACTOR APPLIED TO MAP   0.000000
+     CALCULATING ADDITIONAL MAP STATISTICS
+
+     PROPERTIES OF APERTURE MAP:
+
+         VOXEL TO METER CONVERSION USED:      0.100000E-04
+         MAP AVERAGING FACTOR APPLIED:       10.000000
+
+         DIAMETER[M]           LENGTH[M]         NX        NZ
+            0.010000            0.010000      00100     00100
+
+         NUMBER OF CELLS THAT WERE MASKED: 0
+
+         MINIMUM, NONZERO APERTURE OF FRACTURE:        1.000000 VOXELS
+         MAXIMUM APERTURE OF FRACTURE:        1.000000 VOXELS
+
+         HOMOGENEOUS APERTURE OF FRACTURE WITHOUT MASK APPLIED:        1.000000 VOXELS
+         HOMOGENEOUS APERTURE OF FRACTURE WITH MASK APPLIED:           1.000000 VOXELS
+
+         APERTURE RANGES BY PERCENTILE
+         PERCENTILE               [VOX]                [MM]
+              0.000            1.000000         0.010000000
+              1.000            1.000000         0.010000000
+              5.000            1.000000         0.010000000
+             10.000            1.000000         0.010000000
+             15.000            1.000000         0.010000000
+             20.000            1.000000         0.010000000
+             25.000            1.000000         0.010000000
+             30.000            1.000000         0.010000000
+             40.000            1.000000         0.010000000
+             50.000            1.000000         0.010000000
+             60.000            1.000000         0.010000000
+             70.000            1.000000         0.010000000
+             75.000            1.000000         0.010000000
+             80.000            1.000000         0.010000000
+             85.000            1.000000         0.010000000
+             90.000            1.000000         0.010000000
+             95.000            1.000000         0.010000000
+             99.000            1.000000         0.010000000
+            100.000            1.000000         0.010000000
+
+ DEFINING BOUNDARY CELL TRANSMISSIBILIES
+
+ CALCULATING FLOW THROUGH FRACTURE
+
+     USING D4 GAUSS SOLVER
+     REQUIRED TIME FOR SOLUTION:      0.200000
+
+      FRACTURE FLOWS CALCULATED
+
+ INITIALIZING OUTPUT FILES
+     INPUT CONVERSIONS APPLIED
+     -----------------------------------------
+        UNIT IN      UNIT OUT       CONVERSION
+     -----------------------------------------
+     PA         -> PA        :     1.00000
+     M          -> M         :     1.00000
+     SEC        -> SEC       :     1.00000
+     M^3/SEC    -> M^3/SEC   :     1.00000
+     PA*SEC     -> PA*SEC    :     1.00000
+     KG/M^3     -> KG/M^3    :     1.00000
+     -----------------------------------------
+
+     OUTPUT CONVERSIONS APPLIED
+     -----------------------------------------
+        UNIT IN      UNIT OUT       CONVERSION
+     -----------------------------------------
+     PA         -> PA        :     1.00000
+     M          -> M         :     1.00000
+     SEC        -> SEC       :     1.00000
+     M^3/SEC    -> M^3/SEC   :     1.00000
+     PA*SEC     -> PA*SEC    :     1.00000
+     KG/M^3     -> KG/M^3    :     1.00000
+     -----------------------------------------
+
+     INLET BOUNDARY PRESSURE:       100.000000     PA
+     OUTLET BOUNDARY PRESSURE:       0.00000000     PA
+     NET FLOW RATE CALCULATED:      0.833324010E-14 M^3/SEC
+     MAXIMUM NET FLOW RESIDUAL:     -0.198377673E-18
+
+         --------------------------------
+         X-FLOW RANGES
+         --------------------------------
+         PERCENTILE   |        [M^3/SEC]
+         --------------------------------
+         |    0.000   |       -0.000000 |
+         |    1.000   |       -0.000000 |
+         |    5.000   |       -0.000000 |
+         |   10.000   |       -0.000000 |
+         |   15.000   |       -0.000000 |
+         |   20.000   |       -0.000000 |
+         |   25.000   |       -0.000000 |
+         |   30.000   |       -0.000000 |
+         |   40.000   |       -0.000000 |
+         |   50.000   |       -0.000000 |
+         |   60.000   |       -0.000000 |
+         |   70.000   |       -0.000000 |
+         |   75.000   |       -0.000000 |
+         |   80.000   |       -0.000000 |
+         |   85.000   |       -0.000000 |
+         |   90.000   |       -0.000000 |
+         |   95.000   |       -0.000000 |
+         |   99.000   |       -0.000000 |
+         |  100.000   |       -0.000000 |
+         --------------------------------
+
+         --------------------------------
+         Z-FLOW RANGES
+         --------------------------------
+         PERCENTILE   |        [M^3/SEC]
+         --------------------------------
+         |    0.000   |        0.000000 |
+         |    1.000   |        0.000000 |
+         |    5.000   |        0.000000 |
+         |   10.000   |        0.000000 |
+         |   15.000   |        0.000000 |
+         |   20.000   |        0.000000 |
+         |   25.000   |        0.000000 |
+         |   30.000   |        0.000000 |
+         |   40.000   |        0.000000 |
+         |   50.000   |        0.000000 |
+         |   60.000   |        0.000000 |
+         |   70.000   |        0.000000 |
+         |   75.000   |        0.000000 |
+         |   80.000   |        0.000000 |
+         |   85.000   |        0.000000 |
+         |   90.000   |        0.000000 |
+         |   95.000   |        0.000000 |
+         |   99.000   |        0.000000 |
+         |  100.000   |        0.000000 |
+         --------------------------------
+
+         --------------------------------
+         FLOW MAGNITUDE RANGES
+         --------------------------------
+         PERCENTILE   |        [M^3/SEC]
+         --------------------------------
+         |    0.000   |        0.000000 |
+         |    1.000   |        0.000000 |
+         |    5.000   |        0.000000 |
+         |   10.000   |        0.000000 |
+         |   15.000   |        0.000000 |
+         |   20.000   |        0.000000 |
+         |   25.000   |        0.000000 |
+         |   30.000   |        0.000000 |
+         |   40.000   |        0.000000 |
+         |   50.000   |        0.000000 |
+         |   60.000   |        0.000000 |
+         |   70.000   |        0.000000 |
+         |   75.000   |        0.000000 |
+         |   80.000   |        0.000000 |
+         |   85.000   |        0.000000 |
+         |   90.000   |        0.000000 |
+         |   95.000   |        0.000000 |
+         |   99.000   |        0.000000 |
+         |  100.000   |        0.000000 |
+         --------------------------------
+
+         --------------------------------
+         NORMALIZED RESIDUAL RANGES
+         --------------------------------
+         PERCENTILE   |              [-]
+         --------------------------------
+         |    0.000   |        0.000000 |
+         |    1.000   |        0.000000 |
+         |    5.000   |        0.000000 |
+         |   10.000   |        0.000000 |
+         |   15.000   |        0.000000 |
+         |   20.000   |        0.000000 |
+         |   25.000   |        0.000000 |
+         |   30.000   |        0.000000 |
+         |   40.000   |        0.000000 |
+         |   50.000   |        0.000000 |
+         |   60.000   |        0.000000 |
+         |   70.000   |        0.000000 |
+         |   75.000   |        0.000000 |
+         |   80.000   |        0.000000 |
+         |   85.000   |        0.000000 |
+         |   90.000   |        0.000000 |
+         |   95.000   |        0.000000 |
+         |   99.000   |        0.000000 |
+         |  100.000   |        1.000000 |
+         --------------------------------
+
+ WRITING DATA TO OUTPUT FILES...
+     ADJUSTED APERTURE FILE COMPLETED
+     FLOW FILE COMPLETED
+     PRESSURE FILE COMPLETED
+
+     CREATING THE VTK FILE...
+         VTK POINTS OUTPUT TO FILE
+
+     OUTPUTTING DATA TO THE VTK FILE...
+         APERTURE DATA OUTPUT TO VTK FILE
+         PRESSURE DATA OUTPUT TO VTK FILE
+         REYNOLDS_NUMBER DATA OUTPUT TO VTK FILE
+         NORMALIZED_RESIDUAL DATA OUTPUT TO VTK FILE
+         VECTOR FLOW DATA OUTPUT TO VTK FILE
+
+ DEALLOCATED ALL ARRAYS
+
+ OUTPUT FILES CLOSED
