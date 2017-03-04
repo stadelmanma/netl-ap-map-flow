@@ -26,7 +26,7 @@ if _pil_version < '3.4.0':
     raise Exception('ApertureMapModelTools requires pillow 3.4.0 or greater')
 
 #
-from .__core__ import DataField, FractureImageStack, StatFile
+from .__core__ import DataField, FractureImageStack
 from .__core__ import _get_logger, set_main_logger_level
 from .__core__ import files_from_directory, load_infile_list
 from .__core__ import calc_percentile, calc_percentile_num, get_data_vect

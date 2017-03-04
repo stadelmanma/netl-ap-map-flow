@@ -4,7 +4,7 @@ ApertureMapModelTools module.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2017/02/11
+Last Modifed: 2017/03/03
 #
 """
 #
@@ -464,62 +464,6 @@ class FractureImageStack(sp.ndarray):
         self.save_image_stack(fname, img_data, overwrite=overwrite)
 
 
-class StatFile(dict):
-    r"""
-    Parses and stores information from a simulation statisitics file. This
-    class helps facilitate data mining of legacy simulation results. If
-    available the YAML formatted file should be used instead as it can be
-    directly parsed into a dictionary by the yaml module.
-    """
-
-    def __init__(self, infile):
-        super().__init__()
-        self.infile = infile
-        self.map_file = ''
-        self.pvt_file = ''
-        self.parse_stat_file()
-
-    def parse_stat_file(self, stat_file=None):
-        r"""
-        Parses either the supplied infile or the class's infile and
-        uses the data to populate the data_dict.
-        """
-        self.infile = (stat_file if stat_file else self.infile)
-        #
-        with open(self.infile, 'r') as stat_file:
-            content = stat_file.read()
-            content_arr = content.split('\n')
-            content_arr = [re.sub(r', *$', '', l).strip() for l in content_arr]
-            content_arr = [re.sub(r'^#.*', '', l) for l in content_arr]
-            content_arr = [l for l in content_arr if l]
-        #
-        # pulling out aperture map and pvt file key-value pairs
-        if (re.match('APER', content_arr[0])):
-            map_line = content_arr.pop(0).split(',')
-            self.map_file = map_line[1].strip()
-            self[map_line[0].replace(':', '').strip()] = self.map_file
-        #
-        if (re.match('PVT', content_arr[0])):
-            pvt_line = content_arr.pop(0).split(',')
-            self.pvt_file = pvt_line[1].strip()
-            self[pvt_line[0].replace(':', '').strip()] = self.pvt_file
-        #
-        # stepping through pairs of lines to get key -> values
-        for i in range(0, len(content_arr), 2):
-            key_list = re.split(r',', content_arr[i])
-            key_list = [k.strip() for k in key_list]
-            val_list = re.split(r',', content_arr[i + 1])
-            val_list = [float(v) for v in val_list]
-            #
-            for key, val in zip(key_list, val_list):
-                m = re.search(r'\[(.*?)\]$', key)
-                unit = (m.group(1) if m else '-')
-                key = re.sub(r'\[.*?\]$', '', key).strip()
-                self[key] = [val, unit]
-        #
-        # modifiying NX and NZ keys to just be an integer instead of list
-        self['NX'] = self['NX'][0]
-        self['NZ'] = self['NZ'][0]
 #
 ########################################################################
 #  Basic functions

@@ -3,7 +3,7 @@ Handles testing of the core object and function module
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/09
-Last Modifed: 2017/02/12
+Last Modifed: 2017/03/03
 #
 """
 from argparse import Namespace
@@ -167,20 +167,6 @@ class TestCore:
             fracture_stack.save(fname)
         #
         fracture_stack.save(fname, overwrite=True)
-
-    def test_stat_file(self):
-        r"""
-        Builds a stat file and test its properties
-        """
-        fname = os.path.join(FIXTURE_DIR, 'test-stat-file.csv')
-        stat_file = amt.StatFile(fname)
-        assert stat_file.map_file
-        assert stat_file.pvt_file
-        assert stat_file.keys()
-        assert stat_file.values()
-        assert stat_file['NX'] == 136
-        assert stat_file['NZ'] == 138
-        assert stat_file['INLET PRESS'] == [1000, 'PA']
 
     def test_toplevel_logger(self):
         r"""
