@@ -113,7 +113,11 @@ def diff_compare_file_set(pat_str):
     """
     global RETURN_CODE
     # defining allowed max diffs
-    max_diff = {'coverage_test_log.txt': 2}
+    max_diff = {
+        'coverage_test_log.txt': 2,
+        'coverage_test_stats.csv': 2,
+        'coverage_test_stats.yaml': 2
+    }
     #
     files = files_from_directory(pattern=re.compile(pat_str), deep=False)
     for new_file in files:
