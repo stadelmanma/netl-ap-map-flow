@@ -67,14 +67,9 @@ C     PRIMARY SUBROUTINE TO DIRECTLY CONVERT A VALUE TO DIFFERENT UNITS
         !
         REAL(8) :: CONV_FACT
         !
-        IF (INDEX(UTYPE,'TEMP') > 0) THEN
-          CALL CONV_TEMP(UNIT_IN,UNIT_OUT,VALUE,BOK)
-          IF (.NOT. BOK) GOTO 1000
-        ELSE
-          CALL CALC_CONV_FACT(UTYPE,UNIT_IN,UNIT_OUT,CONV_FACT,BOK)
-          IF (.NOT. BOK) GOTO 1000
-          VALUE = VALUE * CONV_FACT
-        END IF
+        CALL CALC_CONV_FACT(UTYPE,UNIT_IN,UNIT_OUT,CONV_FACT,BOK)
+        IF (.NOT. BOK) GOTO 1000
+        VALUE = VALUE * CONV_FACT
         !
         RETURN
         !
@@ -139,9 +134,6 @@ C     GETS THE TYPE ID OF THE UNIT
         ELSE IF (INDEX(UTYPE,'MASS') > 0) THEN
           TYPE_ID = 20
           SI_UNITS(TYPE_ID) = 'KG'
-        ELSE IF (INDEX(UTYPE,'TEMP') > 0) THEN
-          TYPE_ID = 30
-          SI_UNITS(TYPE_ID) = 'K'
         ELSE IF (INDEX(UTYPE,'TIME') > 0) THEN
           TYPE_ID = 40
           SI_UNITS(TYPE_ID) = 'SEC'
@@ -178,8 +170,6 @@ C     USES THE TYPE TO CALL THE PROPER UNIT CONVERTER
           CALL CONV_DIST(UNIT_IN,CONV_FACT)
         ELSE IF (TYPE_ID == 20) THEN
           CALL CONV_MASS(UNIT_IN,CONV_FACT)
-        ELSE IF (TYPE_ID == 30) THEN
-          WRITE(*,*) " NO MULTIPLICATIVE CONVERSIONS FOR TEMPERATURE."
         ELSE IF (TYPE_ID == 40) THEN
           CALL CONV_TIME(UNIT_IN,CONV_FACT)
         ELSE IF (TYPE_ID == 50) THEN
@@ -246,61 +236,6 @@ C     CONVERTS MASS UNITS TO SI
         END IF
         !
         RETURN
-      END SUBROUTINE
-C
-C     CONVERTS TEMPERATURE VALUE TO VALUE IN UNIT_OUT UNITS
-      SUBROUTINE CONV_TEMP(UNIT_IN,UNIT_OUT,VALUE,BOK)
-        !
-        IMPLICIT NONE
-        REAL(8), INTENT(OUT) :: VALUE
-        LOGICAL, INTENT(IN OUT) :: BOK
-        CHARACTER(*), INTENT(IN) :: UNIT_IN
-        CHARACTER(*), INTENT(IN OUT) :: UNIT_OUT
-        !
-        CHARACTER(80) :: UIN,UOUT
-        !
-        IF (TRIM(UNIT_OUT) == 'SI') UNIT_OUT = 'K'
-        UIN  = TRIM(UNIT_IN)
-        UOUT = TRIM(UNIT_OUT)
-        !
-        ! CONVERTING VALUE FROM UNIT_IN TO SI
-        IF      (UIN(1:1) == 'F' .OR. INDEX(UIN,'FAHR') >  0) THEN
-          VALUE = (VALUE + 459.67D0)*(5.0D0/9.0D0)
-        ELSE IF (UIN(1:1) == 'R' .OR. INDEX(UIN,'RANK') >  0) THEN
-          VALUE = VALUE * (5.0D0/9.0D0)
-        ELSE IF (UIN(1:1) == 'C' .OR. INDEX(UIN,'CEL') >  0) THEN
-          VALUE = VALUE + 273.15D0
-        ELSE IF (UIN(1:1) == 'K' .OR. INDEX(UIN,'KEL') >  0) THEN
-          VALUE = VALUE
-        ELSE
-          GOTO 900
-        END IF
-        !
-        ! CONVERTING VALUE FROM SI TO UNIT_OUT
-        IF      (UOUT(1:1) == 'F' .OR. INDEX(UOUT,'FAHR') >  0) THEN
-          VALUE = VALUE*(9.0D0/5.0D0) - 459.67D0
-        ELSE IF (UOUT(1:1) == 'R'  .OR. INDEX(UOUT,'RANK') >  0) THEN
-          VALUE = VALUE * (9.0D0/5.0D0)
-        ELSE IF (UOUT(1:1) == 'C'  .OR. INDEX(UOUT,'CEL') >  0) THEN
-          VALUE = VALUE - 273.15D0
-        ELSE IF (UOUT(1:1) == 'K'  .OR. INDEX(UOUT,'KEL') >  0) THEN
-          VALUE = VALUE
-        ELSE
-          GOTO 910
-        END IF
-        !
-        RETURN
-        !
-  900   WRITE(*,2000)TRIM(UNIT_IN)
-        GOTO 1000
-  910   WRITE(*,2000)TRIM(UNIT_OUT)
-        GOTO 1000
-        !
- 1000   BOK = .FALSE.
-        RETURN
-        !
- 2000   FORMAT(1X,'ERROR: NO TEMPERATURE CONVERSION FOUND FOR UNIT: ',A)
-        !
       END SUBROUTINE
 C
 C     CONVERTS TIME UNITS TO SI
