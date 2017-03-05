@@ -16,7 +16,7 @@ AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic la
 
 |
 
- * DataProcessing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is apm_process_data_map.py which accepts various command line arguments to automatically perform basic post-processing. 
+ * DataProcessing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is apm_process_data_map.py which accepts various command line arguments to automatically perform basic post-processing.
 
 |
 
@@ -32,7 +32,7 @@ AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic la
 
 Setting up the Modeling Package
 -------------------------------
-These steps were followed on Ubuntu 14.04 & 16.04, OSX 10.9 & MacOS 10.12 and Windows 7. They are not guaranteed to remain updated however the general process should be relatively stable as all dependencies are being handled by large, community driven projects i.e. Anaconda, MinGW, GCC, etc. Running the test suite in Windows is possible but not without some manual adjustments and extra effort. 
+These steps were followed on Ubuntu 14.04 & 16.04, OSX 10.9 & MacOS 10.12 and Windows 7. They are not guaranteed to remain updated however the general process should be relatively stable as all dependencies are being handled by large, community driven projects i.e. Anaconda, MinGW, GCC, etc. Running the test suite in Windows is possible but not without some manual adjustments and extra effort.
 
 Installation Tips
 ~~~~~~~~~~~~~~~~~
@@ -40,7 +40,7 @@ Installation Tips
 * This guide assumes you install Anaconda3 locally. If you choose to install it system wide you will need to run some commands with :code:`sudo` in unix systems or in an elevated command prompt in Windows.
 * For unix systems that already have a system version of Python 2.7, :code:`python` will likely also bring up the Anaconda version, to regain access to the system version of Python delete the :code:`python` symlink in :code:`~/anaconda/bin`
 * After installing Anaconda3 run :code:`pip --version` in a terminal to ensure it points to the anaconda installation, if not check your PATH.
-* After downloading the model run :code:`conda update --all` and :code:`pip install -r requirements.txt --upgrade` to ensure all packages are up to date. 
+* After downloading the model run :code:`conda update --all` and :code:`pip install -r requirements.txt --upgrade` to ensure all packages are up to date, this will also install the pint module. 
 * Run :code:`pip install -r test_requirements.txt` to enable running the test suite.
 * When running the test suite, recompile the model using :code:`./bin/build_model debug` which builds the model using additional flags, code coverage and profiling
 * After installation run the script :code:`./bin/create-script-runners [directory]` to make model scripts accessible on the PATH, this will not work in regular Windows cmd.exe (use Babun or Cygwin). If :code:`[directory]` is not supplied it will try to place them in :code:`~/.local/bin`
@@ -50,7 +50,7 @@ Linux
 1. Install :code:`git` using the terminal command :code:`sudo apt-get install git`.
     A. Run :code:`git --version` in a new terminal window to check if it was installed properly.
 2. Download and Install the 64 bit, Python 3.X version of  `Anaconda <https://www.continuum.io/downloads#linux>`_ for Linux.
-    A. In a terminal, copy and paste the command :code:`bash ~/Downloads/Anaconda3-4.2.0-Linux-x86_64.sh` you may need to tweak the path and or filename if a new version of Anaconda is released. 
+    A. In a terminal, copy and paste the command :code:`bash ~/Downloads/Anaconda3-4.2.0-Linux-x86_64.sh` you may need to tweak the path and or filename if a new version of Anaconda is released.
     B. Follow the instructions as the installation script runs and enter 'yes' when it prompts to update your :code:`$PATH` variable.
         * If using a different shell (i.e. zsh) you will likely need to manually update your :code:`$PATH` variable.
     C. Close your existing terminal window and open a new one, enter :code:`python3 --version` to check if Anaconda has installed Python successfully.
@@ -71,8 +71,8 @@ MacOS/ OSX
 3. Download and install the 64 bit, Python 3.X version of `Anaconda <https://www.continuum.io/downloads#osx>`_ for MacOS
     A. Choose the "Install for Me Only" option when prompted
     B. Open or create the ~/.bashrc (or equivalent for your shell i.e. ~/.zshrc) file and add the line :code:`export PATH=$HOME/anaconda/bin:$PATH`.
-        * Be careful not to forget the :code:`:` between directory paths 
-        * If you edited the ~/.bashrc file in the terminal or have an open window run :code:`source ~/.bashrc` to apply changes, alternatively close and open a term terminal window. 
+        * Be careful not to forget the :code:`:` between directory paths
+        * If you edited the ~/.bashrc file in the terminal or have an open window run :code:`source ~/.bashrc` to apply changes, alternatively close and open a term terminal window.
     C. In a terminal window run :code:`python3 --version` to ensure Anaconda was installed properly and is accessible
 4. Open a terminal and cd into the directory you want to install the AP_MAP_FLOW package in
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`
@@ -83,7 +83,7 @@ Windows
 ~~~~~~~
 1. Download and install the 64 bit, Python 3.X version of `Anaconda <https://www.continuum.io/downloads#windows>`_ for Windows
     A. Open a command prompt (it's under Accessories) and enter :code:`python`. If the installion was successful the interpreter will be displayed
-    B. Exit the Python interpreter hit :code:`Ctrl+Z` and then :code:`Enter` 
+    B. Exit the Python interpreter hit :code:`Ctrl+Z` and then :code:`Enter`
     C. Run the command :code:`conda install git`
 2. Download and install `MinGW-w64 <https://sourceforge.net/projects/mingw-w64/>`_ for windows
     A. Double click the installation script that was downloaded and hit :code:`Next`
@@ -101,8 +101,8 @@ Windows with Babun
 ~~~~~~~~~~~~~~~~~~
 `Babun <http://babun.github.io/>`_ offers a much friendlier terminal experience than the standard cmd.exe prompt. To use the code with Babun follow steps 1 and 2 for regular Windows installation using the cmd.exe prompt and then download and install Babun.
 
-1. Open up a Babun prompt using the start menu. 
-    A. Run :code:`nano ~/.zshrc` to edit the file and copy and paste the .zshrc code block below into the bottom of the file. 
+1. Open up a Babun prompt using the start menu.
+    A. Run :code:`nano ~/.zshrc` to edit the file and copy and paste the .zshrc code block below into the bottom of the file.
         * Make sure you used the down arrow key to put your cursor at the bottom of the file
         * Once you've copied the block all you have to do in Babun is right click to paste, if you accidently highlighted something in Babun before pasting you will need to copy the block again.
         * If you installed Anaconda somewhere else you will need to tweak the path to match.
@@ -118,7 +118,7 @@ Windows with Babun
     C. Run the command :code:`dos2unix ./bin/*`
         * This converts Windows line endings :code:`\r\n` into unix line endings :code:`\n`
     C. Run :code:`./bin/build_model` which will build the model and link the ApertureMapModelTools package Anaconda's Python3
-    D. Run :code:`./bin/create-script-runners` to allow usage of the files in the ./scripts directory within babun. 
+    D. Run :code:`./bin/create-script-runners` to allow usage of the files in the ./scripts directory within babun.
         * Run :code:`source ~/.zshrc` or open a new Babun terminal so it registers the changes
         * To execute one of the runner scripts simply type :code:`apm_` and then hit tab to cycle through the options. Use :code:`(script name) -h` for usage information.
         * If you move the netl-Ap_MAP_FLOW directory you will need to re-run the command to update the runners
