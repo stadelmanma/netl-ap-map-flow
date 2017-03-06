@@ -7,7 +7,7 @@ C         LOWEST LEVEL ROUTINES CAN BE CALLED DIRECTLY IF THE ONLY THING
 C         REQUIRED IS A CONVERSION FACTOR FROM NON-SI TO SI
 C
 C     DATE WRITTEN:  2016/02/17
-C     LAST MODIFIED: 2016/07/15
+C     LAST MODIFIED: 2017/03/05
 C ----------------------------------------------------------------------
 C               ---- VARIABLE DESCRIPTIONS ----
 C
