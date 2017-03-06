@@ -12,12 +12,14 @@ from pint import UnitRegistry as __UnitRegistry
 unit_registry = __UnitRegistry()
 unit_registry.define('micron = um')
 
+
 def register_voxel_unit(voxel_size, unit):
     r"""
     Registers the 'voxel' unit with the unit_registry. voxel_size is the length
     of an edge of the voxel in the specified units.
     """
     unit_registry.define('voxel = {} * {} = vox'.format(voxel_size, unit))
+
 
 def convert_value(value, unit_in, unit_out='SI'):
     r"""
@@ -31,6 +33,7 @@ def convert_value(value, unit_in, unit_out='SI'):
         value = quant.to(unit_out).magnitude
     #
     return value
+
 
 def get_conversion_factor(unit_in, unit_out='SI'):
     r"""
