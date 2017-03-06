@@ -135,19 +135,19 @@ C     GETS THE TYPE ID OF THE UNIT
           TYPE_ID = 20
           SI_UNITS(TYPE_ID) = 'KG'
         ELSE IF (INDEX(UTYPE,'TIME') > 0) THEN
-          TYPE_ID = 40
+          TYPE_ID = 30
           SI_UNITS(TYPE_ID) = 'SEC'
         ELSE IF (INDEX(UTYPE,'DENS') > 0) THEN
-          TYPE_ID = 50
+          TYPE_ID = 40
           SI_UNITS(TYPE_ID) = 'KG/M^3'
         ELSE IF (INDEX(UTYPE,'FLOW')+INDEX(UTYPE,'RATE') > 0) THEN
-          TYPE_ID = 60
+          TYPE_ID = 50
           SI_UNITS(TYPE_ID) = 'M^3/SEC'
         ELSE IF (INDEX(UTYPE,'PRES') > 0) THEN
-          TYPE_ID = 70
+          TYPE_ID = 60
           SI_UNITS(TYPE_ID) = 'PA'
         ELSE IF (INDEX(UTYPE,'VISC') > 0) THEN
-          TYPE_ID = 80
+          TYPE_ID = 70
           SI_UNITS(TYPE_ID) = 'PA*SEC'
         ELSE
           TYPE_ID = -1
@@ -170,15 +170,15 @@ C     USES THE TYPE TO CALL THE PROPER UNIT CONVERTER
           CALL CONV_DIST(UNIT_IN,CONV_FACT)
         ELSE IF (TYPE_ID == 20) THEN
           CALL CONV_MASS(UNIT_IN,CONV_FACT)
-        ELSE IF (TYPE_ID == 40) THEN
+        ELSE IF (TYPE_ID == 30) THEN
           CALL CONV_TIME(UNIT_IN,CONV_FACT)
-        ELSE IF (TYPE_ID == 50) THEN
+        ELSE IF (TYPE_ID == 40) THEN
           CALL CONV_DENS(UNIT_IN,CONV_FACT)
-        ELSE IF (TYPE_ID == 60) THEN
+        ELSE IF (TYPE_ID == 50) THEN
           CALL CONV_RATE(UNIT_IN,CONV_FACT)
-        ELSE IF (TYPE_ID == 70) THEN
+        ELSE IF (TYPE_ID == 60) THEN
           CALL CONV_PRES(UNIT_IN,CONV_FACT)
-        ELSE IF (TYPE_ID == 80) THEN
+        ELSE IF (TYPE_ID == 70) THEN
           CALL CONV_VISC(UNIT_IN,CONV_FACT)
         ELSE
           WRITE(*,*) " NO CONVERTER FOUND FOR TYPE ID: ",TYPE_ID
