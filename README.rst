@@ -12,7 +12,7 @@ AP MAP FLOW
 
 Description
 -----------
-AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. Several tools written in `Python <https://www.python.org/>`_ provide added functionality are packaged in the ApertureMapModelTools module. The project has been primarily developed on Ubuntu, however any OS will likely work as long as the requiste packages are installed. The Fortran code was compiled using a 64-bit GNU Fortran compiler. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. There are a few sub modules available to divide up functionality, they are described below.
+AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. Several tools written in `Python <https://www.python.org/>`_ provide added functionality are packaged in the ApertureMapModelTools module. The project has been primarily developed on Ubuntu, however any OS will likely work as long as the requiste packages are installed. The Fortran code was compiled using a 64-bit GNU Fortran compiler. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. Unit conversions can be handled using three functions provided in UnitConversion.py. The module [pint](https://github.com/hgrecco/pint) is required and needs to be installed via pip. There are a few sub modules available to divide up functionality, they are described below.
 
 |
 
@@ -26,9 +26,6 @@ AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic la
 
  * RunModel houses functions used to run the LCL model via python scripts instead of single instances on the command line. In addition to the core methods used to run individual simulations a BulkRun class exists which allows the user to automate the running of mulitple simulations concurrently. The example file for running a 'bulk simulation' is under `<examples/bulk-run-example.rst>`_. Utilization of the RunModel sub-module is in `<examples/running-the-flow-model.rst>`_, section `Running by Python Script <examples/running-the-flow-model.rst#running-by-python-script>`_
 
-|
-
- * UnitConversion performs unit conversions for the user and is able to handle a wide variety of inputs. However it assumes the user is supplying a valid conversion i.e. meters to feet, where the dimensionality matches.
 
 Setting up the Modeling Package
 -------------------------------
@@ -40,7 +37,7 @@ Installation Tips
 * This guide assumes you install Anaconda3 locally. If you choose to install it system wide you will need to run some commands with :code:`sudo` in unix systems or in an elevated command prompt in Windows.
 * For unix systems that already have a system version of Python 2.7, :code:`python` will likely also bring up the Anaconda version, to regain access to the system version of Python delete the :code:`python` symlink in :code:`~/anaconda/bin`
 * After installing Anaconda3 run :code:`pip --version` in a terminal to ensure it points to the anaconda installation, if not check your PATH.
-* After downloading the model run :code:`conda update --all` and :code:`pip install -r requirements.txt --upgrade` to ensure all packages are up to date, this will also install the pint module. 
+* After downloading the model run :code:`conda update --all` and :code:`pip install -r requirements.txt --upgrade` to ensure all packages are up to date, this will also install the pint module.
 * Run :code:`pip install -r test_requirements.txt` to enable running the test suite.
 * When running the test suite, recompile the model using :code:`./bin/build_model debug` which builds the model using additional flags, code coverage and profiling
 * After installation run the script :code:`./bin/create-script-runners [directory]` to make model scripts accessible on the PATH, this will not work in regular Windows cmd.exe (use Babun or Cygwin). If :code:`[directory]` is not supplied it will try to place them in :code:`~/.local/bin`
