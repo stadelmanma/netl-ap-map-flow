@@ -5,7 +5,7 @@ C
 C     PROGRAM DESCRIPTON: HANDLES UNIT TESTING OF THE UNIT CONVERSION MODULE.
 C
 C     DATE WRITTEN:  2016/07/14
-C     LAST MODIFIED: 2016/07/18
+C     LAST MODIFIED: 2017/03/05
 C
 C     SUBROUTINE CALLS:
 C
@@ -30,7 +30,6 @@ C     CALLING TEST ROUTINES
       CALL TEST_GET_CONV_FACT
       CALL TEST_CONV_DIST
       CALL TEST_CONV_MASS
-      CALL TEST_CONV_TEMP
       CALL TEST_CONV_TIME
       CALL TEST_CONV_DENS
       CALL TEST_CONV_RATE
@@ -70,24 +69,11 @@ C
         CALL CONVERT_VALUE('DIST','M',UNIT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'COVERT_VALUE')
         !
-        ! TEMPERATURE CONVERSIONS
-        TEST_VAL = 0.0D0
-        CORR_VAL = 459.67D0
-        BOK = .TRUE.
-        UNIT = 'R'
-        CALL CONVERT_VALUE('TEMP','F',UNIT,TEST_VAL,BOK)
-        CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'COVERT_VALUE-TEMP')
-        !
-        ! HITTING FAILING CASES
+        ! HITTING FAILING CASE
         BOK = .TRUE.
         UNIT = 'MM'
         CALL CONVERT_VALUE('DIST','BAD UNIT',UNIT,TEST_VAL,BOK)
         CALL ASSERT_EQUALS(BOK, .FALSE., 'COVERT_VALUE-FAIL1')
-        !
-        BOK = .TRUE.
-        UNIT = 'BAD UNIT'
-        CALL CONVERT_VALUE('TEMP','K',UNIT,TEST_VAL,BOK)
-        CALL ASSERT_EQUALS(BOK, .FALSE., 'COVERT_VALUE-FAIL2')
         !
         CALL END_TEST('TEST_COVERT_VALUE')
         !
@@ -172,15 +158,14 @@ C ----------------------------------------------------------------------
         !
         WRITE(SI_CHK(10,:),"(A)") 'DIST','M'
         WRITE(SI_CHK(20,:),"(A)") 'MASS','KG'
-        WRITE(SI_CHK(30,:),"(A)") 'TEMP','K'
-        WRITE(SI_CHK(40,:),"(A)") 'TIME','SEC'
-        WRITE(SI_CHK(50,:),"(A)") 'DENS','KG/M^3'
-        WRITE(SI_CHK(60,:),"(A)") 'FLOW','M^3/SEC'
-        WRITE(SI_CHK(70,:),"(A)") 'PRES','PA'
-        WRITE(SI_CHK(80,:),"(A)") 'VISC','PA*SEC'
+        WRITE(SI_CHK(30,:),"(A)") 'TIME','SEC'
+        WRITE(SI_CHK(40,:),"(A)") 'DENS','KG/M^3'
+        WRITE(SI_CHK(50,:),"(A)") 'FLOW','M^3/SEC'
+        WRITE(SI_CHK(60,:),"(A)") 'PRES','PA'
+        WRITE(SI_CHK(70,:),"(A)") 'VISC','PA*SEC'
         !
         ! CHECKING ALL OF THE IDS AND THEIR RESPECTIVE SI UNIT STRING
-        DO I = 10,80,10
+        DO I = 10,70,10
           CALL SET_TYPE_ID(SI_CHK(I,1), TID)
           CALL ASSERT_EQUALS(TID, I, TEST1//SI_CHK(I,1))
           CALL ASSERT_EQUALS(SI_UNITS(TID),SI_CHK(I,2),
@@ -215,18 +200,17 @@ C ----------------------------------------------------------------------
         !
         WRITE(SI_CHK(10),"(A)") 'M'
         WRITE(SI_CHK(20),"(A)") 'KG'
-        WRITE(SI_CHK(30),"(A)") 'K'
-        WRITE(SI_CHK(40),"(A)") 'SEC'
-        WRITE(SI_CHK(50),"(A)") 'KG/M^3'
-        WRITE(SI_CHK(60),"(A)") 'M^3/SEC'
-        WRITE(SI_CHK(70),"(A)") 'PA'
-        WRITE(SI_CHK(80),"(A)") 'PA*SEC'
-        WRITE(SI_CHK(90),"(A)") 'BAD TYPE ID'
+        WRITE(SI_CHK(30),"(A)") 'SEC'
+        WRITE(SI_CHK(40),"(A)") 'KG/M^3'
+        WRITE(SI_CHK(50),"(A)") 'M^3/SEC'
+        WRITE(SI_CHK(60),"(A)") 'PA'
+        WRITE(SI_CHK(70),"(A)") 'PA*SEC'
+        WRITE(SI_CHK(80),"(A)") 'BAD TYPE ID'
         !
         ! CHECKING ALL OF THE IDS AND THEIR RESPECTIVE CONVERSION FACTOR
-        DO I = 10,90,10
+        DO I = 10,80,10
           CALL GET_CONV_FACT(I, SI_CHK(I), FACT)
-          IF (I == 30 .OR. I == 90) THEN
+          IF (I == 80) THEN
             CALL ASSERT_EQUALS(FACT, -1.0D0, TEST1//'FAIL-'//SI_CHK(I))
           ELSE
             CALL ASSERT_EQUALS(FACT, 1.0D0, TEST1//SI_CHK(I))
@@ -317,65 +301,6 @@ C ----------------------------------------------------------------------
         CALL END_TEST('TEST_CONV_MASS')
         !
         RETURN
-      END SUBROUTINE
-C
-C ----------------------------------------------------------------------
-      SUBROUTINE TEST_CONV_TEMP
-        !
-        ! WRITTEN BY: MATTHEW STADELMAN
-        ! LAST MODIFIED: 2016/07/15
-        !
-        USE UNIT_TEST_MODULE
-        USE UNIT_CONVERSION_MODULE
-        !
-        IMPLICIT NONE
-        REAL(8) :: TEST_VAL, CORR_VAL
-        LOGICAL :: BOK
-        CHARACTER(10) :: UOUT
-        !
-        CALL INIT_TEST
-        !
-        TEST_VAL = 0.0D0
-        CORR_VAL = 459.67D0
-        BOK = .TRUE.
-        UOUT = 'R'
-        CALL CONV_TEMP('F',UOUT,TEST_VAL,BOK)
-        CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'CONV_TEMP: F->R')
-        !
-        TEST_VAL = 0.0D0
-        CORR_VAL = -459.67D0
-        BOK = .TRUE.
-        UOUT = 'F'
-        CALL CONV_TEMP('R',UOUT,TEST_VAL,BOK)
-        CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'CONV_TEMP: R->F')
-        !
-        TEST_VAL = 0.0D0
-        CORR_VAL = 273.15D0
-        BOK = .TRUE.
-        UOUT = 'K'
-        CALL CONV_TEMP('C',UOUT,TEST_VAL,BOK)
-        CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'CONV_TEMP: C->K')
-        !
-        TEST_VAL = 0.0D0
-        CORR_VAL = -273.15D0
-        BOK = .TRUE.
-        UOUT = 'C'
-        CALL CONV_TEMP('K',UOUT,TEST_VAL,BOK)
-        CALL ASSERT_EQUALS(TEST_VAL, CORR_VAL, 'CONV_TEMP K->C')
-        !
-        ! HITTING FAILING CASES
-        BOK = .TRUE.
-        UOUT = 'K'
-        CALL CONV_TEMP('BAD UNIT',UOUT,TEST_VAL,BOK)
-        CALL ASSERT_EQUALS(BOK, .FALSE., 'CONV_TEMP-FAIL1')
-        !
-        BOK = .TRUE.
-        UOUT = 'BAD UNIT'
-        CALL CONV_TEMP('K',UOUT,TEST_VAL,BOK)
-        CALL ASSERT_EQUALS(BOK, .FALSE., 'CONV_TEMP-FAIL2')
-        !
-        CALL END_TEST('TEST_CONV_TEMP')
-        !
       END SUBROUTINE
 C
 C ----------------------------------------------------------------------
