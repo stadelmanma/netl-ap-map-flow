@@ -48,6 +48,10 @@ class TestBulkRun:
         Testing if check processes works properly
         """
         class TestProcess:
+            start_time = 0.0
+            end_time = 1.0
+            input_file = {'outfile_name': None}
+
             def __init__(self):
                 self.value = None
 
