@@ -339,6 +339,7 @@ def run_model(input_file_obj, synchronous=False, show_stdout=False):
         out = None
     #
     proc = Popen(cmd, stdout=out, stderr=out, universal_newlines=True)
+    proc.input_file = input_file_obj
     proc.start_time = time()
     async_comm = AsyncCommunicate(proc)
     async_comm.start()
