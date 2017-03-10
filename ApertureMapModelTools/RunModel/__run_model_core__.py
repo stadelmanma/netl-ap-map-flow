@@ -13,7 +13,11 @@ from shlex import split as shlex_split
 from subprocess import PIPE
 from subprocess import Popen
 from threading import Thread
-from ApertureMapModelTools.__core__ import DataField
+from time import time
+from ApertureMapModelTools.__core__ import _get_logger, DataField
+
+# module globals
+logger = _get_logger(__name__)
 
 
 class ArgInput(object):
@@ -116,6 +120,19 @@ class AsyncCommunicate(Thread):
     def run(self):
         out, err = self.popen_obj.communicate()
         self.popen_obj.stdout_content, self.popen_obj.stderr_content = out, err
+        self.popen_obj.end_time = time()
+        #
+        msg = '\n\t'.join([
+            'Completed Simulation:',
+            'input file: {}',
+            'Time Required: {:0.3f} minutes',
+            'Exit Code: {}'
+        ])
+        treq = (self.popen_obj.end_time - self.popen_obj.start_time)/60.0
+        logger.info(msg.format(
+            self.popen_obj.input_file.outfile_name,
+            treq,
+            self.popen_obj.returncode))
 
 
 class InputFile(OrderedDict):
@@ -285,7 +302,7 @@ class InputFile(OrderedDict):
         with open(file_name, 'w') as fname:
             fname.write(content)
         #
-        print('Input file saved as: '+file_name)
+        logger.info('Input file saved as: '+file_name)
 
 
 def estimate_req_RAM(input_maps, avail_RAM, suppress=False, **kwargs):
@@ -336,7 +353,14 @@ def run_model(input_file_obj, synchronous=False, show_stdout=False):
     if show_stdout:
         out = None
     #
+    # beginning simulation
     proc = Popen(cmd, stdout=out, stderr=out, universal_newlines=True)
+    proc.input_file = input_file_obj
+    proc.start_time = time()
+    #
+    msg = 'Beginning Simulation:\n\tInput File: {} \n\tProcess ID: {}'
+    logger.info(msg.format(input_file_obj.outfile_name, proc.pid))
+    #
     async_comm = AsyncCommunicate(proc)
     async_comm.start()
     #

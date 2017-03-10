@@ -7,7 +7,7 @@ import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
 import yaml
-from ApertureMapModelTools import set_main_logger_level
+from ApertureMapModelTools import _get_logger, set_main_logger_level
 from ApertureMapModelTools.RunModel import BulkRun, InputFile
 
 #
@@ -25,6 +25,7 @@ Last Modfied: 2016/10/18
 
 # setting log level
 set_main_logger_level('info')
+logger = _get_logger('ApertureMapModelTools.Scripts')
 
 # creating arg parser
 parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
@@ -51,7 +52,11 @@ def apm_bulk_run():
         set_main_logger_level('debug')
 
     bulk_run = None
+    msg = 'Processing {} run parameter files'
+    logger.debug(msg.format(len(namespace.input_files)))
     for input_file in namespace.input_files:
+        msg = 'Reading {1} parameter file.'
+        logger.debug(msg.format(*os.path.split(input_file)))
         #
         # loading yaml file and parsing input file
         input_file = open(input_file, 'r')
@@ -60,11 +65,12 @@ def apm_bulk_run():
 
         # Creating class with provided kwargs
         if not bulk_run:
+            logger.debug('Instantiating initial BulkRun class')
             bulk_run = BulkRun(inp_file, **inputs['bulk_run_keyword_args'])
 
         # Generating the InputFile list
         bulk_run.generate_input_files(inputs['default_run_parameters'],
-                                      inputs['default_file_formats'],
+                                      inputs.get('default_file_formats', None),
                                       case_identifer=inputs.get('case_identifier', None),
                                       case_params=inputs.get('case_parameters', None),
                                       append=True)

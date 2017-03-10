@@ -38,6 +38,9 @@ class BulkRun(dict):
         #
         # updating keys
         self.update(kwargs)
+        #
+        msg = 'Utilizing a maximum of {:d} cores, and {:f} gigabtyes of RAM'
+        logger.debug(msg.format(int(self.num_CPUs), self.sys_RAM))
 
     def dry_run(self):
         r"""
@@ -64,17 +67,14 @@ class BulkRun(dict):
         r"""
         Acts as the driver function for the entire bulk run of simulations.
         """
-        class dummy:
-            r""" Dummy class used to simulate a Popen object """
-            def poll():
-                return 0
         #
         logger.info('Beginning bulk run of simulations')
         self._initialize_run()
         #
-        # initializing processes list with dummy processes and starting loop
-        processes = [dummy]
-        RAM_in_use = [0.0]
+        # initializing processes list and starting loop
+        processes = []
+        RAM_in_use = []
+        self._start_simulations(processes, RAM_in_use, **self)
         while self.input_file_list:
             self._check_processes(processes, RAM_in_use, **self)
             self._start_simulations(processes, RAM_in_use, **self)

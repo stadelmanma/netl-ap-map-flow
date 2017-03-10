@@ -57,6 +57,7 @@ class TestBulkRun:
                     return None
                 #
                 return self.value
+        #
         processes = [TestProcess()]
         RAM_in_use = [0.0]
         #
