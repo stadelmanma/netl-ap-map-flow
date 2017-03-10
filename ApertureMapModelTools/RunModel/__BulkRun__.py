@@ -186,15 +186,6 @@ class BulkRun(dict):
                 if proc.poll() is not None:
                     del processes[i]
                     del RAM_in_use[i]
-                    #
-                    msg = '\n\t'.join([
-                        'Completed Simulation:',
-                        'input file: {}',
-                        'Time Required: {:0.3f} minutes'
-                    ])
-                    treq = (proc.end_time - proc.start_time)/60.0
-                    logger.debug(msg.format(
-                        proc.input_file.get('outfile_name', None), treq))
                     return
             #
             sleep(retest_delay)
@@ -216,8 +207,6 @@ class BulkRun(dict):
                 if inp_file.RAM_req <= free_RAM:
                     inp_file = self.input_file_list.pop(i)
                     processes.append(run_model(inp_file))
-                    msg = 'Beginning simulation for: {}'
-                    logger.info(msg.format(inp_file.outfile_name))
                     #
                     RAM_in_use.append(inp_file.RAM_req)
                     free_RAM = self.avail_RAM - sum(RAM_in_use)
