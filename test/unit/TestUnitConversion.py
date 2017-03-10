@@ -6,7 +6,6 @@ Date Written: 2016/06/09
 Last Modifed: 2017/03/06
 #
 """
-import pytest
 from pint import UnitRegistry
 from ApertureMapModelTools import UnitConversion
 
