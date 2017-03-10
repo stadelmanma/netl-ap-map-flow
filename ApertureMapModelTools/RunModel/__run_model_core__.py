@@ -13,6 +13,7 @@ from shlex import split as shlex_split
 from subprocess import PIPE
 from subprocess import Popen
 from threading import Thread
+from time import time
 from ApertureMapModelTools.__core__ import DataField
 
 
@@ -116,6 +117,7 @@ class AsyncCommunicate(Thread):
     def run(self):
         out, err = self.popen_obj.communicate()
         self.popen_obj.stdout_content, self.popen_obj.stderr_content = out, err
+        self.popen_obj.end_time = time()
 
 
 class InputFile(OrderedDict):
@@ -336,6 +338,7 @@ def run_model(input_file_obj, synchronous=False, show_stdout=False):
     if show_stdout:
         out = None
     #
+    proc.start_time = time()
     proc = Popen(cmd, stdout=out, stderr=out, universal_newlines=True)
     async_comm = AsyncCommunicate(proc)
     async_comm.start()
