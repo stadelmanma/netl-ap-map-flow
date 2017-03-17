@@ -66,6 +66,9 @@ parser.add_argument('--img-stack-name', default=None,
                     help='''alternate name to save the tiff stack as,
                     has no effect if the -n # flag is omitted''')
 
+parser.add_argument('--gen-cluster-img', action='store_true',
+                    help='generates a tiff image colored by cluster number')
+
 parser.add_argument('--no-aper-map', action='store_true',
                     help='do not generate aperture map')
 
@@ -132,7 +135,12 @@ def apm_process_image_stack():
     #
     # processing image stack based on connectivity
     if args.num_clusters:
-        process_image(img_data, args.num_clusters)
+        kwargs = {
+            'output_img': args.gen_cluster_img,
+            'img_name': os.path.splitext(img_stack_file)[0] + '-clusters.tif',
+            'img_shape': img_data.shape
+        }
+        img_data = process_image(img_data, args.num_clusters, **kwargs)
 
     #
     # outputing aperture map
@@ -157,7 +165,7 @@ def apm_process_image_stack():
         img_data.save(img_stack_file, overwrite=args.force)
 
 
-def process_image(img_data, num_clusters):
+def process_image(img_data, num_clusters, **kwargs):
     r"""
     Processes a tiff stack on retaining voxels based on node connectivity.
     The clusters are sorted by size and the large N are retained.
@@ -172,7 +180,8 @@ def process_image(img_data, num_clusters):
     del img_data, index_map
     nonzero_locs = remove_isolated_clusters(conns,
                                             nonzero_locs,
-                                            num_clusters)
+                                            num_clusters,
+                                            **kwargs)
     # reconstructing 3-D array
     logger.info('reconstructing processed data back into 3-D array')
     #
@@ -182,7 +191,8 @@ def process_image(img_data, num_clusters):
     del nonzero_locs
     img_data[x_coords, y_coords, z_coords] = True
     del x_coords, y_coords, z_coords
-    img_data = img_data.view(FractureImageStack)
+    #
+    return img_data.view(FractureImageStack)
 
 
 def calculate_offset_map(img_data):
@@ -225,6 +235,7 @@ def generate_node_connectivity_array(index_map, data_array):
     # setting up some constants
     x_dim, y_dim, z_dim = data_array.shape
     conn_map = list(product([0, -1, 1], [0, -1, 1], [0, -1, 1]))
+    #
     conn_map = sp.array(conn_map, dtype=int)
     conn_map = conn_map[1:]
     #
@@ -234,7 +245,7 @@ def generate_node_connectivity_array(index_map, data_array):
         slice_list.append(slice(i, i+slice_list[0].stop))
     slice_list[-1] = slice(slice_list[-1].start, index_map.shape[0])
     #
-    conns = sp.ones((0, 2), dtype=sp.uint32)
+    conns = sp.ones((0, 2), dtype=data_array.index_int_type)
     logger.debug('\tnumber of slices to process: {}'.format(len(slice_list)))
     for sect in slice_list:
         # getting coordinates of nodes and their neighbors
@@ -285,7 +296,7 @@ def generate_adjacency_matrix(conns, nonzero_locs):
     """
     msg = 're-indexing connections array from absolute to relative indicies'
     logger.info(msg)
-    mapper = -sp.ones(nonzero_locs[-1]+1)
+    mapper = sp.ones(nonzero_locs[-1]+1, dtype=sp.uint32) * sp.iinfo(sp.uint32).max
     mapper[nonzero_locs] = sp.arange(nonzero_locs.size, dtype=sp.uint32)
     conns[:, 0] = mapper[conns[:, 0]]
     conns[:, 1] = mapper[conns[:, 1]]
@@ -304,7 +315,7 @@ def generate_adjacency_matrix(conns, nonzero_locs):
     return adj_mat
 
 
-def remove_isolated_clusters(conns, nonzero_locs, num_to_keep):
+def remove_isolated_clusters(conns, nonzero_locs, num_to_keep, **kwargs):
     r"""
     Identifies and removes all disconnected clusters except the number of
     groups specified by "num_to_keep". num_to_keep=N retains the N largest
@@ -319,6 +330,8 @@ def remove_isolated_clusters(conns, nonzero_locs, num_to_keep):
     order = sp.argsort(counts)[::-1]
     groups = groups[order]
     counts = counts[order]
+    del adj_mat, order
+    num_to_keep = min(num_to_keep, groups.size)
     #
     msg = '\t{} component groups for {} total nodes'
     logger.debug(msg.format(groups.size, cs_ids.size))
@@ -330,13 +343,50 @@ def remove_isolated_clusters(conns, nonzero_locs, num_to_keep):
     num = sp.sum(counts[0:num_to_keep])/cs_ids.size*100
     logger.debug(msg.format(num, num_to_keep))
     #
+    # creating image colored by clusters if desired
+    if kwargs.get('output_img', False):
+        save_cluster_image(cs_ids,
+                           groups,
+                           counts,
+                           nonzero_locs,
+                           kwargs.get('img_shape'),
+                           kwargs.get('img_name'))
+    #
     inds = sp.where(sp.in1d(cs_ids, groups[0:num_to_keep]))[0]
+    del cs_ids, groups, counts
+    #
     num = nonzero_locs.size
     nonzero_locs = nonzero_locs[inds]
     msg = '\tremoved {} disconnected nodes'
     logger.debug(msg.format(num - nonzero_locs.size))
     #
     return nonzero_locs
+
+
+def save_cluster_image(cs_ids, groups, counts, locs, img_shape, img_name):
+    r"""
+    Saves an 8 bit image colored by cluster number
+    """
+    logger.info('creating tiff image file colored by cluster number')
+    #
+    msg = '\t{} % of nodes covered in {} colored groups'
+    num_cs = min(16, groups.size)
+    num = sp.sum(counts[0:num_cs])/cs_ids.size*100
+    logger.debug(msg.format(num, num_cs))
+    #
+    # setting the top 16 groups separated by increments of 8 and the rest are 255
+    data = sp.ones(cs_ids.size, dtype=sp.uint8) * 255
+    for n, cs_id in enumerate(groups[0:num_cs-1]):
+        inds = sp.where(cs_ids == cs_id)[0]
+        data[inds] = 67 + n * 8
+    #
+    x_coords, y_coords, z_coords = sp.unravel_index(locs, img_shape)
+    img_data = sp.zeros(img_shape, dtype=sp.uint8)
+    img_data[x_coords, y_coords, z_coords] = data
+    # save image data
+    img_data = img_data.view(FractureImageStack)
+    logger.info('saving image cluster data to file' + img_name)
+    img_data.save(img_name, overwrite=True)
 
 
 def patch_holes(data_map):

@@ -381,7 +381,10 @@ class FractureImageStack(sp.ndarray):
         return sp.asarray(image_data).view(cls)
 
     def __array_finalize__(self, obj):
-        pass
+        #
+        # setting the type of integer that fits the flattened array index
+        itype = sp.uint32 if (self.size < sp.iinfo(sp.uint32).max) else sp.uint
+        self.index_int_type = itype
 
     nx = property(lambda self: self.shape[0])
     ny = property(lambda self: self.shape[1])
@@ -425,7 +428,7 @@ class FractureImageStack(sp.ndarray):
             with flattened indicies. If True then three vectors are returned
             which are the X, Y and Z coordinates of each voxel.
         """
-        nonzero_locs = sp.where(sp.ravel(self))[0]
+        nonzero_locs = sp.where(sp.ravel(self))[0].astype(self.index_int_type)
         logger.debug('{} non-zero voxels in image'.format(nonzero_locs.size))
         if coordinates:
             return sp.unravel_index(nonzero_locs, self.shape)
