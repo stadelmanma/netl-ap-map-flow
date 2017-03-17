@@ -393,7 +393,7 @@ class FractureImageStack(sp.ndarray):
     def create_aperture_map(self, axis=1, dtype=int):
         r""" Flattens the 3-D image data along the specified axis using
         scipy.sum and returns a 2-D ndarray of the summed data"""
-        return sp.sum(self, axis=axis, dtype=dtype).T
+        return sp.sum(self, axis=axis, dtype=dtype).view(sp.ndarray).T
 
     def create_offset_map(self, no_data_fill=0):
         r"""
