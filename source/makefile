@@ -54,10 +54,10 @@ MODULE_OBJS = $(addprefix $(OBJDIR), $(MODULE_FILES:.F=.o))
 #
 # determining flags to apply at compile time based on target
 # test flags are only defined when this file is included into the testing makefile
-FLAGS = $(OPTIMIZE) $(OS_FLAG) -J$(OBJDIR)
+FLAGS = $(OPTIMIZE) $(OS_FLAG) -J$(OBJDIR) -fdefault-real-8
 debug test: FLAGS = -fimplicit-none -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace -cpp -g -pg
 debug test: FLAGS += -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter
-debug test: FLAGS += $(OS_FLAG) -J$(OBJDIR) -I$(OBJDIR)
+debug test: FLAGS += $(OS_FLAG) -J$(OBJDIR) -I$(OBJDIR) -fdefault-real-8
 
 
 ${OBJDIR}:
