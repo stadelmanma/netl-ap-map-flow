@@ -45,7 +45,7 @@ parser.add_argument('image_file', type=os.path.realpath,
                     help='binary TIF stack image to process')
 
 parser.add_argument('colored_stack_name', nargs='?', default=None,
-                    help='name to save the aperture map under')
+                    help='name to save the colored stack under')
 
 def apm_color_stack_by_aperture():
     r"""
@@ -59,7 +59,7 @@ def apm_color_stack_by_aperture():
     # checking path to prevent accidental overwritting
     if not namespace.colored_stack_name:
         filename = os.path.basename(namespace.image_file)
-        filename = os.path.splitext(map_name)[0]
+        filename = os.path.splitext(filename)[0]
         namespace.colored_stack_name = filename + '-colored.tif'
 
     #
@@ -73,7 +73,7 @@ def apm_color_stack_by_aperture():
 
     # saving map
     logger.info('saving image data to file' + filename)
-    image.save(filename, overwrite=True)
+    image.save(filename, overwrite=namespace.force)
 
 def gen_colored_map(image_file, invert):
     r"""

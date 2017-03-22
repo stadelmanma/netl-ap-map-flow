@@ -201,7 +201,7 @@ def calculate_offset_map(img_data):
     """
     #
     logger.info('creating initial offset map')
-    img_data.create_offset_map(no_data_fill=sp.nan)
+    offset_map = img_data.create_offset_map(no_data_fill=sp.nan)
     #
     logger.info('interpolating missing data due to zero aperture zones')
     offset_map = patch_holes(offset_map)
