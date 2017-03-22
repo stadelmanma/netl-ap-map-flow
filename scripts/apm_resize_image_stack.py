@@ -6,14 +6,12 @@ aperture.
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
-import scipy as sp
 from ApertureMapModelTools import _get_logger, set_main_logger_level
 from ApertureMapModelTools import FractureImageStack
 
 #
 desc_str = r"""
-Description: Color a tiff stack by the fracture aperture, the maximum value is
-255, anything greater is reduced.
+Description: Reduces the y-axis dimension of an image stack.
 
 Written By: Matthew stadelman
 Date Written: 2016/09/13
@@ -44,10 +42,10 @@ parser.add_argument('-i', '--invert', action='store_true',
 parser.add_argument('image_file', type=os.path.realpath,
                     help='binary TIF stack image to process')
 
-parser.add_argument('colored_stack_name', nargs='?', default=None,
-                    help='name to save the colored stack under')
+parser.add_argument('outfile_name', nargs='?', default=None,
+                    help='name to save the aperture map under')
 
-def apm_color_stack_by_aperture():
+def apm_resize_image_stack():
     r"""
     Driver function to color the tif image.
     """
@@ -57,27 +55,27 @@ def apm_color_stack_by_aperture():
         set_main_logger_level('debug')
 
     # checking path to prevent accidental overwritting
-    if not namespace.colored_stack_name:
+    if not namespace.outfile_name:
         filename = os.path.basename(namespace.image_file)
         filename = os.path.splitext(filename)[0]
-        namespace.colored_stack_name = filename + '-colored.tif'
+        namespace.outfile_name = filename + '-resized.tif'
 
     #
-    filename = os.path.join(namespace.output_dir, namespace.colored_stack_name)
+    filename = os.path.join(namespace.output_dir, namespace.outfile_name)
     if os.path.exists(filename) and not namespace.force:
         msg = '{} already exists, use "-f" option to overwrite'
         raise FileExistsError(msg.format(filename))
 
     # create the aperture colored image
-    image = gen_colored_map(namespace.image_file, namespace.invert)
+    image = resize_image(namespace.image_file, namespace.invert)
 
     # saving map
     logger.info('saving image data to file' + filename)
     image.save(filename, overwrite=namespace.force)
 
-def gen_colored_map(image_file, invert):
+def resize_image(image_file, invert):
     r"""
-    Handles producing a colored image
+    Handles resizing the image y-axis
     """
     # loading image data
     logger.info('loading image...')
@@ -86,19 +84,14 @@ def gen_colored_map(image_file, invert):
         logger.debug('inverting image data')
         image = ~image
     logger.debug('image dimensions: {} {} {}'.format(*image.shape))
-
-    # summing data array down into a 2-D map
-    logger.info('generating 2-D aperture map...')
-    aperture_map = image.create_aperture_map(dtype=sp.uint8).T
-    aperture_map[aperture_map > 255] = 255
-
-    # mapping aperture data back to image stack
-    x_coords, y_coords, z_coords = image.get_fracture_voxels(coordinates=True)
-    image = sp.zeros(image.shape, dtype=sp.uint8)
-    image[x_coords, y_coords, z_coords] = aperture_map[x_coords, z_coords]
     #
-    return image.view(FractureImageStack)
-
+    x_coords, y_coords, z_coords = image.get_fracture_voxels(coordinates=True)
+    y_min = max(0, y_coords.min() - 10)
+    y_max = min(image.ny, y_coords.max() + 10)
+    image = image[:, y_min:y_max, :]
+    logger.debug(' new image dimensions: {} {} {}'.format(*image.shape))
+    #
+    return image
 #
 if __name__ == '__main__':
-    apm_color_stack_by_aperture()
+    apm_resize_image_stack()
