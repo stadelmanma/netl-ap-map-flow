@@ -12,7 +12,9 @@ from ApertureMapModelTools import FractureImageStack
 
 #
 desc_str = r"""
-Description: Generates a 2-D aperture map based on a binary CT image stack.
+Description: Generates a 2-D aperture map based on a binary CT image stack. You
+can add the format descriptor {image_file} in the aperture_map_name and it will
+be automatically replaced by the basename of the image file used.
 
 Written By: Matthew stadelman
 Date Written: 2016/09/13
@@ -43,8 +45,9 @@ parser.add_argument('-i', '--invert', action='store_true',
 parser.add_argument('image_file', type=os.path.realpath,
                     help='binary TIF stack image to process')
 
-parser.add_argument('aperture_map_name', nargs='?', default=None,
-                    help='name to save the aperture map under')
+parser.add_argument('aperture_map_name', nargs='?',
+                    default='{image_file}-aperture-map.txt',
+                    help='name to save the aperture map under (default: %(default)s)')
 
 
 def apm_generate_aperture_map():
@@ -52,26 +55,27 @@ def apm_generate_aperture_map():
     Driver function to generate an aperture map from a TIF image.
     """
     # parsing commandline args
-    namespace = parser.parse_args()
-    if namespace.verbose:
+    args = parser.parse_args()
+    if args.verbose:
         set_main_logger_level('debug')
 
-    # checking path to prevent accidental overwritting
-    if not namespace.aperture_map_name:
-        map_name = os.path.basename(namespace.image_file)
-        map_name = os.path.splitext(map_name)[0]
-        namespace.aperture_map_name = map_name + '-aperture-map.txt'
-
+    # checking path to prevent accidental overwriting
+    image_file = os.path.basename(args.image_file)
+    image_file = os.path.splitext(image_file)[0]
+    if not args.aperture_map_name:
+        args.aperture_map_name = '{image_file}-aperture-map.txt'
+    args.aperture_map_name = args.aperture_map_name.format(image_file=image_file)
     #
-    map_path = os.path.join(namespace.output_dir, namespace.aperture_map_name)
-    if os.path.exists(map_path) and not namespace.force:
+    map_path = os.path.join(args.output_dir, args.aperture_map_name)
+    if os.path.exists(map_path) and not args.force:
         msg = '{} already exists, use "-f" option to overwrite'
         raise FileExistsError(msg.format(map_path))
+    os.makedirs(os.path.split(map_path)[0], exist_ok=True)
 
     # loading image data
     logger.info('loading image...')
-    img_data = FractureImageStack(namespace.image_file)
-    if namespace.invert:
+    img_data = FractureImageStack(args.image_file)
+    if args.invert:
         logger.debug('inverting image data')
         img_data = ~img_data
     logger.debug('image dimensions: {} {} {}'.format(*img_data.shape))
