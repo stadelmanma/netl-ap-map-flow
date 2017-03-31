@@ -247,7 +247,8 @@ def generate_node_connectivity_array(index_map, data_array):
     #
     conns = sp.ones((0, 2), dtype=data_array.index_int_type)
     logger.debug('\tnumber of slices to process: {}'.format(len(slice_list)))
-    for sect in slice_list:
+    percent = 10
+    for n, sect in enumerate(slice_list):
         # getting coordinates of nodes and their neighbors
         nodes = index_map[sect]
         inds = sp.repeat(nodes, conn_map.shape[0], axis=0)
@@ -277,6 +278,9 @@ def generate_node_connectivity_array(index_map, data_array):
             inds[mask] = inds[mask][:, ::-1]
             # appending section connectivity data to conns array
             conns = sp.append(conns, inds.astype(sp.uint32), axis=0)
+        if int(n/len(slice_list)*100) == percent:
+            logger.debug('\tprocessed slice {:5d}, {}% complete'.format(n, percent))
+            percent += 10
     #
     # using scipy magic from stackoverflow to remove dupilcate connections
     logger.info('removing duplicate connections...')
