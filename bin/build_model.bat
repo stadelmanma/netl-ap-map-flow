@@ -29,8 +29,5 @@ if DEFINED USE_GIT (
 ::
 :: building flow model from source
 cd "%REPO_HOME%"
-if NOT EXIST "source\dist" (
-    mkdir "source\dist"
-)
 make %1 MODELNAME=apm-lcl-model.exe -C source
-move source\dist\apm-lcl-model.exe .
+move ApertureMapModelTools\src\dist\apm-lcl-model.exe ApertureMapModelTools\

@@ -8,12 +8,12 @@ if command -v git >/dev/null 2>&1;  then
 fi
 if [ ! $REPO_HOME ]; then
     echo ""
-    echo "Defaulting to assume source code is located at ./source"
+    echo "Defaulting to assume source code is located at ./ApertureMapModelTools/src"
     REPO_HOME=$(pwd)
 fi
 set -e
 
 # Building the flow model from source
 cd "$REPO_HOME"
-make $1 MODELNAME=apm-lcl-model.exe -C source
-mv source/dist/apm-lcl-model.exe .
+make $1 MODELNAME=apm-lcl-model.exe -C ApertureMapModelTools/src
+mv ApertureMapModelTools/src/dist/apm-lcl-model.exe ApertureMapModelTools/
