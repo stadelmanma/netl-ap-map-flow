@@ -14,6 +14,7 @@ from subprocess import PIPE
 from subprocess import Popen
 from threading import Thread
 from time import time
+import ApertureMapModelTools as amt
 from ApertureMapModelTools.__core__ import _get_logger, DataField
 
 # module globals
@@ -203,13 +204,12 @@ class InputFile(OrderedDict):
                 exe_path = os.path.join(os.path.split(file_path)[0], exe_path)
                 exe_path = os.path.realpath(exe_path)
             if os.path.exists(exe_path):
-                self['EXE-FILE'].value = exe_path
-                # This is a good place for logger warning message if false
+                self.executable = exe_path
+            else:
+                logger.warning('The exe file specified does not exist: ' + exe_path)
+                self.executable = None
         except KeyError:
-            msg = 'Fatal Error: '
-            msg += 'No EXE-FILE specified in initialization file header.'
-            msg += ' \n Exiting...'
-            raise SystemExit(msg)
+            self.executable = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
 
     def clone(self, file_formats=None):
         r"""
@@ -332,9 +332,9 @@ def estimate_req_RAM(input_maps, avail_RAM, suppress=False, **kwargs):
 
 def run_model(input_file_obj, synchronous=False, show_stdout=False):
     r"""
-    Runs an instance of the aperture map model specified in the 'EXE-FILE' argument
-    in the input file. If synhronous is True then a while loop is used to hold the
-    program until the model finishes running.
+    Runs the default version of the model compiled with the module or a version
+    specified by the 'EXE-FILE' argument in the input file. If synhronous is True
+    then the program will pause until the model finishes running.
     --
     input_file_obj - InputFile class object to be written and run by the model
     synchronous - Bool, default=False if True the script pauses until the model
@@ -346,7 +346,7 @@ def run_model(input_file_obj, synchronous=False, show_stdout=False):
     Returns a Popen object
     """
     input_file_obj.write_inp_file()
-    exe_file = os.path.abspath(input_file_obj['EXE-FILE'].value)
+    exe_file = os.path.abspath(input_file_obj.executable)
     cmd = (exe_file, input_file_obj.outfile_name)
     #
     out = PIPE
