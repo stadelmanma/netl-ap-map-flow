@@ -1,0 +1,10 @@
+include README.rst LICENSE.md
+recursive-include ApertureMapModelTools *
+recursive-include bin *
+recursive-include examples *
+recursive-include scripts *
+recursive-include source *
+recursive-include test *
+prune build
+prune source/dist
+global-exclude *.pyc *~ .DS_Store *__pycache__* *.pyo
