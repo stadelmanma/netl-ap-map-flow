@@ -17,14 +17,3 @@ set -e
 cd "$REPO_HOME"
 make $1 MODELNAME=apm-lcl-model.exe -C source
 mv source/dist/apm-lcl-model.exe .
-
-# adding module to python path
-PY_SITE=$(python3 -m site --user-site)
-if ! [ -d "$PY_SITE/ApertureMapModelTools" ]; then
-    echo ""
-    echo "Attempting to symlink module into python user site"
-    mkdir -p "$PY_SITE"
-    cd "$PY_SITE"
-    ln -s "$REPO_HOME/ApertureMapModelTools"
-    echo "Successfully added link to module in: $PY_SITE"
-fi
