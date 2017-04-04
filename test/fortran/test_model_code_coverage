@@ -46,7 +46,7 @@ def run_model_wrapper(inp_file, expected_code=0, stdout_pat=None):
         #
         RETURN_CODE = 1
 
-def inialize_input_file():
+def initalize_input_file():
     r"""
     initializes the input file used for all simulations
     """
@@ -151,7 +151,7 @@ def diff_compare_file_set(pat_str):
 
 # -----------------------------------------------------------------------------
 #
-inp_file = inialize_input_file()
+inp_file = initalize_input_file()
 #
 # setting parameters
 map_path = os.path.join(FIXTURE_DIR, 'ParallelPlate-1vox.txt')
