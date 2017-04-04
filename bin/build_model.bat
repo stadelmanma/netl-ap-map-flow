@@ -1,6 +1,6 @@
 ::
 :: This script assumes it has been run from the top level directory
-:: as .\bin\build_model
+:: as .\bin\build_model.bat
 ::
 @echo off
 
@@ -32,8 +32,8 @@ cd "%REPO_HOME%"
 if NOT EXIST "source\dist" (
     mkdir "source\dist"
 )
-make %1 MODELNAME=APM-MODEL.EXE -C source
-move source\dist\APM-MODEL.EXE .
+make %1 MODELNAME=apm-lcl-model.exe -C source
+move source\dist\apm-lcl-model.exe .
 ::
 :: handles creating a directory junction for the module if needed
 :: this allows global import ApertureMapModelTools statments
