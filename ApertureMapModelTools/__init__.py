@@ -11,6 +11,9 @@ import logging.config as _logging_config
 import os as _os
 import sys as _sys
 import PIL as _pil
+
+__version__ = '0.0.1'
+
 #
 # checking python version
 if _sys.version_info < (3, 4):
