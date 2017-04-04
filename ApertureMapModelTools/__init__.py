@@ -13,6 +13,7 @@ import sys as _sys
 import PIL as _pil
 
 __version__ = '0.0.1'
+DEFAULT_MODEL_NAME = 'apm-lcl-model.exe'
 
 #
 from .__core__ import DataField, FractureImageStack
