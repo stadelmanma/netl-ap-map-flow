@@ -1,26 +1,38 @@
 from glob import glob
 import os
+from subprocess import Popen
 import sys
-from distutils.util import convert_path
+
 try:
     from setuptools import setup
 except ImportError:
-    from distutils.core import setup
+    print('Please install or upgrade setuptools or pip to continue')
+    sys.exit(1)
 
 # Check Python version
 if sys.version_info < (3, 4):
-    raise Exception('ApertureMapModelTools requires Python 3.4 or greater to run')
+    print('ApertureMapModelTools requires Python 3.4 or greater to run')
+    sys.exit(1)
 
+# pull long description from README
+with open('README.rst', 'r') as f:
+    long_desc = f.read()
+
+# pull out version and default name from module
 main_ = {}
-ver_path = convert_path('ApertureMapModelTools/__init__.py')
+ver_path = os.path.join('ApertureMapModelTools', '__init__.py')
 with open(ver_path) as f:
     for line in f:
         if line.startswith('__version__'):
             exec(line, main_)
+        if line.startswith('DEFAULT_MODEL_NAME'):
+            exec(line, main_)
 
+# call setup
 setup(
     name='ApertureMapModelTools',
-    description = ' A fracture flow modeling package utilizing a modified local cubic law approach with OpenFoam and ParaView compatibility.',
+    description=' A fracture flow modeling package utilizing a modified local cubic law approach with OpenFoam and ParaView compatibility.',
+    long_description=long_desc,
     version=main_['__version__'],
     classifiers=[
         'Development Status :: 4 - Beta',
@@ -37,6 +49,7 @@ setup(
         'ApertureMapModelTools.OpenFoam',
         'ApertureMapModelTools.RunModel',
     ],
+    include_package_data=True,
     package_data={
         'ApertureMapModelTools': ['logging.conf', 'src/*.F', 'src/makefile']
     },
@@ -54,3 +67,10 @@ setup(
     license='GPLv3',
     keywords=['Local Cubic Law', 'Paraview', 'OpenFoam']
 )
+
+# build standard version of the model
+proc = Popen(('./bin/build_model', '-n', main_['DEFAULT_MODEL_NAME']))
+proc.wait()
+if proc.returncode != 0:
+    print('Failed to build local cubic law model')
+    sys.exit(1)
