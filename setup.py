@@ -38,7 +38,7 @@ setup(
         'ApertureMapModelTools.RunModel',
     ],
     package_data={
-        'ApertureMapModelTools': ['logging.conf']
+        'ApertureMapModelTools': ['logging.conf', 'src/*.F', 'src/makefile']
     },
     scripts=glob('scripts/apm-*'),
     install_requires=[
