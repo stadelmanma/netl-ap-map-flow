@@ -15,20 +15,6 @@ import PIL as _pil
 __version__ = '0.0.1'
 
 #
-# checking python version
-if _sys.version_info < (3, 4):
-    raise Exception('ApertureMapModelTools requires Python 3.4 or greater')
-
-#
-# checking pillow version
-try:
-    _pil_version = _pil.__version__
-except AttributeError:
-    _pil_version = _pil.PILLOW_VERSION
-if _pil_version < '3.4.0':
-    raise Exception('ApertureMapModelTools requires pillow 3.4.0 or greater')
-
-#
 from .__core__ import DataField, FractureImageStack
 from .__core__ import _get_logger, set_main_logger_level
 from .__core__ import files_from_directory, load_infile_list
