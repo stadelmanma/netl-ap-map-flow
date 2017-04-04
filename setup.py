@@ -1,3 +1,4 @@
+from glob import glob
 import os
 import sys
 from distutils.util import convert_path
@@ -36,6 +37,7 @@ setup(
         'ApertureMapModelTools.OpenFoam',
         'ApertureMapModelTools.RunModel',
     ],
+    scripts=glob('scripts/apm-*'),
     install_requires=[
         'numpy',
         'scipy',
