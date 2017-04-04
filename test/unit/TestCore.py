@@ -7,8 +7,6 @@ Last Modifed: 2017/03/03
 #
 """
 from argparse import Namespace
-from collections import namedtuple
-from importlib import reload
 import logging
 import os
 import pytest
@@ -24,30 +22,6 @@ class TestCore:
     r"""
     Tests each of the functions an classes used in the __core__ module
     """
-    def setup_class(self):
-        pass
-
-    def test_import(self, monkeypatch):
-        r"""
-        Tests that the main __init__ module method properly flags early
-        versions of python and pillow
-        """
-        version = namedtuple('version', ['major', 'minor', 'micro', 'releaselevel', 'serial'])
-        orig_version = sys.version_info
-        test_vers = version(major=3, minor=0, micro=0, releaselevel='final', serial='')
-        #
-        monkeypatch.setattr(sys, 'version_info', test_vers)
-        with pytest.raises(Exception):
-            reload(amt)
-        sys.version_info = orig_version
-        #
-        monkeypatch.setattr(PIL, '__version__', '3.3.0')
-        monkeypatch.setattr(PIL, 'PILLOW_VERSION', '3.3.0')
-        with pytest.raises(Exception):
-            reload(amt)
-        monkeypatch.delattr(PIL, '__version__')
-        with pytest.raises(Exception):
-            reload(amt)
 
     def test_data_field(self):
         r"""
