@@ -4,12 +4,12 @@ REPO_TOP="$(git rev-parse --show-toplevel)"
 EXIT_CODE=0
 
 # Building the flow model from source with coverage flags
-cd "$REPO_TOP/source"
-cp *.F ../test/fortran
-cp makefile ../test/fortran/model_makefile
+cd "$REPO_TOP/ApertureMapModelTools/src"
+cp *.F "$REPO_TOP/test/fortran"
+cp makefile "$REPO_TOP/test/fortran/model_makefile"
 
 # creating directory and building model with coverage
-cd ../test/fortran
+cd "$REPO_TOP/test/fortran"
 make test
 
 # executing test scripts and capturing return codes
