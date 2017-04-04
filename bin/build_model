@@ -28,7 +28,6 @@ def build_model():
     # running make
     cmd = ('make', args.target, 'MODELNAME=' + args.name, '-C', src_path)
     cmd = tuple([param for param in cmd if param])
-    print(cmd)
     proc = Popen(cmd, stdout=None, stderr=None, universal_newlines=True)
     proc.wait()
 
