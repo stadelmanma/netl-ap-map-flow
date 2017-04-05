@@ -132,7 +132,7 @@ Basic Usage of APM Model
 
 Running the Model in a terminal::
 
-    ./apm-lcl-model.exe  model_initialization_file
+    apm-run-lcl-model.py  model_initialization_file
 
 Full usage instructions can be found in `<examples/running-the-flow-model.rst>`_.
 

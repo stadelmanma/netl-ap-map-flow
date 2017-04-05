@@ -1,22 +1,23 @@
 ;
 ;
-; Comments are denoted by a preceeding ';' and are ignored by the file reader.
+; Comments are denoted by a preceding ';' and are ignored by the file reader.
 ; All input and output paths need to be absolute or defined relative to the location
 ; the executable is being run from.
-; One or more consectuative spaces are treated as delimiters except when the value is
+; One or more consecutive spaces are treated as delimiters except when the value is
 ; enclosed inside a set a double quotation marks, otherwise quotations are not required.
 ; Output file locations are not required and by default are created with a generic name
 ; in the current working directory.
-; If an output file is specified, any preceeding directories must already exist.
+; If an output file is specified, any preceding directories must already exist.
 ; Recommended extensions have been shown on output files below.
 ; When populating fields be sure to remove the parentheses and semicolons for the input
 ; to be used by the model.
-; Units are requried where appropriate and must be separated from the  value by at
+; Units are required where appropriate and must be separated from the value by at
 ; least one space.
 ;
 ;
-; THE EXE FILE MUST BE NAMED FOR THE PYTHON RUN MODULE TO WORK
-;EXE-FILE: apm-lcl-model.exe
+; You can optionally specify the executable to use instead of the default at
+; ApertureMapModelTools/apm-lcl-model.exe
+;EXE-FILE:
 ;
 ;
 ; FILE PATHS AND NAMES
@@ -30,7 +31,7 @@
 ;OVERWRITE EXISTING FILES
 ;
 ; BOUNDARY CONDITIONS
-;INLET-PRESS:   (INITAL/INLET PRESSURE) (UNIT)
+;INLET-PRESS:   (INITIAL/INLET PRESSURE) (UNIT)
 ;INLET-RATE:  (OUTLET FLOW RATE) (UNIT)
 ;OUTLET-PRESS: (OUTLET PRESSURE) (UNIT)
 ;OUTLET-RATE:  (OUTLET FLOW RATE) (UNIT)
