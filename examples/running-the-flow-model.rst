@@ -162,19 +162,20 @@ Argument - Type - Description
     # Creating an InputFile object
     inp_file = InputFile('model-input-params.inp', filename_formats=None)
 
-    # updating arguments can be done two ways
-    #inp_file['param_keyword'].update_value(value, uncomment=True)
-    #inp_file.update_args(dict_of_param_values)
+    # updating arguments can be done three ways
+    #inp_file['param_keyword'] = value
+    #inp_file['param_keyword'] = (value, commented_out)
+    #inp_file.update(dict_of_param_values)
 
     # Directly updating the viscosity value
-    inp_file['FLUID-VISCOSITY'].update_value('1.00')
+    inp_file['FLUID-VISCOSITY'] = '1.00'
 
     # updating a set of parameters
     new_param_values = {
         'OVERWRITE': 'OVERWRITE FILES',
         'INLET-PRESS': '150.00'
     }
-    inp_file.update_args(new_param_values)
+    inp_file.update(new_param_values)
 
     # printing the InputFile object shows the changes
     print(inp_file)
@@ -189,12 +190,12 @@ You will notice that the line ``OVERWRITE EXISTING FILES`` has been changed and 
 
     # changing the unit and value of density
     inp_file['FLUID-DENSITY'].unit = 'LB/FT^3'
-    inp_file['FLUID-DENSITY'].update_value('62.42796')
+    inp_file['FLUID-DENSITY'] = '62.42796'
 
     #
     print(inp_file)
 
-In addition to updating arguments you can also apply a set of filename formats to the InputFile class. These allow the filenames to be dynamically created based on the argument parameters present. Using the ``update_args`` method of the InputFile class you can also add a special set of args not used as parameters but instead to format filenames. Any args passed into ``update_args`` that aren't already a parameter are added to the ``filename_format_args`` attribute of the class.
+In addition to updating arguments you can also apply a set of filename formats to the InputFile class. These allow the filenames to be dynamically created based on the argument parameters present. Using the ``update`` method of the InputFile class you can also add a special set of args not used as parameters but instead to format filenames. Any args passed into ``update`` that aren't already a parameter are added to the ``filename_format_args`` attribute of the class.
 
 .. code-block:: python
 
@@ -208,7 +209,7 @@ In addition to updating arguments you can also apply a set of filename formats t
 
     # recycling our existing input file object
     inp_file = InputFile(inp_file, filename_formats=name_formats)
-    inp_file.update_args({'APMAP': 'AVG-FRAC1'})
+    inp_file.update({'APMAP': 'AVG-FRAC1'})
 
     # showing the changes
     print(inp_file)
