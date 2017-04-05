@@ -38,13 +38,14 @@ class TestRunCore:
         arg.unit = 'PSI'
         assert arg.value == '200'
         assert arg.unit == 'PSI'
+        assert arg.commented_out is False
         #
         # line with no value
         line = ';OVERWRITE EXISTING FILES'
         arg = ArgInput(line)
         assert arg.value == 'OVERWRITE EXISTING FILES'
         assert arg.unit is None
-        arg.value = ''
+        arg.value = ('', True)
         assert arg.line == ';'
         #
         # line with colon but no following value
@@ -52,6 +53,7 @@ class TestRunCore:
         arg = ArgInput(line)
         assert arg.value == ''
         assert arg.unit == ''
+        assert arg.commented_out is False
         #
         # empty line
         line = ''
@@ -85,24 +87,31 @@ class TestRunCore:
             'INLET-PRESS': '300',
             'BAD-ARG': 'IN FORMATS'
         }
-        inp_file.update_args(new_args)
+        inp_file.update(new_args)
         assert inp_file['INLET-PRESS'].value == new_args['INLET-PRESS']
         assert inp_file.filename_format_args['BAD-ARG'] == new_args['BAD-ARG']
+        #
+        with pytest.raises(TypeError):
+            inp_file.update('a', 'b', 'c')
+        #
+        # adding a new parameter to the file
+        model_path = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
+        inp_file.add_parameter(';EXE-FILE: ' + model_path)
+        assert inp_file['EXE-FILE'].value == model_path
         #
         # testing retrivial of uncommented values
         uncmt_keys = [k for k, v in inp_file.items() if not v.commented_out]
         uncmt_dict = inp_file.get_uncommented_values()
         assert uncmt_keys == list(uncmt_dict.keys())
         #
-        # testing __repr__ function with an undefined file in formats
+        # testing __str__ function with an undefined file in formats
         with pytest.raises(KeyError):
             inp_file.filename_formats['NONEXISTANT-FILE'] = 'NONEXISTANT-FILE-FORMAT'
             print(inp_file)
         del inp_file.filename_formats['NONEXISTANT-FILE']
         #
         # writing the output file to TEMP_DIR with a valid EXE-FILE
-        model_path = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
-        inp_file['EXE-FILE'] = ArgInput(';EXE-FILE: ' + model_path)
+
         inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'
         inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
@@ -111,7 +120,7 @@ class TestRunCore:
         assert inp_file.executable == model_path
         #
         # writing the output file to TEMP_DIR with a non-existant EXE-FILE
-        inp_file['EXE-FILE'] = ArgInput(';EXE-FILE: ' + amt.DEFAULT_MODEL_NAME + '-junk')
+        inp_file['EXE-FILE'] = amt.DEFAULT_MODEL_NAME + '-junk'
         inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'
         inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
@@ -142,7 +151,7 @@ class TestRunCore:
         inp_file.filename_formats['input_file'] = os.path.join(TEMP_DIR, 'test-model-inputs.txt')
         #
         new_path = os.path.join(FIXTURE_DIR, 'maps', 'parallel-plate-01vox.txt')
-        inp_file['APER-MAP'].update_value(new_path)
+        inp_file['APER-MAP'] = new_path
         #
         # running the model both async and in sync
         proc = RunModel.run_model(inp_file, synchronous=False)
