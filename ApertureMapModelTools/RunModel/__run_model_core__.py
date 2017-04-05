@@ -14,6 +14,7 @@ from subprocess import PIPE
 from subprocess import Popen
 from threading import Thread
 from time import time
+from scipy import inf as sp_inf
 import ApertureMapModelTools as amt
 from ApertureMapModelTools.__core__ import _get_logger, DataField
 
@@ -316,7 +317,7 @@ class InputFile(OrderedDict):
         logger.info('Input file saved as: '+file_name)
 
 
-def estimate_req_RAM(input_maps, avail_RAM=None, suppress=False, **kwargs):
+def estimate_req_RAM(input_maps, avail_RAM=sp_inf, suppress=False, **kwargs):
     r"""
     Reads in the input maps to estimate the RAM requirement of each map
     and to make sure the user has alloted enough space.
@@ -330,7 +331,7 @@ def estimate_req_RAM(input_maps, avail_RAM=None, suppress=False, **kwargs):
         RAM = 0.00505193 * tot_coef**(0.72578813)
         RAM = RAM * 2**(-20)  # KB -> GB
         RAM_per_map.append(RAM)
-        if avail_RAM and RAM > avail_RAM:
+        if RAM > avail_RAM:
             error = True
             fmt = 'Map {} requires {} GBs of RAM only {} GBs was alloted.'
             logger.fatal(fmt.format(fname, RAM, avail_RAM))
