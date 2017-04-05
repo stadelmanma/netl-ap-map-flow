@@ -12,11 +12,11 @@ AP MAP FLOW
 
 Description
 -----------
-AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. Several tools written in `Python <https://www.python.org/>`_ provide added functionality are packaged in the ApertureMapModelTools module. The project has been primarily developed on Ubuntu, however any OS will likely work as long as the requiste packages are installed. The Fortran code was compiled using a 64-bit GNU Fortran compiler. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. Unit conversions can be handled using three functions provided in UnitConversion.py. The module `pint <https://github.com/hgrecco/pint>`_ is required and needs to be installed via pip. There are a few submodules available to divide up functionality, they are described below.
+AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. Several tools written in `Python <https://www.python.org/>`_ provide added functionality are packaged in the ApertureMapModelTools module. The project has been primarily developed on Ubuntu, however any OS will likely work as long as the requiste packages are installed. The Fortran code was compiled using a 64-bit GNU Fortran compiler. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. Unit conversions can be handled using three functions provided in UnitConversion.py. The module `pint <https://github.com/hgrecco/pint>`_ is required and needs to be installed via pip or through conda-forge. There are a few submodules available to divide up functionality, they are described below.
 
 |
 
- * DataProcessing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is apm_process_data_map.py which accepts various command line arguments to automatically perform basic post-processing.
+ * DataProcessing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is :code:`apm-process-data-map.py` which accepts various command line arguments to automatically perform basic post-processing.
 
 |
 
@@ -24,12 +24,12 @@ AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic la
 
 |
 
- * RunModel houses functions used to run the LCL model via python scripts instead of single instances on the command line. In addition to the core methods used to run individual simulations a BulkRun class exists which allows the user to automate the running of mulitple simulations concurrently. The example file for running a 'bulk simulation' is under `<examples/bulk-run-example.rst>`_. Utilization of the RunModel sub-module is in `<examples/running-the-flow-model.rst>`_, section `Running by Python Script <examples/running-the-flow-model.rst#running-by-python-script>`_
+ * RunModel houses functions required to build Python scripts to run the model. The script :code:`apm-run-lcl-model.py` can run one or more simulation sequentially. In addition to the core methods used to run individual simulations a BulkRun class exists which allows the user to automate the running of mulitple simulations in parallel. The example file for running a 'bulk simulation' is under `<examples/bulk-run-example.rst>`_. Utilization of the RunModel sub-module is in `<examples/running-the-flow-model.rst>`_, section `Running by Python Script <examples/running-the-flow-model.rst#running-by-python-script>`_
 
 
 Setting up the Modeling Package
 -------------------------------
-These steps were followed on Ubuntu 14.04 & 16.04, OSX 10.9 & MacOS 10.12 and Windows 7. They are not guaranteed to remain updated however the general process should be relatively stable as all dependencies are being handled by large, community driven projects i.e. Anaconda, MinGW, GCC, etc. Running the test suite in Windows is possible but not without some manual adjustments and extra effort.
+These steps were followed on Ubuntu 14.04 & 16.04, OSX 10.9 & MacOS 10.12 and Windows 7. They are not guaranteed to remain updated however the general process should be relatively stable as all dependencies are being handled by large, community driven projects i.e. Anaconda, MinGW, GCC, etc. Running the test suite in Windows is possible but not without some manual adjustments and extra effort. After installation there are several scripts avilable under the :code:`apm-` prefix upon opening up a new terminal.
 
 Installation Tips
 ~~~~~~~~~~~~~~~~~
@@ -37,27 +37,24 @@ Installation Tips
 * This guide assumes you install Anaconda3 locally. If you choose to install it system wide you will need to run some commands with :code:`sudo` in unix systems or in an elevated command prompt in Windows.
 * For unix systems that already have a system version of Python 2.7, :code:`python` will likely also bring up the Anaconda version, to regain access to the system version of Python delete the :code:`python` symlink in :code:`~/anaconda/bin`
 * After installing Anaconda3 run :code:`pip --version` in a terminal to ensure it points to the anaconda installation, if not check your PATH.
-* Add the `conda-forge <https://conda-forge.github.io/>`_ package to your conda environment to allow conda to install pint. :code:`conda config --add channels conda-forge`
+* Add the `conda-forge <https://conda-forge.github.io/>`_ channel to your conda environment to allow conda to install pint. :code:`conda config --add channels conda-forge`
 * After downloading the model run :code:`conda update --all` and :code:`conda install --file requirements.txt` to ensure all packages are up to date, this will also install the pint module.
 * Run :code:`pip install -r test_requirements.txt` to enable running the test suite.
 * When running the test suite, recompile the model using :code:`./bin/build_model debug` which builds the model using additional flags, code coverage and profiling
-* After installation run the script :code:`./bin/create-script-runners [directory]` to make model scripts accessible on the PATH, this will not work in regular Windows cmd.exe (use Babun or Cygwin). If :code:`[directory]` is not supplied it will try to place them in :code:`~/.local/bin`
+* If you want to modify the source code of the model or module you are better off to run :code:`python3 setup.py develop --user` rather than :code:`install`. The former method simply creats a link instead of actually copying the files allowing your changes to take effect upon a fresh start of the interpreter.
 
 Linux
 ~~~~~
 1. Install :code:`git` using the terminal command :code:`sudo apt-get install git`.
     A. Run :code:`git --version` in a new terminal window to check if it was installed properly.
-2. Download and Install the 64 bit, Python 3.X version of  `Anaconda <https://www.continuum.io/downloads#linux>`_ for Linux.
-    A. In a terminal, copy and paste the command :code:`bash ~/Downloads/Anaconda3-4.2.0-Linux-x86_64.sh` you may need to tweak the path and or filename if a new version of Anaconda is released.
-    B. Follow the instructions as the installation script runs and enter 'yes' when it prompts to update your :code:`$PATH` variable.
-        * If using a different shell (i.e. zsh) you will likely need to manually update your :code:`$PATH` variable.
-    C. Close your existing terminal window and open a new one, enter :code:`python3 --version` to check if Anaconda has installed Python successfully.
+2. Download and Install the 64 bit, Python 3.X version of  `Anaconda <https://www.continuum.io/downloads#linux>`_ for Linux. Follow their instructions to install Anaconda and be sure to let it update your :code:`$PATH` variable. If using a shell other than bash (i.e. zsh) you may need propograte the :code:`$PATH` changes appropriately.
+    A. Close your existing terminal window and open a new one, enter :code:`python3 --version` to check if Anaconda has installed Python successfully.
 3. Install :code:`gfortran` using the terminal command :code:`sudo apt-get install gfortran`.
     A. Run :code:`gfortran --version` in a new terminal window to check if it was installed properly.
 4. Open a terminal or cd into the directory you want to install the AP_MAP_FLOW package in.
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`.
     B. Run the command :code:`cd netl-AP_MAP_FLOW`.
-    C. Finally run :code:`./bin/build_model` which will build the model and link the ApertureMapModelTools module to the python3 installation.
+    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the ApertureMapModelTools module to the python3 installation.
 
 MacOS/ OSX
 ~~~~~~~~~~
@@ -75,7 +72,7 @@ MacOS/ OSX
 4. Open a terminal and cd into the directory you want to install the AP_MAP_FLOW package in
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`
     B. Run the command :code:`cd netl-AP_MAP_FLOW`
-    C. Finally run :code:`./bin/build_model` which will build the model and link the ApertureMapModelTools module to the python3 installation.
+    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the ApertureMapModelTools module to the python3 installation.
 
 Windows
 ~~~~~~~
@@ -93,7 +90,7 @@ Windows
 3. Shift + right click in the directory you want to install the AP_MAP_FLOW package and open a command window.
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`
     B. Run the command :code:`cd netl-AP_MAP_FLOW`
-    C. Finally run :code:`.\bin\build_model.bat` which will build the model and link the ApertureMapModelTools package to the installed version of python
+    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the ApertureMapModelTools package to the installed version of python
 
 Windows with Babun
 ~~~~~~~~~~~~~~~~~~
@@ -115,11 +112,7 @@ Windows with Babun
     B. Run the command :code:`cd netl-AP_MAP_FLOW`
     C. Run the command :code:`dos2unix ./bin/*`
         * This converts Windows line endings :code:`\r\n` into unix line endings :code:`\n`
-    C. Run :code:`./bin/build_model` which will build the model and link the ApertureMapModelTools package Anaconda's Python3
-    D. Run :code:`./bin/create-script-runners` to allow usage of the files in the ./scripts directory within babun.
-        * Run :code:`source ~/.zshrc` or open a new Babun terminal so it registers the changes
-        * To execute one of the runner scripts simply type :code:`apm_` and then hit tab to cycle through the options. Use :code:`(script name) -h` for usage information.
-        * If you move the netl-Ap_MAP_FLOW directory you will need to re-run the command to update the runners
+    C. Run :code:`python3 setup.py install --user` which will build the model and link the ApertureMapModelTools package into Anaconda's Python3 installation
 
 .. code-block:: shell
 
@@ -130,7 +123,7 @@ Windows with Babun
     PATH="/cygdrive/c/Users/$USER/Anaconda3/Library/bin:$PATH"
     export PATH
     #
-    # alias python3 to work interactively and pytho back to regular babun version
+    # alias python3 to work interactively and python back to regular babun version
     alias python="/usr/bin/python"
     alias python3="/cygdrive/c/Users/$USER/Anaconda3/python.exe -i"
 
