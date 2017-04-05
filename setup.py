@@ -28,6 +28,14 @@ with open(ver_path) as f:
         if line.startswith('DEFAULT_MODEL_NAME'):
             exec(line, main_)
 
+# check for makefile target and remove args to prevent errors in setup()
+try:
+    arg_loc = sys.argv.index('--make-target')
+    del sys.argv[arg_loc]
+    target = sys.argv.pop(arg_loc)
+except ValueError:
+    target = None
+
 # call setup
 setup(
     name='ApertureMapModelTools',
@@ -68,8 +76,12 @@ setup(
     keywords=['Local Cubic Law', 'Paraview', 'OpenFoam']
 )
 
-# build standard version of the model
-proc = Popen(('./bin/build_model', '-n', main_['DEFAULT_MODEL_NAME']))
+# build the model with an optional target, i.e. debug
+cmd = ['./bin/build_model', '-n', main_['DEFAULT_MODEL_NAME']]
+if target:
+    cmd.append(target)
+#
+proc = Popen(cmd)
 proc.wait()
 if proc.returncode != 0:
     print('Failed to build local cubic law model')
