@@ -190,6 +190,7 @@ class InputFile(OrderedDict):
             file_path = os.path.realpath(infile)
             with open(infile, 'r') as fname:
                 content = fname.read()
+        self.infile = file_path
         #
         # parsing contents into input_file object
         content_arr = content.split('\n')
@@ -198,17 +199,26 @@ class InputFile(OrderedDict):
             arg = ArgInput(line)
             self[arg.keyword] = ArgInput(line)
         #
-        try:
-            exe_path = self['EXE-FILE'].value
-            if not os.path.isabs(exe_path):
-                exe_path = os.path.join(os.path.split(file_path)[0], exe_path)
-                exe_path = os.path.realpath(exe_path)
-            if os.path.exists(exe_path):
-                self.executable = exe_path
+        self.set_executable()
+
+    def set_executable(self, exec_file=None):
+        r"""
+        Sets the path to the model executable, defaulting to the version compiled
+        with the module.
+        """
+        self.executable = None
+        #
+        if exec_file is None and self.get('EXE-FILE', None):
+            exec_file = self['EXE-FILE'].value
+            if not os.path.isabs(exec_file):
+                exec_file = os.path.join(os.path.dirname(self.infile), exec_file)
+                exec_file = os.path.realpath(exec_file)
+            if os.path.exists(exec_file):
+                self.executable = exec_file
             else:
-                logger.warning('The exe file specified does not exist: ' + exe_path)
-                self.executable = None
-        except KeyError:
+                logger.warning('The exe file specified does not exist: ' + exec_file)
+        #
+        if not self.executable:
             self.executable = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
 
     def clone(self, file_formats=None):
@@ -292,6 +302,7 @@ class InputFile(OrderedDict):
         """
         #
         # creating file directories and generating input file
+        self.set_executable()
         self._construct_file_names(make_dirs=True)
         content = str(self)
         #

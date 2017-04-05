@@ -103,9 +103,9 @@ class TestRunCore:
         inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'
         inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
-        # re-reading the output file to test a valid EXE-FILE
+        # re-reading the output file to test an invalid EXE-FILE
         inp_file = RunModel.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
-        assert inp_file.executable is None
+        assert inp_file.executable == model_path
 
     def test_estimate_req_RAM(self):
         r"""
