@@ -25,37 +25,49 @@ class TestRunCore:
         Testing various inputs to the argument parser
         """
         # regular input line
-        line = 'INLET-PRESS:   100  KPA ;CMT-MSG'
+        line = ';INLET-PRESS:   100  KPA ;CMT-MSG'
         arg = ArgInput(line)
         assert arg.keyword == 'INLET-PRESS'
         assert arg.value == '100'
+        assert arg.unit == 'KPA'
         assert arg.comment_msg == ';CMT-MSG'
-        arg.update_value('200')
-        assert arg.value == '200'
+        assert arg.commented_out is True
+        assert arg.line == str(arg)
         #
-        # commented regular line
+        arg.value = 200
+        arg.unit = 'PSI'
+        assert arg.value == '200'
+        assert arg.unit == 'PSI'
+        #
+        # line with no value
         line = ';OVERWRITE EXISTING FILES'
         arg = ArgInput(line)
-        assert arg.commented_out is True
-        arg.update_value('OVERWRITE')
-        assert arg.commented_out is False
-        line = arg.output_line()
-        assert line.strip() == 'OVERWRITE'
+        assert arg.value == 'OVERWRITE EXISTING FILES'
+        assert arg.unit is None
+        arg.value = ''
+        assert arg.line == ';'
+        #
         # line with colon but no following value
-        line = 'INLET-PRESS: '
+        line = 'INLET-PRESS:'
         arg = ArgInput(line)
-        assert arg.value == 'NONE'
+        assert arg.value == ''
+        assert arg.unit == ''
+        #
         # empty line
         line = ''
         arg = ArgInput(line)
+        assert arg.value == arg.line
+        #
         # line with quote
         line = 'KEYWORD: "VALUE1 + VALUE2"'
         arg = ArgInput(line)
         assert arg.value == 'VALUE1 + VALUE2'
+        #
         # line with un-matched quote, causes shlex_split to fail
         line = 'TEST: "UNMATCHED QUOTE'
         arg = ArgInput(line)
         assert arg.value == '"UNMATCHED'
+        assert arg.unit == 'QUOTE'
 
     def test_input_file(self):
         #
