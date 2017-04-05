@@ -316,7 +316,7 @@ class InputFile(OrderedDict):
         logger.info('Input file saved as: '+file_name)
 
 
-def estimate_req_RAM(input_maps, avail_RAM, suppress=False, **kwargs):
+def estimate_req_RAM(input_maps, avail_RAM=None, suppress=False, **kwargs):
     r"""
     Reads in the input maps to estimate the RAM requirement of each map
     and to make sure the user has alloted enough space.
@@ -330,11 +330,10 @@ def estimate_req_RAM(input_maps, avail_RAM, suppress=False, **kwargs):
         RAM = 0.00505193 * tot_coef**(0.72578813)
         RAM = RAM * 2**(-20)  # KB -> GB
         RAM_per_map.append(RAM)
-        if RAM > avail_RAM:
+        if avail_RAM and RAM > avail_RAM:
             error = True
-            fmt = 'Fatal Error: '
-            fmt += 'Map {} requires {} GBs of RAM only {} GBs was alloted.'
-            print(fmt.format(fname, RAM, avail_RAM))
+            fmt = 'Map {} requires {} GBs of RAM only {} GBs was alloted.'
+            logger.fatal(fmt.format(fname, RAM, avail_RAM))
     if error and not suppress:
         raise EnvironmentError
     #
@@ -358,6 +357,7 @@ def run_model(input_file_obj, synchronous=False, show_stdout=False):
     """
     input_file_obj.write_inp_file()
     exe_file = os.path.abspath(input_file_obj.executable)
+    logger.debug('Using executable located at: ' + exe_file)
     cmd = (exe_file, input_file_obj.outfile_name)
     #
     out = PIPE
