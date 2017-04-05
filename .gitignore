@@ -4,9 +4,11 @@
 *.o
 *.exe
 *.EXE
+*.egg-info
 .coverage
 .cache
 .spyderworkspace
 .spyderproject
 model-testing
 dist
+build

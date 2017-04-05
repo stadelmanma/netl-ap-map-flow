@@ -8,7 +8,7 @@ Running the Flow Model
 Intro
 =====
 
-The Local Cubic Law (LCL) flow model by default is named :code:`APM-MODEL.EXE`, the added extension doesn't affect UNIX systems and allows Windows to recognize it as executable. There are two methods to run the model, first is directly on the command line specifying your input parameters file and the second is using Python scripting through the :code:`RunModel` sub-module in :code:`ApertureMapModelTools`. The model requires two or three input files and generates several output files. The model works in the X-Z plane where +Z is vertical and +X is to the right. The Y direction is the aperture variation and the model assumes a planar mid surface. This implies that the fracture is symmetric with respect to the X-Z plane. If you envision a spiral bound notebook with the bottom left corner as the origin. The Z-axis follows the metal spiral upward, positive X is the direction moving away from the spiral. Y is the thickness of the notebook.
+The Local Cubic Law (LCL) flow model by default is named :code:`apm-lcl-model.exe`, the added extension doesn't affect UNIX systems and allows Windows to recognize it as executable. There are two methods to run the model, first is directly on the command line specifying your input parameters file and the second is using Python scripting through the :code:`RunModel` sub-module in :code:`ApertureMapModelTools`. The model requires two or three input files and generates several output files. The model works in the X-Z plane where +Z is vertical and +X is to the right. The Y direction is the aperture variation and the model assumes a planar mid surface. This implies that the fracture is symmetric with respect to the X-Z plane. If you envision a spiral bound notebook with the bottom left corner as the origin. The Z-axis follows the metal spiral upward, positive X is the direction moving away from the spiral. Y is the thickness of the notebook.
 
 
 The Input Parameters File
@@ -22,7 +22,7 @@ A template of the input parameters file can be found in `here <apm-model-inputs-
  * Physical quantities must have a unit associated with them.
  * The LCL model's unit conversion is independent of the Python module and considerably more restrictive.
 
-At the top of the input file there should be a commented line reading :code:`;EXE-FILE: APM-MODEL.EXE`, or the name of the model executable if it is changed. This is a key input to the RunModel sub-module when it is used.
+At the top of the input file there should be a commented line reading :code:`;EXE-FILE: apm-lcl-model.exe`, or the name of the model executable if it is changed. This is a key input to the RunModel sub-module when it is used.
 
 The input file can be broken down into four main components:
 
@@ -86,7 +86,7 @@ Before we actually run the model it will be helpful to have a place to store the
 .. code-block:: bash
 
     mkdir model-testing
-    mv APM-MODEL.EXE model-testing
+    mv apm-lcl-model.exe model-testing
     cd model-testing
     touch model-input-params.inp
 
@@ -95,7 +95,7 @@ Open model-input-params.inp with your favorite text editor and copy and paste th
 .. code-block:: Scheme
 
 	;
-	;EXE-FILE: APM-MODEL.EXE
+	;EXE-FILE: apm-lcl-model.exe
 	;
 	; FILE PATHS AND NAMES
 	APER-MAP: ../examples/Fractures/Fracture1ApertureMap-10avg.txt
@@ -132,7 +132,7 @@ With the above steps complete running the model is as simple as this:
 
 .. code-block:: bash
 
-    ./APM-MODEL.EXE model-input-params.inp
+    ./apm-lcl-model.exe model-input-params.inp
 
 You will notice that several output files have been generated in the current directory. They are saved under the default names because we did not specified our own filenames in the input file. You can view the VTK file in paraview and the other CSV data maps in your viewer of choice. The STATS file is not a data map but being saved as a CSV file allows for quick calculations in excel or similar software. If we try to run the model a second time as before line again you will see an error is generated and execution is terminated. This is because the line :code:`;OVERWRITE EXISTING FILES` is preceded by a semicolon meaning it is commented out and by default existing files will not be overwritten.
 

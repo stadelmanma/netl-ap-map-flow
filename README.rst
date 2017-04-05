@@ -12,7 +12,7 @@ AP MAP FLOW
 
 Description
 -----------
-AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. Several tools written in `Python <https://www.python.org/>`_ provide added functionality are packaged in the ApertureMapModelTools module. The project has been primarily developed on Ubuntu, however any OS will likely work as long as the requiste packages are installed. The Fortran code was compiled using a 64-bit GNU Fortran compiler. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. Unit conversions can be handled using three functions provided in UnitConversion.py. The module `pint <https://github.com/hgrecco/pint>` is required and needs to be installed via pip. There are a few submodules available to divide up functionality, they are described below.
+AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. Several tools written in `Python <https://www.python.org/>`_ provide added functionality are packaged in the ApertureMapModelTools module. The project has been primarily developed on Ubuntu, however any OS will likely work as long as the requiste packages are installed. The Fortran code was compiled using a 64-bit GNU Fortran compiler. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. Unit conversions can be handled using three functions provided in UnitConversion.py. The module `pint <https://github.com/hgrecco/pint>`_ is required and needs to be installed via pip. There are a few submodules available to divide up functionality, they are described below.
 
 |
 
@@ -139,7 +139,7 @@ Basic Usage of APM Model
 
 Running the Model in a terminal::
 
-    ./APM-MODEL.EXE  model_initialization_file
+    ./apm-lcl-model.exe  model_initialization_file
 
 Full usage instructions can be found in `<examples/running-the-flow-model.rst>`_.
 

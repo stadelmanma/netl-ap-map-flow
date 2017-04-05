@@ -14,6 +14,7 @@ from subprocess import PIPE
 from subprocess import Popen
 from threading import Thread
 from time import time
+import ApertureMapModelTools as amt
 from ApertureMapModelTools.__core__ import _get_logger, DataField
 
 # module globals
@@ -189,6 +190,7 @@ class InputFile(OrderedDict):
             file_path = os.path.realpath(infile)
             with open(infile, 'r') as fname:
                 content = fname.read()
+        self.infile = file_path
         #
         # parsing contents into input_file object
         content_arr = content.split('\n')
@@ -197,19 +199,27 @@ class InputFile(OrderedDict):
             arg = ArgInput(line)
             self[arg.keyword] = ArgInput(line)
         #
-        try:
-            exe_path = self['EXE-FILE'].value
-            if not os.path.isabs(exe_path):
-                exe_path = os.path.join(os.path.split(file_path)[0], exe_path)
-                exe_path = os.path.realpath(exe_path)
-            if os.path.exists(exe_path):
-                self['EXE-FILE'].value = exe_path
-                # This is a good place for logger warning message if false
-        except KeyError:
-            msg = 'Fatal Error: '
-            msg += 'No EXE-FILE specified in initialization file header.'
-            msg += ' \n Exiting...'
-            raise SystemExit(msg)
+        self.set_executable()
+
+    def set_executable(self, exec_file=None):
+        r"""
+        Sets the path to the model executable, defaulting to the version compiled
+        with the module.
+        """
+        self.executable = None
+        #
+        if exec_file is None and self.get('EXE-FILE', None):
+            exec_file = self['EXE-FILE'].value
+            if not os.path.isabs(exec_file):
+                exec_file = os.path.join(os.path.dirname(self.infile), exec_file)
+                exec_file = os.path.realpath(exec_file)
+            if os.path.exists(exec_file):
+                self.executable = exec_file
+            else:
+                logger.warning('The exe file specified does not exist: ' + exec_file)
+        #
+        if not self.executable:
+            self.executable = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
 
     def clone(self, file_formats=None):
         r"""
@@ -292,6 +302,7 @@ class InputFile(OrderedDict):
         """
         #
         # creating file directories and generating input file
+        self.set_executable()
         self._construct_file_names(make_dirs=True)
         content = str(self)
         #
@@ -332,9 +343,9 @@ def estimate_req_RAM(input_maps, avail_RAM, suppress=False, **kwargs):
 
 def run_model(input_file_obj, synchronous=False, show_stdout=False):
     r"""
-    Runs an instance of the aperture map model specified in the 'EXE-FILE' argument
-    in the input file. If synhronous is True then a while loop is used to hold the
-    program until the model finishes running.
+    Runs the default version of the model compiled with the module or a version
+    specified by the 'EXE-FILE' argument in the input file. If synhronous is True
+    then the program will pause until the model finishes running.
     --
     input_file_obj - InputFile class object to be written and run by the model
     synchronous - Bool, default=False if True the script pauses until the model
@@ -346,7 +357,7 @@ def run_model(input_file_obj, synchronous=False, show_stdout=False):
     Returns a Popen object
     """
     input_file_obj.write_inp_file()
-    exe_file = os.path.abspath(input_file_obj['EXE-FILE'].value)
+    exe_file = os.path.abspath(input_file_obj.executable)
     cmd = (exe_file, input_file_obj.outfile_name)
     #
     out = PIPE

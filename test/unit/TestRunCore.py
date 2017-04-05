@@ -8,6 +8,7 @@ Last Modifed: 2016/06/11
 """
 import os
 import pytest
+import ApertureMapModelTools as amt
 from ApertureMapModelTools import RunModel
 from ApertureMapModelTools.RunModel.__run_model_core__ import ArgInput
 
@@ -87,14 +88,24 @@ class TestRunCore:
             print(inp_file)
         del inp_file.filename_formats['NONEXISTANT-FILE']
         #
-        # writing the output file to TEMP_DIR without an EXE-FILE and a directory needing created
-        del inp_file['EXE-FILE']
+        # writing the output file to TEMP_DIR with a valid EXE-FILE
+        model_path = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
+        inp_file['EXE-FILE'] = ArgInput(';EXE-FILE: ' + model_path)
         inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'
         inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
-        # re-reading the output file to test what happens with no EXE-FILE
-        with pytest.raises(SystemExit):
-            inp_file = RunModel.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
+        # re-reading the output file to test a valid EXE-FILE
+        inp_file = RunModel.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
+        assert inp_file.executable == model_path
+        #
+        # writing the output file to TEMP_DIR with a non-existant EXE-FILE
+        inp_file['EXE-FILE'] = ArgInput(';EXE-FILE: ' + amt.DEFAULT_MODEL_NAME + '-junk')
+        inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'
+        inp_file.write_inp_file(alt_path=TEMP_DIR)
+        #
+        # re-reading the output file to test an invalid EXE-FILE
+        inp_file = RunModel.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
+        assert inp_file.executable == model_path
 
     def test_estimate_req_RAM(self):
         r"""
@@ -120,10 +131,6 @@ class TestRunCore:
         #
         new_path = os.path.join(FIXTURE_DIR, 'maps', 'parallel-plate-01vox.txt')
         inp_file['APER-MAP'].update_value(new_path)
-        #
-        inp_file.outfile_name = os.path.join(TEMP_DIR, 'test-run-model.inp')
-        exe_path = os.path.realpath(os.path.join('.', inp_file['EXE-FILE'].value))
-        inp_file['EXE-FILE'].update_value(exe_path, False)
         #
         # running the model both async and in sync
         proc = RunModel.run_model(inp_file, synchronous=False)

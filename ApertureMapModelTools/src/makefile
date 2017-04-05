@@ -2,7 +2,7 @@
 # defining default variable names (assume POISX system)
 CC = gfortran
 OPTIMIZE ?= -O3
-MODELNAME ?= APM-MODEL.EXE
+MODELNAME ?= apm-lcl-model.exe
 OBJDIR ?= dist
 OS_FLAG = -DWIN64=0
 MKDIR = mkdir -p

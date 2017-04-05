@@ -16,6 +16,7 @@ from ApertureMapModelTools.RunModel.__run_model_core__ import ArgInput
 # global constants
 FIXTURE_DIR = os.path.realpath('fixtures')
 RETURN_CODE = 0
+MODEL_NAME = sys.argv[1]
 # -----------------------------------------------------------------------------
 
 
@@ -46,7 +47,7 @@ def run_model_wrapper(inp_file, expected_code=0, stdout_pat=None):
         #
         RETURN_CODE = 1
 
-def inialize_input_file():
+def initalize_input_file():
     r"""
     initializes the input file used for all simulations
     """
@@ -59,7 +60,7 @@ def inialize_input_file():
     inp_file = InputFile(init_inp, file_formats)
     #
     # updating exe-file path so it is absolute
-    exe_path = os.path.realpath(os.path.join('.', inp_file['EXE-FILE'].value))
+    exe_path = os.path.realpath(os.path.join(os.path.dirname(__file__), MODEL_NAME))
     inp_file['EXE-FILE'].update_value(exe_path, False)
     #
     return inp_file
@@ -151,7 +152,7 @@ def diff_compare_file_set(pat_str):
 
 # -----------------------------------------------------------------------------
 #
-inp_file = inialize_input_file()
+inp_file = initalize_input_file()
 #
 # setting parameters
 map_path = os.path.join(FIXTURE_DIR, 'ParallelPlate-1vox.txt')

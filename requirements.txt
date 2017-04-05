@@ -1,6 +1,6 @@
 numpy
 scipy
 matplotlib
-pillow
+pillow>=3.4.0
 pyyaml
 pint
