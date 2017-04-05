@@ -65,8 +65,9 @@ class ArgInput(object):
         # split the line into an array
         try:
             self._line_arr = shlex_split(line)
-        except ValueError:
-            logger.debug('shlex split failed on line {}'.format(line))
+        except ValueError as err:
+            msg = 'shlex split failed on line {} with ValueError: {}'
+            logger.debug(msg.format(line, err))
             self._line_arr = re.split(r'\s+', line)
             self._line_arr = [v.strip() for v in self._line_arr if v.strip()]
         #
@@ -85,9 +86,9 @@ class ArgInput(object):
             #
             self._value_index = ifld + 1
             if len(self._line_arr) <= self._value_index:
-                self._line_arr.append('') # add index for value
+                self._line_arr.append('')  # add index for value
             if len(self._line_arr) <= self._value_index + 1:
-                self._line_arr.append('') # add index for unit
+                self._line_arr.append('')  # add index for unit
             break
 
     @property
