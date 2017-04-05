@@ -10,14 +10,14 @@ cp makefile "$REPO_TOP/test/fortran/model_makefile"
 
 # creating directory and building model with coverage
 cd "$REPO_TOP/test/fortran"
-make test
+make test MODELNAME="apm-lcl-coverage-test.exe"
 
 # executing test scripts and capturing return codes
 set +e
 
 echo ""
 echo "Running flow model integration tests."
-./test_model_code_coverage
+./test_model_code_coverage "apm-lcl-coverage-test.exe"
 EXIT_CODE=$((EXIT_CODE + $?))
 
 echo ""
