@@ -130,7 +130,7 @@ class BulkRun(dict):
                 #
                 # generating new InputFile with parameter combination
                 inp_file = self.init_input_file.clone(default_name_formats)
-                inp_file.update_args(comb)
+                inp_file.update(comb)
                 self.input_file_list.append(inp_file)
 
     @staticmethod
