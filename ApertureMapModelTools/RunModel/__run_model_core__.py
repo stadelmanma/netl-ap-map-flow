@@ -106,10 +106,16 @@ class ArgInput(object):
 
     @value.setter
     def value(self, value):
+        r"""
+        Sets the value of an arg input, if a tuple is passed in the second
+        value is used to determine if the value should be commented out or not
+        """
+        comment = False
         if self._value_index == -1:
             self._parse_line(str(value))
         else:
             self._line_arr[self._value_index] = str(value)
+        self.commented_out = comment
 
     @property
     def unit(self):
@@ -193,9 +199,22 @@ class InputFile(OrderedDict):
         # builidng content from ArgInput class line attribute
         content = ''
         for arg_input in self.values():
-            content += arg_input.output_line()+'\n'
+            content += arg_input.line + '\n'
         #
         return content
+
+    def __setitem__(self, key, value, new_param=False):
+        r"""
+        Subclassed to pass the value directly to the arg input
+        """
+        if new_param:
+            super().__setitem__(key, value)
+        else:
+            try:
+                self[key].value = value
+            except KeyError:
+                msg = "'{}' is not set, use .add_parameter method to set param"
+                raise KeyError(msg.format(key))
 
     def parse_input_file(self, infile):
         r"""
@@ -215,11 +234,18 @@ class InputFile(OrderedDict):
         # parsing contents into input_file object
         content_arr = content.split('\n')
         for line in content_arr:
-            line = re.sub(r'^(;+)\s+', r'\1', line)
-            arg = ArgInput(line)
-            self[arg.keyword] = ArgInput(line)
+            self.add_parameter(line)
         #
         self.set_executable()
+
+    def add_parameter(self, line):
+        r"""
+        Adds a parameter to the input file by parsing the line that would have
+        been added to the input file if directly editing it.
+        """
+        line = re.sub(r'^(;+)\s+', r'\1', line)
+        arg = ArgInput(line)
+        self.__setitem__(arg.keyword, arg, new_param=True)
 
     def set_executable(self, exec_file=None):
         r"""
@@ -253,15 +279,21 @@ class InputFile(OrderedDict):
         #
         return input_file
 
-    def update_args(self, args):
+    def update(self, *args, **kwargs):
         r"""
-        Passes data to the ArgInput update_value function
+        Updates the InputFile instance, passing any unknown keys to the
+        filename_format_args dictionary instead of raising a KeyError like
+        in __setitem__
         """
-        for key in args:
+        if len(args) > 1:
+            msg = 'update expected at most 1 arguments, got {:d}'
+            raise TypeError(msg.format(len(args)))
+        other = dict(*args, **kwargs)
+        for key in other:
             try:
-                self[key].update_value(args[key])
+                self[key] = other[key]
             except KeyError:
-                self.filename_format_args[key] = args[key]
+                self.filename_format_args[key] = other[key]
         #
         # setting up new filenames
         self._construct_file_names()
@@ -273,9 +305,8 @@ class InputFile(OrderedDict):
         """
         #
         args = [(key, arg) for key, arg in self.items() if not arg.commented_out]
-        arg_dict = OrderedDict(args)
         #
-        return arg_dict
+        return OrderedDict(args)
 
     def _construct_file_names(self, make_dirs=False):
         r"""
@@ -293,15 +324,13 @@ class InputFile(OrderedDict):
         # checking existance of directories and updating dict
         for fname in outfiles.keys():
             try:
-                self[fname].update_value(outfiles[fname])
+                self[fname] = outfiles[fname]
             except KeyError:
                 if fname == 'input_file':
                     pass
                 else:
-                    msg = 'Error - outfile: {} not defined in initialization file'
-                    print(msg.format(fname))
-                    print('')
-                    print('')
+                    msg = 'Outfile: {} not defined in initialization file'
+                    logger.error(msg.format(fname))
                     raise KeyError(fname)
             #
             if not make_dirs:
@@ -333,7 +362,7 @@ class InputFile(OrderedDict):
         with open(file_name, 'w') as fname:
             fname.write(content)
         #
-        logger.info('Input file saved as: '+file_name)
+        logger.info('Input file saved as: ' + file_name)
 
 
 def estimate_req_RAM(input_maps, avail_RAM=sp_inf, suppress=False, **kwargs):
