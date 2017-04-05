@@ -3,7 +3,7 @@ This stores the basic classes and functions needed to the run model
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/16
-Last Modifed: 2016/06/16
+Last Modifed: 2017/04/05
 #
 """
 from collections import OrderedDict
@@ -32,10 +32,8 @@ class ArgInput(object):
         Parses the line for the input key string and value
         """
         # inital values
-        self.line_arr = []
-        self.keyword = ''
-        self.value_index = -1
-        self.unit = ''
+        self._line_arr = []
+        self._value_index = -1
         self.comment_msg = ''
         self.commented_out = False
         #
@@ -50,65 +48,74 @@ class ArgInput(object):
         mat = re.search(r';.*', line)
         if mat:
             self.comment_msg = line[mat.start():].strip()
-            line = line[:mat.start()]
+            line = line[:mat.start()].strip()
         #
-        self.line = line
-        self.value = line
+        # split the line into an array
         try:
-            self.line_arr = shlex_split(line) or ['']
+            self._line_arr = shlex_split(line)
         except ValueError:
-            # TODO: Add debug message here saying shlex failed
-            self.line_arr = re.split(r'\s+', line)
-            self.line_arr = [v for v in self.line_arr if v]
-        self.keyword = re.match(r'[a-zA-z_-]*', self.line).group()
+            logger.debug('shlex split failed on line {}'.format(line))
+            self._line_arr = re.split(r'\s+', line)
+            self._line_arr = [v.strip() for v in self._line_arr if v.strip()]
+        #
+        # ensure even a blank line produces a value array
+        if not self._line_arr:
+            self._line_arr = ['']
         #
         # if line has a colon the field after it will be used as the value
         # otherwise the whole line is considered the value
-        if not re.search(r':(:?\s|$)', self.line):
+        if not re.search(r':(:?\s|$)', line):
             return
         #
-        for ifld, field in enumerate(self.line_arr):
-            if re.search(r':$', field):
-                try:
-                    self.value = self.line_arr[ifld+1]
-                    self.value_index = ifld+1
-                    if len(self.line_arr) > ifld + 2:
-                        self.unit = self.line_arr[ifld+2]
-                except IndexError:
-                    self.value = 'NONE'
-                    self.value_index = ifld+1
-                    self.line_arr.append(self.value)
-                    self.line = ' '.join(self.line_arr)
+        for ifld, field in enumerate(self._line_arr):
+            if not re.search(r':$', field):
+                continue
+            #
+            self._value_index = ifld + 1
+            if len(self._line_arr) <= self._value_index:
+                self._line_arr.append('') # add index for value
+            if len(self._line_arr) <= self._value_index + 1:
+                self._line_arr.append('') # add index for unit
+            break
 
     def __str__(self):
-        r"""
-        Returns an input line repsentation of the object
-        """
-        #
-        cmt = (';' if self.commented_out else '')
-        line = '{}{} {}'.format(cmt, self.line, self.comment_msg)
-        #
-        return line
+        r""" Allows direct printing of an ArgInput object """
+        return self.line
 
-    def update_value(self, new_value, uncomment=True):
-        r"""
-        Updates the line with the new value and uncomments the line by default
-        """
-        #
-        new_value = str(new_value)
-        if uncomment:
-            self.commented_out = False
-        #
-        if self.value_index > 0:
-            self.line_arr[self.value_index] = new_value
+    @property
+    def keyword(self):
+        r""" Return first index of line arr """
+        return re.sub(r':$', '', self._line_arr[0])
+
+    @property
+    def value(self):
+        r""" Returns the value_index from the line arr """
+        if self._value_index > -1:
+            return self._line_arr[self._value_index]
         else:
-            self.line_arr = re.split(r'\s', new_value)
-            self.line_arr = [l for l in self.line_arr if l is not None]
-        self.line = ' '.join(self.line_arr)
-        self.value = new_value
+            return None
 
-    def output_line(self):
-        return str(self)
+    @value.setter
+    def value(self, value):
+        self._line_arr[self._value_index] = str(value)
+
+    @property
+    def unit(self):
+        r""" Returns the value_index from the line arr """
+        if self._value_index > -1:
+            return self._line_arr[self._value_index + 1]
+        else:
+            return None
+
+    @unit.setter
+    def unit(self, unit):
+        self._line_arr[self._value_index + 1] = str(unit)
+
+    @property
+    def line(self):
+        r""" Return a formatted line """
+        cmt = ';' if self.commented_out else ''
+        return cmt + ' '.join(self._line_arr) + self.comment_msg
 
 
 class AsyncCommunicate(Thread):
