@@ -39,7 +39,6 @@ class ArgInput(object):
         #
         self._parse_line(line)
 
-
     def __str__(self):
         r""" Allows direct printing of an ArgInput object """
         return self.line
@@ -111,11 +110,15 @@ class ArgInput(object):
         value is used to determine if the value should be commented out or not
         """
         comment = False
+        if (isinstance(value, (list, tuple))):
+            comment = True if value[1] else False
+            value = value[0]
+        self.commented_out = comment
+        #
         if self._value_index == -1:
             self._parse_line(str(value))
         else:
             self._line_arr[self._value_index] = str(value)
-        self.commented_out = comment
 
     @property
     def unit(self):
