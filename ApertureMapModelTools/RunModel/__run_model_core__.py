@@ -37,6 +37,18 @@ class ArgInput(object):
         self.comment_msg = ''
         self.commented_out = False
         #
+        self._parse_line(line)
+
+
+    def __str__(self):
+        r""" Allows direct printing of an ArgInput object """
+        return self.line
+
+    def _parse_line(self, line):
+        r"""
+        Handles parsing a line to build the ArgInput class
+        """
+        #
         # removing semi-colon if whole line was commented out
         line = line.strip()
         mat = re.match(r'^;(.*)', line)
@@ -78,10 +90,6 @@ class ArgInput(object):
                 self._line_arr.append('') # add index for unit
             break
 
-    def __str__(self):
-        r""" Allows direct printing of an ArgInput object """
-        return self.line
-
     @property
     def keyword(self):
         r""" Return first index of line arr """
@@ -93,11 +101,14 @@ class ArgInput(object):
         if self._value_index > -1:
             return self._line_arr[self._value_index]
         else:
-            return None
+            return ' '.join(self._line_arr)
 
     @value.setter
     def value(self, value):
-        self._line_arr[self._value_index] = str(value)
+        if self._value_index == -1:
+            self._parse_line(str(value))
+        else:
+            self._line_arr[self._value_index] = str(value)
 
     @property
     def unit(self):
