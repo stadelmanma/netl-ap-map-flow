@@ -88,12 +88,22 @@ class TestRunCore:
             print(inp_file)
         del inp_file.filename_formats['NONEXISTANT-FILE']
         #
-        # writing the output file to TEMP_DIR with an EXE-FILE
-        inp_file['EXE-FILE'] = ArgInput(';EXE-FILE: ' + amt.DEFAULT_MODEL_NAME)
+        # writing the output file to TEMP_DIR with a valid EXE-FILE
+        model_path = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
+        inp_file['EXE-FILE'] = ArgInput(';EXE-FILE: ' + model_path)
         inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'
         inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
-        # re-reading the output file to test what happens with an EXE-FILE
+        # re-reading the output file to test a valid EXE-FILE
+        inp_file = RunModel.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
+        assert inp_file.executable == model_path
+        #
+        # writing the output file to TEMP_DIR with a non-existant EXE-FILE
+        inp_file['EXE-FILE'] = ArgInput(';EXE-FILE: ' + amt.DEFAULT_MODEL_NAME + '-junk')
+        inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'
+        inp_file.write_inp_file(alt_path=TEMP_DIR)
+        #
+        # re-reading the output file to test a valid EXE-FILE
         inp_file = RunModel.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
         assert inp_file.executable is None
 
