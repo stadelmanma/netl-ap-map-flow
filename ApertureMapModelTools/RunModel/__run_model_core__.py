@@ -266,6 +266,9 @@ class InputFile(OrderedDict):
                 self.executable = exec_file
             else:
                 logger.warning('The exe file specified does not exist: ' + exec_file)
+        # ensuring line is always commented out
+        if self.get('EXE-FILE', None):
+            self['EXE-FILE'].commented_out = True
         #
         if not self.executable:
             self.executable = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
