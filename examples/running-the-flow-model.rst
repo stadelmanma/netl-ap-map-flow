@@ -147,11 +147,10 @@ The core components of the `RunModule <../ApertureMapModelTools/RunModel/__run_m
 
 The InputFile Class
 ~~~~~~~~~~~~~~~~~~~
-The InputFile class is used to read, write and manipulate an input parameters file. It provides an easy to use interface for updating parameters and can dynamically generate filenames based on those input parameters. One caveat is you can not easily add in new parameters that weren't in the original input file used to instantiate the class. Therefore, when using this class it is best to use a template file that has all of the parameters present and unneeded ones commented out.
+The InputFile class is used to read, write and manipulate an input parameters file. It provides an easy to use interface for updating parameters and can dynamically generate filenames based on those input parameters. Use of the class is simplest when you have the code read a file with all of the possible parameters already entered and the unneeded ones commented out.
 
 Notes:
  * The keywords of the input file class are the first characters occurring before *any* spaces on a line. The keyword for parameter ``OVERWRITE EXISTING FILES path/to/filename`` is ``OVERWRITE```
- * Currently the original units are preserved and can not easily be updated.
 
 Argument - Type - Description
  * infile - String or InputFile - The path to the file you want to read or the variable storing the InputFile object you want to recycle.
@@ -170,7 +169,7 @@ Argument - Type - Description
     # Directly updating the viscosity value
     inp_file['FLUID-VISCOSITY'] = '1.00'
 
-    # updating a set of parameters
+    # updating a set of parameters using a dictionary
     new_param_values = {
         'OVERWRITE': 'OVERWRITE FILES',
         'INLET-PRESS': '150.00'
@@ -181,7 +180,7 @@ Argument - Type - Description
     print(inp_file)
 
 
-You will notice that the line ``OVERWRITE EXISTING FILES`` has been changed and uncommented. The class by default will uncomment any parameter that is updated. Parameters are stored in their own class called `ArgInput <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ which can be directly manipulated by accessing the keyword of an InputFile object like so, :code:`inp_file['FLUID-VISCOSITY']`. Earlier when we updated the value of the viscosity directly we called the method ``.update_value`` which is a method of the ArgInput class not the InputFile class. Directly manipulating the ArgInput objects stored by the InputFile class allows you to perform more complex operations on a parameter such as changing the line entirely or directly commenting out inputs.
+You will notice that the line ``OVERWRITE EXISTING FILES`` has been changed and uncommented. The class by default will uncomment any parameter that is updated. To update a value and set the commented_out boolean use a tuple :code:`(value, True/False)`. This will also work when creating a dictionary of values to update. Parameters are stored in their own class called `ArgInput <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ which can be directly manipulated by accessing the keyword of an InputFile object like so, :code:`inp_file['FLUID-VISCOSITY']`. New parameters can not be created by simple assignment, instead you must call the ``add_parameter`` method and pass in the full line intended to go in the file, or a suitable placeholder line.
 
 .. code-block:: python
 
@@ -191,6 +190,12 @@ You will notice that the line ``OVERWRITE EXISTING FILES`` has been changed and 
     # changing the unit and value of density
     inp_file['FLUID-DENSITY'].unit = 'LB/FT^3'
     inp_file['FLUID-DENSITY'] = '62.42796'
+
+    # adding a new parameter to the input file
+    inp_file.add_parameter('NEW-PARAMETER: (value) (unit)')
+
+    # changing the new param and making the line commented out
+    inp_file['NEW-PARAMETER'] = ('NULL', True)
 
     #
     print(inp_file)
@@ -202,19 +207,19 @@ In addition to updating arguments you can also apply a set of filename formats t
     # setting the formats dict up
     # Format replacements are recognized by {KEYWORD} in the filename
     name_formats = {
-        'SUMMARY-FILE': '{APMAP}-SUMMARY-VISC-{FLUID-VISCOSITY}CP.TXT',
-        'STAT-FILE': '{APMAP}-STAT-VISC-{FLUID-VISCOSITY}CP.CSV',
-        'VTK-FILE': '{APMAP}-VTK-VISC-{FLUID-VISCOSITY}CP.vtk'
+        'SUMMARY-FILE': '{apmap}-summary-visc-{fluid-viscosity}cp.txt',
+        'STAT-FILE': '{apmap}-stat-visc-{fluid-viscosity}cp.csv',
+        'VTK-FILE': '{apmap}-vtk-visc-{fluid-viscosity}cp.vtk'
     }
 
     # recycling our existing input file object
     inp_file = InputFile(inp_file, filename_formats=name_formats)
-    inp_file.update({'APMAP': 'AVG-FRAC1'})
+    inp_file.update({'apmap': 'avg-frac1'})
 
     # showing the changes
     print(inp_file)
 
-Right below the :code:`print(inp_file)` command, the name the input parameters file would be saved as when being run or written using the "code"`.write_inp_file` method is shown. This name can also be altered with formatting by adding an 'input_file' entry to the filename_formats_dict. An entry in the filename_formats_dict will overwrite any changes directly make to the ``.outfile_name`` attribute of the InputFile class. The default outfile name is the name of the parameters file being read, so the original file would be overwritten.
+The name of the input file can also be altered with formatting by adding an ``input_file`` entry to the filename_formats_dict. An entry in the filename_formats_dict will overwrite any changes directly make to the ``.outfile_name`` attribute of the InputFile class. The default outfile name is the name of the parameters file being read, so the original file would be overwritten.
 
 The estimate_req_RAM Function
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
