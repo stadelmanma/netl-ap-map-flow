@@ -133,9 +133,6 @@ def input_file_class():
         def clone(self, file_formats=None):
             return PseudoInputFile()
 
-        def update_args(self, args):
-            self.update(args)
-
         def construct_file_names(self):
             pass
 

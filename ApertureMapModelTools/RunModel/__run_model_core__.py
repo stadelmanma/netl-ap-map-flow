@@ -3,7 +3,7 @@ This stores the basic classes and functions needed to the run model
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/16
-Last Modifed: 2016/06/16
+Last Modifed: 2017/04/05
 #
 """
 from collections import OrderedDict
@@ -32,12 +32,21 @@ class ArgInput(object):
         Parses the line for the input key string and value
         """
         # inital values
-        self.line_arr = []
-        self.keyword = ''
-        self.value_index = -1
-        self.unit = ''
+        self._line_arr = []
+        self._value_index = -1
         self.comment_msg = ''
         self.commented_out = False
+        #
+        self._parse_line(line)
+
+    def __str__(self):
+        r""" Allows direct printing of an ArgInput object """
+        return self.line
+
+    def _parse_line(self, line):
+        r"""
+        Handles parsing a line to build the ArgInput class
+        """
         #
         # removing semi-colon if whole line was commented out
         line = line.strip()
@@ -50,65 +59,84 @@ class ArgInput(object):
         mat = re.search(r';.*', line)
         if mat:
             self.comment_msg = line[mat.start():].strip()
-            line = line[:mat.start()]
+            line = line[:mat.start()].strip()
         #
-        self.line = line
-        self.value = line
+        # split the line into an array
         try:
-            self.line_arr = shlex_split(line) or ['']
-        except ValueError:
-            # TODO: Add debug message here saying shlex failed
-            self.line_arr = re.split(r'\s+', line)
-            self.line_arr = [v for v in self.line_arr if v]
-        self.keyword = re.match(r'[a-zA-z_-]*', self.line).group()
+            self._line_arr = shlex_split(line)
+        except ValueError as err:
+            msg = 'shlex split failed on line {} with ValueError: {}'
+            logger.debug(msg.format(line, err))
+            self._line_arr = re.split(r'\s+', line)
+            self._line_arr = [v.strip() for v in self._line_arr if v.strip()]
+        #
+        # ensure even a blank line produces a value array
+        if not self._line_arr:
+            self._line_arr = ['']
         #
         # if line has a colon the field after it will be used as the value
         # otherwise the whole line is considered the value
-        if not re.search(r':(:?\s|$)', self.line):
+        if not re.search(r':(:?\s|$)', line):
             return
         #
-        for ifld, field in enumerate(self.line_arr):
-            if re.search(r':$', field):
-                try:
-                    self.value = self.line_arr[ifld+1]
-                    self.value_index = ifld+1
-                    if len(self.line_arr) > ifld + 2:
-                        self.unit = self.line_arr[ifld+2]
-                except IndexError:
-                    self.value = 'NONE'
-                    self.value_index = ifld+1
-                    self.line_arr.append(self.value)
-                    self.line = ' '.join(self.line_arr)
+        for ifld, field in enumerate(self._line_arr):
+            if not re.search(r':$', field):
+                continue
+            #
+            self._value_index = ifld + 1
+            if len(self._line_arr) <= self._value_index:
+                self._line_arr.append('')  # add index for value
+            if len(self._line_arr) <= self._value_index + 1:
+                self._line_arr.append('')  # add index for unit
+            break
 
-    def __str__(self):
-        r"""
-        Returns an input line repsentation of the object
-        """
-        #
-        cmt = (';' if self.commented_out else '')
-        line = '{}{} {}'.format(cmt, self.line, self.comment_msg)
-        #
-        return line
+    @property
+    def keyword(self):
+        r""" Return first index of line arr """
+        return re.sub(r':$', '', self._line_arr[0])
 
-    def update_value(self, new_value, uncomment=True):
-        r"""
-        Updates the line with the new value and uncomments the line by default
-        """
-        #
-        new_value = str(new_value)
-        if uncomment:
-            self.commented_out = False
-        #
-        if self.value_index > 0:
-            self.line_arr[self.value_index] = new_value
+    @property
+    def value(self):
+        r""" Returns the value_index from the line arr """
+        if self._value_index > -1:
+            return self._line_arr[self._value_index]
         else:
-            self.line_arr = re.split(r'\s', new_value)
-            self.line_arr = [l for l in self.line_arr if l is not None]
-        self.line = ' '.join(self.line_arr)
-        self.value = new_value
+            return ' '.join(self._line_arr)
 
-    def output_line(self):
-        return str(self)
+    @value.setter
+    def value(self, value):
+        r"""
+        Sets the value of an arg input, if a tuple is passed in the second
+        value is used to determine if the value should be commented out or not
+        """
+        comment = False
+        if (isinstance(value, (list, tuple))):
+            comment = True if value[1] else False
+            value = value[0]
+        self.commented_out = comment
+        #
+        if self._value_index == -1:
+            self._parse_line(str(value))
+        else:
+            self._line_arr[self._value_index] = str(value)
+
+    @property
+    def unit(self):
+        r""" Returns the value_index from the line arr """
+        if self._value_index > -1:
+            return self._line_arr[self._value_index + 1]
+        else:
+            return None
+
+    @unit.setter
+    def unit(self, unit):
+        self._line_arr[self._value_index + 1] = str(unit)
+
+    @property
+    def line(self):
+        r""" Return a formatted line """
+        cmt = ';' if self.commented_out else ''
+        return cmt + ' '.join(self._line_arr) + self.comment_msg
 
 
 class AsyncCommunicate(Thread):
@@ -174,9 +202,25 @@ class InputFile(OrderedDict):
         # builidng content from ArgInput class line attribute
         content = ''
         for arg_input in self.values():
-            content += arg_input.output_line()+'\n'
+            content += arg_input.line + '\n'
         #
         return content
+
+    def __setitem__(self, key, value, new_param=False):
+        r"""
+        Subclassed to pass the value directly to the arg input
+        """
+        if new_param:
+            super().__setitem__(key, value)
+        else:
+            try:
+                self[key].value = value
+            except KeyError:
+                msg = "'{}' is not set, use .add_parameter method to set param"
+                raise KeyError(msg.format(key))
+        #
+        if key == 'EXE-FILE':
+            self.set_executable()
 
     def parse_input_file(self, infile):
         r"""
@@ -196,21 +240,30 @@ class InputFile(OrderedDict):
         # parsing contents into input_file object
         content_arr = content.split('\n')
         for line in content_arr:
-            line = re.sub(r'^(;+)\s+', r'\1', line)
-            arg = ArgInput(line)
-            self[arg.keyword] = ArgInput(line)
+            self.add_parameter(line)
         #
         self.set_executable()
 
-    def set_executable(self, exec_file=None):
+    def add_parameter(self, line):
+        r"""
+        Adds a parameter to the input file by parsing the line that would have
+        been added to the input file if directly editing it.
+        """
+        line = re.sub(r'^(;+)\s+', r'\1', line)
+        arg = ArgInput(line)
+        self.__setitem__(arg.keyword, arg, new_param=True)
+
+    def set_executable(self):
         r"""
         Sets the path to the model executable, defaulting to the version compiled
         with the module.
         """
         self.executable = None
         #
-        if exec_file is None and self.get('EXE-FILE', None):
+        if self.__contains__('EXE-FILE'):
+            self['EXE-FILE'].commented_out = True
             exec_file = self['EXE-FILE'].value
+            #
             if not os.path.isabs(exec_file):
                 exec_file = os.path.join(os.path.dirname(self.infile), exec_file)
                 exec_file = os.path.realpath(exec_file)
@@ -234,15 +287,21 @@ class InputFile(OrderedDict):
         #
         return input_file
 
-    def update_args(self, args):
+    def update(self, *args, **kwargs):
         r"""
-        Passes data to the ArgInput update_value function
+        Updates the InputFile instance, passing any unknown keys to the
+        filename_format_args dictionary instead of raising a KeyError like
+        in __setitem__
         """
-        for key in args:
+        if len(args) > 1:
+            msg = 'update expected at most 1 arguments, got {:d}'
+            raise TypeError(msg.format(len(args)))
+        other = dict(*args, **kwargs)
+        for key in other:
             try:
-                self[key].update_value(args[key])
+                self[key] = other[key]
             except KeyError:
-                self.filename_format_args[key] = args[key]
+                self.filename_format_args[key] = other[key]
         #
         # setting up new filenames
         self._construct_file_names()
@@ -254,9 +313,8 @@ class InputFile(OrderedDict):
         """
         #
         args = [(key, arg) for key, arg in self.items() if not arg.commented_out]
-        arg_dict = OrderedDict(args)
         #
-        return arg_dict
+        return OrderedDict(args)
 
     def _construct_file_names(self, make_dirs=False):
         r"""
@@ -274,15 +332,13 @@ class InputFile(OrderedDict):
         # checking existance of directories and updating dict
         for fname in outfiles.keys():
             try:
-                self[fname].update_value(outfiles[fname])
+                self[fname] = outfiles[fname]
             except KeyError:
                 if fname == 'input_file':
                     pass
                 else:
-                    msg = 'Error - outfile: {} not defined in initialization file'
-                    print(msg.format(fname))
-                    print('')
-                    print('')
+                    msg = 'Outfile: {} not defined in initialization file'
+                    logger.error(msg.format(fname))
                     raise KeyError(fname)
             #
             if not make_dirs:
@@ -303,7 +359,6 @@ class InputFile(OrderedDict):
         """
         #
         # creating file directories and generating input file
-        self.set_executable()
         self._construct_file_names(make_dirs=True)
         content = str(self)
         #
@@ -314,7 +369,7 @@ class InputFile(OrderedDict):
         with open(file_name, 'w') as fname:
             fname.write(content)
         #
-        logger.info('Input file saved as: '+file_name)
+        logger.info('Input file saved as: ' + file_name)
 
 
 def estimate_req_RAM(input_maps, avail_RAM=sp_inf, suppress=False, **kwargs):

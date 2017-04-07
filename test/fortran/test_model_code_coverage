@@ -9,7 +9,6 @@ import yaml
 sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))
 from ApertureMapModelTools import files_from_directory, load_infile_list
 from ApertureMapModelTools.RunModel import InputFile, run_model
-from ApertureMapModelTools.RunModel.__run_model_core__ import ArgInput
 #
 # -----------------------------------------------------------------------------
 #
@@ -40,7 +39,13 @@ def run_model_wrapper(inp_file, expected_code=0, stdout_pat=None):
     #
     if not success:
         print('='*80)
+        print(inp_file)
+        print('')
+        print('-'*80)
+        print('')
         print(proc.stdout_content)
+        print('')
+        print('-'*80)
         print('')
         print(proc.stderr_content)
         print('='*80)
@@ -61,7 +66,7 @@ def initalize_input_file():
     #
     # updating exe-file path so it is absolute
     exe_path = os.path.realpath(os.path.join(os.path.dirname(__file__), MODEL_NAME))
-    inp_file['EXE-FILE'].update_value(exe_path, False)
+    inp_file['EXE-FILE'] = exe_path
     #
     return inp_file
 
@@ -156,9 +161,9 @@ inp_file = initalize_input_file()
 #
 # setting parameters
 map_path = os.path.join(FIXTURE_DIR, 'ParallelPlate-1vox.txt')
-inp_file['APER-MAP'].update_value(map_path)
+inp_file['APER-MAP'] = map_path
 inp_file['OVERWRITE'].commented_out = True
-inp_file['BAD-INPUT'] = ArgInput('BAD-INPUT: VALUE')
+inp_file.add_parameter('BAD-INPUT: VALUE')
 #
 # running initial liquid sim with everything to set up base coverage
 run_model_wrapper(inp_file, stdout_pat=re.compile('WARNING: UNRECOGNIZED INPUT: BAD-INPUT: VALUE'))
@@ -170,7 +175,7 @@ diff_compare_file_set('.*coverage_test.*')
 #
 # commenting/ uncommenting some inputs so they don't cause issue
 map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
-inp_file['APER-MAP'].update_value(map_path)
+inp_file['APER-MAP'] = map_path
 inp_file['SUMMARY-FILE'].commented_out = True
 inp_file['OVERWRITE'].commented_out = False
 inp_file['FRAC-PRESS'].commented_out = True
@@ -181,23 +186,23 @@ inp_file['SOLVER'].commented_out = True
 # running sim with outlet rate control
 inp_file['INLET-RATE'].commented_out = True
 inp_file['OUTLET-PRESS'].commented_out = True
-inp_file['INLET-PRESS'].update_value('2000000')
-inp_file['OUTLET-RATE'].update_value('1.0')
+inp_file['INLET-PRESS'] = '2000000'
+inp_file['OUTLET-RATE'] = '1.0'
 run_model_wrapper(inp_file)
 #
 # running a diff check on all
 #
 # changing map to one with NX > NZ to hit solver logic
 map_path = os.path.join(FIXTURE_DIR, 'Fracture3ApertureMap-10avg.txt')
-inp_file['APER-MAP'].update_value(map_path)
+inp_file['APER-MAP'] = map_path
 #
 # running all four boundary sides with inlet rate control
 inp_file['INLET-PRESS'].commented_out = True
 inp_file['OUTLET-RATE'].commented_out = True
-inp_file['INLET-RATE'].update_value('1.0')
-inp_file['OUTLET-PRESS'].update_value('0.0')
+inp_file['INLET-RATE'] = '1.0'
+inp_file['OUTLET-PRESS'] = '0.0'
 for side in ['TOP', 'BOTTOM', 'LEFT', 'RIGHT']:
-    inp_file['OUTLET-SIDE'].update_value(side)
+    inp_file['OUTLET-SIDE'] = side
     run_model_wrapper(inp_file)
 #
 # -----------------------------------------------------------------------------
@@ -214,7 +219,7 @@ if proc.returncode == 0:
     RETURN_CODE = 1
 #
 # bad VTK-FILE value
-inp_file['VTK-FILE'].update_value('')
+inp_file['VTK-FILE'] = ''
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('INSUFFICIENT'))
 inp_file['VTK-FILE'].commented_out = True
 #
@@ -230,39 +235,39 @@ run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('SPECIFY "OVE
 inp_file['OVERWRITE'].commented_out = False
 #
 # trying to run sim that writes a file to a non-existant location
-inp_file['VTK-FILE'].update_value('/non/existant/root/path/test.txt')
+inp_file['VTK-FILE'] = '/non/existant/root/path/test.txt'
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('IO ERROR:\s*\d+'))
 inp_file['VTK-FILE'].commented_out = True
 #
 # hitting errors when processing initialization file, missing and invalid field
-inp_file['OUTLET-PRESS'].update_value('')
+inp_file['OUTLET-PRESS'] = ''
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('INSUFFICIENT'))
-inp_file['OUTLET-PRESS'].update_value('ABC')
+inp_file['OUTLET-PRESS'] = 'ABC'
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('FIELD\s*\d+\s*ON THE'))
 inp_file['OUTLET-PRESS'].commented_out = True
 #
 # bad aperture map
 map_path = os.path.join(FIXTURE_DIR, 'BadApertureMap.txt')
-inp_file['APER-MAP'].update_value(map_path)
+inp_file['APER-MAP'] = map_path
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('FIELD\s*\d+\s*ON THE'))
 map_path = os.path.join(FIXTURE_DIR, 'Fracture1ApertureMap-10avg.txt')
-inp_file['APER-MAP'].update_value(map_path)
+inp_file['APER-MAP'] = map_path
 #
 # too large of a map along either axis
-inp_file['MAXIMUM'].update_value(135)
+inp_file['MAXIMUM'] = 135
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('MAXIMUM NUMBER OF HORIZONTAL'))
-inp_file['MAXIMUM'].update_value(137)
+inp_file['MAXIMUM'] = 137
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('MAXIMUM NUMBER OF VERTICAL'))
-inp_file['MAXIMUM'].update_value(500)
+inp_file['MAXIMUM'] = 500
 #
 # liquid sim with invalid visc
-inp_file['FLUID-VISCOSITY'].update_value('-1.0')
+inp_file['FLUID-VISCOSITY'] = '-1.0'
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('ERROR - NONE OR INVAILD VISCOSITY'))
-inp_file['FLUID-VISCOSITY'].update_value('1.0')
+inp_file['FLUID-VISCOSITY'] = '1.0'
 #
 # invalid outlet side
-inp_file['OUTLET-SIDE'].update_value('CENTER')
+inp_file['OUTLET-SIDE'] = 'CENTER'
 run_model_wrapper(inp_file, expected_code=1, stdout_pat=re.compile('INVALID OUTLET SIDE ENTERED'))
-inp_file['OUTLET-SIDE'].update_value('TOP')
+inp_file['OUTLET-SIDE'] = 'TOP'
 #
 sys.exit(RETURN_CODE)
