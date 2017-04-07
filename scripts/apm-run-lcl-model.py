@@ -29,6 +29,9 @@ parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
 parser.add_argument('-v', '--verbose', action='store_true',
                     help='debug messages are printed to the screen')
 
+parser.add_argument('-e', '--executable', default=None, type=os.path.realpath,
+                    help='debug messages are printed to the screen')
+
 parser.add_argument('input_files', nargs='+', type=os.path.realpath,
                     help='1 or more model parameter files to load')
 
@@ -51,6 +54,9 @@ def apm_run_lcl_model():
         ram_req = estimate_req_RAM([input_file['APER-MAP'].value])[0]
         msg = 'Map will require approimately {:0.6f} GBs of RAM'.format(ram_req)
         logger.info(msg)
+        #
+        if args.executable:
+            input_file.executable = args.executable
         #
         proc = run_model(input_file, synchronous=True, show_stdout=True)
 
