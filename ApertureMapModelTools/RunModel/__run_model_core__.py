@@ -218,6 +218,9 @@ class InputFile(OrderedDict):
             except KeyError:
                 msg = "'{}' is not set, use .add_parameter method to set param"
                 raise KeyError(msg.format(key))
+        #
+        if key == 'EXE-FILE':
+            self.set_executable()
 
     def parse_input_file(self, infile):
         r"""
@@ -250,15 +253,17 @@ class InputFile(OrderedDict):
         arg = ArgInput(line)
         self.__setitem__(arg.keyword, arg, new_param=True)
 
-    def set_executable(self, exec_file=None):
+    def set_executable(self):
         r"""
         Sets the path to the model executable, defaulting to the version compiled
         with the module.
         """
         self.executable = None
         #
-        if exec_file is None and self.get('EXE-FILE', None):
+        if self.__contains__('EXE-FILE'):
+            self['EXE-FILE'].commented_out = True
             exec_file = self['EXE-FILE'].value
+            #
             if not os.path.isabs(exec_file):
                 exec_file = os.path.join(os.path.dirname(self.infile), exec_file)
                 exec_file = os.path.realpath(exec_file)
@@ -266,9 +271,6 @@ class InputFile(OrderedDict):
                 self.executable = exec_file
             else:
                 logger.warning('The exe file specified does not exist: ' + exec_file)
-        # ensuring line is always commented out
-        if self.get('EXE-FILE', None):
-            self['EXE-FILE'].commented_out = True
         #
         if not self.executable:
             self.executable = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
@@ -357,7 +359,6 @@ class InputFile(OrderedDict):
         """
         #
         # creating file directories and generating input file
-        self.set_executable()
         self._construct_file_names(make_dirs=True)
         content = str(self)
         #
