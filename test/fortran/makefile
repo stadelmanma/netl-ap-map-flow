@@ -33,7 +33,7 @@ IO_MOD_TEST_OBJS = $(addprefix $(OBJDIR), $(IO_MOD_TEST_FILES:.F=.o))
 
 # compiles test specific files without test flags to avoid unwanted coverage data
 ${OBJDIR}%.o : ${TESTSRC}%.F | ${OBJDIR}
-	$(FC) -c $(BUILD_FLAGS) $(LDFLAGS) $(FFLAGS) -o $@ $<
+	$(FC) -c $(BUILD_FLAGS) $(FFLAGS) -o $@ $<
 
 test_string: ${STRING_MOD_TEST_OBJS}
 	$(FC) -o TEST_STRING_MOD.EXE $(STRING_MOD_TEST_OBJS) $(BUILD_FLAGS) $(LDFLAGS) $(FFLAGS) $(TEST_FLAGS)
