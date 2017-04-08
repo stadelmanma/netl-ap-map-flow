@@ -32,7 +32,8 @@ install:
   - pip install -r test_requirements.txt
 
 before_script:
-  - python3 setup.py develop --user --make-target debug
+  - python3 setup.py develop --user
+  - ./bin/build_model debug
 
 script:
   - ./bin/test pep8 cov
