@@ -1,8 +1,8 @@
-.. image:: https://travis-ci.org/stadelmanma/netl-AP_MAP_FLOW.svg?branch=master
-   :target: https://travis-ci.org/stadelmanma/netl-AP_MAP_FLOW
+.. image:: https://travis-ci.org/stadelmanma/netl-ap-map-flow.svg?branch=master
+   :target: https://travis-ci.org/stadelmanma/netl-ap-map-flow
 
-.. image:: https://codecov.io/gh/stadelmanma/netl-AP_MAP_FLOW/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/stadelmanma/netl-AP_MAP_FLOW
+.. image:: https://codecov.io/gh/stadelmanma/netl-ap-map-flow/branch/master/graph/badge.svg
+   :target: https://codecov.io/gh/stadelmanma/netl-ap-map-flow
 
 .. image:: https://zenodo.org/badge/50030017.svg
    :target: https://zenodo.org/badge/latestdoi/50030017
