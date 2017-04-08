@@ -63,10 +63,10 @@ ${OBJDIR}:
 	-$(MKDIR) $(OBJDIR:/=)
 
 ${OBJDIR}%.o : %.F | ${OBJDIR}
-	$(FC) -c $(BUILD_FLAGS) $(FFLAGS) $(TEST_FLAGS) -o $@ $<
+	$(FC) -c $(BUILD_FLAGS) $(LDFLAGS) $(FFLAGS) $(TEST_FLAGS) -o $@ $<
 
 ${OBJDIR}${MODELNAME}: ${MODULE_OBJS} ${MODEL_OBJS}
-	$(FC) $(BUILD_FLAGS) $(FFLAGS) $(TEST_FLAGS) $^ -o $@
+	$(FC) $(BUILD_FLAGS) $(LDFLAGS) $(FFLAGS) $(TEST_FLAGS) $^ -o $@
 
 all: ${OBJDIR}${MODELNAME}
 
