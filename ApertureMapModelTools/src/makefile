@@ -1,17 +1,18 @@
 #
-# defining default variable names (assume POISX system)
-CC = gfortran
+# defining default variable names (assume UNIX system)
+FC = gfortran
+MKDIR = mkdir -p
+RMDIR = rm -rf
+
+OS_NAME =$(shell uname)
+OS_FLAG = -DWIN64=0
+
 OPTIMIZE ?= -O3
 MODELNAME ?= apm-lcl-model.exe
 OBJDIR ?= dist
-OS_FLAG = -DWIN64=0
 STATIC_FLAG ?=
-MKDIR = mkdir -p
-RM = rm -f
-RMDIR = rm -rf
-OS_NAME =$(shell uname)
 
-.DEFAULT_GOAL:= all
+.DEFAULT_GOAL := all
 
 override OBJDIR := $(strip $(OBJDIR))/
 
@@ -63,10 +64,10 @@ ${OBJDIR}:
 	-$(MKDIR) $(OBJDIR:/=)
 
 ${OBJDIR}%.o : %.F | ${OBJDIR}
-	$(CC) -c $(FLAGS) $(TEST_FLAGS) -o $@ $<
+	$(FC) -c $(FLAGS) $(TEST_FLAGS) -o $@ $<
 
 ${OBJDIR}${MODELNAME}: ${MODULE_OBJS} ${MODEL_OBJS}
-	$(CC) $(FLAGS) $(TEST_FLAGS) $^ -o $@
+	$(FC) $(FLAGS) $(TEST_FLAGS) $^ -o $@
 
 all: ${OBJDIR}${MODELNAME}
 
