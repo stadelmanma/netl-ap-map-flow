@@ -33,16 +33,16 @@ IO_MOD_TEST_OBJS = $(addprefix $(OBJDIR), $(IO_MOD_TEST_FILES:.F=.o))
 
 # compiles test specific files without test flags to avoid unwanted coverage data
 ${OBJDIR}%.o : ${TESTSRC}%.F | ${OBJDIR}
-	$(FC) -c $(FLAGS) -o $@ $<
+	$(FC) -c $(FFLAGS) -o $@ $<
 
 test_string: ${STRING_MOD_TEST_OBJS}
-	$(FC) -o TEST_STRING_MOD.EXE $(STRING_MOD_TEST_OBJS) $(FLAGS) $(TEST_FLAGS)
+	$(FC) -o TEST_STRING_MOD.EXE $(STRING_MOD_TEST_OBJS) $(FFLAGS) $(TEST_FLAGS)
 
 test_unit_conv: ${UNIT_CONV_TEST_OBJS}
-	$(FC) -o TEST_UNIT_CONV_MOD.EXE $(UNIT_CONV_TEST_OBJS) $(FLAGS) $(TEST_FLAGS)
+	$(FC) -o TEST_UNIT_CONV_MOD.EXE $(UNIT_CONV_TEST_OBJS) $(FFLAGS) $(TEST_FLAGS)
 
 test_io_mod: ${MODULE_OBJS} ${APM_SUBS_TEST_OBJS}
-	$(FC) -o TEST_IO_MOD.EXE ${MODULE_OBJS} $(IO_MOD_TEST_OBJS) $(FLAGS) $(TEST_FLAGS)
+	$(FC) -o TEST_IO_MOD.EXE ${MODULE_OBJS} $(IO_MOD_TEST_OBJS) $(FFLAGS) $(TEST_FLAGS)
 
 unit_tests: test_string test_unit_conv test_io_mod
 
