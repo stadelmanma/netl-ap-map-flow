@@ -4,6 +4,9 @@
 .. image:: https://codecov.io/gh/stadelmanma/netl-AP_MAP_FLOW/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/stadelmanma/netl-AP_MAP_FLOW
 
+.. image:: https://zenodo.org/badge/50030017.svg
+   :target: https://zenodo.org/badge/latestdoi/50030017
+
 AP MAP FLOW
 ===========
 
