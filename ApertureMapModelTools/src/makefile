@@ -5,10 +5,13 @@ OPTIMIZE ?= -O3
 MODELNAME ?= apm-lcl-model.exe
 OBJDIR ?= dist
 OS_FLAG = -DWIN64=0
+STATIC_FLAG ?=
 MKDIR = mkdir -p
 RM = rm -f
 RMDIR = rm -rf
 OS_NAME =$(shell uname)
+
+.DEFAULT_GOAL:= all
 
 override OBJDIR := $(strip $(OBJDIR))/
 
@@ -34,10 +37,6 @@ ifeq ($(SYS),WIN)
 	RMDIR = rmdir /Q /S
 endif
 
-# setting default goal after setting object directory
-.DEFAULT_GOAL:= $(OBJDIR)$(MODELNAME)
-
-
 # setting up object variables
 MODEL_FILES := $(wildcard *.F)
 MODEL_OBJS = $(addprefix $(OBJDIR), $(MODEL_FILES:.F=.o))
@@ -54,7 +53,7 @@ MODULE_OBJS = $(addprefix $(OBJDIR), $(MODULE_FILES:.F=.o))
 #
 # determining flags to apply at compile time based on target
 # test flags are only defined when this file is included into the testing makefile
-FLAGS = $(OPTIMIZE) $(OS_FLAG) -J$(OBJDIR) -fdefault-real-8 -fdefault-double-8
+FLAGS = $(OPTIMIZE) $(OS_FLAG) $(STATIC_FLAG) -J$(OBJDIR) -fdefault-real-8 -fdefault-double-8
 debug test: FLAGS = -fimplicit-none -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace -cpp -g -pg
 debug test: FLAGS += -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter
 debug test: FLAGS += $(OS_FLAG) -J$(OBJDIR) -I$(OBJDIR) -fdefault-real-8 -fdefault-double-8
@@ -69,8 +68,13 @@ ${OBJDIR}%.o : %.F | ${OBJDIR}
 ${OBJDIR}${MODELNAME}: ${MODULE_OBJS} ${MODEL_OBJS}
 	$(CC) $(FLAGS) $(TEST_FLAGS) $^ -o $@
 
-debug: clean ${OBJDIR}${MODELNAME}
+all: ${OBJDIR}${MODELNAME}
 
+rebuild: clean all
+
+debug: rebuild
+
+.PHONY: clean
 clean:
 	$(RM) *.o *.mod *.EXE *.gcno *.gcda *.gcov
 	-$(RMDIR) $(OBJDIR:/=)
