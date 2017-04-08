@@ -33,16 +33,16 @@ IO_MOD_TEST_OBJS = $(addprefix $(OBJDIR), $(IO_MOD_TEST_FILES:.F=.o))
 
 # compiles test specific files without test flags to avoid unwanted coverage data
 ${OBJDIR}%.o : ${TESTSRC}%.F | ${OBJDIR}
-	$(CC) -c $(FLAGS) -o $@ $<
+	$(FC) -c $(BUILD_FLAGS) $(FFLAGS) -o $@ $<
 
 test_string: ${STRING_MOD_TEST_OBJS}
-	$(CC) -o TEST_STRING_MOD.EXE $(STRING_MOD_TEST_OBJS) $(FLAGS) $(TEST_FLAGS)
+	$(FC) -o TEST_STRING_MOD.EXE $(STRING_MOD_TEST_OBJS) $(BUILD_FLAGS) $(LDFLAGS) $(FFLAGS) $(TEST_FLAGS) $(LOADLIBES) $(LDLIBS)
 
 test_unit_conv: ${UNIT_CONV_TEST_OBJS}
-	$(CC) -o TEST_UNIT_CONV_MOD.EXE $(UNIT_CONV_TEST_OBJS) $(FLAGS) $(TEST_FLAGS)
+	$(FC) -o TEST_UNIT_CONV_MOD.EXE $(UNIT_CONV_TEST_OBJS) $(BUILD_FLAGS) $(LDFLAGS) $(FFLAGS) $(TEST_FLAGS) $(LOADLIBES) $(LDLIBS)
 
 test_io_mod: ${MODULE_OBJS} ${APM_SUBS_TEST_OBJS}
-	$(CC) -o TEST_IO_MOD.EXE ${MODULE_OBJS} $(IO_MOD_TEST_OBJS) $(FLAGS) $(TEST_FLAGS)
+	$(FC) -o TEST_IO_MOD.EXE ${MODULE_OBJS} $(IO_MOD_TEST_OBJS) $(BUILD_FLAGS) $(LDFLAGS) $(FFLAGS) $(TEST_FLAGS) $(LOADLIBES) $(LDLIBS)
 
 unit_tests: test_string test_unit_conv test_io_mod
 

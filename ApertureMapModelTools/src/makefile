@@ -1,19 +1,19 @@
 #
-# defining default variable names (assume POISX system)
-CC = gfortran
-OPTIMIZE ?= -O3
-MODELNAME ?= apm-lcl-model.exe
-OBJDIR ?= dist
-OS_FLAG = -DWIN64=0
-STATIC_FLAG ?=
+# defining default variable names (assume UNIX system)
+FC = gfortran
 MKDIR = mkdir -p
-RM = rm -f
 RMDIR = rm -rf
-OS_NAME =$(shell uname)
+OS_NAME = $(shell uname)
+MODELNAME = apm-lcl-model.exe
+.DEFAULT_GOAL := all
 
-.DEFAULT_GOAL:= all
-
+OBJDIR = dist
 override OBJDIR := $(strip $(OBJDIR))/
+
+OS_FLAG = -DWIN64=0
+STATIC_FLAG =
+BUILD_FLAGS = -cpp $(OS_FLAG) $(STATIC_FLAG) -J$(OBJDIR)
+FFLAGS = -O3 -fdefault-real-8 -fdefault-double-8
 
 # determining system type if not supplied
 ifndef SYS
@@ -53,20 +53,20 @@ MODULE_OBJS = $(addprefix $(OBJDIR), $(MODULE_FILES:.F=.o))
 #
 # determining flags to apply at compile time based on target
 # test flags are only defined when this file is included into the testing makefile
-FLAGS = $(OPTIMIZE) $(OS_FLAG) $(STATIC_FLAG) -J$(OBJDIR) -fdefault-real-8 -fdefault-double-8
-debug test: FLAGS = -fimplicit-none -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace -cpp -g -pg
-debug test: FLAGS += -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter
-debug test: FLAGS += $(OS_FLAG) -J$(OBJDIR) -I$(OBJDIR) -fdefault-real-8 -fdefault-double-8
+
+debug test: FFLAGS = -fimplicit-none -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace -g -pg
+debug test: FFLAGS += -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter
+debug test: FFLAGS += -fdefault-real-8 -fdefault-double-8
 
 
 ${OBJDIR}:
 	-$(MKDIR) $(OBJDIR:/=)
 
 ${OBJDIR}%.o : %.F | ${OBJDIR}
-	$(CC) -c $(FLAGS) $(TEST_FLAGS) -o $@ $<
+	$(FC) -c $(BUILD_FLAGS) $(FFLAGS) $(TEST_FLAGS) -o $@ $<
 
 ${OBJDIR}${MODELNAME}: ${MODULE_OBJS} ${MODEL_OBJS}
-	$(CC) $(FLAGS) $(TEST_FLAGS) $^ -o $@
+	$(FC) $(BUILD_FLAGS) $(LDFLAGS) $(FFLAGS) $(TEST_FLAGS) $^ $(LOADLIBES) $(LDLIBS) -o $@
 
 all: ${OBJDIR}${MODELNAME}
 
