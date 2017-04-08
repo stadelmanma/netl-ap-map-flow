@@ -10,6 +10,8 @@ from ApertureMapModelTools import _get_logger, set_main_logger_level
 
 # setting up arg parser
 parser = argparse.ArgumentParser(description='Builds the flow model from source code')
+parser.add_argument('-m', '--make-exec', default='make',
+                    help='make executable to use (default: %(default)s)')
 parser.add_argument('-n', '--name', default=amt.DEFAULT_MODEL_NAME,
                     help='Name to build the executable under (default: %(default)s)')
 parser.add_argument('-o', '--output-dir', default=amt.__path__[0],
@@ -34,7 +36,7 @@ def build_model():
     logger.info('Compiling source in: {}'.format(src_path))
 
     # building command
-    cmd = ['make', '-C', src_path, args.targets, 'MODELNAME=' + args.name]
+    cmd = [args.make_exec, '-C', src_path, args.targets, 'MODELNAME=' + args.name]
     cmd.extend(args.env_vars)
     cmd = tuple([param for param in cmd if param])
 
