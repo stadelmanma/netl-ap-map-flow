@@ -6,6 +6,7 @@ import argparse
 import os
 from subprocess import Popen
 import ApertureMapModelTools as amt
+from ApertureMapModelTools import _get_logger, set_main_logger_level
 
 # setting up arg parser
 parser = argparse.ArgumentParser(description='Builds the flow model from source code')
@@ -13,28 +14,41 @@ parser.add_argument('-n', '--name', default=amt.DEFAULT_MODEL_NAME,
                     help='Name to build the executable under (default: %(default)s)')
 parser.add_argument('-o', '--output-dir', default=amt.__path__[0],
                     help='Location to save execuable at (default: %(default)s)')
-parser.add_argument('target', nargs='?', default=None, help='makefile target to build',
-                    choices=set((None, 'debug', 'test', 'clean')))
+parser.add_argument('targets', nargs='?', default=None, help='makefile target to build',
+                    choices=[None, 'all', 'rebuild', 'debug', 'clean', 'test'])
+parser.add_argument('env_vars', nargs='*', default=[],
+                    help='makefile environment variables, must specify target')
+
+# setting up logger
+set_main_logger_level('info')
+logger = _get_logger('ApertureMapModelTools.build_model')
 
 def build_model():
     # getting command line args
     args = parser.parse_args()
 
-    # determining path to pass to makefile
+    # determining src path to pass to makefile
     src_path = os.path.join(amt.__path__[0], 'src')
     exe_file = os.path.join(amt.__path__[0], 'src', 'dist', args.name)
     out_file = os.path.join(args.output_dir, args.name)
+    logger.info('Compiling source in: {}'.format(src_path))
+
+    # building command
+    cmd = ['make', '-C', src_path, args.targets, 'MODELNAME=' + args.name]
+    cmd.extend(args.env_vars)
+    cmd = tuple([param for param in cmd if param])
 
     # running make
-    cmd = ('make', args.target, 'MODELNAME=' + args.name, '-C', src_path)
-    cmd = tuple([param for param in cmd if param])
+    logger.info('Makefile command: {}'.format(' '.join(cmd)))
     proc = Popen(cmd, stdout=None, stderr=None, universal_newlines=True)
     proc.wait()
 
-    # moving the file up to the main namespace
+    # moving the file up to the main namespace and removing the old one
     if os.path.isfile(out_file):
+        logger.info('Removing pre-existing file')
         os.remove(out_file)
-    if args.target != 'clean':
+    if os.path.isfile(exe_file):
+        logger.info('Moving executable to: {}'.format(out_file))
         os.rename(exe_file, out_file)
 
     # exit with same return code as make
