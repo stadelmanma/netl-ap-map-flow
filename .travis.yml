@@ -33,7 +33,7 @@ install:
 
 before_script:
   - python3 setup.py develop --user
-  - ./bin/build_model debug
+  - ./bin/build_model all STATIC_FLAG=-static
 
 script:
   - ./bin/test pep8 cov
