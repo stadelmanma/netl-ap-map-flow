@@ -25,7 +25,6 @@ platform:
 install:
     # Remove cygwin (and therefore the git that comes with it).
     - cmd: rmdir C:\cygwin /s /q
-
     # Use the pre-installed Miniconda for the desired arch
     - cmd: call %CONDA_INSTALL_LOCN%\Scripts\activate.bat
     - cmd: conda config --add channels conda-forge
@@ -37,5 +36,5 @@ install:
 build: off
 
 build_script:
-    - cmd: "%PYTHON%" setup.py install --single-version-externally-managed --record=record.txt
-    - cmd: "%PYTHON%" .\bin\build_model -m mingw32-make.exe all STATIC_FLAG=-static
+    - cmd: python setup.py install
+    - cmd: python .\bin\build_model -m mingw32-make.exe all STATIC_FLAG=-static
