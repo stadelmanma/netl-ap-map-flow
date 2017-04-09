@@ -16,6 +16,7 @@ from ApertureMapModelTools.RunModel import InputFile, run_model
 FIXTURE_DIR = os.path.realpath('fixtures')
 RETURN_CODE = 0
 MODEL_NAME = 'apm-lcl-coverage-test.exe'
+EXE_PATH = os.path.realpath(os.path.join(os.curdir, MODEL_NAME))
 # -----------------------------------------------------------------------------
 
 
@@ -65,8 +66,7 @@ def initalize_input_file():
     inp_file = InputFile(init_inp, file_formats)
     #
     # updating exe-file path so it is absolute
-    exe_path = os.path.realpath(os.path.join(os.path.dirname(__file__), MODEL_NAME))
-    inp_file['EXE-FILE'] = exe_path
+    inp_file['EXE-FILE'] = EXE_PATH
     #
     return inp_file
 
