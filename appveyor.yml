@@ -22,7 +22,8 @@ install:
     #- cmd: rmdir C:\cygwin /s /q
     # Use the pre-installed Miniconda for the desired arch
     - cmd: echo %PATH%
-    - cmd: dir C:\MinGW\bin
+    - cmd: dir C:\mingw-w64\i686-5.3.0-posix-dwarf-rt_v4-rev0
+    - cmd: dir C:\mingw-w64\i686-5.3.0-posix-dwarf-rt_v4-rev0\bin
     - cmd: call %CONDA_INSTALL_LOCN%\Scripts\activate.bat
     - cmd: conda config --set always_yes yes
     - cmd: conda config --add channels conda-forge
