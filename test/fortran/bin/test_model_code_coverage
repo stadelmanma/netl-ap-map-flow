@@ -15,7 +15,7 @@ from ApertureMapModelTools.RunModel import InputFile, run_model
 # global constants
 FIXTURE_DIR = os.path.realpath('fixtures')
 RETURN_CODE = 0
-MODEL_NAME = sys.argv[1]
+MODEL_NAME = 'apm-lcl-coverage-test.exe'
 # -----------------------------------------------------------------------------
 
 
