@@ -1,9 +1,20 @@
 #!/usr/bin/env python3
+import argparse
 from glob import glob
 import os
 import shutil
 from subprocess import Popen, check_call, check_output
 import ApertureMapModelTools as amt
+
+
+# setting up arg parser
+desc = 'Runs a suite of integration and unit tests on the fortran code'
+parser = argparse.ArgumentParser(description=desc)
+parser.add_argument('-m', '--make-exec', default='make',
+                    help='make executable to use (default: %(default)s)')
+
+# getting args
+args = parser.parse_args()
 
 
 # get path to top of repository to serve as an anchor point
@@ -25,7 +36,7 @@ shutil.copyfile(os.path.join(model_src, 'makefile'),
 
 # build test version of model and the unit test executables
 os.chdir(test_fortran_dir)
-check_call(['make', 'test', 'MODELNAME="apm-lcl-coverage-test.exe"'])
+check_call([args.make_exec, 'test', 'MODELNAME="apm-lcl-coverage-test.exe"'])
 
 # run test suite located in bin directory
 exit_code = 0
@@ -37,7 +48,7 @@ for test in glob('bin/*'):
 
 # building the coverage report
 print('')
-check_call(['make', 'coverage'])
+check_call([args.make_exec, 'coverage'])
 
 # return with an exit code
 print('')
