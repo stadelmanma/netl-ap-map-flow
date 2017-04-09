@@ -10,8 +10,8 @@ from collections import OrderedDict
 import os
 import re
 from shlex import split as shlex_split
-from subprocess import PIPE
-from subprocess import Popen
+from subprocess import PIPE, Popen
+import sys
 from threading import Thread
 from time import time
 from scipy import inf as sp_inf
@@ -63,7 +63,7 @@ class ArgInput(object):
         #
         # split the line into an array
         try:
-            self._line_arr = shlex_split(line)
+            self._line_arr = shlex_split(line, posix="win" not in sys.platform)
         except ValueError as err:
             msg = 'shlex split failed on line {} with ValueError: {}'
             logger.debug(msg.format(line, err))
