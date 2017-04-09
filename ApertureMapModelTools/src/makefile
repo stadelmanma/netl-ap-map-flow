@@ -12,7 +12,7 @@ override OBJDIR := $(strip $(OBJDIR))/
 
 OS_FLAG = -DWIN64=0
 STATIC_FLAG =
-BUILD_FLAGS = -cpp $(OS_FLAG) $(STATIC_FLAG) -J$(OBJDIR)
+BUILD_FLAGS = -cpp -m64 $(OS_FLAG) $(STATIC_FLAG) -J$(OBJDIR)
 FFLAGS = -O3 -fdefault-real-8 -fdefault-double-8
 
 # determining system type if not supplied
