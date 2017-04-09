@@ -1,51 +1,49 @@
-#!/bin/bash
-set -e
-REPO_TOP="$(git rev-parse --show-toplevel)"
-EXIT_CODE=0
+#!/usr/bin/env python3
+from glob import glob
+import os
+import shutil
+from subprocess import Popen, check_call, check_output
+import ApertureMapModelTools as amt
 
-# Building the flow model from source with coverage flags
-cd "$REPO_TOP/ApertureMapModelTools/src"
-cp *.F "$REPO_TOP/test/fortran"
-cp makefile "$REPO_TOP/test/fortran/model_makefile"
 
-# creating directory and building model with coverage
-cd "$REPO_TOP/test/fortran"
-make test MODELNAME="apm-lcl-coverage-test.exe"
+# get path to top of repository to serve as an anchor point
+cmd = ['git', 'rev-parse', '--show-toplevel']
+repo_top = check_output(cmd, universal_newlines=True).strip()
 
-# executing test scripts and capturing return codes
-set +e
+# create paths to model and test source code
+model_src = os.path.join(repo_top, 'ApertureMapModelTools', 'src')
+test_src = os.path.join(repo_top, 'test', 'fortran', 'src')
+test_fortran_dir = os.path.join(repo_top, 'test', 'fortran')
 
-echo ""
-echo "Running flow model integration tests."
-./test_model_code_coverage "apm-lcl-coverage-test.exe"
-EXIT_CODE=$((EXIT_CODE + $?))
+# move model source code into fortran test directory
+for src_file in glob(os.path.join(model_src, '*.F')):
+    shutil.copy(src_file, test_fortran_dir)
 
-echo ""
-echo "Running STRING_MODULE unit tests."
-./TEST_STRING_MOD.EXE
-EXIT_CODE=$((EXIT_CODE + $?))
+# copy over makefile
+shutil.copyfile(os.path.join(model_src, 'makefile'),
+                os.path.join(test_fortran_dir, 'model_makefile'))
 
-echo ""
-echo "Running UNIT_CONVERSION_MODULE unit tests."
-./TEST_UNIT_CONV_MOD.EXE
-EXIT_CODE=$((EXIT_CODE + $?))
+# build test version of model and the unit test executables
+os.chdir(test_fortran_dir)
+check_call(['make', 'test', 'MODELNAME="apm-lcl-coverage-test.exe"'])
 
-echo ""
-echo "Running IO_MODULE unit tests."
-./TEST_IO_MOD.EXE
-EXIT_CODE=$((EXIT_CODE + $?))
+# run test suite located in bin directory
+exit_code = 0
+for test in glob('bin/*'):
+    print('')
+    print('Running test file: ' + os.path.basename(test))
+    proc = Popen([test], universal_newlines=True, cwd=os.curdir)
+    exit_code += proc.wait()
 
 # building the coverage report
-echo ""
-make coverage
+print('')
+check_call(['make', 'coverage'])
 
-# exiting with proper exit code
-echo ""
-if [ $EXIT_CODE -eq 0 ]
-then
-    echo "We have lift off!"
-    exit 0
-else
-    echo "Houston, we've had a problem here."
-    exit 1
-fi
+# return with an exit code
+print('')
+if exit_code == 0:
+    print('We have lift off!')
+    exit(0)
+else:
+    print("Houston, we've had a problem here.")
+    exit(1)
