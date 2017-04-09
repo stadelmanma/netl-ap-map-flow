@@ -21,8 +21,7 @@ install:
     # Remove cygwin (and therefore the git that comes with it).
     #- cmd: rmdir C:\cygwin /s /q
     # Use the pre-installed Miniconda for the desired arch
-    - cmd: dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1
-    - cmd: dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64
+    - cmd: dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
     - cmd: set PATH=%PATH%;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
     - cmd: call %CONDA_INSTALL_LOCN%\Scripts\activate.bat
     - cmd: conda config --set always_yes yes
@@ -30,6 +29,7 @@ install:
     - cmd: conda config --set show_channel_urls true
     - cmd: conda update conda
     - cmd: conda install --file requirements.txt
+    - cmd: pip install -r test_requirements.txt
 
 # Skip .NET project specific build phase.
 build: off
@@ -37,3 +37,6 @@ build: off
 build_script:
     - cmd: python setup.py install
     - cmd: python .\bin\build_model -m mingw32-make all STATIC_FLAG=-static
+
+test_script:
+    - cmd: python .\bin\test pep8 cov
