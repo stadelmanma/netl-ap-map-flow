@@ -15,7 +15,8 @@ from ApertureMapModelTools.RunModel import InputFile, run_model
 # global constants
 FIXTURE_DIR = os.path.realpath('fixtures')
 RETURN_CODE = 0
-MODEL_NAME = sys.argv[1]
+MODEL_NAME = 'apm-lcl-coverage-test.exe'
+EXE_PATH = os.path.realpath(os.path.join(os.curdir, MODEL_NAME))
 # -----------------------------------------------------------------------------
 
 
@@ -65,8 +66,7 @@ def initalize_input_file():
     inp_file = InputFile(init_inp, file_formats)
     #
     # updating exe-file path so it is absolute
-    exe_path = os.path.realpath(os.path.join(os.path.dirname(__file__), MODEL_NAME))
-    inp_file['EXE-FILE'] = exe_path
+    inp_file['EXE-FILE'] = EXE_PATH
     #
     return inp_file
 
@@ -92,7 +92,7 @@ def check_parallel_plate_error(expected_error, num_digits):
     print('Parallel plate numerical error: {:0.6f}%'.format(q_pp_err * 100.0))
     msg = 'Expected numerical error: {}, calculated numerical error: {}'
     if int(q_pp_err * scale) != expected_error*scale:
-        print(msg.format(q_pp_err, expected_error))
+        print(msg.format(expected_error, q_pp_err))
         RETURN_CODE = 1
 
 def test_outfile_loading(pat_str):
@@ -131,13 +131,14 @@ def diff_compare_file_set(pat_str):
         orig_file = os.path.split(new_file)[1]
         orig_file = '{}-orig{}'.format(*os.path.splitext(orig_file))
         orig_file = os.path.join(FIXTURE_DIR, orig_file)
-        # setup and crate Popen object
-        cmd = ['git', 'diff', '--numstat', '--exit-code', '--no-index', orig_file, new_file]
+        # setup and create Popen object
+        cmd = ['git', 'diff', '--numstat', '--exit-code', '--no-index',
+               '--ignore-space-at-eol', '--ws-error-highlight=all', orig_file, new_file]
         proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         proc.stdout, proc.stderr = proc.communicate()
-        if  proc.stderr.strip():
+        if proc.returncode:
             print('git diff command failed')
-            print(proc.stderr)
+            print(proc.stderr[0:1000])
             RETURN_CODE = 1
         # check stdout
         if proc.stdout.strip():
@@ -169,7 +170,7 @@ inp_file.add_parameter('BAD-INPUT: VALUE')
 run_model_wrapper(inp_file, stdout_pat=re.compile('WARNING: UNRECOGNIZED INPUT: BAD-INPUT: VALUE'))
 #
 # testing the net numerical error in the parallel plate simulation
-check_parallel_plate_error(0.0000111880, 9)
+check_parallel_plate_error(0.0, 9)
 test_outfile_loading('.*(?<!stats).csv')
 diff_compare_file_set('.*coverage_test.*')
 #

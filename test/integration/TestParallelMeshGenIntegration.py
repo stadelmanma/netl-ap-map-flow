@@ -8,6 +8,7 @@ Last Modifed: 2016/08/16
 """
 import os
 import pytest
+import sys
 import scipy as sp
 from ApertureMapModelTools import DataField
 from ApertureMapModelTools.OpenFoam import OpenFoamFile, OpenFoamDict, OpenFoamList
@@ -15,6 +16,7 @@ import ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ as pmg_submodule
 from ApertureMapModelTools.OpenFoam import ParallelMeshGen
 
 
+@pytest.mark.xfail(sys.platform == 'win32', reason="OpenFoam doesn't natively run on Windows")
 def test_parallel_mesh_gen():
     #
     infile = os.path.join(FIXTURE_DIR, 'maps', 'Fracture1ApertureMap-10avg.txt')

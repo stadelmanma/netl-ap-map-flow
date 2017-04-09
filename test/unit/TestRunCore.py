@@ -63,7 +63,7 @@ class TestRunCore:
         # line with quote
         line = 'KEYWORD: "VALUE1 + VALUE2"'
         arg = ArgInput(line)
-        assert arg.value == 'VALUE1 + VALUE2'
+        assert arg.value == '"VALUE1 + VALUE2"'
         #
         # line with un-matched quote, causes shlex_split to fail
         line = 'TEST: "UNMATCHED QUOTE'

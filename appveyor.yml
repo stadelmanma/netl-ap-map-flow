@@ -1,0 +1,40 @@
+version: '0.0.{build}'
+
+environment:
+  PYTHONIOENCODING: "UTF-8"
+
+  matrix:
+    - TARGET_ARCH: "x64"
+      CONDA_PY: "35"
+      PY_CONDITION: "python >=3.5,<3.6"
+      CONDA_INSTALL_LOCN: "C:\\Miniconda35-x64"
+
+    - TARGET_ARCH: "x64"
+      CONDA_PY: "36"
+      PY_CONDITION: "python >=3.6"
+      CONDA_INSTALL_LOCN: "C:\\Miniconda36-x64"
+
+platform:
+    - x64
+
+install:
+    # Use the pre-installed Miniconda for the desired arch
+    - cmd: set PATH=%PATH%;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
+    - cmd: call %CONDA_INSTALL_LOCN%\Scripts\activate.bat
+    - cmd: conda config --set always_yes yes
+    - cmd: conda config --add channels conda-forge
+    - cmd: conda config --set show_channel_urls true
+    - cmd: conda update conda
+    - cmd: conda install --file requirements.txt
+    - cmd: pip install -r test_requirements.txt
+
+# Skip .NET project specific build phase.
+build: off
+
+build_script:
+    - cmd: python setup.py develop --user
+    - cmd: python .\bin\build_model -m mingw32-make all STATIC_FLAG=-static
+
+test_script:
+    - cmd: python .\bin\test pep8 cov
+    - cmd: python .\bin\run_model_coverage_test -m mingw32-make

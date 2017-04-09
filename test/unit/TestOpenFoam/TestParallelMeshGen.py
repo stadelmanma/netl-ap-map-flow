@@ -9,6 +9,7 @@ Last Modifed: 2016/08/18
 #
 import os
 import pytest
+import sys
 import scipy as sp
 import ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ as pmg_submodule
 from ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ import DataFieldRegion
@@ -17,6 +18,7 @@ from ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ import MergeGroup
 from ApertureMapModelTools.OpenFoam import ParallelMeshGen
 
 
+@pytest.mark.xfail(sys.platform == 'win32', reason="OpenFoam doesn't natively run on Windows")
 class TestParallelMeshGen:
     r"""
     Executes a set of functions to handle testing of the ParalellMeshGen class
