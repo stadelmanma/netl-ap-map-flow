@@ -1,6 +1,9 @@
 .. image:: https://travis-ci.org/stadelmanma/netl-ap-map-flow.svg?branch=master
    :target: https://travis-ci.org/stadelmanma/netl-ap-map-flow
 
+.. image:: https://ci.appveyor.com/api/projects/status/cyaxl3r2mbmymbp3?svg=true
+   :target: https://ci.appveyor.com/project/stadelmanma/netl-ap-map-flow
+
 .. image:: https://codecov.io/gh/stadelmanma/netl-ap-map-flow/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/stadelmanma/netl-ap-map-flow
 
