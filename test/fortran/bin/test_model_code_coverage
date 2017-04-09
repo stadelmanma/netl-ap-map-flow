@@ -170,7 +170,7 @@ inp_file.add_parameter('BAD-INPUT: VALUE')
 run_model_wrapper(inp_file, stdout_pat=re.compile('WARNING: UNRECOGNIZED INPUT: BAD-INPUT: VALUE'))
 #
 # testing the net numerical error in the parallel plate simulation
-check_parallel_plate_error(0.0000111880, 9)
+check_parallel_plate_error(0.0, 9)
 test_outfile_loading('.*(?<!stats).csv')
 diff_compare_file_set('.*coverage_test.*')
 #
