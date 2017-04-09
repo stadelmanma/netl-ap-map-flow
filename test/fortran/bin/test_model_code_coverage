@@ -131,9 +131,9 @@ def diff_compare_file_set(pat_str):
         orig_file = os.path.split(new_file)[1]
         orig_file = '{}-orig{}'.format(*os.path.splitext(orig_file))
         orig_file = os.path.join(FIXTURE_DIR, orig_file)
-        # setup and crate Popen object
+        # setup and create Popen object
         cmd = ['git', 'diff', '--numstat', '--exit-code', '--no-index',
-               '--ignore-space-at-eol', '--ws-error-highlight=all' orig_file, new_file]
+               '--ignore-space-at-eol', '--ws-error-highlight=all', orig_file, new_file]
         proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         proc.stdout, proc.stderr = proc.communicate()
         if  proc.stderr.strip():
