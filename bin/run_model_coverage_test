@@ -39,8 +39,10 @@ os.chdir(test_fortran_dir)
 check_call([args.make_exec, 'test', 'MODELNAME="apm-lcl-coverage-test.exe"'])
 
 # run test suite located in bin directory
-exit_code = 0
-for test in glob('bin/*'):
+cmd = ['python', os.path.join('bin', 'test_model_code_coverage')]
+proc = Popen(cmd, universal_newlines=True, cwd=os.curdir)
+exit_code = proc.wait()
+for test in glob('bin/*.exe'):
     print('')
     print('Running test file: ' + os.path.basename(test))
     proc = Popen([os.path.realpath(test)], universal_newlines=True, cwd=os.curdir)
