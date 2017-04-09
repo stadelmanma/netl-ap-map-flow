@@ -132,12 +132,13 @@ def diff_compare_file_set(pat_str):
         orig_file = '{}-orig{}'.format(*os.path.splitext(orig_file))
         orig_file = os.path.join(FIXTURE_DIR, orig_file)
         # setup and crate Popen object
-        cmd = ['git', 'diff', '--numstat', '--exit-code', '--no-index', orig_file, new_file]
+        cmd = ['git', 'diff', '--numstat', '--exit-code', '--no-index',
+               '--ignore-space-at-eol', orig_file, new_file]
         proc = Popen(cmd, stdout=PIPE, stderr=PIPE, universal_newlines=True)
         proc.stdout, proc.stderr = proc.communicate()
         if  proc.stderr.strip():
             print('git diff command failed')
-            print(proc.stderr)
+            print(proc.stderr[0:5000])
             RETURN_CODE = 1
         # check stdout
         if proc.stdout.strip():
