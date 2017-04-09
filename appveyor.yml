@@ -19,7 +19,6 @@ platform:
 
 install:
     # Use the pre-installed Miniconda for the desired arch
-    - cmd: dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
     - cmd: set PATH=%PATH%;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
     - cmd: call %CONDA_INSTALL_LOCN%\Scripts\activate.bat
     - cmd: conda config --set always_yes yes
