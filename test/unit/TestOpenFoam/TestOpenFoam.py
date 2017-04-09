@@ -9,11 +9,13 @@ Last Modifed: 2016/08/15
 #
 import os
 import pytest
+import sys
 import scipy as sp
 from ApertureMapModelTools.OpenFoam.__openfoam_core__ import OpenFoamObject
 from ApertureMapModelTools import OpenFoam
 
 
+@pytest.mark.xfail(sys.platform == 'win32', reason="OpenFoam doesn't natively run on Windows")
 class TestOpenFoam:
     r"""
     Executes a set of functions to handle testing of the export routines
