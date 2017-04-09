@@ -5,11 +5,6 @@ environment:
 
   matrix:
     - TARGET_ARCH: "x64"
-      CONDA_PY: "34"
-      PY_CONDITION: "python >=3.4,<3.5"
-      CONDA_INSTALL_LOCN: "C:\\Miniconda3-x64"
-
-    - TARGET_ARCH: "x64"
       CONDA_PY: "35"
       PY_CONDITION: "python >=3.5,<3.6"
       CONDA_INSTALL_LOCN: "C:\\Miniconda35-x64"
@@ -24,18 +19,19 @@ platform:
 
 install:
     # Remove cygwin (and therefore the git that comes with it).
-    - cmd: rmdir C:\cygwin /s /q
+    #- cmd: rmdir C:\cygwin /s /q
     # Use the pre-installed Miniconda for the desired arch
     - cmd: call %CONDA_INSTALL_LOCN%\Scripts\activate.bat
     - cmd: conda config --set always_yes yes
     - cmd: conda config --add channels conda-forge
     - cmd: conda config --set show_channel_urls true
-    - cmd: conda update --quiet conda
-    - cmd: conda install --file requirements.txt
+    - cmd: conda update conda
+    - cmd: conda install conda-build
+    - cmd: conda upgrade conda-build
 
 # Skip .NET project specific build phase.
 build: off
 
 build_script:
     - cmd: python setup.py install
-    - cmd: python .\bin\build_model -m mingw32-make.exe all STATIC_FLAG=-static
+    - cmd: python .\bin\build_model -m mingw32-make all STATIC_FLAG=-static
