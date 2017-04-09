@@ -18,8 +18,6 @@ platform:
     - x64
 
 install:
-    # Remove cygwin (and therefore the git that comes with it).
-    #- cmd: rmdir C:\cygwin /s /q
     # Use the pre-installed Miniconda for the desired arch
     - cmd: dir C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
     - cmd: set PATH=%PATH%;C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin
@@ -35,7 +33,7 @@ install:
 build: off
 
 build_script:
-    - cmd: python setup.py install
+    - cmd: python setup.py develop --user
     - cmd: python .\bin\build_model -m mingw32-make all STATIC_FLAG=-static
 
 test_script:
