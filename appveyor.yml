@@ -34,7 +34,7 @@ build: off
 build_script:
     - cmd: python setup.py develop --user
     - cmd: python .\bin\build_model -m mingw32-make all STATIC_FLAG=-static
-    - cmd: python .\bin\run_model_coverage_test
 
 test_script:
     - cmd: python .\bin\test pep8 cov
+    - cmd: python .\bin\run_model_coverage_test -m mingw32-make
