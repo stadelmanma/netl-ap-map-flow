@@ -43,7 +43,7 @@ exit_code = 0
 for test in glob('bin/*'):
     print('')
     print('Running test file: ' + os.path.basename(test))
-    proc = Popen([test], universal_newlines=True, cwd=os.curdir)
+    proc = Popen([os.path.realpath(test)], universal_newlines=True, cwd=os.curdir)
     exit_code += proc.wait()
 
 # building the coverage report
