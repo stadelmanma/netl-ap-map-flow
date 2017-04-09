@@ -1,0 +1,43 @@
+sudo: required
+dist: trusty
+
+language: python
+
+python:
+  - "3.4"
+  - "3.5"
+  - "3.6"
+
+addons:
+  apt:
+    packages:
+      - libatlas-dev
+      - libatlas-base-dev
+      - liblapack-dev
+      - gfortran
+
+before_install:
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - hash -r
+  - conda config --set always_yes yes --set changeps1 no
+  - conda config --add channels conda-forge
+  - conda update -q conda
+  - conda info -a
+
+install:
+  - conda create -q -n test-environment python=$TRAVIS_PYTHON_VERSION --file requirements.txt
+  - source activate test-environment
+  - pip install -r test_requirements.txt
+
+before_script:
+  - python3 setup.py develop --user
+  - ./bin/build_model all STATIC_FLAG=-static
+
+script:
+  - ./bin/test pep8 cov
+  - ./bin/run_model_coverage_test
+
+after_success:
+  - codecov
