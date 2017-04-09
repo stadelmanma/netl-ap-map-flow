@@ -57,6 +57,8 @@ MODULE_OBJS = $(addprefix $(OBJDIR), $(MODULE_FILES:.F=.o))
 debug test: FFLAGS = -fimplicit-none -fwhole-file -fcheck=all -std=f2008 -pedantic -fbacktrace -g -pg
 debug test: FFLAGS += -Wall -Wline-truncation -Wcharacter-truncation -Wsurprising -Waliasing -Wunused-parameter
 debug test: FFLAGS += -fdefault-real-8 -fdefault-double-8
+# run tests at higher precision to test against analytical solutions
+test: FFLAGS += -freal-8-real-16
 
 
 ${OBJDIR}:
