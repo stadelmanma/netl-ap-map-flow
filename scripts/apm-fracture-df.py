@@ -362,6 +362,6 @@ def output_data(file_handle, traces, x_data=None, z_data=None):
         for i, frac_slice in enumerate(z_data):
             file_handle.write(fmt.format(i, **frac_slice.fractals))
 
-#
+
 if __name__ == '__main__':
     apm_fracture_df()
