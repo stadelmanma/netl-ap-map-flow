@@ -87,5 +87,6 @@ def process_files(args):
                 raise FileExistsError(msg.format(processor.outfile_name))
             processor.write_data()
 
+
 if __name__ == '__main__':
     apm_process_data_map()
