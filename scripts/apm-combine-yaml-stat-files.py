@@ -48,6 +48,7 @@ parser.add_argument('outfile_name', nargs='?', type=os.path.realpath,
                     default='combined-fracture-stats.csv',
                     help='name to save CSV file under')
 
+
 def apm_combine_yaml_files():
     r"""
     Driver program to handles combining YAML stat files into a single
@@ -194,6 +195,6 @@ def process_data_key(key, header, data_list):
         if all_match:
             data[key] = [data[key][0]]
 
-#
+
 if __name__ == '__main__':
     apm_combine_yaml_files()
