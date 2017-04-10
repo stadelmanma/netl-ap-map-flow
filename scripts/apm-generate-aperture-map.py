@@ -45,9 +45,10 @@ parser.add_argument('-i', '--invert', action='store_true',
 parser.add_argument('image_file', type=os.path.realpath,
                     help='binary TIF stack image to process')
 
+msg = 'name to save the aperture map under (default: %(default)s)'
 parser.add_argument('aperture_map_name', nargs='?',
                     default='{image_file}-aperture-map.txt',
-                    help='name to save the aperture map under (default: %(default)s)')
+                    help=msg)
 
 
 def apm_generate_aperture_map():
@@ -88,6 +89,6 @@ def apm_generate_aperture_map():
     logger.info('saving aperture map as {}'.format(map_path))
     sp.savetxt(map_path, aperture_map, fmt='%d', delimiter='\t')
 
-#
+
 if __name__ == '__main__':
     apm_generate_aperture_map()
