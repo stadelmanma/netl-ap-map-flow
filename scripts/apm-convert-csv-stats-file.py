@@ -124,6 +124,6 @@ def apm_convert_csv_stats_file():
     with open(filename, 'w') as outfile:
         yaml.dump(dict(data), outfile)
 
-#
+
 if __name__ == '__main__':
     apm_convert_csv_stats_file()
