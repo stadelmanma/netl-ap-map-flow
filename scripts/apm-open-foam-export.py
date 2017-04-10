@@ -453,9 +453,7 @@ def write_all_files(overwrite=False):
     except FileExistsError as err:
         logger.fatal('Specify the "-f" flag to automatically overwrite files')
         raise err
-#
-########################################################################
-#
-# Runs the function if being invoked directly, acts as a module otherwise.
+
+
 if __name__ == '__main__':
     apm_open_foam_export()
