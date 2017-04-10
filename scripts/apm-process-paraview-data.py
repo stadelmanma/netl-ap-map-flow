@@ -136,7 +136,7 @@ def save_data_maps(map_coords, data_coords, aper_map, data_dict):
     #
     # generating p field
     logger.info('generating and saving pressure field...')
-    field = data_dict['p']*1000 # openFoam outputs kinematic pressure
+    field = data_dict['p']*1000  # openFoam outputs kinematic pressure
     field = griddata(data_coords, field, map_coords, method='nearest')
     field = sp.reshape(field, aper_map.data_map.shape[::-1])
     sp.savetxt(base_name+'-p-map.txt', field.T, delimiter='\t')
@@ -165,6 +165,6 @@ def save_data_maps(map_coords, data_coords, aper_map, data_dict):
     field = field * aper_map.data_map.T * voxel_size**2
     sp.savetxt(base_name+'-qm-map.txt', field.T, delimiter='\t')
 
-#
+
 if __name__ == '__main__':
     process_paraview_data()
