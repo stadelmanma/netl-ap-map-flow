@@ -47,6 +47,7 @@ parser.add_argument('image_file', type=os.path.realpath,
 parser.add_argument('colored_stack_name', nargs='?', default=None,
                     help='name to save the colored stack under')
 
+
 def apm_color_stack_by_aperture():
     r"""
     Driver function to color the tif image.
@@ -75,6 +76,7 @@ def apm_color_stack_by_aperture():
     logger.info('saving image data to file' + filename)
     image.save(filename, overwrite=namespace.force)
 
+
 def gen_colored_map(image_file, invert):
     r"""
     Handles producing a colored image
@@ -99,6 +101,6 @@ def gen_colored_map(image_file, invert):
     #
     return image.view(FractureImageStack)
 
-#
+
 if __name__ == '__main__':
     apm_color_stack_by_aperture()
