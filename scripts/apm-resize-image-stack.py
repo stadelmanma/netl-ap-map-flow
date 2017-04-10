@@ -45,6 +45,7 @@ parser.add_argument('image_file', type=os.path.realpath,
 parser.add_argument('outfile_name', nargs='?', default=None,
                     help='name to save the aperture map under')
 
+
 def apm_resize_image_stack():
     r"""
     Driver function to color the tif image.
@@ -73,6 +74,7 @@ def apm_resize_image_stack():
     logger.info('saving image data to file' + filename)
     image.save(filename, overwrite=namespace.force)
 
+
 def resize_image(image_file, invert):
     r"""
     Handles resizing the image y-axis
@@ -92,6 +94,7 @@ def resize_image(image_file, invert):
     logger.debug(' new image dimensions: {} {} {}'.format(*image.shape))
     #
     return image
-#
+
+
 if __name__ == '__main__':
     apm_resize_image_stack()
