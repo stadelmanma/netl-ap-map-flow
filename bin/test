@@ -26,6 +26,7 @@ if 'cov' in sys_args:
     del sys_args[sys_args.index('cov')]
     args.append('--cov-report=term-missing')
     args.append('--cov=ApertureMapModelTools')
+    args.append('--cov=scripts')
 
 # building final argument list
 del sys_args[0]
