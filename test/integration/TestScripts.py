@@ -79,3 +79,12 @@ class TestScripts:
                               'parallel-plate-10vox-RF1.00-700PA-LOG.TXT'))
         assert os.path.isfile(os.path.join(TEMP_DIR,
                               'Fracture1ApertureMap-10avg-RF0.00-300PA-INIT.INP'))
+
+    def test_fracture_df(cls):
+        # check that script exists for test
+        assert cls.script_files.get('apm-fracture-df.py', None)
+        #
+        # run dry run -xz --bot --mid --top
+        infile = os.path.join(FIXTURE_DIR, 'binary-fracture-small.tif')
+        args = ['-xz', '--bot', '--mid', '--top', infile, '-o', TEMP_DIR]
+        cls.run_script(cls.script_files['apm-fracture-df.py'], args)
