@@ -38,6 +38,11 @@ parser.add_argument('-v', '--verbose', action='store_true',
 parser.add_argument('-i', '--invert', action='store_true',
                     help='use this flag if your fracture is in black')
 
+parser.add_argument('-o', '--output-dir',
+                    type=os.path.realpath, default=os.getcwd(),
+                    help='''outputs file to the specified
+                    directory, sub-directories are created as needed''')
+
 parser.add_argument('-x', '--x-axis', action='store_true',
                     help='calculates Df exponent along x axis')
 
@@ -117,14 +122,16 @@ def apm_fracture_df():
     # checking output file path and setting default if required
     if args.data_filename is None:
         args.data_filename = os.path.basename(args.image_file)
-        args.data_filename = os.path.join(os.getcwd(), args.data_filename)
         args.data_filename = os.path.splitext(args.data_filename)[0]
         args.data_filename += '-df' + os.extsep + 'txt'
+    args.data_filename = os.path.join(args.output_dir, args.data_filename)
     #
     if os.path.exists(args.data_filename) and not args.force:
         msg = 'File %s already exists, '
         msg += 'use "-f" option to overwrite'
         raise FileExistsError(msg % args.data_filename)
+    #
+    os.makedirs(os.path.split(args.data_filename)[0], exist_ok=True)
     #
     # setting up which traces to calculate
     if (args.bot or args.top) and not args.mid:
