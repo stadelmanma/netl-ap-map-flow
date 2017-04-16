@@ -120,3 +120,22 @@ class TestScripts:
         assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
         outfile = 'binary-fracture-small-processed.tif'
         assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
+
+    def test_process_paraview_data(cls):
+        #
+        infile = os.path.join(FIXTURE_DIR, 'paraview-data-file.csv')
+        aper_map = 'Fracture1ApertureMap-10avg.txt'
+        aper_map = os.path.join(FIXTURE_DIR, 'maps', aper_map)
+        #
+        args = ['-v', '--rho', '1000.0', infile, aper_map,
+                '2.76e-5', '10', '-o', TEMP_DIR]
+        cls.run_script('apm-process-paraview-data.py', args)
+        #
+        outfile = 'paraview-data-file-p-map.txt'
+        assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
+        outfile = 'paraview-data-file-qx-map.txt'
+        assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
+        outfile = 'paraview-data-file-qz-map.txt'
+        assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
+        outfile = 'paraview-data-file-qm-map.txt'
+        assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
