@@ -20,7 +20,7 @@ the flow velocities into volumetic flow rates.
 
 Written By: Matthew stadelman
 Date Written: 2016/09/29
-Last Modfied: 2016/09/29
+Last Modfied: 2017/04/16
 """
 
 # setting up logger
@@ -38,6 +38,11 @@ parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
 # adding arguments
 parser.add_argument('-v', '--verbose', action='store_true',
                     help='debug messages are printed to the screen')
+
+parser.add_argument('-o', '--output-dir',
+                    type=os.path.realpath, default=os.getcwd(),
+                    help='''outputs file to the specified
+                    directory, sub-directories are created as needed''')
 
 parser.add_argument('--rho', type=float, default=1000,
                     help='fluid density for kinematic pressure conversion')
@@ -78,6 +83,7 @@ def process_paraview_data():
     base_name = args.base_name
     if base_name is None:
         base_name = os.path.basename(para_infile).split('.')[0]
+    base_name = os.path.join(args.output_dir, base_name)
     #
     aper_map, data_dict = read_data_files(para_infile, aper_infile)
     map_coords, data_coords = generate_coordinate_arrays(aper_map, data_dict)
