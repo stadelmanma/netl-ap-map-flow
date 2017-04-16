@@ -88,3 +88,16 @@ class TestScripts:
         infile = os.path.join(FIXTURE_DIR, 'binary-fracture-small.tif')
         args = ['-xz', '--bot', '--mid', '--top', infile, '-o', TEMP_DIR]
         cls.run_script(cls.script_files['apm-fracture-df.py'], args)
+        #
+        # check that file was created
+        assert os.path.isfile(os.path.join(TEMP_DIR, 'binary-fracture-small-df.txt'))
+
+    @pytest.mark.skip
+    def test_convert_csv_stats_file(cls):
+        # check that script exists for test
+        assert cls.script_files.get('apm-convert-csv-stats-file.py', None)
+        #
+        # run dry run -xz --bot --mid --top
+        infile = os.path.join(FIXTURE_DIR, 'binary-fracture-small.tif')
+        args = ['-xz', '--bot', '--mid', '--top', infile, '-o', TEMP_DIR]
+        cls.run_script(cls.script_files['apm-fracture-df.py'], args)
