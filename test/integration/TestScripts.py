@@ -27,20 +27,17 @@ class TestScripts:
         cls.script_files = glob(os.path.join(script_path, 'apm-*'))
         cls.script_files = {os.path.basename(s): s for s in cls.script_files}
 
-    @staticmethod
-    def run_script(script, args):
+    def run_script(cls, script, args):
         r"""
         runs the set of args provided for the script
         """
+        script = cls.script_files[script]
         cmd = ['python', script] + args
         proc = Popen(cmd)
         print('Running command: ', cmd)
         assert not proc.wait()
 
     def test_apm_bulk_run(cls):
-        # check that script exists for test
-        assert cls.script_files.get('apm-bulk-run.py', None)
-
         # load bulk run file for pre-processing
         bulkrun_inp_file = os.path.join(FIXTURE_DIR, 'test-bulk-run.yaml')
         with open(bulkrun_inp_file, 'r') as f:
@@ -64,11 +61,11 @@ class TestScripts:
         #
         # run dry run
         args = ['-v', bulkrun_inp_file]
-        cls.run_script(cls.script_files['apm-bulk-run.py'], args)
+        cls.run_script('apm-bulk-run.py', args)
         #
         # actually perform bulk run
         args = ['-v', '--start', bulkrun_inp_file]
-        cls.run_script(cls.script_files['apm-bulk-run.py'], args)
+        cls.run_script('apm-bulk-run.py', args)
         #
         # checking that some files were created
         assert os.path.isfile(os.path.join(TEMP_DIR,
@@ -81,23 +78,19 @@ class TestScripts:
                               'Fracture1ApertureMap-10avg-RF0.00-300PA-INIT.INP'))
 
     def test_fracture_df(cls):
-        # check that script exists for test
-        assert cls.script_files.get('apm-fracture-df.py', None)
-        #
         # run dry run -xz --bot --mid --top
         infile = os.path.join(FIXTURE_DIR, 'binary-fracture-small.tif')
         args = ['-xz', '--bot', '--mid', '--top', infile, '-o', TEMP_DIR]
-        cls.run_script(cls.script_files['apm-fracture-df.py'], args)
+        cls.run_script('apm-fracture-df.py', args)
         #
         # check that file was created
         assert os.path.isfile(os.path.join(TEMP_DIR, 'binary-fracture-small-df.txt'))
 
-    @pytest.mark.skip
     def test_convert_csv_stats_file(cls):
-        # check that script exists for test
-        assert cls.script_files.get('apm-convert-csv-stats-file.py', None)
         #
         # run dry run -xz --bot --mid --top
-        infile = os.path.join(FIXTURE_DIR, 'binary-fracture-small.tif')
-        args = ['-xz', '--bot', '--mid', '--top', infile, '-o', TEMP_DIR]
-        cls.run_script(cls.script_files['apm-fracture-df.py'], args)
+        infile = os.path.join(FIXTURE_DIR, 'legacy-stats-file.csv')
+        args = ['-v', infile, '-o', TEMP_DIR]
+        cls.run_script('apm-convert-csv-stats-file.py', args)
+        #
+        assert os.path.isfile(os.path.join(TEMP_DIR, 'legacy-stats-file.yaml'))
