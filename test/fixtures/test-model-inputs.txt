@@ -1,11 +1,11 @@
-;FILE PATHS AND NAMES
+;OUTPUT FILE PATHS AND NAMES
 ;APER-MAP:
-;SUMMARY-FILE:
-;STAT-FILE:
-;APER-FILE:
-;FLOW-FILE:
-;PRESS-FILE:
-;VTK-FILE:
+;SUMMARY-FILE: fracture-log.txt
+;STAT-FILE: fracture-stat.csv
+;APER-FILE: fracture-aperture.csv
+;FLOW-FILE: fracture-flow.csv
+;PRESS-FILE: fracture-press.csv
+;VTK-FILE: fracture-data.vtk
 OVERWRITE EXISTING FILES
 
 ;BOUNDARY CONDITIONS
