@@ -36,6 +36,12 @@ base_name = None
 parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
 
 # adding arguments
+parser.add_argument('-v', '--verbose', action='store_true',
+                    help='debug messages are printed to the screen')
+
+parser.add_argument('--rho', type=float, default=1000,
+                    help='fluid density for kinematic pressure conversion')
+
 parser.add_argument('data_file', type=os.path.realpath,
                     help='paraview CSV data file')
 
@@ -59,21 +65,23 @@ def process_paraview_data():
     """
     global avg_fact, voxel_size, base_name
     #
-    namespace = parser.parse_args()
+    args = parser.parse_args()
+    if args.verbose:
+        set_main_logger_level('debug')
     #
     # these will be command-line args
-    para_infile = namespace.data_file
-    aper_infile = namespace.map_file
-    avg_fact = namespace.avg_fact
-    voxel_size = namespace.voxel_size
+    para_infile = args.data_file
+    aper_infile = args.map_file
+    avg_fact = args.avg_fact
+    voxel_size = args.voxel_size
     #
-    base_name = namespace.base_name
+    base_name = args.base_name
     if base_name is None:
         base_name = os.path.basename(para_infile).split('.')[0]
     #
     aper_map, data_dict = read_data_files(para_infile, aper_infile)
     map_coords, data_coords = generate_coordinate_arrays(aper_map, data_dict)
-    save_data_maps(map_coords, data_coords, aper_map, data_dict)
+    save_data_maps(map_coords, data_coords, aper_map, data_dict, args.rho)
 
 
 def read_data_files(para_file, map_file):
@@ -128,7 +136,7 @@ def generate_coordinate_arrays(aper_map, para_data_dict):
     return map_coords, data_coords
 
 
-def save_data_maps(map_coords, data_coords, aper_map, data_dict):
+def save_data_maps(map_coords, data_coords, aper_map, data_dict, density):
     r"""
     Converts the raw paraview point data into a 2-D data distribution and
     saves the file by appending to the base_name.
@@ -136,7 +144,7 @@ def save_data_maps(map_coords, data_coords, aper_map, data_dict):
     #
     # generating p field
     logger.info('generating and saving pressure field...')
-    field = data_dict['p']*1000  # openFoam outputs kinematic pressure
+    field = data_dict['p'] * density  # openFoam outputs kinematic pressure
     field = griddata(data_coords, field, map_coords, method='nearest')
     field = sp.reshape(field, aper_map.data_map.shape[::-1])
     sp.savetxt(base_name+'-p-map.txt', field.T, delimiter='\t')
