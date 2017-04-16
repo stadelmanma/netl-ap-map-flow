@@ -94,3 +94,15 @@ class TestScripts:
         cls.run_script('apm-convert-csv-stats-file.py', args)
         #
         assert os.path.isfile(os.path.join(TEMP_DIR, 'legacy-stats-file.yaml'))
+
+    def test_generate_aperture_map(cls):
+        #
+        infile = os.path.join(FIXTURE_DIR, 'binary-fracture.tif')
+        args = ['-v', '--gen-colored-stack', infile, '-o', TEMP_DIR]
+        cls.run_script('apm-generate-aperture-map.py', args)
+        #
+        # test for file existance
+        filename = 'binary-fracture-aperture-map.txt'
+        assert os.path.isfile(os.path.join(TEMP_DIR, filename))
+        filename = 'binary-fracture-colored.tif'
+        assert os.path.isfile(os.path.join(TEMP_DIR, filename))
