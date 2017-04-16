@@ -106,3 +106,17 @@ class TestScripts:
         assert os.path.isfile(os.path.join(TEMP_DIR, filename))
         filename = 'binary-fracture-colored.tif'
         assert os.path.isfile(os.path.join(TEMP_DIR, filename))
+
+    def test_process_image_stack(cls):
+        #
+        infile = os.path.join(FIXTURE_DIR, 'binary-fracture-small.tif')
+        args = ['-vn', '1', '--gen-cluster-img', '-o', TEMP_DIR, infile]
+        cls.run_script('apm-process-image-stack.py', args)
+        #
+        # test for file existance
+        outfile = 'binary-fracture-small-aperture-map.txt'
+        assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
+        outfile = 'binary-fracture-small-offset-map.txt'
+        assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
+        outfile = 'binary-fracture-small-processed.tif'
+        assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
