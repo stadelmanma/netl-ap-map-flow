@@ -66,8 +66,6 @@ def apm_generate_aperture_map():
     # checking path to prevent accidental overwriting
     image_file = os.path.basename(args.image_file)
     image_file = os.path.splitext(image_file)[0]
-    if not args.aperture_map_name:
-        args.aperture_map_name = '{image_file}-aperture-map.txt'
     args.aperture_map_name = args.aperture_map_name.format(image_file=image_file)
     #
     map_path = os.path.join(args.output_dir, args.aperture_map_name)
@@ -92,12 +90,18 @@ def apm_generate_aperture_map():
     logger.info('saving aperture map as {}'.format(map_path))
     sp.savetxt(map_path, aperture_map, fmt='%d', delimiter='\t')
 
-    # genereating colored stack if desired
+    # generating colored stack if desired
     if args.gen_colored_stack:
-        gen_colored_image_stack(img_data, aperture_map, args.image_file, args.force)
+        image = gen_colored_image_stack(img_data, aperture_map)
+        # save the image data
+        filename = os.path.splitext(image_file)[0] + '-colored.tif'
+        filename = os.path.join(args.output_dir, filename)
+        #
+        logger.info('saving image data to file' + filename)
+        image.save(filename, overwrite=args.force)
 
 
-def gen_colored_image_stack(img_data, aperture_map, filename, overwrite):
+def gen_colored_image_stack(img_data, aperture_map):
     r"""
     Handles producing a colored image
     """
@@ -110,11 +114,8 @@ def gen_colored_image_stack(img_data, aperture_map, filename, overwrite):
     x_coords, y_coords, z_coords = img_data.get_fracture_voxels(coordinates=True)
     img_data = sp.zeros(img_data.shape, dtype=sp.uint8)
     img_data[x_coords, y_coords, z_coords] = aperture_map[x_coords, z_coords]
-
-    # save the image data
-    filename = os.path.splitext(filename)[0] + '-colored.tif'
-    logger.info('saving image data to file' + filename)
-    img_data.view(FractureImageStack).save(filename, overwrite=overwrite)
+    #
+    return img_data.view(FractureImageStack)
 
 
 if __name__ == '__main__':
