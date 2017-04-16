@@ -9,6 +9,7 @@ Last Modifed: 2017/04/09
 from glob import glob
 import os
 import pytest
+import re
 from subprocess import Popen, PIPE, check_output
 import yaml
 import ApertureMapModelTools as amt
@@ -150,7 +151,6 @@ class TestScripts:
         outfile = 'binary-fracture-small-resized.tif'
         assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
 
-    @pytest.mark.skip
     def test_run_lcl_model(cls):
         #
         inp_file = os.path.join(FIXTURE_DIR, 'test-model-inputs.txt')
@@ -160,17 +160,24 @@ class TestScripts:
         # adding aperture map
         infile = 'Fracture1ApertureMap-10avg.txt'
         inp_file['APER-MAP'] = os.path.join(FIXTURE_DIR, 'maps', infile)
-        inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
         # updating file paths
         files = {}
-        for key, value in inp_file:
-            if key.match('FILE$'):
-                files[key] = os.path.join(TEMP_DIR, value)
+        for key, arg in inp_file.items():
+            if re.search(r'FILE$', key):
+                files[key] = os.path.join(TEMP_DIR, arg.value)
                 inp_file[key] = files[key]
+            if key == 'FLOW-FILE' or key == 'STAT-FILE':
+                del files[key]  # deleteing here because file isn't created as is
+        #
+        inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
         exe_file = os.path.split(amt.__file__)[0]
         exe_file = os.path.join(exe_file, amt.DEFAULT_MODEL_NAME)
         infile = os.path.join(TEMP_DIR, 'model-input-file.inp')
         args = ['-v', '-e', exe_file, infile]
         cls.run_script('apm-run-lcl-model.py', args)
+        #
+        # test for file existance
+        for outfile in files.values():
+            assert os.path.isfile(outfile)
