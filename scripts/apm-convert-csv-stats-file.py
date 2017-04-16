@@ -31,6 +31,11 @@ parser.add_argument('-f', '--force', action='store_true',
 parser.add_argument('-v', '--verbose', action='store_true',
                     help='debug messages are printed to the screen')
 
+parser.add_argument('-o', '--output-dir',
+                    type=os.path.realpath, default=os.getcwd(),
+                    help='''outputs files to the specified
+                    directory, sub-directories are created as needed''')
+
 parser.add_argument('stat_file', type=os.path.realpath,
                     help='CSV stat file to process')
 
@@ -101,23 +106,23 @@ def apm_convert_csv_stats_file():
     Driver function to process the stat file.
     """
     # parsing commandline args
-    namespace = parser.parse_args()
-    if namespace.verbose:
+    args = parser.parse_args()
+    if args.verbose:
         set_main_logger_level('debug')
 
     # checking path to prevent accidental overwriting
-    filename = namespace.out_name
-    if not namespace.out_name:
-        filename = os.path.splitext(namespace.stat_file)[0]
-        namespace.out_name = filename + '.yaml'
+    if not args.out_name:
+        args.out_name = os.path.basename(args.stat_file)
+        args.out_name = os.path.splitext(args.out_name)[0] + '.yaml'
+    filename = os.path.join(args.output_dir, args.out_name)
     #
-    if os.path.exists(filename) and not namespace.force:
+    if os.path.exists(filename) and not args.force:
         msg = '{} already exists, use "-f" option to overwrite'
         raise FileExistsError(msg.format(filename))
 
     # loading data
     logger.info('parsing csv stat file')
-    data = StatFile(namespace.stat_file)
+    data = StatFile(args.stat_file)
 
     # saving data
     logger.info('saving yaml file as {}'.format(filename))
