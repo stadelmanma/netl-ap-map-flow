@@ -8,6 +8,15 @@ import ApertureMapModelTools as amt
 
 
 @pytest.fixture(autouse=True)
+def test_root_directory(request):
+    r"""
+    Defines TEST_ROOT global
+    """
+    test_root = path.dirname(path.realpath(__file__))
+    request.function.__globals__['TEST_ROOT'] = test_root
+
+
+@pytest.fixture(autouse=True)
 def fixtures_directory(request):
     r"""
     Defines FIXTURE_DIR global for loading files
