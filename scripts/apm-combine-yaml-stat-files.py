@@ -41,10 +41,15 @@ parser.add_argument('-r', '--recursive', action='store_true',
 parser.add_argument('-p', '--pattern', default='.*yaml',
                     help='Regular expression pattern to select files')
 
+parser.add_argument('-o', '--output-dir',
+                    type=os.path.realpath, default=os.getcwd(),
+                    help='''outputs files to the specified
+                    directory, sub-directories are created as needed''')
+
 parser.add_argument('directory',
                     help='Directory to search for stat files')
 
-parser.add_argument('outfile_name', nargs='?', type=os.path.realpath,
+parser.add_argument('outfile_name', nargs='?',
                     default='combined-fracture-stats.csv',
                     help='name to save CSV file under')
 
@@ -61,9 +66,10 @@ def apm_combine_yaml_files():
         set_main_logger_level('debug')
     #
     # checking ouput file path
-    if (os.path.exists(args.outfile_name) and not args.force):
+    filename = os.path.join(args.output_dir, args.outfile_name)
+    if (os.path.exists(filename) and not args.force):
         msg = '{} already exists, use "-f" option to overwrite'
-        raise FileExistsError(msg.format(args.outfile_name))
+        raise FileExistsError(msg.format(filename))
     #
     # finding files
     files = files_from_directory(directory=args.directory,
@@ -90,7 +96,7 @@ def apm_combine_yaml_files():
             data_list[-1]['_stat_file'] = stat_file
     #
     # outputing data
-    output_stat_data(args.outfile_name, key_order, data_list)
+    output_stat_data(filename, key_order, data_list)
 
 
 def determine_key_order(stat_file):
