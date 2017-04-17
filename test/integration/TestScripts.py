@@ -181,3 +181,19 @@ class TestScripts:
         # test for file existance
         for outfile in files.values():
             assert os.path.isfile(outfile)
+
+    def test_subtract_data_maps(cls):
+        #
+        map_file = 'coverage_test_aper-orig.csv'
+        map_file = os.path.join(TEST_ROOT, 'fortran', 'fixtures', map_file)
+        data_file1 = 'coverage_test_flow-x-orig.csv'
+        data_file1 = os.path.join(TEST_ROOT, 'fortran', 'fixtures', data_file1)
+        data_file2 = 'coverage_test_flow-z-orig.csv'
+        data_file2 = os.path.join(TEST_ROOT, 'fortran', 'fixtures', data_file2)
+        #
+        args = ['-v', '-pn', '-on', '-abs', map_file, data_file1, data_file2,
+                'sub-data-file.txt', '-o', TEMP_DIR]
+        cls.run_script('apm-subtract-data-maps.py', args)
+        #
+        # check for file existance
+        assert os.path.isfile(os.path.join(TEMP_DIR, 'sub-data-file.txt'))
