@@ -197,3 +197,12 @@ class TestScripts:
         #
         # check for file existance
         assert os.path.isfile(os.path.join(TEMP_DIR, 'sub-data-file.txt'))
+
+    def test_combine_yaml_stat_files(cls):
+        #
+        args = ['-vrp', 'test-stat.*.yaml', TEST_ROOT, '-o', TEMP_DIR]
+        cls.run_script('apm-combine-yaml-stat-files.py', args)
+        #
+        # check for file existance
+        outfile = 'combined-fracture-stats.csv'
+        assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
