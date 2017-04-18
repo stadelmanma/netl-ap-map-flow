@@ -78,15 +78,15 @@ class Profile(BaseProcessor):
         """
         #
         if filename is None:
-            filename = self.infile
-        #
-        # getting index before the extension
-        ldot = filename.rfind('.')
-        #
-        # naming ouput file
-        axis = self.args['axis'].upper()
-        name = filename[:ldot]+'-profiles-'+axis+'-axis'+filename[ldot:]
-        self.outfile_name = name
+            filename = self.outfile_name
+            #
+            # getting index before the extension
+            ldot = filename.rfind('.')
+            #
+            # naming ouput file
+            axis = self.args['axis'].upper()
+            filename = filename[:ldot]+'-profiles-'+axis+'-axis'+filename[ldot:]
+        self.outfile_name = filename
         #
         # outputting data
         fmt = 'Location: {0}%{1}\n'
