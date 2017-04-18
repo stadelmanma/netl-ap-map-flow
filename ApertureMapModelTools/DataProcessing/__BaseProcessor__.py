@@ -122,7 +122,6 @@ class BaseProcessor(object):
             logger.error(msg)
             return
         #
-        print(path, self.outfile_name)
         filename = os.path.join(path, self.outfile_name)
         with open(filename, 'w') as f:
             f.write(self.outfile_content)
