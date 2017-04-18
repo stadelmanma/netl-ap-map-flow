@@ -28,8 +28,8 @@ class TestBaseProcessor:
         assert base_proc.infile == field.infile
         assert (base_proc.data_vector == field.data_vector).all()
         assert (base_proc.data_map == field.data_map).all()
+        assert base_proc.outfile_name == 'pytest-DataFeld-fixture'
         assert not base_proc.args
-        assert not base_proc.outfile_name
         assert not base_proc.outfile_content
         assert not base_proc.output_key
         assert not base_proc.processed_data
@@ -85,5 +85,7 @@ class TestBaseProcessor:
         base_proc.outfile_content = None
         base_proc.write_data()
         base_proc.outfile_content = 'test'
-        base_proc.outfile_name = os.path.join(TEMP_DIR, 'test.txt')
-        base_proc.write_data()
+        base_proc.outfile_name = 'test.txt'
+        base_proc.write_data(path=TEMP_DIR)
+        #
+        assert os.path.isfile(os.path.join(TEMP_DIR, 'test.txt'))
