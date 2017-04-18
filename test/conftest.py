@@ -71,7 +71,9 @@ def data_field_class():
         Handles testing of the data field object without needing to create one
         """
         def __init__(self):
-            self.infile = 'pytest-DataFeld-fixture'
+            test_root = path.dirname(path.realpath(__file__))
+            #
+            self.infile = path.join(test_root, 'pytest-DataFeld-fixture')
             self.outfile = ''
             self._data_map = sp.arange(100).reshape(10, 10)
             self.point_data = None
