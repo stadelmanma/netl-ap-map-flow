@@ -32,11 +32,6 @@ parser.add_argument('-v', '--verbose', action='store_true',
 parser.add_argument('-f', '--force', action='store_true',
                     help="can overwrite existing files (default: %(default)s)")
 
-parser.add_argument('-o', '--output-dir',
-                    type=os.path.realpath, default=os.getcwd(),
-                    help='''outputs files to the specified
-                    directory, sub-directories are created as needed''')
-
 parser.add_argument('-W', '--no-write', action='store_true',
                     help="does not write data to file (default: %(default)s)")
 
@@ -48,6 +43,10 @@ subparse_parent = argparse.ArgumentParser(add_help=False)
 subparse_parent.add_argument('-files', nargs='+', type=os.path.realpath,
                              required=True,
                              help='data file to process')
+subparse_parent.add_argument('-o', '--output-dir',
+                             type=os.path.realpath, default=os.getcwd(),
+                             help='''outputs files to the specified
+                             directory, sub-directories are created as needed''')
 subparsers = parser.add_subparsers(dest='processor',
                                    title='Data Processing Commands',
                                    metavar='{command}')
