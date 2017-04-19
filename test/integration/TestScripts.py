@@ -15,10 +15,18 @@ import yaml
 import ApertureMapModelTools as amt
 
 
+def check_path(*args):
+    r"""
+    runs an assertion that the file exists
+    """
+    assert os.path.isfile(os.path.join(*args))
+
+
 class TestScripts:
     r"""
     Manages running the test suite
     """
+
     def setup_class(cls):
         # determine top of repository and location of scripts folder
         cmd = ['git', 'rev-parse', '--show-toplevel']
@@ -206,3 +214,46 @@ class TestScripts:
         # check for file existance
         outfile = 'combined-fracture-stats.csv'
         assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
+
+    def test_process_data_map(cls):
+        script = 'apm-process-data-map.py'
+        infile = os.path.join(FIXTURE_DIR, 'flow-map.csv')
+        main_args = ['-files', infile, '-o', TEMP_DIR]
+        #
+        # run eval channels
+        args = ['-v', 'chans', 'x', '1e-3'] + main_args
+        cls.run_script(script, args)
+        check_path(TEMP_DIR, 'flow-map-channel_data-X-axis.csv')
+        #
+        args = ['-v', 'chans', 'z', '1e-3'] + main_args
+        cls.run_script(script, args)
+        check_path(TEMP_DIR, 'flow-map-channel_data-X-axis.csv')
+        #
+        # run histogram
+        args = ['-v', 'hist', '16'] + main_args
+        cls.run_script(script, args)
+        check_path(TEMP_DIR, 'flow-map-histogram.csv')
+        #
+        # run histogram range
+        args = ['-v', 'histrng', '16', '-r', '5', '95'] + main_args
+        cls.run_script(script, args)
+        check_path(TEMP_DIR, 'flow-map-histogram_range.csv')
+        #
+        # run histogram range
+        args = ['-v', 'histlog', '5'] + main_args
+        cls.run_script(script, args)
+        check_path(TEMP_DIR, 'flow-map-histogram_logscale.csv')
+        #
+        # run percentile routine
+        args = ['-v', 'perc', '10', '50', '90'] + main_args
+        cls.run_script(script, args)
+        check_path(TEMP_DIR, 'flow-map-percentiles.csv')
+        #
+        # run profile routines
+        args = ['-v', 'prof', 'x', '10', '50', '90'] + main_args
+        cls.run_script(script, args)
+        check_path(TEMP_DIR, 'flow-map-profiles-X-axis.csv')
+        #
+        args = ['-v', 'prof', 'z', '10', '50', '90'] + main_args
+        cls.run_script(script, args)
+        check_path(TEMP_DIR, 'flow-map-profiles-Z-axis.csv')
