@@ -33,14 +33,12 @@ def setup_temp_directory(request):
     temp_dir = path.join(path.dirname(path.realpath(__file__)), 'temp')
     try:
         mkdir(temp_dir)
-    except:
+    except FileExistsError:
         pass
 
     def clean():
-        try:
-            rmtree(temp_dir)
-        except:
-            pass
+        rmtree(temp_dir, ignore_errors=True)
+
     request.addfinalizer(clean)
     #
     return temp_dir
@@ -51,11 +49,6 @@ def temp_directory(request, setup_temp_directory):
     r"""
     Defines TEMP_DIR global for saving files
     """
-    temp_dir = path.join(path.dirname(path.realpath(__file__)), 'temp')
-    try:
-        mkdir(temp_dir)
-    except:
-        pass
     request.function.__globals__['TEMP_DIR'] = setup_temp_directory
 
 

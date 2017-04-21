@@ -27,22 +27,11 @@ class TestScripts:
     Manages running the test suite
     """
 
-    def setup_class(cls):
-        # determine top of repository and location of scripts folder
-        cmd = ['git', 'rev-parse', '--show-toplevel']
-        cls.repo_top = check_output(cmd, universal_newlines=True).strip()
-
-        # get all script files and set basename as key
-        script_path = os.path.join(cls.repo_top, 'scripts')
-        cls.script_files = glob(os.path.join(script_path, 'apm-*'))
-        cls.script_files = {os.path.basename(s): s for s in cls.script_files}
-
     def run_script(cls, script, args):
         r"""
         runs the set of args provided for the script
         """
-        script = cls.script_files[script]
-        cmd = ['python', script] + args
+        cmd = [script] + args
         proc = Popen(cmd)
         print('Running command: ', cmd)
         assert not proc.wait()
