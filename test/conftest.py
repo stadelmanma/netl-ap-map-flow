@@ -1,10 +1,14 @@
 from collections import OrderedDict
-from os import path
-from os import mkdir
+from os import path, mkdir, environ
 import pytest
 from shutil import rmtree
 import scipy as sp
 import ApertureMapModelTools as amt
+
+
+def pytest_addoption(parser):
+    hlp = 'Use installed script files in tests instead of local files'
+    parser.addoption('--use-installed-scripts', action='store_true', help=hlp)
 
 
 @pytest.fixture(autouse=True)
@@ -50,6 +54,17 @@ def temp_directory(request, setup_temp_directory):
     Defines TEMP_DIR global for saving files
     """
     request.function.__globals__['TEMP_DIR'] = setup_temp_directory
+
+
+@pytest.fixture(scope='class')
+def set_script_path():
+    r"""
+    Appends the local scripts directory to the system path if the
+    --use-installed-scripts option was omitted
+    """
+    if not pytest.config.option.use_installed_scripts:
+        script_path = path.join(path.dirname(amt.__file__), 'scripts')
+        environ['PATH'] = script_path + path.pathsep + environ['PATH']
 
 
 @pytest.fixture
