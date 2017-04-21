@@ -7,9 +7,6 @@ import ApertureMapModelTools as amt
 
 
 def pytest_addoption(parser):
-    hlp = 'Use installed script files in tests instead of local files'
-    parser.addoption('--use-installed-scripts', action='store_true', help=hlp)
-    #
     hlp = 'Use OpenFoam executables instead of fixtures, some unit tests will fail'
     parser.addoption('--use-openfoam', action='store_true', help=hlp)
 
@@ -30,6 +27,15 @@ def fixtures_directory(request):
     """
     fixture_dir = path.join(path.dirname(path.realpath(__file__)), 'fixtures')
     request.function.__globals__['FIXTURE_DIR'] = fixture_dir
+
+
+@pytest.fixture(scope='function')
+def script_directory(request):
+    r"""
+    Returns the abolute path to scripts directory
+    """
+    script_dir = path.join(path.dirname(amt.__file__), '..', 'scripts')
+    request.function.__globals__['SCRIPT_DIR'] = script_dir
 
 
 @pytest.fixture(scope='session')
@@ -57,17 +63,6 @@ def temp_directory(request, setup_temp_directory):
     Defines TEMP_DIR global for saving files
     """
     request.function.__globals__['TEMP_DIR'] = setup_temp_directory
-
-
-@pytest.fixture(scope='class')
-def set_script_path():
-    r"""
-    Appends the local scripts directory to the system path if the
-    --use-installed-scripts option was omitted
-    """
-    if not pytest.config.option.use_installed_scripts:
-        script_path = path.join(path.dirname(amt.__file__), 'scripts')
-        environ['PATH'] = script_path + path.pathsep + environ['PATH']
 
 
 @pytest.fixture(scope='class')

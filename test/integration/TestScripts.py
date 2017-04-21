@@ -22,6 +22,7 @@ def check_path(*args):
     assert os.path.isfile(os.path.join(*args))
 
 
+@pytest.mark.usefixtures('script_directory')
 class TestScripts:
     r"""
     Manages running the test suite
@@ -30,8 +31,9 @@ class TestScripts:
     def run_script(cls, script, args):
         r"""
         runs the set of args provided for the script
-        """
-        cmd = [script] + args
+        """,
+        script = os.path.join(SCRIPT_DIR, script)
+        cmd = ['python', script] + args
         proc = Popen(cmd)
         print('Running command: ', cmd)
         assert not proc.wait()
