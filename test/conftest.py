@@ -9,6 +9,9 @@ import ApertureMapModelTools as amt
 def pytest_addoption(parser):
     hlp = 'Use installed script files in tests instead of local files'
     parser.addoption('--use-installed-scripts', action='store_true', help=hlp)
+    #
+    hlp = 'Use OpenFoam executables instead of fixtures, some unit tests will fail'
+    parser.addoption('--use-openfoam', action='store_true', help=hlp)
 
 
 @pytest.fixture(autouse=True)
@@ -65,6 +68,17 @@ def set_script_path():
     if not pytest.config.option.use_installed_scripts:
         script_path = path.join(path.dirname(amt.__file__), 'scripts')
         environ['PATH'] = script_path + path.pathsep + environ['PATH']
+
+
+@pytest.fixture(scope='class')
+def set_openfoam_path():
+    r"""
+    Appends the path to use local dummy fixtures instead of actual openFoam
+    executables unless the option --use-openfoam was added
+    """
+    if not pytest.config.option.use_openfoam:
+        fixture_bin = path.join(path.dirname(__file__), 'fixtures', 'bin')
+        environ['PATH'] = fixture_bin + path.pathsep + environ['PATH']
 
 
 @pytest.fixture
