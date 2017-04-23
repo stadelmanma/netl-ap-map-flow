@@ -25,6 +25,12 @@ with open(ver_path) as f:
         if line.startswith('__version__'):
             exec(line, main_)
 
+# get all scripts
+scripts = glob(os.path.join('ApertureMapModelTools', 'scripts', '*'))
+fmt = '{0} = ApertureMapModelTools.scripts.{0}:main'
+for i, script in enumerate(scripts):
+    scripts[i] = fmt.format(os.path.splitext(os.path.basename(script))[0])
+
 # call setup
 setup(
     name='ApertureMapModelTools',
@@ -48,6 +54,9 @@ setup(
         'ApertureMapModelTools.RunModel',
         'ApertureMapModelTools.scripts'
     ],
+    entry_points={
+        'console_scripts': scripts
+    },
     include_package_data=True,
     package_data={
         'ApertureMapModelTools': ['logging.conf', 'src/*.F', 'src/makefile']
