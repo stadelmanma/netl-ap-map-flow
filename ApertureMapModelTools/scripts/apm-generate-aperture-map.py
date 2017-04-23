@@ -18,7 +18,7 @@ be automatically replaced by the basename of the image file used.
 
 Written By: Matthew stadelman
 Date Written: 2016/09/13
-Last Modfied: 2017/04/14
+Last Modfied: 2017/04/23
 """
 # setting up logger
 set_main_logger_level('info')
@@ -54,7 +54,7 @@ parser.add_argument('aperture_map_name', nargs='?',
                     help=msg)
 
 
-def apm_generate_aperture_map():
+def main():
     r"""
     Driver function to generate an aperture map from a TIF image.
     """
@@ -116,7 +116,3 @@ def gen_colored_image_stack(img_data, aperture_map):
     img_data[x_coords, y_coords, z_coords] = aperture_map[x_coords, z_coords]
     #
     return img_data.view(FractureImageStack)
-
-
-if __name__ == '__main__':
-    apm_generate_aperture_map()

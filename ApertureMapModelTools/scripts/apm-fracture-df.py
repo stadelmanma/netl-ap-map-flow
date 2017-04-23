@@ -19,7 +19,7 @@ fractal dimension (Df) along either the X and/or Z axis.
 
 Written By: Matthew stadelman
 Date Written: 2016/11/17
-Last Modfied: 2017/02/12
+Last Modfied: 2017/04/23
 """
 # setting up logger
 set_main_logger_level('info')
@@ -110,7 +110,7 @@ class FractureSlice(object):
         self.fractals[key] = fractal
 
 
-def apm_fracture_df():
+def main():
     r"""
     Driver program to load an image and process it to output hurst exponents
     """
@@ -368,7 +368,3 @@ def output_data(file_handle, traces, x_data=None, z_data=None):
         #
         for i, frac_slice in enumerate(z_data):
             file_handle.write(fmt.format(i, **frac_slice.fractals))
-
-
-if __name__ == '__main__':
-    apm_fracture_df()

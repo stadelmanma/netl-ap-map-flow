@@ -28,7 +28,7 @@ linear and nearest interpolation methods to prevent artificial features.
 
 Written By: Matthew stadelman
 Date Written: 2016/08/30
-Last Modfied: 2017/02/27
+Last Modfied: 2017/04/23
 """
 # setting up logger
 set_main_logger_level('info')
@@ -83,7 +83,7 @@ parser.add_argument('image_file', type=os.path.realpath,
                     help='binary TIFF stack image to process')
 
 
-def apm_process_image_stack():
+def main():
     r"""
     Driver program to load an image and generate maps. Memory
     requirements when processing a large TIFF stack can be very high.
@@ -462,7 +462,3 @@ def filter_high_gradients(data_map):
     patch_holes(data_map)
     #
     return data_map
-
-
-if __name__ == '__main__':
-    apm_process_image_stack()

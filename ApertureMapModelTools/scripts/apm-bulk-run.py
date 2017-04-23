@@ -20,7 +20,7 @@ bulk_run_class.
 
 Written By: Matthew stadelman
 Date Written: 2016/08/04
-Last Modfied: 2016/10/18
+Last Modfied: 2017/04/23
 """
 
 # setting log level
@@ -41,7 +41,7 @@ parser.add_argument('input_files', nargs='+', type=os.path.realpath,
                     help='1 or more YAML input files to load')
 
 
-def apm_bulk_run():
+def main():
     r"""
     Driver function to handle parsing of command line args and setting up
     the bulk run
@@ -83,8 +83,3 @@ def apm_bulk_run():
     else:
         bulk_run.dry_run()
         print('Add "--start" flag to begin simulations')
-
-
-#
-if __name__ == '__main__':
-    apm_bulk_run()

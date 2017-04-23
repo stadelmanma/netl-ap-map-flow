@@ -22,7 +22,7 @@ input file and existing OpenFoam files which are used as templates.
 
 Written By: Matthew stadelman
 Date Written: 2015/07/25
-Last Modfied: 2016/07/25
+Last Modfied: 2017/04/23
 """
 
 interactive_message = r"""
@@ -94,7 +94,7 @@ namespace = None
 ########################################################################
 
 
-def apm_open_foam_export():
+def main():
     r"""
     Handles processing of commandline args and generation of open foam files
     """
@@ -453,7 +453,3 @@ def write_all_files(overwrite=False):
     except FileExistsError as err:
         logger.fatal('Specify the "-f" flag to automatically overwrite files')
         raise err
-
-
-if __name__ == '__main__':
-    apm_open_foam_export()
