@@ -29,15 +29,6 @@ def fixtures_directory(request):
     request.function.__globals__['FIXTURE_DIR'] = fixture_dir
 
 
-@pytest.fixture(scope='function')
-def script_directory(request):
-    r"""
-    Returns the abolute path to scripts directory
-    """
-    script_dir = path.join(path.dirname(amt.__file__), '..', 'scripts')
-    request.function.__globals__['SCRIPT_DIR'] = script_dir
-
-
 @pytest.fixture(scope='session')
 def setup_temp_directory(request):
     r"""
