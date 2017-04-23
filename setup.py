@@ -46,22 +46,23 @@ setup(
         'ApertureMapModelTools.DataProcessing',
         'ApertureMapModelTools.OpenFoam',
         'ApertureMapModelTools.RunModel',
+        'ApertureMapModelTools.scripts'
     ],
     include_package_data=True,
     package_data={
         'ApertureMapModelTools': ['logging.conf', 'src/*.F', 'src/makefile']
     },
-    scripts=glob('scripts/apm-*'),
     install_requires=[
         'numpy',
         'scipy',
         'pillow>=3.4.0',
+        'pint',
         'pyyaml'
     ],
     author='Matthew A. Stadelman',
     author_email='stadelmanma@gmail.com',
-    download_url='https://github.com/stadelmanma/netl-AP_MAP_FLOW',
-    url='https://github.com/stadelmanma/netl-AP_MAP_FLOW',
+    download_url='https://github.com/stadelmanma/netl-ap-map-flow',
+    url='https://github.com/stadelmanma/netl-ap-map-flow',
     license='GPLv3',
     keywords=['Local Cubic Law', 'Paraview', 'OpenFoam']
 )
