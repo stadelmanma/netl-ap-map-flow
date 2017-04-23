@@ -7,6 +7,7 @@ Date Written: 2016/02/26
 Last Modifed: 2016/10/25
 #
 """
+import os
 from ..__core__ import _get_logger
 logger = _get_logger(__name__)
 
@@ -24,7 +25,7 @@ class BaseProcessor(object):
         self.infile = field.infile
         self.data_vector = None
         self.data_map = None
-        self.outfile_name = None
+        self.outfile_name = os.path.basename(self.infile) if self.infile else ''
         self.outfile_content = None
         self.output_key = None
         self.processed_data = None
@@ -112,7 +113,7 @@ class BaseProcessor(object):
         print(self.outfile_content)
         print('')
 
-    def write_data(self):
+    def write_data(self, path=os.path.realpath(os.curdir)):
         r"""
         Writes the data processor's data to its outfile
         """
@@ -121,7 +122,8 @@ class BaseProcessor(object):
             logger.error(msg)
             return
         #
-        with open(self.outfile_name, 'w') as f:
+        filename = os.path.join(path, self.outfile_name)
+        with open(filename, 'w') as f:
             f.write(self.outfile_content)
         #
-        logger.info('Output saved as: '+self.outfile_name)
+        logger.info('Output saved as: ' + filename)

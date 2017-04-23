@@ -69,10 +69,12 @@ def apm_bulk_run():
             bulk_run = BulkRun(inp_file, **inputs['bulk_run_keyword_args'])
 
         # Generating the InputFile list
+        case_identifer = inputs.get('case_identifier', None)
+        case_params = inputs.get('case_parameters', None)
         bulk_run.generate_input_files(inputs['default_run_parameters'],
                                       inputs.get('default_file_formats', None),
-                                      case_identifer=inputs.get('case_identifier', None),
-                                      case_params=inputs.get('case_parameters', None),
+                                      case_identifer=case_identifer,
+                                      case_params=case_params,
                                       append=True)
 
     # starting or dry running sims

@@ -90,13 +90,14 @@ class Histogram(BaseProcessor):
         """
         #
         if filename is None:
-            filename = self.infile
-        #
-        # getting index before the extension
-        ldot = filename.rfind('.')
-        #
-        # naming ouput file
-        self.outfile_name = filename[:ldot]+'-'+self.action+filename[ldot:]
+            filename = self.outfile_name
+            #
+            # getting index before the extension
+            ldot = filename.rfind('.')
+            #
+            # naming ouput file
+            filename = filename[:ldot]+'-'+self.action+filename[ldot:]
+        self.outfile_name = filename
         #
         # outputting data
         content = 'Histogram data from file: '+self.infile+'\n'

@@ -28,10 +28,13 @@ parser = argparse.ArgumentParser(description=desc_str,
 # defining main arguments
 parser.add_argument('-v', '--verbose', action='store_true',
                     help="prints debug messages (default: %(default)s)")
+
 parser.add_argument('-f', '--force', action='store_true',
                     help="can overwrite existing files (default: %(default)s)")
+
 parser.add_argument('-W', '--no-write', action='store_true',
                     help="does not write data to file (default: %(default)s)")
+
 parser.add_argument('-s', '--screen', action='store_true',
                     help="print data to screen (default: %(default)s)")
 #
@@ -40,6 +43,10 @@ subparse_parent = argparse.ArgumentParser(add_help=False)
 subparse_parent.add_argument('-files', nargs='+', type=os.path.realpath,
                              required=True,
                              help='data file to process')
+subparse_parent.add_argument('-o', '--output-dir',
+                             type=os.path.realpath, default=os.getcwd(),
+                             help='''outputs files to the specified
+                             directory, sub-directories are created as needed''')
 subparsers = parser.add_subparsers(dest='processor',
                                    title='Data Processing Commands',
                                    metavar='{command}')
@@ -82,10 +89,14 @@ def process_files(args):
         # writing data if -W was not used
         if not args.no_write:
             processor.gen_output(delim=',')
-            if os.path.exists(processor.outfile_name) and not args.force:
+            #
+            filename = os.path.join(args.output_dir, processor.outfile_name)
+            if os.path.exists(filename) and not args.force:
                 msg = '{} already exists, use "-f" option to overwrite'
-                raise FileExistsError(msg.format(processor.outfile_name))
-            processor.write_data()
+                raise FileExistsError(msg.format(filename))
+            #
+            processor.write_data(path=args.output_dir)
+
 
 if __name__ == '__main__':
     apm_process_data_map()

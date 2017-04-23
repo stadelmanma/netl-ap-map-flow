@@ -17,6 +17,7 @@ from ApertureMapModelTools.OpenFoam import ParallelMeshGen
 
 
 @pytest.mark.xfail(sys.platform == 'win32', reason="OpenFoam doesn't natively run on Windows")
+@pytest.mark.usefixtures('set_openfoam_path')
 def test_parallel_mesh_gen():
     #
     infile = os.path.join(FIXTURE_DIR, 'maps', 'Fracture1ApertureMap-10avg.txt')

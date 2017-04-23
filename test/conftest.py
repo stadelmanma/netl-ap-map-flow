@@ -1,10 +1,23 @@
 from collections import OrderedDict
-from os import path
-from os import mkdir
+from os import path, mkdir, environ
 import pytest
 from shutil import rmtree
 import scipy as sp
 import ApertureMapModelTools as amt
+
+
+def pytest_addoption(parser):
+    hlp = 'Use OpenFoam executables instead of fixtures, some unit tests will fail'
+    parser.addoption('--use-openfoam', action='store_true', help=hlp)
+
+
+@pytest.fixture(autouse=True)
+def test_root_directory(request):
+    r"""
+    Defines TEST_ROOT global
+    """
+    test_root = path.dirname(path.realpath(__file__))
+    request.function.__globals__['TEST_ROOT'] = test_root
 
 
 @pytest.fixture(autouse=True)
@@ -16,6 +29,15 @@ def fixtures_directory(request):
     request.function.__globals__['FIXTURE_DIR'] = fixture_dir
 
 
+@pytest.fixture(scope='function')
+def script_directory(request):
+    r"""
+    Returns the abolute path to scripts directory
+    """
+    script_dir = path.join(path.dirname(amt.__file__), '..', 'scripts')
+    request.function.__globals__['SCRIPT_DIR'] = script_dir
+
+
 @pytest.fixture(scope='session')
 def setup_temp_directory(request):
     r"""
@@ -24,14 +46,12 @@ def setup_temp_directory(request):
     temp_dir = path.join(path.dirname(path.realpath(__file__)), 'temp')
     try:
         mkdir(temp_dir)
-    except:
+    except FileExistsError:
         pass
 
     def clean():
-        try:
-            rmtree(temp_dir)
-        except:
-            pass
+        rmtree(temp_dir, ignore_errors=True)
+
     request.addfinalizer(clean)
     #
     return temp_dir
@@ -42,12 +62,18 @@ def temp_directory(request, setup_temp_directory):
     r"""
     Defines TEMP_DIR global for saving files
     """
-    temp_dir = path.join(path.dirname(path.realpath(__file__)), 'temp')
-    try:
-        mkdir(temp_dir)
-    except:
-        pass
     request.function.__globals__['TEMP_DIR'] = setup_temp_directory
+
+
+@pytest.fixture(scope='class')
+def set_openfoam_path():
+    r"""
+    Appends the path to use local dummy fixtures instead of actual openFoam
+    executables unless the option --use-openfoam was added
+    """
+    if not pytest.config.option.use_openfoam:
+        fixture_bin = path.join(path.dirname(__file__), 'fixtures', 'bin')
+        environ['PATH'] = fixture_bin + path.pathsep + environ['PATH']
 
 
 @pytest.fixture
@@ -62,7 +88,9 @@ def data_field_class():
         Handles testing of the data field object without needing to create one
         """
         def __init__(self):
-            self.infile = 'pytest-DataFeld-fixture'
+            test_root = path.dirname(path.realpath(__file__))
+            #
+            self.infile = path.join(test_root, 'pytest-DataFeld-fixture')
             self.outfile = ''
             self._data_map = sp.arange(100).reshape(10, 10)
             self.point_data = None

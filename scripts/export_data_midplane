@@ -9,7 +9,7 @@ import sys
 from paraview import simple
 
 # parsing commandline line args
-if sys.argv[1] == '-h' or sys.argv[1] == '-help':
+if sys.argv[1] == '-h' or sys.argv[1] == '--help':
     usage = '\nUsage:\n'
     usage += 'pvpython ' + sys.argv[0] + ' '
     usage += '[VTK filename] [CSV filename]'

@@ -69,13 +69,14 @@ class Percentiles(BaseProcessor):
         """
         #
         if filename is None:
-            filename = self.infile
-        #
-        # getting index before the extension
-        ldot = filename.rfind('.')
-        #
-        # naming ouput file
-        self.outfile_name = filename[:ldot]+'-percentiles'+filename[ldot:]
+            filename = self.outfile_name
+            #
+            # getting index before the extension
+            ldot = filename.rfind('.')
+            #
+            # naming ouput file
+            filename = filename[:ldot]+'-percentiles'+filename[ldot:]
+        self.outfile_name = filename
         #
         # outputting data
         content = 'Percentile data from file: '+self.infile+'\n'

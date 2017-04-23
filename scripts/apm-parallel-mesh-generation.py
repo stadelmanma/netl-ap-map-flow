@@ -22,7 +22,7 @@ Last Modfied: 2016/09/13
 """
 # setting up logging
 set_main_logger_level('info')
-logger =_get_logger('ApertureMapModelTools.Scripts')
+logger = _get_logger('ApertureMapModelTools.Scripts')
 
 # creating arg parser
 parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
@@ -102,7 +102,7 @@ def apm_parallel_mesh_generation():
         offset_field = DataField(namespace.offset_file)
     #
     # setting up mesh generator
-    system_dir = os.path.join(namespace.system_path,'system')
+    system_dir = os.path.join(namespace.system_path, 'system')
     np = namespace.np
     kwargs = {'nprocs': np,
               'avg_fact': namespace.avg_fact,
@@ -136,7 +136,7 @@ def read_params_file(infile, mesh_params):
     with open(infile, 'r') as f:
         content = f.read()
         lines = content.split('\n')
-        lines = [line.replace(':',' ') for line in lines if line]
+        lines = [line.replace(':', ' ') for line in lines if line]
     #
     # updating mesh_params with keys from infile
     for line in lines:
@@ -152,6 +152,6 @@ def read_params_file(infile, mesh_params):
     #
     logger.info(msg)
 
-#
+
 if __name__ == '__main__':
     apm_parallel_mesh_generation()

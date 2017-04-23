@@ -463,6 +463,6 @@ def filter_high_gradients(data_map):
     #
     return data_map
 
-#
+
 if __name__ == '__main__':
     apm_process_image_stack()

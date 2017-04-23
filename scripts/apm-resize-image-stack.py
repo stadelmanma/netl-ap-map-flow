@@ -45,33 +45,36 @@ parser.add_argument('image_file', type=os.path.realpath,
 parser.add_argument('outfile_name', nargs='?', default=None,
                     help='name to save the aperture map under')
 
+
 def apm_resize_image_stack():
     r"""
     Driver function to color the tif image.
     """
     # parsing commandline args
-    namespace = parser.parse_args()
-    if namespace.verbose:
+    args = parser.parse_args()
+    if args.verbose:
         set_main_logger_level('debug')
 
     # checking path to prevent accidental overwritting
-    if not namespace.outfile_name:
-        filename = os.path.basename(namespace.image_file)
+    if not args.outfile_name:
+        filename = os.path.basename(args.image_file)
         filename = os.path.splitext(filename)[0]
-        namespace.outfile_name = filename + '-resized.tif'
+        args.outfile_name = filename + '-resized.tif'
 
     #
-    filename = os.path.join(namespace.output_dir, namespace.outfile_name)
-    if os.path.exists(filename) and not namespace.force:
+    filename = os.path.join(args.output_dir, args.outfile_name)
+    if os.path.exists(filename) and not args.force:
         msg = '{} already exists, use "-f" option to overwrite'
         raise FileExistsError(msg.format(filename))
+    os.makedirs(os.path.split(filename)[0], exist_ok=True)
 
     # create the aperture colored image
-    image = resize_image(namespace.image_file, namespace.invert)
+    image = resize_image(args.image_file, args.invert)
 
     # saving map
     logger.info('saving image data to file' + filename)
-    image.save(filename, overwrite=namespace.force)
+    image.save(filename, overwrite=args.force)
+
 
 def resize_image(image_file, invert):
     r"""
@@ -92,6 +95,7 @@ def resize_image(image_file, invert):
     logger.debug(' new image dimensions: {} {} {}'.format(*image.shape))
     #
     return image
-#
+
+
 if __name__ == '__main__':
     apm_resize_image_stack()

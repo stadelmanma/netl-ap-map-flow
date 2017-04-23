@@ -18,7 +18,7 @@ be automatically replaced by the basename of the image file used.
 
 Written By: Matthew stadelman
 Date Written: 2016/09/13
-Last Modfied: 2017/02/11
+Last Modfied: 2017/04/14
 """
 # setting up logger
 set_main_logger_level('info')
@@ -45,9 +45,13 @@ parser.add_argument('-i', '--invert', action='store_true',
 parser.add_argument('image_file', type=os.path.realpath,
                     help='binary TIF stack image to process')
 
+parser.add_argument('--gen-colored-stack', action='store_true',
+                    help='create a copy of the tif stack colored by the apeture')
+
+msg = 'name to save the aperture map under (default: %(default)s)'
 parser.add_argument('aperture_map_name', nargs='?',
                     default='{image_file}-aperture-map.txt',
-                    help='name to save the aperture map under (default: %(default)s)')
+                    help=msg)
 
 
 def apm_generate_aperture_map():
@@ -62,8 +66,6 @@ def apm_generate_aperture_map():
     # checking path to prevent accidental overwriting
     image_file = os.path.basename(args.image_file)
     image_file = os.path.splitext(image_file)[0]
-    if not args.aperture_map_name:
-        args.aperture_map_name = '{image_file}-aperture-map.txt'
     args.aperture_map_name = args.aperture_map_name.format(image_file=image_file)
     #
     map_path = os.path.join(args.output_dir, args.aperture_map_name)
@@ -88,6 +90,33 @@ def apm_generate_aperture_map():
     logger.info('saving aperture map as {}'.format(map_path))
     sp.savetxt(map_path, aperture_map, fmt='%d', delimiter='\t')
 
-#
+    # generating colored stack if desired
+    if args.gen_colored_stack:
+        image = gen_colored_image_stack(img_data, aperture_map)
+        # save the image data
+        filename = os.path.splitext(image_file)[0] + '-colored.tif'
+        filename = os.path.join(args.output_dir, filename)
+        #
+        logger.info('saving image data to file' + filename)
+        image.save(filename, overwrite=args.force)
+
+
+def gen_colored_image_stack(img_data, aperture_map):
+    r"""
+    Handles producing a colored image
+    """
+    # transpose map so it matches image data orientation
+    aperture_map = aperture_map.T
+    aperture_map[aperture_map > 255] = 255
+
+    # color each X-Z column of the image stack according to it's aperture
+    logger.debug('creating colored image stack')
+    x_coords, y_coords, z_coords = img_data.get_fracture_voxels(coordinates=True)
+    img_data = sp.zeros(img_data.shape, dtype=sp.uint8)
+    img_data[x_coords, y_coords, z_coords] = aperture_map[x_coords, z_coords]
+    #
+    return img_data.view(FractureImageStack)
+
+
 if __name__ == '__main__':
     apm_generate_aperture_map()

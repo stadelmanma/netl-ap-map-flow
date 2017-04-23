@@ -28,7 +28,8 @@ with open(ver_path) as f:
 # call setup
 setup(
     name='ApertureMapModelTools',
-    description=' A fracture flow modeling package utilizing a modified local cubic law approach with OpenFoam and ParaView compatibility.',
+    description='A fracture flow modeling package utilizing a modified local ' +
+                'cubic law approach with OpenFoam and ParaView compatibility.',
     long_description=long_desc,
     version=main_['__version__'],
     classifiers=[
