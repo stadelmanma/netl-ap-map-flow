@@ -20,7 +20,7 @@ the flow velocities into volumetic flow rates.
 
 Written By: Matthew stadelman
 Date Written: 2016/09/29
-Last Modfied: 2017/04/16
+Last Modfied: 2017/04/23
 """
 
 # setting up logger
@@ -64,7 +64,7 @@ parser.add_argument('base_name', nargs='?', default=None,
                     defaults to the name of the CSV file''')
 
 
-def process_paraview_data():
+def main():
     r"""
     Processes commandline args and runs script
     """
@@ -178,7 +178,3 @@ def save_data_maps(map_coords, data_coords, aper_map, data_dict, density):
     field = sp.reshape(field, aper_map.data_map.shape[::-1])
     field = field * aper_map.data_map.T * voxel_size**2
     sp.savetxt(base_name+'-qm-map.txt', field.T, delimiter='\t')
-
-
-if __name__ == '__main__':
-    process_paraview_data()

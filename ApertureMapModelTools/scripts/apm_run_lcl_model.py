@@ -15,7 +15,7 @@ different version of the local cubic law model.
 
 Written By: Matthew stadelman
 Date Written: 2017/04/04
-Last Modfied: 2017/04/04
+Last Modfied: 2017/04/23
 """
 
 # setting log level
@@ -36,7 +36,7 @@ parser.add_argument('input_files', nargs='+', type=os.path.realpath,
                     help='1 or more model parameter files to load')
 
 
-def apm_run_lcl_model():
+def main():
     r"""
     Driver function to handle parsing command line args and running the model.
     """
@@ -59,7 +59,3 @@ def apm_run_lcl_model():
             input_file.executable = args.executable
         #
         proc = run_model(input_file, synchronous=True, show_stdout=True)
-
-
-if __name__ == '__main__':
-    apm_run_lcl_model()

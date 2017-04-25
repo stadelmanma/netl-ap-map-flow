@@ -18,7 +18,7 @@ Valid mesh_types are: simple, symmetry, threshold and symmetry-threshold
 
 Written By: Matthew stadelman
 Date Written: 2016/08/16
-Last Modfied: 2016/09/13
+Last Modfied: 2017/04/23
 """
 # setting up logging
 set_main_logger_level('info')
@@ -65,7 +65,7 @@ parser.add_argument('offset_file', nargs='?', type=os.path.realpath,
                     help='aperture map offset file to read in')
 
 
-def apm_parallel_mesh_generation():
+def main():
     r"""
     Processes the command line arguments and generates the mesh
     """
@@ -151,7 +151,3 @@ def read_params_file(infile, mesh_params):
         msg += '{}: {}\n'.format(key, value)
     #
     logger.info(msg)
-
-
-if __name__ == '__main__':
-    apm_parallel_mesh_generation()

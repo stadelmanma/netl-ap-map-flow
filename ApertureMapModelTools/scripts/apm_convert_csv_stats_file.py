@@ -15,7 +15,7 @@ Description: Generates a YAML formatted file from a CSV stat file.
 
 Written By: Matthew stadelman
 Date Written: 2017/03/03
-Last Modfied: 2017/03/03
+Last Modfied: 2017/04/23
 """
 # setting up logger
 set_main_logger_level('info')
@@ -101,7 +101,7 @@ class StatFile(dict):
         self['NZ'] = self['NZ'][0]
 
 
-def apm_convert_csv_stats_file():
+def main():
     r"""
     Driver function to process the stat file.
     """
@@ -128,7 +128,3 @@ def apm_convert_csv_stats_file():
     logger.info('saving yaml file as {}'.format(filename))
     with open(filename, 'w') as outfile:
         yaml.dump(dict(data), outfile)
-
-
-if __name__ == '__main__':
-    apm_convert_csv_stats_file()

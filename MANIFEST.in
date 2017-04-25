@@ -1,7 +1,7 @@
-include README.rst LICENSE.md requirements.txt test_requirements.txt pytest.ini
+include setup.py README.rst LICENSE.md requirements.txt test_requirements.txt pytest.ini
 recursive-include ApertureMapModelTools *
 recursive-include bin *
 recursive-include examples *
-recursive-include scripts *
+recursive-include misc *
 recursive-include test *
 global-exclude *.pyc *~ .DS_Store *__pycache__* *.pyo

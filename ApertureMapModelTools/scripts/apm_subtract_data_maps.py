@@ -18,7 +18,7 @@ calculated data map is output.
 
 Written By: Matthew stadelman
 Date Written: 2016/10/27
-Last Modfied: 2016/11/01
+Last Modfied: 2017/04/23
 """
 
 # setting up logger
@@ -64,7 +64,7 @@ parser.add_argument('out_name',
 ########################################################################
 
 
-def apm_subtract_data_maps():
+def main():
     r"""
     Parses command line arguments and delegates tasks to helper functions
     for actual data processing
@@ -196,7 +196,3 @@ def output_percentile_set(data_field, args):
         content += fmt.format(*row)
     content += '\n'
     logger.info(content)
-
-
-if __name__ == '__main__':
-    apm_subtract_data_maps()

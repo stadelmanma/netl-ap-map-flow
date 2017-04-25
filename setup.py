@@ -25,6 +25,12 @@ with open(ver_path) as f:
         if line.startswith('__version__'):
             exec(line, main_)
 
+# get all scripts
+scripts = glob(os.path.join('ApertureMapModelTools', 'scripts', '*'))
+fmt = '{0} = ApertureMapModelTools.scripts.{0}:main'
+for i, script in enumerate(scripts):
+    scripts[i] = fmt.format(os.path.splitext(os.path.basename(script))[0])
+
 # call setup
 setup(
     name='ApertureMapModelTools',
@@ -46,22 +52,26 @@ setup(
         'ApertureMapModelTools.DataProcessing',
         'ApertureMapModelTools.OpenFoam',
         'ApertureMapModelTools.RunModel',
+        'ApertureMapModelTools.scripts'
     ],
+    entry_points={
+        'console_scripts': scripts
+    },
     include_package_data=True,
     package_data={
         'ApertureMapModelTools': ['logging.conf', 'src/*.F', 'src/makefile']
     },
-    scripts=glob('scripts/apm-*'),
     install_requires=[
         'numpy',
         'scipy',
         'pillow>=3.4.0',
+        'pint',
         'pyyaml'
     ],
     author='Matthew A. Stadelman',
     author_email='stadelmanma@gmail.com',
-    download_url='https://github.com/stadelmanma/netl-AP_MAP_FLOW',
-    url='https://github.com/stadelmanma/netl-AP_MAP_FLOW',
+    download_url='https://github.com/stadelmanma/netl-ap-map-flow',
+    url='https://github.com/stadelmanma/netl-ap-map-flow',
     license='GPLv3',
     keywords=['Local Cubic Law', 'Paraview', 'OpenFoam']
 )

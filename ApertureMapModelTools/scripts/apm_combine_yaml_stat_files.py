@@ -18,7 +18,7 @@ based on the supplied pattern and combine them into a single CSV file.
 
 Written By: Matthew stadelman
 Date Written: 2017/02/12
-Last Modfied: 2017/02/12
+Last Modfied: 2017/04/23
 """
 
 # setting up logger
@@ -54,7 +54,7 @@ parser.add_argument('outfile_name', nargs='?',
                     help='name to save CSV file under')
 
 
-def apm_combine_yaml_files():
+def main():
     r"""
     Driver program to handles combining YAML stat files into a single
     CSV file.
@@ -200,7 +200,3 @@ def process_data_key(key, header, data_list):
     for data in data_list:
         if all_match:
             data[key] = [data[key][0]]
-
-
-if __name__ == '__main__':
-    apm_combine_yaml_files()

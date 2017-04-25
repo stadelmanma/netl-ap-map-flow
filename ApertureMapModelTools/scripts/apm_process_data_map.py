@@ -15,7 +15,7 @@ and either writes data to file or prints to screen.
 
 Written By: Matthew stadelman
 Date Written: 2015/10/01
-Last Modfied: 2016/10/25
+Last Modfied: 2017/04/23
 """
 #
 # fetching logger
@@ -59,7 +59,7 @@ for cls in classes:
 ########################################################################
 
 
-def apm_process_data_map():
+def main():
     r"""
     Parses command line arguments and delegates tasks to helper functions
     for actual data processing
@@ -96,7 +96,3 @@ def process_files(args):
                 raise FileExistsError(msg.format(filename))
             #
             processor.write_data(path=args.output_dir)
-
-
-if __name__ == '__main__':
-    apm_process_data_map()

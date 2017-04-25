@@ -1,9 +1,9 @@
 """
-Handles testing of the script files when running setup.py
+Handles testing of the script files
 #
 Written By: Matthew Stadelman
 Date Written: 2017/04/09
-Last Modifed: 2017/04/09
+Last Modifed: 2017/04/23
 #
 """
 from glob import glob
@@ -11,6 +11,7 @@ import os
 import pytest
 import re
 from subprocess import Popen, PIPE, check_output
+import sys
 import yaml
 import ApertureMapModelTools as amt
 
@@ -22,23 +23,26 @@ def check_path(*args):
     assert os.path.isfile(os.path.join(*args))
 
 
-@pytest.mark.usefixtures('script_directory')
 class TestScripts:
     r"""
     Manages running the test suite
     """
 
-    def run_script(cls, script, args):
+    def run_script(cls, script, args, monkeypatch):
         r"""
         runs the set of args provided for the script
-        """,
-        script = os.path.join(SCRIPT_DIR, script)
-        cmd = ['python', script] + args
-        proc = Popen(cmd)
-        print('Running command: ', cmd)
-        assert not proc.wait()
+        """
+        #
+        print('Running command: ', script, args)
+        #
+        monkeypatch.setattr(sys, 'argv', [script] + args)
+        #
+        pkg = 'ApertureMapModelTools.scripts'
+        script = getattr(__import__(pkg, fromlist=[script]), script)
+        #
+        script.main()
 
-    def test_apm_bulk_run(cls):
+    def test_apm_bulk_run(cls, monkeypatch):
         # load bulk run file for pre-processing
         bulkrun_inp_file = os.path.join(FIXTURE_DIR, 'test-bulk-run.yaml')
         with open(bulkrun_inp_file, 'r') as f:
@@ -62,11 +66,11 @@ class TestScripts:
         #
         # run dry run
         args = ['-v', bulkrun_inp_file]
-        cls.run_script('apm-bulk-run.py', args)
+        cls.run_script('apm_bulk_run', args, monkeypatch)
         #
         # actually perform bulk run
         args = ['-v', '--start', bulkrun_inp_file]
-        cls.run_script('apm-bulk-run.py', args)
+        cls.run_script('apm_bulk_run', args, monkeypatch)
         #
         # checking that some files were created
         assert os.path.isfile(os.path.join(TEMP_DIR,
@@ -78,29 +82,29 @@ class TestScripts:
         assert os.path.isfile(os.path.join(TEMP_DIR,
                               'Fracture1ApertureMap-10avg-RF0.00-300PA-INIT.INP'))
 
-    def test_fracture_df(cls):
+    def test_fracture_df(cls, monkeypatch):
         # run dry run -xz --bot --mid --top
         infile = os.path.join(FIXTURE_DIR, 'binary-fracture-small.tif')
         args = ['-xz', '--bot', '--mid', '--top', infile, '-o', TEMP_DIR]
-        cls.run_script('apm-fracture-df.py', args)
+        cls.run_script('apm_fracture_df', args, monkeypatch)
         #
         # check that file was created
         assert os.path.isfile(os.path.join(TEMP_DIR, 'binary-fracture-small-df.txt'))
 
-    def test_convert_csv_stats_file(cls):
+    def test_convert_csv_stats_file(cls, monkeypatch):
         #
         # run dry run -xz --bot --mid --top
         infile = os.path.join(FIXTURE_DIR, 'legacy-stats-file.csv')
         args = ['-v', infile, '-o', TEMP_DIR]
-        cls.run_script('apm-convert-csv-stats-file.py', args)
+        cls.run_script('apm_convert_csv_stats_file', args, monkeypatch)
         #
         assert os.path.isfile(os.path.join(TEMP_DIR, 'legacy-stats-file.yaml'))
 
-    def test_generate_aperture_map(cls):
+    def test_generate_aperture_map(cls, monkeypatch):
         #
         infile = os.path.join(FIXTURE_DIR, 'binary-fracture.tif')
         args = ['-v', '--gen-colored-stack', infile, '-o', TEMP_DIR]
-        cls.run_script('apm-generate-aperture-map.py', args)
+        cls.run_script('apm_generate_aperture_map', args, monkeypatch)
         #
         # test for file existance
         filename = 'binary-fracture-aperture-map.txt'
@@ -108,11 +112,11 @@ class TestScripts:
         filename = 'binary-fracture-colored.tif'
         assert os.path.isfile(os.path.join(TEMP_DIR, filename))
 
-    def test_process_image_stack(cls):
+    def test_process_image_stack(cls, monkeypatch):
         #
         infile = os.path.join(FIXTURE_DIR, 'binary-fracture-small.tif')
         args = ['-vn', '1', '--gen-cluster-img', '-o', TEMP_DIR, infile]
-        cls.run_script('apm-process-image-stack.py', args)
+        cls.run_script('apm_process_image_stack', args, monkeypatch)
         #
         # test for file existance
         outfile = 'binary-fracture-small-aperture-map.txt'
@@ -122,7 +126,7 @@ class TestScripts:
         outfile = 'binary-fracture-small-processed.tif'
         assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
 
-    def test_process_paraview_data(cls):
+    def test_process_paraview_data(cls, monkeypatch):
         #
         infile = os.path.join(FIXTURE_DIR, 'paraview-data-file.csv')
         aper_map = 'Fracture1ApertureMap-10avg.txt'
@@ -130,7 +134,7 @@ class TestScripts:
         #
         args = ['-v', '--rho', '1000.0', infile, aper_map,
                 '2.76e-5', '10', '-o', TEMP_DIR]
-        cls.run_script('apm-process-paraview-data.py', args)
+        cls.run_script('apm_process_paraview_data', args, monkeypatch)
         #
         outfile = 'paraview-data-file-p-map.txt'
         assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
@@ -141,16 +145,16 @@ class TestScripts:
         outfile = 'paraview-data-file-qm-map.txt'
         assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
 
-    def test_resize_image_stack(cls):
+    def test_resize_image_stack(cls, monkeypatch):
         #
         infile = os.path.join(FIXTURE_DIR, 'binary-fracture-small.tif')
         args = ['-v', infile, '-o', TEMP_DIR]
-        cls.run_script('apm-resize-image-stack.py', args)
+        cls.run_script('apm_resize_image_stack', args, monkeypatch)
         #
         outfile = 'binary-fracture-small-resized.tif'
         assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
 
-    def test_run_lcl_model(cls):
+    def test_run_lcl_model(cls, monkeypatch):
         #
         inp_file = os.path.join(FIXTURE_DIR, 'test-model-inputs.txt')
         infile = 'model-input-file.inp'
@@ -175,13 +179,13 @@ class TestScripts:
         exe_file = os.path.join(exe_file, amt.DEFAULT_MODEL_NAME)
         infile = os.path.join(TEMP_DIR, 'model-input-file.inp')
         args = ['-v', '-e', exe_file, infile]
-        cls.run_script('apm-run-lcl-model.py', args)
+        cls.run_script('apm_run_lcl_model', args, monkeypatch)
         #
         # test for file existance
         for outfile in files.values():
             assert os.path.isfile(outfile)
 
-    def test_subtract_data_maps(cls):
+    def test_subtract_data_maps(cls, monkeypatch):
         #
         map_file = 'coverage_test_aper-orig.csv'
         map_file = os.path.join(TEST_ROOT, 'fortran', 'fixtures', map_file)
@@ -192,59 +196,59 @@ class TestScripts:
         #
         args = ['-v', '-pn', '-on', '-abs', map_file, data_file1, data_file2,
                 'sub-data-file.txt', '-o', TEMP_DIR]
-        cls.run_script('apm-subtract-data-maps.py', args)
+        cls.run_script('apm_subtract_data_maps', args, monkeypatch)
         #
         # check for file existance
         assert os.path.isfile(os.path.join(TEMP_DIR, 'sub-data-file.txt'))
 
-    def test_combine_yaml_stat_files(cls):
+    def test_combine_yaml_stat_files(cls, monkeypatch):
         #
         args = ['-vrp', 'test-stat.*.yaml', TEST_ROOT, '-o', TEMP_DIR]
-        cls.run_script('apm-combine-yaml-stat-files.py', args)
+        cls.run_script('apm_combine_yaml_stat_files', args, monkeypatch)
         #
         # check for file existance
         outfile = 'combined-fracture-stats.csv'
         assert os.path.isfile(os.path.join(TEMP_DIR, outfile))
 
-    def test_process_data_map(cls):
-        script = 'apm-process-data-map.py'
+    def test_process_data_map(cls, monkeypatch):
+        script = 'apm_process_data_map'
         infile = os.path.join(FIXTURE_DIR, 'flow-map.csv')
         main_args = ['-files', infile, '-o', TEMP_DIR]
         #
         # run eval channels
         args = ['-v', 'chans', 'x', '1e-3'] + main_args
-        cls.run_script(script, args)
+        cls.run_script(script, args, monkeypatch)
         check_path(TEMP_DIR, 'flow-map-channel_data-X-axis.csv')
         #
         args = ['-v', 'chans', 'z', '1e-3'] + main_args
-        cls.run_script(script, args)
+        cls.run_script(script, args, monkeypatch)
         check_path(TEMP_DIR, 'flow-map-channel_data-X-axis.csv')
         #
         # run histogram
         args = ['-v', 'hist', '16'] + main_args
-        cls.run_script(script, args)
+        cls.run_script(script, args, monkeypatch)
         check_path(TEMP_DIR, 'flow-map-histogram.csv')
         #
         # run histogram range
         args = ['-v', 'histrng', '16', '-r', '5', '95'] + main_args
-        cls.run_script(script, args)
+        cls.run_script(script, args, monkeypatch)
         check_path(TEMP_DIR, 'flow-map-histogram_range.csv')
         #
         # run histogram range
         args = ['-v', 'histlog', '5'] + main_args
-        cls.run_script(script, args)
+        cls.run_script(script, args, monkeypatch)
         check_path(TEMP_DIR, 'flow-map-histogram_logscale.csv')
         #
         # run percentile routine
         args = ['-v', 'perc', '10', '50', '90'] + main_args
-        cls.run_script(script, args)
+        cls.run_script(script, args, monkeypatch)
         check_path(TEMP_DIR, 'flow-map-percentiles.csv')
         #
         # run profile routines
         args = ['-v', 'prof', 'x', '10', '50', '90'] + main_args
-        cls.run_script(script, args)
+        cls.run_script(script, args, monkeypatch)
         check_path(TEMP_DIR, 'flow-map-profiles-X-axis.csv')
         #
         args = ['-v', 'prof', 'z', '10', '50', '90'] + main_args
-        cls.run_script(script, args)
+        cls.run_script(script, args, monkeypatch)
         check_path(TEMP_DIR, 'flow-map-profiles-Z-axis.csv')

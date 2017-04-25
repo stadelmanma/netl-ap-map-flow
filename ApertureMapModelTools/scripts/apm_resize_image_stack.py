@@ -15,7 +15,7 @@ Description: Reduces the y-axis dimension of an image stack.
 
 Written By: Matthew stadelman
 Date Written: 2016/09/13
-Last Modfied: 2017/02/11
+Last Modfied: 2017/04/23
 """
 # setting up logger
 set_main_logger_level('info')
@@ -46,7 +46,7 @@ parser.add_argument('outfile_name', nargs='?', default=None,
                     help='name to save the aperture map under')
 
 
-def apm_resize_image_stack():
+def main():
     r"""
     Driver function to color the tif image.
     """
@@ -95,7 +95,3 @@ def resize_image(image_file, invert):
     logger.debug(' new image dimensions: {} {} {}'.format(*image.shape))
     #
     return image
-
-
-if __name__ == '__main__':
-    apm_resize_image_stack()
