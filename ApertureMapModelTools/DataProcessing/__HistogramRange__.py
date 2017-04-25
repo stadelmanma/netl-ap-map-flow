@@ -8,7 +8,7 @@ Last Modifed: 2016/10/25
 #
 """
 import scipy as sp
-from ApertureMapModelTools.__core__ import calc_percentile
+from ..__core__ import calc_percentile
 from .__Histogram__ import Histogram
 
 
