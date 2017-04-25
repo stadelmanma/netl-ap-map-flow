@@ -1,5 +1,5 @@
 numpy
 scipy
-pillow>=3.4.0
+pillow=4.0.0
 pyyaml
 pint
