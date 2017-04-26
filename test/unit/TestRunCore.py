@@ -8,7 +8,7 @@ Last Modifed: 2016/06/11
 """
 import os
 import pytest
-import apmapflow as amt
+import apmapflow as apm
 from apmapflow import run_model
 from apmapflow.run_model.run_model import ArgInput
 
@@ -95,7 +95,7 @@ class TestRunCore:
             inp_file.update('a', 'b', 'c')
         #
         # adding a new parameter to the file
-        model_path = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
+        model_path = os.path.join(apm.__path__[0], apm.DEFAULT_MODEL_NAME)
         inp_file.add_parameter(';EXE-FILE: ' + model_path)
         assert inp_file['EXE-FILE'].value == model_path
         #
@@ -120,7 +120,7 @@ class TestRunCore:
         assert inp_file.executable == model_path
         #
         # writing the output file to TEMP_DIR with a non-existant EXE-FILE
-        inp_file['EXE-FILE'] = amt.DEFAULT_MODEL_NAME + '-junk'
+        inp_file['EXE-FILE'] = apm.DEFAULT_MODEL_NAME + '-junk'
         inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'
         inp_file.write_inp_file(alt_path=TEMP_DIR)
         #

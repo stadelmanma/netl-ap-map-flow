@@ -3,7 +3,7 @@ from os import path, mkdir, environ
 import pytest
 from shutil import rmtree
 import scipy as sp
-import apmapflow as amt
+import apmapflow as apm
 
 
 def pytest_addoption(parser):
@@ -74,7 +74,7 @@ def data_field_class():
     and placeholder data
     """
 
-    class PseudoDataField(amt.DataField):
+    class PseudoDataField(apm.DataField):
         r"""
         Handles testing of the data field object without needing to create one
         """
@@ -110,7 +110,7 @@ def openfoam_file_class():
     placeholder data.
     """
 
-    class PseduoOpenFoamFile(amt.openfoam.OpenFoamFile):
+    class PseduoOpenFoamFile(apm.openfoam.OpenFoamFile):
         r"""
         Simplfies testing of functions needing an OpenFoamFile instance
         """
@@ -167,7 +167,7 @@ def bulk_run_class(input_file_class):
     Returns a pseduo BulkRun class object for unit testing of the class where
     possible
     """
-    class PseudoBulkRun(amt.run_model.BulkRun):
+    class PseudoBulkRun(apm.run_model.BulkRun):
         r"""
         Setting placeholder methods and arguments
         """
