@@ -7,7 +7,7 @@ from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
 import scipy as sp
 from ApertureMapModelTools import _get_logger, set_main_logger_level, DataField
-from ApertureMapModelTools.DataProcessing import Percentiles
+from ApertureMapModelTools.data_processing import Percentiles
 
 #
 desc_str = r"""

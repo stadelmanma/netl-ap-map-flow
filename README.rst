@@ -22,7 +22,7 @@ AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic la
 
 |
 
- * DataProcessing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is :code:`apm-process-data-map.py` which accepts various command line arguments to automatically perform basic post-processing.
+ * data_processing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is :code:`apm-process-data-map.py` which accepts various command line arguments to automatically perform basic post-processing.
 
 |
 

@@ -49,7 +49,7 @@ setup(
     ],
     packages=[
         'ApertureMapModelTools',
-        'ApertureMapModelTools.DataProcessing',
+        'ApertureMapModelTools.data_processing',
         'ApertureMapModelTools.OpenFoam',
         'ApertureMapModelTools.RunModel',
         'ApertureMapModelTools.scripts'

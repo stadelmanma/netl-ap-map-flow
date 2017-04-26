@@ -9,7 +9,7 @@ Last Modifed: 2016/10/25
 import os
 import pytest
 import scipy as sp
-from ApertureMapModelTools.DataProcessing.base_processor import BaseProcessor
+from ApertureMapModelTools.data_processing.base_processor import BaseProcessor
 
 
 class TestBaseProcessor:

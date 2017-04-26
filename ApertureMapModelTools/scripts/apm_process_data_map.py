@@ -5,12 +5,12 @@ from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
 import re
 from ApertureMapModelTools import _get_logger, set_main_logger_level, DataField
-from ApertureMapModelTools import DataProcessing
+from ApertureMapModelTools import data_processing
 #
 ########################################################################
 #
 desc_str = r"""
-Description: Processes data maps using the desired DataProcessing class
+Description: Processes data maps using the desired data_processing class
 and either writes data to file or prints to screen.
 
 Written By: Matthew stadelman
@@ -51,7 +51,7 @@ subparsers = parser.add_subparsers(dest='processor',
                                    title='Data Processing Commands',
                                    metavar='{command}')
 
-classes = DataProcessing.__dict__.values()
+classes = data_processing.__dict__.values()
 for cls in classes:
     try:
         cls._add_subparser(subparsers, subparse_parent)

@@ -8,7 +8,7 @@ Last Modifed: 2016/10/20
 """
 import argparse
 import scipy as sp
-from ApertureMapModelTools.DataProcessing.histogram_logscale import HistogramLogscale
+from ApertureMapModelTools.data_processing.histogram_logscale import HistogramLogscale
 
 
 class TestHistogramLogscale:
