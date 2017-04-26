@@ -8,7 +8,7 @@ Last Modifed: 2016/10/25
 """
 import argparse
 import os
-from ApertureMapModelTools.DataProcessing.__Percentiles__ import Percentiles
+from ApertureMapModelTools.DataProcessing.percentiles import Percentiles
 
 
 class TestPercentiles:

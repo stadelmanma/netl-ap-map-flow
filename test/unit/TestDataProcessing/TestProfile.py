@@ -10,7 +10,7 @@ import argparse
 import os
 import pytest
 import scipy as sp
-from ApertureMapModelTools.DataProcessing.__Profile__ import Profile
+from ApertureMapModelTools.DataProcessing.profile import Profile
 
 
 class TestProfile:
