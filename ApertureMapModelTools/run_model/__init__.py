@@ -6,5 +6,5 @@ Date Written: 2016/02/26
 Last Modifed: 2016/02/26
 #
 """
-from .__run_model_core__ import InputFile, estimate_req_RAM, run_model
-from .__BulkRun__ import BulkRun
+from .run_model import InputFile, estimate_req_RAM, run_model
+from .bulk_run import BulkRun
