@@ -1,33 +1,33 @@
 =========================
-Using the OpenFoam Module
+Using the openfoam Module
 =========================
 
 .. contents::
 
 Description
 ===========
-The OpenFoam Module is designed to allow easy modification and creation of OpenFoam files in a Python interface. The main motivation for writing the code was to create a work flow that would allow results from the Local Cubic Law (LCL) model to be quickly compared to OpenFoam results on the same geometry. The module has routines to load and parse basic OpenFoam files as well as generate a blockMeshDict file from a 2-D aperture map. There are three primary classes and three additional helper classes used in the module, all of which will be gone over next. The apm_open_foam_export.py script wraps all of the functionality present in the module into a program that can generate a complete OpenFoam simulation by modifying an existing set of OpenFoam files. 
+The openfoam Module is designed to allow easy modification and creation of OpenFoam files in a Python interface. The main motivation for writing the code was to create a work flow that would allow results from the Local Cubic Law (LCL) model to be quickly compared to OpenFoam results on the same geometry. The module has routines to load and parse basic OpenFoam files as well as generate a blockMeshDict file from a 2-D aperture map. There are three primary classes and three additional helper classes used in the module, all of which will be gone over next. The apm_open_foam_export.py script wraps all of the functionality present in the module into a program that can generate a complete OpenFoam simulation by modifying an existing set of OpenFoam files.
 
 OpenFoamFile Class
 ==================
-The OpenFoamFile class is one of the central objects of the OpenFoam module allowing the reading of an existing OpenFoamFile or creating one from scratch. It inherits from the OpenFoamObject and the OrderedDict classes. All OpenFoam files have a dictionary-like structure and as such data is stored on the OpenFoamFile object in the same format as a regular Python dictionary. It has one method, :code:`write_foam_file(*args, **kwargs)`. The class can be instantiated by directly providing values or giving a filename to read instead. Direct creation of an OpenFoamFile instance has two required positional arguments and 2 optional keyword arguments. :code:`OpenFoamFile(location, object_name, class_name=None, values=None)`. The first three correspond to entries in the FoamFile dictionary at the top of all OpenFoam files and the final argument is a set of key, value pairs to load onto the object. Because the class inherits from the OrderedDict class any valid dictionary iterable in Python can be used however a list of key,value pairs works best because order is maintained.
+The OpenFoamFile class is one of the central objects of the openfoam module allowing the reading of an existing OpenFoamFile or creating one from scratch. It inherits from the OpenFoamObject and the OrderedDict classes. All OpenFoam files have a dictionary-like structure and as such data is stored on the OpenFoamFile object in the same format as a regular Python dictionary. It has one method, :code:`write_foam_file(*args, **kwargs)`. The class can be instantiated by directly providing values or giving a filename to read instead. Direct creation of an OpenFoamFile instance has two required positional arguments and 2 optional keyword arguments. :code:`OpenFoamFile(location, object_name, class_name=None, values=None)`. The first three correspond to entries in the FoamFile dictionary at the top of all OpenFoam files and the final argument is a set of key, value pairs to load onto the object. Because the class inherits from the OrderedDict class any valid dictionary iterable in Python can be used however a list of key,value pairs works best because order is maintained.
 
 .. code-block:: python
-	
+
 	# loading modules
 	import os
-	from ApertureMapModelTools import OpenFoam as of
-	
+	from ApertureMapModelTools import openfoam as of
+
 	# directly creating an OpenFoamFile object
 	init_vals = [
 	    ('numberOfSubdomains', '2'),
 	    ('method', 'scotch'),
 	    ('distributed', 'no')
 	]
-	of_file = of.OpenFoamFile('system', # goes in the system directory 
+	of_file = of.OpenFoamFile('system', # goes in the system directory
 	                          'decomposeParDict', # OpenFoam object name
 	                          class_name='dictionary, # showing default value
-	                          values=init_vals) 
+	                          values=init_vals)
 
 	# checking value and resetting
 	print(of_file['numberOfSubdomains']) # prints '2'
@@ -37,12 +37,12 @@ The OpenFoamFile class is one of the central objects of the OpenFoam module allo
 	filename = 'path/to/OpenFoamFile'
 	of_file = of.OpenFoamFile(filename)
 
-Once an instance has been created and contains the desired values a file can be easily written to a specified location by calling :code:`write_foam_file(path='.', create_dirs=True, overwrite=False)` instance method. By default a file is written to the following path and name './location/object' where location and object are values stored in the :code:`head_dict` attribute of the class object. In the above example location is the 'system' directory and object is 'decomposeParDict'. An alternative output name, for example 'decomposeParDict-np4' can be defined by setting the :code:`name` attribute of the object. The example below will show a few examples of writing files. 
+Once an instance has been created and contains the desired values a file can be easily written to a specified location by calling :code:`write_foam_file(path='.', create_dirs=True, overwrite=False)` instance method. By default a file is written to the following path and name './location/object' where location and object are values stored in the :code:`head_dict` attribute of the class object. In the above example location is the 'system' directory and object is 'decomposeParDict'. An alternative output name, for example 'decomposeParDict-np4' can be defined by setting the :code:`name` attribute of the object. The example below will show a few examples of writing files.
 
 When using an instance produced from an existing file the location and name attribute can differ from the defaults. The code will attempt to pull the 'location' value from the FoamFile dict in the file being read, if that fails then it will use the name of the directory the file was stored in. The initial value of the :code:`name` attribute is always the name of the file being read. This was done to allow different versions of the same file to coexist when creating an export.
 
 .. code-block:: python
-	
+
 	# writing file to './system/decomposeParDict'
 	of_file.write_foam_file()
 
@@ -57,7 +57,7 @@ When using an instance produced from an existing file the location and name attr
 	# writing file to './system/decomposeParDict-np4'
 	of_file.name = 'decomposeParDict-np4'
 	of_file.write_foam_file()
-	  
+
 
 OpenFoamObject Class
 --------------------
@@ -100,14 +100,14 @@ The apm_open_foam_export.py Script
 
 Usage
 -----
-Located in the `scripts <../scripts>`_ directory, it is designed to help automate the process of taking input files from the LCL model and creating a full OpenFoam simulation case to run. The script is meant to be run from the command line and accepts several arguments and flags. The script only modifies or creates four files including the blockMesh, all other files will either need to be created or exist in the directory read from.
+Located in the `scripts <../ApertureMapModelTools/scripts>`_ directory, it is designed to help automate the process of taking input files from the LCL model and creating a full OpenFoam simulation case to run. The script is meant to be run from the command line and accepts several arguments and flags. The script only modifies or creates four files including the blockMesh, all other files will either need to be created or exist in the directory read from.
 
 Arguments and Flags
 -------------------
 The export command line utility accepts several flags and a useful help message can be generated by running the command :code:`apm_open_foam_export.py --help`. The command needs to be run from the scripts folder unless a valid path to the script is used or you make the scripts folder visible on the :code:`$PATH` environment variable. Basic syntax of the command is:
 
 .. code-block:: bash
-	
+
 	apm_open_foam_export.py [-ivf] [-r READ_DIR] [-o OUTPUT_DIR] [input_file]
 
 All arguments are optional, the default values for READ_DIR and OUTPUT_DIR is the current working directory. When reading from a directory the command will not recursively search all subdirectories, only the constant, system and 0 directories will be searched if they exist. Sub directories of those directories are also not searched, for example nothing in the constant/polyMesh directory will be found unless that is explicitly stated as the directory to read from. Note, blockMeshDict files are not directly excluded but should not be intentionally read due to their length and likelihood of parsing errors due to different formatting.
@@ -117,7 +117,7 @@ Flag and Argument description
  * -v, --verbose : verbose logging messages
  * -f, --force : overwrite mode, allows any existing files to be replaced
  * -r [dir], --read-dir [dir] : specifies a directory to read files from
- * -o [dir], --output-dir [dir] : specifies a directory to output the files to. 
+ * -o [dir], --output-dir [dir] : specifies a directory to output the files to.
  * input_file : LCL Model input file to pull information from
 
 
@@ -143,8 +143,8 @@ The transport properties file only has two keys updated 'nu' and 'rho' with the 
 
 Interactive Mode
 ----------------
-Interactive mode is activated by using the -i flag. When interactive mode is used the script recalls itself using :code:`python3 -i (script and args passed)` which essentially causes the script to be executed in an interactive python interpreter. Anything that exists on the main namespace in the script is visible and defined in the interactive session such as variables, functions, module imports, etc. Using the command :code:`apm_open_foam_export.py -iv` will begin an interactive mode session. 
+Interactive mode is activated by using the -i flag. When interactive mode is used the script recalls itself using :code:`python3 -i (script and args passed)` which essentially causes the script to be executed in an interactive python interpreter. Anything that exists on the main namespace in the script is visible and defined in the interactive session such as variables, functions, module imports, etc. Using the command :code:`apm_open_foam_export.py -iv` will begin an interactive mode session.
 
 Files are not automatically written in interactive mode. To write all files based on the command line args used call the function :code:`write_all_files(overwrite=False)`. If the -f flag was used :code:`overwrite=False` is ignored, alternatively :code:`overwrite=True` can be used to mimic the effects of the -f flag. This command will write the blockMeshDict file as well.
 
-Several global variables are defined to ease the use of interactive mode. For a more complete understanding of what is available in terms of functions and globals it recommended to review the code in `apm_open_foam_export.py <../scripts/apm_open_foam_export.py>`_.
+Several global variables are defined to ease the use of interactive mode. For a more complete understanding of what is available in terms of functions and globals it recommended to review the code in `apm_open_foam_export.py <..ApertureMapModelTools/scripts/apm_open_foam_export.py>`_.
