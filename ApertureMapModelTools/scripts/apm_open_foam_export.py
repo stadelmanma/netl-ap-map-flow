@@ -8,8 +8,8 @@ from subprocess import call as subp_call
 from sys import argv
 import scipy as sp
 from ApertureMapModelTools import DataField, files_from_directory, _get_logger
-from ApertureMapModelTools.OpenFoam import OpenFoamExport, OpenFoamFile
-from ApertureMapModelTools.OpenFoam import BlockMeshDict, OpenFoamDict
+from ApertureMapModelTools.openfoam import OpenFoamExport, OpenFoamFile
+from ApertureMapModelTools.openfoam import BlockMeshDict, OpenFoamDict
 from ApertureMapModelTools.RunModel import InputFile
 from ApertureMapModelTools.UnitConversion import get_conversion_factor
 #

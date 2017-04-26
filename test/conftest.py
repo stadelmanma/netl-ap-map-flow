@@ -110,7 +110,7 @@ def openfoam_file_class():
     placeholder data.
     """
 
-    class PseduoOpenFoamFile(amt.OpenFoam.OpenFoamFile):
+    class PseduoOpenFoamFile(amt.openfoam.OpenFoamFile):
         r"""
         Simplfies testing of functions needing an OpenFoamFile instance
         """

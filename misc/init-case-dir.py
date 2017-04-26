@@ -6,7 +6,7 @@ from argparse import RawDescriptionHelpFormatter as RawDesc
 from shutil import rmtree
 import os
 from ApertureMapModelTools import _get_logger, set_main_logger_level, DataField
-from ApertureMapModelTools.OpenFoam import OpenFoamFile
+from ApertureMapModelTools.openfoam import OpenFoamFile
 from ApertureMapModelTools.UnitConversion import convert_value
 #
 #

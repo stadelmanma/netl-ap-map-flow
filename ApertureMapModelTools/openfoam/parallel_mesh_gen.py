@@ -16,8 +16,8 @@ from threading import Event, Thread
 import scipy as sp
 from scipy.sparse import csgraph
 from ..__core__ import DataField, _get_logger
-from .__openfoam_core__ import OpenFoamFile, OpenFoamDict, OpenFoamList
-from .__BlockMeshDict__ import BlockMeshDict
+from .openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
+from .block_mesh_dict import BlockMeshDict
 #
 ########################################################################
 #

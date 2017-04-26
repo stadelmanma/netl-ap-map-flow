@@ -11,8 +11,8 @@ import os
 import pytest
 import sys
 import scipy as sp
-from ApertureMapModelTools.OpenFoam.__openfoam_core__ import OpenFoamObject
-from ApertureMapModelTools import OpenFoam
+from ApertureMapModelTools.openfoam.openfoam import OpenFoamObject
+from ApertureMapModelTools import openfoam
 
 
 @pytest.mark.xfail(sys.platform == 'win32', reason="OpenFoam doesn't natively run on Windows")
@@ -30,29 +30,29 @@ class TestOpenFoam:
 
     def test_openfoam_dict(self):
         init_vals = [('key1', 'val1'), ('key2', 'val2'), ('key3', 'val3')]
-        of_dict = OpenFoam.OpenFoamDict('testDict', values=init_vals)
+        of_dict = openfoam.OpenFoamDict('testDict', values=init_vals)
         assert of_dict.name == 'testDict'
         assert list(of_dict.items()) == init_vals
         #
         # adding a nested dict
-        of_dict['nestedDict'] = OpenFoam.OpenFoamDict('nestedDict', of_dict)
+        of_dict['nestedDict'] = openfoam.OpenFoamDict('nestedDict', of_dict)
         #
         print(of_dict)
 
     def test_openfoam_list(self):
         init_vals = ['val1', 'val2', 'val3']
-        of_list = OpenFoam.OpenFoamList('testList', values=init_vals)
+        of_list = openfoam.OpenFoamList('testList', values=init_vals)
         assert of_list.name == 'testList'
         assert of_list == init_vals
         #
         # adding a nested list
-        of_list.append(OpenFoam.OpenFoamList('nestedList', of_list))
+        of_list.append(openfoam.OpenFoamList('nestedList', of_list))
         #
         print(of_list)
 
     def test_open_foam_file(self):
         init_vals = [('key1', 'val1'), ('key2', 'val2'), ('key3', 'val3')]
-        of_file = OpenFoam.OpenFoamFile('test_location', 'test_object', class_name='test_class', values=init_vals)
+        of_file = openfoam.OpenFoamFile('test_location', 'test_object', class_name='test_class', values=init_vals)
         #
         # checking initialization
         assert of_file.head_dict['class'] == 'test_class'
@@ -61,8 +61,8 @@ class TestOpenFoam:
         assert list(of_file.items()) == init_vals
         #
         # adding  dict and list
-        of_file['dict'] = OpenFoam.OpenFoamDict('dict', init_vals)
-        of_file['list'] = OpenFoam.OpenFoamList('list', ['val1', 'val2', 'val3'])
+        of_file['dict'] = openfoam.OpenFoamDict('dict', init_vals)
+        of_file['list'] = openfoam.OpenFoamList('list', ['val1', 'val2', 'val3'])
         print(of_file)
         #
         # writing file
@@ -72,13 +72,13 @@ class TestOpenFoam:
         #
         # reading a file
         path = os.path.join(FIXTURE_DIR, 'testFoamFile')
-        of_file = OpenFoam.OpenFoamFile(path)
+        of_file = openfoam.OpenFoamFile(path)
         print(of_file)
         #
         assert of_file.head_dict['object'] == 'testFoamFile'
         assert of_file['keyword1'] == 'value1'
-        assert isinstance(of_file['toplevel_dict'], OpenFoam.OpenFoamDict)
-        assert isinstance(of_file['toplevel_list'], OpenFoam.OpenFoamList)
+        assert isinstance(of_file['toplevel_dict'], openfoam.OpenFoamDict)
+        assert isinstance(of_file['toplevel_list'], openfoam.OpenFoamList)
         assert len(of_file['toplevel_dict'].keys()) == 6
         assert len(of_file['toplevel_list']) == 5
         assert of_file['toplevel_dict']['nest_dict3']['n3keyword3'] == 'n3value3'
@@ -93,7 +93,7 @@ class TestOpenFoam:
         # invalid file
         with pytest.raises(ValueError):
             path = os.path.join(FIXTURE_DIR, 'test-model-inputs.txt')
-            of_file = OpenFoam.OpenFoamFile(path)
+            of_file = openfoam.OpenFoamFile(path)
 
     def test_block_mesh_dict(self, data_field_class):
         field = data_field_class()
@@ -111,7 +111,7 @@ class TestOpenFoam:
             'boundary.front.type': 'wall',
             'boundary.back.type': 'wall'
         }
-        mesh = OpenFoam.BlockMeshDict(field, avg_fact=10.0, mesh_params=params, offset_field=offsets)
+        mesh = openfoam.BlockMeshDict(field, avg_fact=10.0, mesh_params=params, offset_field=offsets)
         mesh._edges = ['placeholder']
         mesh._mergePatchPairs = ['placeholder']
         mesh.write_foam_file(TEMP_DIR, overwrite=True)
@@ -132,7 +132,7 @@ class TestOpenFoam:
     def test_open_foam_export(self, data_field_class, openfoam_file_class):
         self._field = data_field_class()
         #
-        export = OpenFoam.OpenFoamExport(field=self._field)
+        export = openfoam.OpenFoamExport(field=self._field)
         #
         path_param = os.path.join(FIXTURE_DIR, 'testFoamFile')
         iter_param = [

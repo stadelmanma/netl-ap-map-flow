@@ -12,7 +12,7 @@ import re
 import scipy as sp
 from scipy.sparse import csgraph
 from ..__core__ import DataField
-from .__openfoam_core__ import OpenFoamFile, OpenFoamDict, OpenFoamList
+from .openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
 #
 ########################################################################
 #

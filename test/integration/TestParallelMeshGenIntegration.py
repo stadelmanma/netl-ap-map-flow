@@ -1,5 +1,5 @@
 """
-Handles testing of the OpenFoam.ParallelMeshGen class
+Handles testing of the openfoam.ParallelMeshGen class
 #
 Written By: Matthew Stadelman
 Date Written: 2016/06/09
@@ -11,9 +11,9 @@ import pytest
 import sys
 import scipy as sp
 from ApertureMapModelTools import DataField
-from ApertureMapModelTools.OpenFoam import OpenFoamFile, OpenFoamDict, OpenFoamList
-import ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ as pmg_submodule
-from ApertureMapModelTools.OpenFoam import ParallelMeshGen
+from ApertureMapModelTools.openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
+import ApertureMapModelTools.openfoam.parallel_mesh_gen as pmg_submodule
+from ApertureMapModelTools.openfoam import ParallelMeshGen
 
 
 @pytest.mark.xfail(sys.platform == 'win32', reason="OpenFoam doesn't natively run on Windows")

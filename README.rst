@@ -26,7 +26,7 @@ AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic la
 
 |
 
- * OpenFoam houses classes and methods to export data into a format acceptable for OpenFoam to use. There is an example of how to utilize the BlockMeshDict class in `<examples/blockmeshdict-generation-example.rst>`_ and the OpenFoam module in `<examples/openfoam-example.rst>`_.
+ * openfoam houses classes and methods to export data into a format acceptable for OpenFoam to use. There is an example of how to utilize the BlockMeshDict class in `<examples/blockmeshdict-generation-example.rst>`_ and the OpenFoam module in `<examples/openfoam-example.rst>`_.
 
 |
 

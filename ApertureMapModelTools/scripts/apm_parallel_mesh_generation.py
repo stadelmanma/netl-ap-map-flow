@@ -6,7 +6,7 @@ import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
 from ApertureMapModelTools import DataField, _get_logger, set_main_logger_level
-from ApertureMapModelTools.OpenFoam import ParallelMeshGen
+from ApertureMapModelTools.openfoam import ParallelMeshGen
 
 #
 desc_str = r"""

@@ -7,8 +7,8 @@ Last Modifed: 2016/08/08
 #
 """
 from collections import OrderedDict
-from .__openfoam_core__ import OpenFoamFile
-from .__BlockMeshDict__ import BlockMeshDict
+from .openfoam import OpenFoamFile
+from .block_mesh_dict import BlockMeshDict
 #
 #
 ########################################################################
