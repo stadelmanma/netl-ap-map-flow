@@ -8,7 +8,7 @@ Last Modifed: 2016/10/25
 #
 """
 import os
-from .. import _get_logger
+from ..ap_map_flow import _get_logger
 logger = _get_logger(__name__)
 
 
