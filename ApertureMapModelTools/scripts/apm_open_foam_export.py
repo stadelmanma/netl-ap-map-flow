@@ -11,7 +11,7 @@ from ApertureMapModelTools import DataField, files_from_directory, _get_logger
 from ApertureMapModelTools.openfoam import OpenFoamExport, OpenFoamFile
 from ApertureMapModelTools.openfoam import BlockMeshDict, OpenFoamDict
 from ApertureMapModelTools.run_model import InputFile
-from ApertureMapModelTools.UnitConversion import get_conversion_factor
+from ApertureMapModelTools.unit_conversion import get_conversion_factor
 #
 #
 ########################################################################

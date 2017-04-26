@@ -7,7 +7,7 @@ from shutil import rmtree
 import os
 from ApertureMapModelTools import _get_logger, set_main_logger_level, DataField
 from ApertureMapModelTools.openfoam import OpenFoamFile
-from ApertureMapModelTools.UnitConversion import convert_value
+from ApertureMapModelTools.unit_conversion import convert_value
 #
 #
 desc_str = r"""
