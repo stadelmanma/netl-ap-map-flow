@@ -636,6 +636,6 @@ def get_data_vect(data_map, direction, start_id=1):
         msg = 'Error - invalid direction supplied, can only be x or z'
         raise ValueError(msg)
 
-#
+
 # setting up core logger
 logger = _get_logger(__name__)
