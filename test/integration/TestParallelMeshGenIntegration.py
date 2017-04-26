@@ -10,10 +10,10 @@ import os
 import pytest
 import sys
 import scipy as sp
-from ApertureMapModelTools import DataField
-from ApertureMapModelTools.openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
-import ApertureMapModelTools.openfoam.parallel_mesh_gen as pmg_submodule
-from ApertureMapModelTools.openfoam import ParallelMeshGen
+from apmapflow import DataField
+from apmapflow.openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
+import apmapflow.openfoam.parallel_mesh_gen as pmg_submodule
+from apmapflow.openfoam import ParallelMeshGen
 
 
 @pytest.mark.xfail(sys.platform == 'win32', reason="OpenFoam doesn't natively run on Windows")

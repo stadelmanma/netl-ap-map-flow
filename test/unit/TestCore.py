@@ -14,8 +14,8 @@ import re
 import sys
 import scipy as sp
 import PIL
-import ApertureMapModelTools as amt
-import ApertureMapModelTools.ap_map_flow as amt_core
+import apmapflow as amt
+import apmapflow.ap_map_flow as amt_core
 
 
 class TestCore:
@@ -146,24 +146,24 @@ class TestCore:
         r"""
         Tests the configuation of the top level logger
         """
-        logger = amt_core._get_logger('ApertureMapModelTools')
-        assert logger.name == 'AMT'
+        logger = amt_core._get_logger('apmapflow')
+        assert logger.name == 'APM'
         assert len(logger.handlers) == 0
 
     def test_get_logger(self):
         r"""
         Tests creation of a logger
         """
-        logger = amt_core._get_logger('ApertureMapModelTools.Test.TestCore')
+        logger = amt_core._get_logger('apmapflow.Test.TestCore')
         #
-        assert logger.name == 'AMT.Test.TestCore'
+        assert logger.name == 'APM.Test.TestCore'
 
     def test_set_main_logger_level(self):
         r"""
         Tests adjudtment of primary logger level
         """
         #
-        logger = logging.getLogger('AMT')
+        logger = logging.getLogger('APM')
         #
         amt_core.set_main_logger_level('debug')
         assert logger.getEffectiveLevel() == logging.DEBUG

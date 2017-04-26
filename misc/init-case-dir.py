@@ -5,9 +5,9 @@ import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 from shutil import rmtree
 import os
-from ApertureMapModelTools import _get_logger, set_main_logger_level, DataField
-from ApertureMapModelTools.openfoam import OpenFoamFile
-from ApertureMapModelTools.unit_conversion import convert_value
+from apmapflow import _get_logger, set_main_logger_level, DataField
+from apmapflow.openfoam import OpenFoamFile
+from apmapflow.unit_conversion import convert_value
 #
 #
 desc_str = r"""
@@ -24,7 +24,7 @@ usage_str = '%(prog)s [-hvf] job_dir aper_map [job_name] [options]'
 
 #
 # fetching logger
-logger = _get_logger('ApertureMapModelTools.Scripts')
+logger = _get_logger('apmapflow.Scripts')
 #
 # setting up the argument parser
 parser = argparse.ArgumentParser(description=desc_str,

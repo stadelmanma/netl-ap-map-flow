@@ -13,7 +13,7 @@ import re
 from subprocess import Popen, PIPE, check_output
 import sys
 import yaml
-import ApertureMapModelTools as amt
+import apmapflow as amt
 
 
 def check_path(*args):
@@ -37,7 +37,7 @@ class TestScripts:
         #
         monkeypatch.setattr(sys, 'argv', [script] + args)
         #
-        pkg = 'ApertureMapModelTools.scripts'
+        pkg = 'apmapflow.scripts'
         script = getattr(__import__(pkg, fromlist=[script]), script)
         #
         script.main()

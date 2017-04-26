@@ -11,8 +11,8 @@ import os
 import pytest
 import sys
 import scipy as sp
-from ApertureMapModelTools.openfoam.openfoam import OpenFoamObject
-from ApertureMapModelTools import openfoam
+from apmapflow.openfoam.openfoam import OpenFoamObject
+from apmapflow import openfoam
 
 
 @pytest.mark.xfail(sys.platform == 'win32', reason="OpenFoam doesn't natively run on Windows")

@@ -5,8 +5,8 @@ Little script designed to semi-automatically generate a mesh
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
-from ApertureMapModelTools import DataField, _get_logger, set_main_logger_level
-from ApertureMapModelTools.openfoam import ParallelMeshGen
+from apmapflow import DataField, _get_logger, set_main_logger_level
+from apmapflow.openfoam import ParallelMeshGen
 
 #
 desc_str = r"""
@@ -22,7 +22,7 @@ Last Modfied: 2017/04/23
 """
 # setting up logging
 set_main_logger_level('info')
-logger = _get_logger('ApertureMapModelTools.Scripts')
+logger = _get_logger('apmapflow.Scripts')
 
 # creating arg parser
 parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)

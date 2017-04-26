@@ -9,8 +9,8 @@ from collections import namedtuple
 import os
 import scipy as sp
 from scipy import stats as sp_stats
-from ApertureMapModelTools import _get_logger, set_main_logger_level
-from ApertureMapModelTools import FractureImageStack
+from apmapflow import _get_logger, set_main_logger_level
+from apmapflow import FractureImageStack
 
 #
 desc_str = r"""
@@ -23,7 +23,7 @@ Last Modfied: 2017/04/23
 """
 # setting up logger
 set_main_logger_level('info')
-logger = _get_logger('ApertureMapModelTools.Scripts')
+logger = _get_logger('apmapflow.Scripts')
 
 # creating arg parser
 parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)

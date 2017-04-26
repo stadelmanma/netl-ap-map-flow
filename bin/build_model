@@ -5,8 +5,8 @@ Builds the flow model from source code.
 import argparse
 import os
 from subprocess import Popen
-from ApertureMapModelTools import DEFAULT_MODEL_PATH, DEFAULT_MODEL_NAME
-from ApertureMapModelTools import _get_logger, set_main_logger_level
+from apmapflow import DEFAULT_MODEL_PATH, DEFAULT_MODEL_NAME
+from apmapflow import _get_logger, set_main_logger_level
 
 # setting up arg parser
 parser = argparse.ArgumentParser(description='Builds the flow model from source code')
@@ -33,7 +33,7 @@ parser.add_argument('env_vars', nargs='*', default=[],
 
 # setting up logger
 set_main_logger_level('info')
-logger = _get_logger('ApertureMapModelTools.build_model')
+logger = _get_logger('apmapflow.build_model')
 
 
 def build_model():

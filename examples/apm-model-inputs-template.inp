@@ -16,7 +16,7 @@
 ;
 ;
 ; You can optionally specify the executable to use instead of the default at
-; ApertureMapModelTools/apm-lcl-model.exe
+; apmapflow/apm-lcl-model.exe
 ;EXE-FILE:
 ;
 ;

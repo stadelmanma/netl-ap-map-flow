@@ -8,9 +8,9 @@ Last Modifed: 2016/06/11
 """
 import os
 import pytest
-import ApertureMapModelTools as amt
-from ApertureMapModelTools import run_model
-from ApertureMapModelTools.run_model.run_model import ArgInput
+import apmapflow as amt
+from apmapflow import run_model
+from apmapflow.run_model.run_model import ArgInput
 
 
 class TestRunCore:

@@ -7,7 +7,7 @@ Last Modifed: 2017/03/06
 #
 """
 from pint import UnitRegistry
-from ApertureMapModelTools import unit_conversion
+from apmapflow import unit_conversion
 
 
 class TestUnitConversion:

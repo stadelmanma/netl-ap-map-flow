@@ -16,7 +16,7 @@ if 'pep8' in sys_args:
 if 'cov' in sys_args:
     del sys_args[sys_args.index('cov')]
     args.append('--cov-report=term-missing')
-    args.append('--cov=ApertureMapModelTools')
+    args.append('--cov=apmapflow')
     args.append('--cov=scripts')
 
 # building final argument list

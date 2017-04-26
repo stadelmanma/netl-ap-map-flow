@@ -7,8 +7,8 @@ import yaml
 #
 # setting path to module
 sys.path.insert(0, os.path.abspath(os.path.join('..', '..')))
-from ApertureMapModelTools import files_from_directory, load_infile_list
-from ApertureMapModelTools.run_model import InputFile, run_model
+from apmapflow import files_from_directory, load_infile_list
+from apmapflow.run_model import InputFile, run_model
 #
 # -----------------------------------------------------------------------------
 #

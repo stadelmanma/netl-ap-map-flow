@@ -1,6 +1,6 @@
 """
 This stores the basic class and function dependencies of the
-ApertureMapModelTools module.
+apmapflow module.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
@@ -475,10 +475,10 @@ class FractureImageStack(sp.ndarray):
 
 def _get_logger(module_name):
     r"""
-    Fetches a module level logger, setting AMT as the parent logger
+    Fetches a module level logger, setting APM as the parent logger
     """
     #
-    name = module_name.replace('ApertureMapModelTools', 'AMT')
+    name = module_name.replace('apmapflow', 'APM')
     name = name.replace('_', '')
     #
     return logging.getLogger(name)

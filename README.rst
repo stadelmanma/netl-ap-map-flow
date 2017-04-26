@@ -18,7 +18,7 @@ AP MAP FLOW
 
 Description
 -----------
-AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. Several tools written in `Python <https://www.python.org/>`_ provide added functionality are packaged in the ApertureMapModelTools module. The project has been primarily developed on Ubuntu, however any OS will likely work as long as the requiste packages are installed. The Fortran code was compiled using a 64-bit GNU Fortran compiler. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. Unit conversions can be handled using three functions provided in unit_conversion.py. The module `pint <https://github.com/hgrecco/pint>`_ is required and needs to be installed via pip or through conda-forge. There are a few submodules available to divide up functionality, they are described below.
+AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. Several tools written in `Python <https://www.python.org/>`_ provide added functionality are packaged in the apmapflow module. The project has been primarily developed on Ubuntu, however any OS will likely work as long as the requiste packages are installed. The Fortran code was compiled using a 64-bit GNU Fortran compiler. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. Unit conversions can be handled using three functions provided in unit_conversion.py. The module `pint <https://github.com/hgrecco/pint>`_ is required and needs to be installed via pip or through conda-forge. There are a few submodules available to divide up functionality, they are described below.
 
 |
 
@@ -60,7 +60,7 @@ Linux
 4. Open a terminal or cd into the directory you want to install the AP_MAP_FLOW package in.
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`.
     B. Run the command :code:`cd netl-AP_MAP_FLOW`.
-    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the ApertureMapModelTools module to the python3 installation.
+    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the apmapflow module to the python3 installation.
 
 MacOS/ OSX
 ~~~~~~~~~~
@@ -78,7 +78,7 @@ MacOS/ OSX
 4. Open a terminal and cd into the directory you want to install the AP_MAP_FLOW package in
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`
     B. Run the command :code:`cd netl-AP_MAP_FLOW`
-    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the ApertureMapModelTools module to the python3 installation.
+    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the apmapflow module to the python3 installation.
 
 Windows
 ~~~~~~~
@@ -96,7 +96,7 @@ Windows
 3. Shift + right click in the directory you want to install the AP_MAP_FLOW package and open a command window.
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`
     B. Run the command :code:`cd netl-AP_MAP_FLOW`
-    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the ApertureMapModelTools package to the installed version of python
+    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the apmapflow package to the installed version of python
 
 Windows with Babun
 ~~~~~~~~~~~~~~~~~~
@@ -118,7 +118,7 @@ Windows with Babun
     B. Run the command :code:`cd netl-AP_MAP_FLOW`
     C. Run the command :code:`dos2unix ./bin/*`
         * This converts Windows line endings :code:`\r\n` into unix line endings :code:`\n`
-    C. Run :code:`python3 setup.py install --user` which will build the model and link the ApertureMapModelTools package into Anaconda's Python3 installation
+    C. Run :code:`python3 setup.py install --user` which will build the model and link the apmapflow package into Anaconda's Python3 installation
 
 .. code-block:: shell
 

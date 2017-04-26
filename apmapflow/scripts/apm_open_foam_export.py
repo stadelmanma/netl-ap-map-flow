@@ -7,11 +7,11 @@ import re
 from subprocess import call as subp_call
 from sys import argv
 import scipy as sp
-from ApertureMapModelTools import DataField, files_from_directory, _get_logger
-from ApertureMapModelTools.openfoam import OpenFoamExport, OpenFoamFile
-from ApertureMapModelTools.openfoam import BlockMeshDict, OpenFoamDict
-from ApertureMapModelTools.run_model import InputFile
-from ApertureMapModelTools.unit_conversion import get_conversion_factor
+from apmapflow import DataField, files_from_directory, _get_logger
+from apmapflow.openfoam import OpenFoamExport, OpenFoamFile
+from apmapflow.openfoam import BlockMeshDict, OpenFoamDict
+from apmapflow.run_model import InputFile
+from apmapflow.unit_conversion import get_conversion_factor
 #
 #
 ########################################################################
@@ -82,7 +82,7 @@ parser.add_argument('input_file', nargs='?', type=os.path.realpath,
                     help='APM-MODEL input file to read in')
 #
 # globals defined for easier interactive use
-logger = _get_logger('ApertureMapModelTools.Scripts')
+logger = _get_logger('apmapflow.Scripts')
 export = None
 raw_files = None
 block_mesh = None

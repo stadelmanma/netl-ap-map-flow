@@ -18,8 +18,8 @@ As mentioned the first step is creating a data field object, the only required a
 
 .. code-block:: python
 
-    from ApertureMapModelTools import DataField
-    from ApertureMapModelTools.openfoam import BlockMeshDict
+    from apmapflow import DataField
+    from apmapflow.openfoam import BlockMeshDict
 
 Next we can instantiate the data field class.
 
@@ -75,8 +75,8 @@ The template below can be used with some minor customization for simple mesh gen
 .. code-block:: python
 
     import os
-    from ApertureMapModelTools import DataField
-    from ApertureMapModelTools.openfoam import BlockMeshDict
+    from apmapflow import DataField
+    from apmapflow.openfoam import BlockMeshDict
     #
     # The path to the aperture map needs to be updated to match the file you want to export
     aper_map_file = os.path.join('path', 'to', 'aperture_map_file.txt')

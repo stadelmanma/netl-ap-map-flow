@@ -5,8 +5,8 @@ Runs the model on the provided input file(s).
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
-from ApertureMapModelTools import _get_logger, set_main_logger_level
-from ApertureMapModelTools.run_model import InputFile, estimate_req_RAM, run_model
+from apmapflow import _get_logger, set_main_logger_level
+from apmapflow.run_model import InputFile, estimate_req_RAM, run_model
 
 desc_str = r"""
 Description: Runs each of the provided input files through the modified local
@@ -20,7 +20,7 @@ Last Modfied: 2017/04/23
 
 # setting log level
 set_main_logger_level('info')
-logger = _get_logger('ApertureMapModelTools.Scripts')
+logger = _get_logger('apmapflow.Scripts')
 
 # creating arg parser
 parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)

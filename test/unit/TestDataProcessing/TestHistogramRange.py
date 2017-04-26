@@ -8,7 +8,7 @@ Last Modifed: 2016/10/25
 """
 import argparse
 import scipy as sp
-from ApertureMapModelTools.data_processing.histogram_range import HistogramRange
+from apmapflow.data_processing.histogram_range import HistogramRange
 
 
 class TestHistogramRange:

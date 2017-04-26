@@ -3,7 +3,7 @@ from os import path, mkdir, environ
 import pytest
 from shutil import rmtree
 import scipy as sp
-import ApertureMapModelTools as amt
+import apmapflow as amt
 
 
 def pytest_addoption(parser):

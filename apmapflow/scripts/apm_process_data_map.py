@@ -4,8 +4,8 @@ import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
 import re
-from ApertureMapModelTools import _get_logger, set_main_logger_level, DataField
-from ApertureMapModelTools import data_processing
+from apmapflow import _get_logger, set_main_logger_level, DataField
+from apmapflow import data_processing
 #
 ########################################################################
 #
@@ -19,7 +19,7 @@ Last Modfied: 2017/04/23
 """
 #
 # fetching logger
-logger = _get_logger('ApertureMapModelTools.Scripts')
+logger = _get_logger('apmapflow.Scripts')
 #
 # setting up the argument parser
 parser = argparse.ArgumentParser(description=desc_str,

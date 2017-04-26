@@ -16,7 +16,7 @@ The OpenFoamFile class is one of the central objects of the openfoam module allo
 
 	# loading modules
 	import os
-	from ApertureMapModelTools import openfoam as of
+	from apmapflow import openfoam as of
 
 	# directly creating an OpenFoamFile object
 	init_vals = [
@@ -100,7 +100,7 @@ The apm_open_foam_export.py Script
 
 Usage
 -----
-Located in the `scripts <../ApertureMapModelTools/scripts>`_ directory, it is designed to help automate the process of taking input files from the LCL model and creating a full OpenFoam simulation case to run. The script is meant to be run from the command line and accepts several arguments and flags. The script only modifies or creates four files including the blockMesh, all other files will either need to be created or exist in the directory read from.
+Located in the `scripts <../apmapflow/scripts>`_ directory, it is designed to help automate the process of taking input files from the LCL model and creating a full OpenFoam simulation case to run. The script is meant to be run from the command line and accepts several arguments and flags. The script only modifies or creates four files including the blockMesh, all other files will either need to be created or exist in the directory read from.
 
 Arguments and Flags
 -------------------
@@ -147,4 +147,4 @@ Interactive mode is activated by using the -i flag. When interactive mode is use
 
 Files are not automatically written in interactive mode. To write all files based on the command line args used call the function :code:`write_all_files(overwrite=False)`. If the -f flag was used :code:`overwrite=False` is ignored, alternatively :code:`overwrite=True` can be used to mimic the effects of the -f flag. This command will write the blockMeshDict file as well.
 
-Several global variables are defined to ease the use of interactive mode. For a more complete understanding of what is available in terms of functions and globals it recommended to review the code in `apm_open_foam_export.py <..ApertureMapModelTools/scripts/apm_open_foam_export.py>`_.
+Several global variables are defined to ease the use of interactive mode. For a more complete understanding of what is available in terms of functions and globals it recommended to review the code in `apm_open_foam_export.py <..apmapflow/scripts/apm_open_foam_export.py>`_.

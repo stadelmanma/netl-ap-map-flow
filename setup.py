@@ -10,7 +10,7 @@ except ImportError:
 
 # Check Python version
 if sys.version_info < (3, 4):
-    print('ApertureMapModelTools requires Python 3.4 or greater to run')
+    print('apmapflow requires Python 3.4 or greater to run')
     sys.exit(1)
 
 # pull long description from README
@@ -19,21 +19,21 @@ with open('README.rst', 'r') as f:
 
 # pull out version and default name from module
 main_ = {}
-ver_path = os.path.join('ApertureMapModelTools', '__init__.py')
+ver_path = os.path.join('apmapflow', '__init__.py')
 with open(ver_path) as f:
     for line in f:
         if line.startswith('__version__'):
             exec(line, main_)
 
 # get all scripts
-scripts = glob(os.path.join('ApertureMapModelTools', 'scripts', '*'))
-fmt = '{0} = ApertureMapModelTools.scripts.{0}:main'
+scripts = glob(os.path.join('apmapflow', 'scripts', '*'))
+fmt = '{0} = apmapflow.scripts.{0}:main'
 for i, script in enumerate(scripts):
     scripts[i] = fmt.format(os.path.splitext(os.path.basename(script))[0])
 
 # call setup
 setup(
-    name='ApertureMapModelTools',
+    name='apmapflow',
     description='A fracture flow modeling package utilizing a modified local ' +
                 'cubic law approach with OpenFoam and ParaView compatibility.',
     long_description=long_desc,
@@ -48,18 +48,18 @@ setup(
         'Topic :: Scientific/Engineering :: Physics',
     ],
     packages=[
-        'ApertureMapModelTools',
-        'ApertureMapModelTools.data_processing',
-        'ApertureMapModelTools.openfoam',
-        'ApertureMapModelTools.run_model',
-        'ApertureMapModelTools.scripts'
+        'apmapflow',
+        'apmapflow.data_processing',
+        'apmapflow.openfoam',
+        'apmapflow.run_model',
+        'apmapflow.scripts'
     ],
     entry_points={
         'console_scripts': scripts
     },
     include_package_data=True,
     package_data={
-        'ApertureMapModelTools': ['logging.conf', 'src/*.F', 'src/makefile']
+        'apmapflow': ['logging.conf', 'src/*.F', 'src/makefile']
     },
     install_requires=[
         'numpy',
