@@ -14,8 +14,8 @@ from subprocess import PIPE, Popen
 from threading import Thread
 from time import time
 from scipy import inf as sp_inf
-import ApertureMapModelTools as amt
-from ApertureMapModelTools.__core__ import _get_logger, DataField
+from ..__init__ import DEFAULT_MODEL_PATH, DEFAULT_MODEL_NAME
+from ..__core__ import _get_logger, DataField
 
 # module globals
 logger = _get_logger(__name__)
@@ -273,7 +273,7 @@ class InputFile(OrderedDict):
                 logger.warning('The exe file specified does not exist: ' + exec_file)
         #
         if not self.executable:
-            self.executable = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
+            self.executable = os.path.join(DEFAULT_MODEL_PATH, DEFAULT_MODEL_NAME)
 
     def clone(self, file_formats=None):
         r"""
