@@ -19,6 +19,7 @@ from ApertureMapModelTools.OpenFoam import ParallelMeshGen
 
 
 @pytest.mark.xfail(sys.platform == 'win32', reason="OpenFoam doesn't natively run on Windows")
+@pytest.mark.usefixtures('set_openfoam_path')
 class TestParallelMeshGen:
     r"""
     Executes a set of functions to handle testing of the ParalellMeshGen class
