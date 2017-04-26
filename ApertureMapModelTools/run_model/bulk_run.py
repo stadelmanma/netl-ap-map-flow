@@ -10,7 +10,7 @@ from collections import defaultdict
 from itertools import product
 import string
 from time import sleep
-from ..ap_map_flow import _get_logger, set_main_logger_level
+from .. import _get_logger, set_main_logger_level
 from .run_model import estimate_req_RAM, run_model
 
 # module globals

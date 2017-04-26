@@ -8,7 +8,7 @@ Last Modifed: 2016/10/25
 #
 """
 import scipy as sp
-from ..ap_map_flow import _get_logger, calc_percentile
+from .. import _get_logger, calc_percentile
 from .base_processor import BaseProcessor
 logger = _get_logger(__name__)
 

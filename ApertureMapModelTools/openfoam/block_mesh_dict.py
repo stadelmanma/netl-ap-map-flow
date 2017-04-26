@@ -11,7 +11,7 @@ import os
 import re
 import scipy as sp
 from scipy.sparse import csgraph
-from ..ap_map_flow import DataField
+from .. import DataField
 from .openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
 #
 ########################################################################

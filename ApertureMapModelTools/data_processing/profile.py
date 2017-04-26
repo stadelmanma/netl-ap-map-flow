@@ -7,7 +7,7 @@ Last Modifed: 2016/10/25
 #
 """
 from collections import OrderedDict
-from ..ap_map_flow import _get_logger, get_data_vect
+from .. import _get_logger, get_data_vect
 from .base_processor import BaseProcessor
 logger = _get_logger(__name__)
 
