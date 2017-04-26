@@ -9,7 +9,7 @@ Last Modifed: 2016/10/25
 """
 import scipy as sp
 from ..__core__ import calc_percentile
-from .__Histogram__ import Histogram
+from .histogram import Histogram
 
 
 class HistogramRange(Histogram):

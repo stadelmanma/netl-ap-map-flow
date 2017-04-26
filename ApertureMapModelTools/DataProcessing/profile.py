@@ -8,7 +8,7 @@ Last Modifed: 2016/10/25
 """
 from collections import OrderedDict
 from ..__core__ import _get_logger, get_data_vect
-from .__BaseProcessor__ import BaseProcessor
+from .base_processor import BaseProcessor
 logger = _get_logger(__name__)
 
 

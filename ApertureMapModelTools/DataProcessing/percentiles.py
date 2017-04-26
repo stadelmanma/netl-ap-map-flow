@@ -8,7 +8,7 @@ Last Modifed: 2016/10/25
 """
 from collections import OrderedDict
 from ..__core__ import calc_percentile
-from .__BaseProcessor__ import BaseProcessor
+from .base_processor import BaseProcessor
 
 
 class Percentiles(BaseProcessor):

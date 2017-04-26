@@ -8,7 +8,7 @@ Last Modifed: 2016/10/20
 #
 """
 import scipy as sp
-from .__Histogram__ import Histogram
+from .histogram import Histogram
 
 
 class HistogramLogscale(Histogram):
