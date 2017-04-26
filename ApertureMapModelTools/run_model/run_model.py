@@ -15,7 +15,7 @@ from threading import Thread
 from time import time
 from scipy import inf as sp_inf
 from ..__init__ import DEFAULT_MODEL_PATH, DEFAULT_MODEL_NAME
-from ..__core__ import _get_logger, DataField
+from ..ap_map_flow import _get_logger, DataField
 
 # module globals
 logger = _get_logger(__name__)

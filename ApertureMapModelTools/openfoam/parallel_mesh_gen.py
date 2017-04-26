@@ -15,7 +15,7 @@ from subprocess import Popen, PIPE
 from threading import Event, Thread
 import scipy as sp
 from scipy.sparse import csgraph
-from ..__core__ import DataField, _get_logger
+from ..ap_map_flow import DataField, _get_logger
 from .openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
 from .block_mesh_dict import BlockMeshDict
 #

@@ -15,12 +15,12 @@ import sys
 import scipy as sp
 import PIL
 import ApertureMapModelTools as amt
-import ApertureMapModelTools.__core__ as amt_core
+import ApertureMapModelTools.ap_map_flow as amt_core
 
 
 class TestCore:
     r"""
-    Tests each of the functions an classes used in the __core__ module
+    Tests each of the functions an classes used in the ap_map_flow module
     """
 
     def test_data_field(self):

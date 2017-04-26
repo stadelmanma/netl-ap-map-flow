@@ -7,7 +7,7 @@ Last Modifed: 2016/10/25
 #
 """
 from collections import OrderedDict
-from ..__core__ import calc_percentile
+from ..ap_map_flow import calc_percentile
 from .base_processor import BaseProcessor
 
 

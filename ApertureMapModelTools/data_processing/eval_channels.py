@@ -7,7 +7,7 @@ Last Modifed: 2016/10/25
 #
 """
 #
-from ..__core__ import _get_logger
+from ..ap_map_flow import _get_logger
 from .base_processor import BaseProcessor
 logger = _get_logger(__name__)
 

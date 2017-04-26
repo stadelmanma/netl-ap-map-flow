@@ -8,7 +8,7 @@ Last Modifed: 2016/10/25
 #
 """
 import scipy as sp
-from ..__core__ import calc_percentile
+from ..ap_map_flow import calc_percentile
 from .histogram import Histogram
 
 
