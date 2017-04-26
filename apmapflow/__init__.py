@@ -20,7 +20,7 @@ from . import run_model
 from . import openfoam
 
 
-__version__ = '0.0.2'
+__version__ = '0.1.0'
 DEFAULT_MODEL_PATH = _os.path.realpath(_os.path.split(__file__)[0])
 DEFAULT_MODEL_NAME = 'apm-lcl-model.exe'
 
