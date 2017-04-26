@@ -6,7 +6,7 @@ import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
 from ApertureMapModelTools import _get_logger, set_main_logger_level
-from ApertureMapModelTools.RunModel import InputFile, estimate_req_RAM, run_model
+from ApertureMapModelTools.run_model import InputFile, estimate_req_RAM, run_model
 
 desc_str = r"""
 Description: Runs each of the provided input files through the modified local

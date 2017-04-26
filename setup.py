@@ -51,7 +51,7 @@ setup(
         'ApertureMapModelTools',
         'ApertureMapModelTools.data_processing',
         'ApertureMapModelTools.openfoam',
-        'ApertureMapModelTools.RunModel',
+        'ApertureMapModelTools.run_model',
         'ApertureMapModelTools.scripts'
     ],
     entry_points={

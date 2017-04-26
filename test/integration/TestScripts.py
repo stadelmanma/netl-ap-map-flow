@@ -158,7 +158,7 @@ class TestScripts:
         #
         inp_file = os.path.join(FIXTURE_DIR, 'test-model-inputs.txt')
         infile = 'model-input-file.inp'
-        inp_file = amt.RunModel.InputFile(inp_file, {'input_file': infile})
+        inp_file = amt.run_model.InputFile(inp_file, {'input_file': infile})
         #
         # adding aperture map
         infile = 'Fracture1ApertureMap-10avg.txt'

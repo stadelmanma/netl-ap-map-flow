@@ -10,7 +10,7 @@ import scipy as sp
 from ApertureMapModelTools import DataField, files_from_directory, _get_logger
 from ApertureMapModelTools.openfoam import OpenFoamExport, OpenFoamFile
 from ApertureMapModelTools.openfoam import BlockMeshDict, OpenFoamDict
-from ApertureMapModelTools.RunModel import InputFile
+from ApertureMapModelTools.run_model import InputFile
 from ApertureMapModelTools.UnitConversion import get_conversion_factor
 #
 #

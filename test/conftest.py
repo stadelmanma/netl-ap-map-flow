@@ -167,7 +167,7 @@ def bulk_run_class(input_file_class):
     Returns a pseduo BulkRun class object for unit testing of the class where
     possible
     """
-    class PseudoBulkRun(amt.RunModel.BulkRun):
+    class PseudoBulkRun(amt.run_model.BulkRun):
         r"""
         Setting placeholder methods and arguments
         """

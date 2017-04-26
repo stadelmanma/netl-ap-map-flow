@@ -30,7 +30,7 @@ AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic la
 
 |
 
- * RunModel houses functions required to build Python scripts to run the model. The script :code:`apm-run-lcl-model.py` can run one or more simulation sequentially. In addition to the core methods used to run individual simulations a BulkRun class exists which allows the user to automate the running of mulitple simulations in parallel. The example file for running a 'bulk simulation' is under `<examples/bulk-run-example.rst>`_. Utilization of the RunModel sub-module is in `<examples/running-the-flow-model.rst>`_, section `Running by Python Script <examples/running-the-flow-model.rst#running-by-python-script>`_
+ * run_model houses functions required to build Python scripts to run the model. The script :code:`apm-run-lcl-model.py` can run one or more simulation sequentially. In addition to the core methods used to run individual simulations a BulkRun class exists which allows the user to automate the running of mulitple simulations in parallel. The example file for running a 'bulk simulation' is under `<examples/bulk-run-example.rst>`_. Utilization of the run_model sub-module is in `<examples/running-the-flow-model.rst>`_, section `Running by Python Script <examples/running-the-flow-model.rst#running-by-python-script>`_
 
 
 Setting up the Modeling Package

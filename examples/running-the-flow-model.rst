@@ -8,7 +8,7 @@ Running the Flow Model
 Intro
 =====
 
-The Local Cubic Law (LCL) flow model by default is named ``apm-lcl-model.exe``, the added extension doesn't affect UNIX systems and allows Windows to recognize it as executable. There are two methods to run the model, first is directly on the command line via the script ``apm-run-lcl-model.py`` specifying your input parameters file(s) and the second is creating custom scripts using the ``RunModel`` sub-module in ``ApertureMapModelTools``. The model axes are on the X-Z plane where +Z is vertical and +X is to the right. The Y direction is the aperture variation and the model assumes a planar mid surface. This implies that the fracture is symmetric with respect to the X-Z plane. If you envision a spiral bound notebook with the bottom left corner as the origin. The Z-axis follows the metal spiral upward, positive X is the direction moving away from the spiral. Y is the thickness of the notebook.
+The Local Cubic Law (LCL) flow model by default is named ``apm-lcl-model.exe``, the added extension doesn't affect UNIX systems and allows Windows to recognize it as executable. There are two methods to run the model, first is directly on the command line via the script ``apm-run-lcl-model.py`` specifying your input parameters file(s) and the second is creating custom scripts using the ``run_model`` sub-module in ``ApertureMapModelTools``. The model axes are on the X-Z plane where +Z is vertical and +X is to the right. The Y direction is the aperture variation and the model assumes a planar mid surface. This implies that the fracture is symmetric with respect to the X-Z plane. If you envision a spiral bound notebook with the bottom left corner as the origin. The Z-axis follows the metal spiral upward, positive X is the direction moving away from the spiral. Y is the thickness of the notebook.
 
 
 The Input Parameters File
@@ -135,15 +135,15 @@ You will notice that several output files have been generated in the current dir
 Running in Python Scripts
 -------------------------
 
-The RunModel sub-module allows for much more power and convenience when running the model or multiple instances of the model. The sub-module also houses the BulkRun class which can be used to automate and parallelize the running of many simulations. Usage of the BulkRun class is outside the scope of this example file and is gone over in depth in `this file <bulk-run-example.rst>`_.
+The run_model sub-module allows for much more power and convenience when running the model or multiple instances of the model. The sub-module also houses the BulkRun class which can be used to automate and parallelize the running of many simulations. Usage of the BulkRun class is outside the scope of this example file and is gone over in depth in `this file <bulk-run-example.rst>`_.
 
-The core components of the `RunModule <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ consist of one class used to manipulate an input parameters files and two functions to handle running of the model. Code snippets below will demonstrate their functionality. The examples here assume you are working with the files created at the beginning of the section `Running the Model`_. The first step is to run the Python interpreter and import them from the parent module. You will only be able to import the module if you used setup.py to install the it, or manually added it to a location on the Python path, i.e. site-packages.
+The core components of the `RunModule <../ApertureMapModelTools/run_model/run_model.py>`_ consist of one class used to manipulate an input parameters files and two functions to handle running of the model. Code snippets below will demonstrate their functionality. The examples here assume you are working with the files created at the beginning of the section `Running the Model`_. The first step is to run the Python interpreter and import them from the parent module. You will only be able to import the module if you used setup.py to install the it, or manually added it to a location on the Python path, i.e. site-packages.
 
 .. code-block:: python
 
     import os
-    from ApertureMapModelTools.RunModel import InputFile
-    from ApertureMapModelTools.RunModel import estimate_req_RAM, run_model
+    from ApertureMapModelTools.run_model import InputFile
+    from ApertureMapModelTools.run_model import estimate_req_RAM, run_model
 
 The InputFile Class
 ~~~~~~~~~~~~~~~~~~~
@@ -180,7 +180,7 @@ Argument - Type - Description
     print(inp_file)
 
 
-You will notice that the line ``OVERWRITE EXISTING FILES`` has been changed and uncommented. The class by default will uncomment any parameter that is updated. To update a value and set the commented_out boolean use a tuple :code:`(value, True/False)`. This will also work when creating a dictionary of values to update. Parameters are stored in their own class called `ArgInput <../ApertureMapModelTools/RunModel/__run_model_core__.py>`_ which can be directly manipulated by accessing the keyword of an InputFile object like so, :code:`inp_file['FLUID-VISCOSITY']`. New parameters can not be created by simple assignment, instead you must call the ``add_parameter`` method and pass in the full line intended to go in the file, or a suitable placeholder line.
+You will notice that the line ``OVERWRITE EXISTING FILES`` has been changed and uncommented. The class by default will uncomment any parameter that is updated. To update a value and set the commented_out boolean use a tuple :code:`(value, True/False)`. This will also work when creating a dictionary of values to update. Parameters are stored in their own class called `ArgInput <../ApertureMapModelTools/run_model/run_model.py>`_ which can be directly manipulated by accessing the keyword of an InputFile object like so, :code:`inp_file['FLUID-VISCOSITY']`. New parameters can not be created by simple assignment, instead you must call the ``add_parameter`` method and pass in the full line intended to go in the file, or a suitable placeholder line.
 
 .. code-block:: python
 

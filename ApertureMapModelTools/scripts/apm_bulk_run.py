@@ -8,7 +8,7 @@ from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
 import yaml
 from ApertureMapModelTools import _get_logger, set_main_logger_level
-from ApertureMapModelTools.RunModel import BulkRun, InputFile
+from ApertureMapModelTools.run_model import BulkRun, InputFile
 
 #
 desc_str = r"""
