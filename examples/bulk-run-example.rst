@@ -7,27 +7,27 @@ Using the BulkRun Class
 Intro
 =====
 
-The BulkRun class housed in the run_model submodule allows the user to setup a test matrix where all combinations of a parameter set can be tested taking advantage of multiple cores on the computer. It relies heavily on the core methods and classes in the run_model submodule and it is recommended that you go through the example  `running-the-flow-model <running-the-flow-model.rst>`_ before trying to use the script to be familiar with how the code will work behind the scenes. In addition to the core methods a special class is used to facilitate running a test matrix, `BulkRun <../apmapflow/run_model/bulk_run.py>`_. It is also recommended you view the source of the class to understand the flow of the program. Lastly the script `apm-bulk-run.py <../scripts/apm-bulk-run.py>`_ can be used to process a bulk run for you by supplying one or more YAML formatted input files to it. An example YAML file is displayed below.
+The BulkRun class housed in the run_model submodule allows the user to setup a test matrix where all combinations of a parameter set can be tested taking advantage of multiple cores on the computer. It relies heavily on the core methods and classes in the run_model submodule and it is recommended that you go through the example  `running-the-flow-model <running-the-flow-model.rst>`_ before trying to use the script to be familiar with how the code will work behind the scenes. In addition to the core methods a special class is used to facilitate running a test matrix, `BulkRun <../apmapflow/run_model/bulk_run.py>`_. It is also recommended you view the source of the class to understand the flow of the program. Lastly the script `apm_bulk_run.py <../apmapflow/scripts/apm_bulk_run.py>`_ can be used to process a bulk run for you by supplying one or more YAML formatted input files to it. An example YAML file is displayed below.
 
-Using the apm-bulk-run.py Script
+Using the apm_bulk_run Script
 ================================
 
 Usage
 -----
 
-The usage of the apm-bulk-run.py script is very simple because it only needs to parse YAML parameter files using the yaml module which can be installed through pip via the :code:`pyyaml` package. YAML files are read in as series of nested dictionaries which the BulkRun module is designed to use. Any number of YAML files can be read in at once however, the first YAML file sets up the BulkRun class and the others are only used to generate additional InputFile instances from.
+The usage of the apm_bulk_run script is very simple because it only needs to parse YAML parameter files using the yaml module which can be installed through pip via the :code:`pyyaml` package. YAML files are read in as series of nested dictionaries which the BulkRun module is designed to use. Any number of YAML files can be read in at once however, the first YAML file sets up the BulkRun class and the others are only used to generate additional InputFile instances from.
 
-Full usage information can be obtained by using the :code:`-h` flag, :code:`./apm-bulk-run.py -h`. More runtim information can be obtained by adding the ``-v`` flag
+Full usage information can be obtained by using the :code:`-h` flag, :code:`./apm_bulk_run -h`. More runtim information can be obtained by adding the ``-v`` flag
 
 By default the script does a dry run, the :code:`--start` flag needs to be added to actually begin simulations. Below is an example of calling the script
 
 .. code-block:: shell
 
     # doing a dry run first
-    apm-bulk-run.py -v group-run1.yml group-run2.yml
+    apm_bulk_run -v group-run1.yml group-run2.yml
 
     # actually running the simulations
-    apm-bulk-run.py -v --start group-run1.yml group-run2.yml
+    apm_bulk_run -v --start group-run1.yml group-run2.yml
 
 
 Example YAML File

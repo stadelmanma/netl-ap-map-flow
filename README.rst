@@ -22,7 +22,7 @@ netl-ap-map-flow is a modeling suite written in Fortran and Python to perform lo
 
 |
 
- * **data_processing** provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is :code:`apm-process-data-map.py` which accepts various command line arguments to automatically perform basic post-processing.
+ * **data_processing** provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is :code:`apm_process_data_map` which accepts various command line arguments to automatically perform basic post-processing.
 
 |
 
@@ -30,7 +30,7 @@ netl-ap-map-flow is a modeling suite written in Fortran and Python to perform lo
 
 |
 
- * **run_model** houses functions required to build Python scripts to run the model. The script :code:`apm-run-lcl-model.py` can run one or more simulation sequentially. In addition to the core methods used to run individual simulations a BulkRun class exists which allows the user to automate the running of mulitple simulations in parallel. The example file for running a 'bulk simulation' is under `<examples/bulk-run-example.rst>`_. Utilization of the run_model sub-module is in `<examples/running-the-flow-model.rst>`_, section `Running by Python Script <examples/running-the-flow-model.rst#running-by-python-script>`_
+ * **run_model** houses functions required to build Python scripts to run the model. The script :code:`apm_process_data_map` can run one or more simulation sequentially. In addition to the core methods used to run individual simulations a BulkRun class exists which allows the user to automate the running of mulitple simulations in parallel. The example file for running a 'bulk simulation' is under `<examples/bulk-run-example.rst>`_. Utilization of the run_model sub-module is in `<examples/running-the-flow-model.rst>`_, section `Running by Python Script <examples/running-the-flow-model.rst#running-by-python-script>`_
 
 
 Setting up the Modeling Package
@@ -57,7 +57,7 @@ Linux
     A. Close your existing terminal window and open a new one, enter :code:`python3 --version` to check if Anaconda has installed Python successfully.
 3. Install :code:`gfortran` using the terminal command :code:`sudo apt-get install gfortran`.
     A. Run :code:`gfortran --version` in a new terminal window to check if it was installed properly.
-4. Open a terminal or cd into the directory you want to install the AP_MAP_FLOW package in.
+4. Open a terminal or cd into the directory you want to install the netl-ap-map-flow package in.
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-ap-map-flow.git`.
     B. Run the command :code:`cd netl-ap-map-flow`.
     C. Finally run :code:`python3 setup.py install` which will build the model and link the apmapflow module to the python3 installation.
@@ -75,7 +75,7 @@ MacOS/ OSX
         * Be careful not to forget the :code:`:` between directory paths
         * If you edited the ~/.bashrc file in the terminal or have an open window run :code:`source ~/.bashrc` to apply changes, alternatively close and open a term terminal window.
     C. In a terminal window run :code:`python3 --version` to ensure Anaconda was installed properly and is accessible
-4. Open a terminal and cd into the directory you want to install the AP_MAP_FLOW package in
+4. Open a terminal and cd into the directory you want to install the netl-ap-map-flow package in
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-ap-map-flow.git`
     B. Run the command :code:`cd netl-ap-map-flow`
     C. Finally run :code:`python3 setup.py install` which will build the model and link the apmapflow module to the python3 installation.
@@ -93,7 +93,7 @@ Windows
     D. Wait for the packages to finish downloading and hit :code:`Next` and then :code:`Finish`
     E. Go to the folder :code:`C:\mingw-w64\mingw64\bin` and rename (or duplicate) the file :code:`mingw32-make.exe` as :code:`make.exe`
     F. Finally add the path :code:`C:\mingw-w64\mingw64\bin` to the `Windows environment Path <http://stackoverflow.com/a/28545224>`_.
-3. Shift + right click in the directory you want to install the AP_MAP_FLOW package and open a command window.
+3. Shift + right click in the directory you want to install the netl-ap-map-flow package and open a command window.
     A. Run the command :code:`git clone https://github.com/stadelmanma/netl-ap-map-flow.git`
     B. Run the command :code:`cd netl-ap-map-flow`
     C. Finally run :code:`python3 setup.py install` which will build the model and link the apmapflow package to the installed version of python
@@ -133,12 +133,12 @@ Windows with Babun
     alias python="/usr/bin/python"
     alias python3="/cygdrive/c/Users/$USER/Anaconda3/python.exe -i"
 
-Basic Usage of APM Model
+Basic Usage of LCL Model
 ------------------------
 
 Running the Model in a terminal::
 
-    apm-run-lcl-model.py  model_initialization_file
+    apm_run_lcl_model  model_initialization_file
 
 Full usage instructions can be found in `<examples/running-the-flow-model.rst>`_.
 

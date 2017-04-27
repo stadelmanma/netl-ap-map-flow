@@ -8,7 +8,7 @@ Running the Flow Model
 Intro
 =====
 
-The Local Cubic Law (LCL) flow model by default is named ``apm-lcl-model.exe``, the added extension doesn't affect UNIX systems and allows Windows to recognize it as executable. There are two methods to run the model, first is directly on the command line via the script ``apm-run-lcl-model.py`` specifying your input parameters file(s) and the second is creating custom scripts using the ``run_model`` sub-module in ``apmapflow``. The model axes are on the X-Z plane where +Z is vertical and +X is to the right. The Y direction is the aperture variation and the model assumes a planar mid surface. This implies that the fracture is symmetric with respect to the X-Z plane. If you envision a spiral bound notebook with the bottom left corner as the origin. The Z-axis follows the metal spiral upward, positive X is the direction moving away from the spiral. Y is the thickness of the notebook.
+The Local Cubic Law (LCL) flow model by default is named ``apm-lcl-model.exe``, the added extension doesn't affect UNIX systems and allows Windows to recognize it as executable. There are two methods to run the model, first is directly on the command line via the script ``apm_run_lcl_model`` specifying your input parameters file(s) and the second is creating custom scripts using the ``run_model`` sub-module in ``apmapflow``. The model axes are on the X-Z plane where +Z is vertical and +X is to the right. The Y direction is the aperture variation and the model assumes a planar mid surface. This implies that the fracture is symmetric with respect to the X-Z plane. If you envision a spiral bound notebook with the bottom left corner as the origin. The Z-axis follows the metal spiral upward, positive X is the direction moving away from the spiral. Y is the thickness of the notebook.
 
 
 The Input Parameters File
@@ -78,7 +78,7 @@ This tells the model what units you want the data output in. Commenting out or o
 Running the Model
 =================
 
-This guide will assume you setup the modeling package using setup.py which would have installed the script ``apm-run-lcl-model.py`` on the console PATH and build the model from source code. Alternatively, you can use the actual executable in place of the script for these examples. Before we actually run the model it will be helpful to have a place to store the output files generated. We need to define an input file to use with the model and in this case we will take advantage of many of the predefined defaults. Running the following code in a terminal while in the top level directory (AP_MAP_FLOW) will get things started, and show the usage information for the script.
+This guide will assume you setup the modeling package using setup.py which would have installed the script ``apm_run_lcl_model`` on the console PATH and build the model from source code. Alternatively, you can use the actual executable in place of the script for these examples. Before we actually run the model it will be helpful to have a place to store the output files generated. We need to define an input file to use with the model and in this case we will take advantage of many of the predefined defaults. Running the following code in a terminal while in the top level directory (netl-ap-map-flow) will get things started, and show the usage information for the script.
 
 .. code-block:: bash
 
@@ -86,7 +86,7 @@ This guide will assume you setup the modeling package using setup.py which would
     cd model-testing
     touch model-input-params.inp
     # display usage info
-    apm-run-lcl-model.py -h
+    apm_run_lcl_model -h
 
 Open model-input-params.inp with your favorite text editor and copy and paste the following block.
 
@@ -128,9 +128,9 @@ With the above steps complete running the model is as simple as this:
 
 .. code-block:: bash
 
-    apm-run-lcl-model.py model-input-params.inp
+    apm_run_lcl_model model-input-params.inp
 
-You will notice that several output files have been generated in the current directory. They are saved under the default names because we did not specified our own filenames in the input file. You can view the VTK file in Paraview and the other CSV data maps in your viewer of choice. The STATS file is not a data map but being saved as a CSV file allows for quick calculations in excel or similar software. The YAML version of the stats file provides an easy to parse format for programmic manipulation, such as using the ``apm-combine-yaml-stat-files.py`` script to coalesce the results of multiple simulations. If we try to run the model a second time as before line again you will see an error is generated and execution is terminated. This is because the line ``;OVERWRITE EXISTING FILES`` is preceded by a semicolon meaning it is commented out and by default existing files will not be overwritten.
+You will notice that several output files have been generated in the current directory. They are saved under the default names because we did not specified our own filenames in the input file. You can view the VTK file in Paraview and the other CSV data maps in your viewer of choice. The STATS file is not a data map but being saved as a CSV file allows for quick calculations in excel or similar software. The YAML version of the stats file provides an easy to parse format for programmic manipulation, such as using the ``apm_combine_yaml_stat_files`` script to coalesce the results of multiple simulations. If we try to run the model a second time as before line again you will see an error is generated and execution is terminated. This is because the line ``;OVERWRITE EXISTING FILES`` is preceded by a semicolon meaning it is commented out and by default existing files will not be overwritten.
 
 Running in Python Scripts
 -------------------------

@@ -2,7 +2,7 @@
 r"""
 This program reads in a legacy VTK and exports out the mid-plane into
 CSV format. All point data is passed along to the CSV file. It is run using
-pvpython ../bin/export_data_midplane.py [VTK filename] [CSV filename]
+pvpython ../misc/export_data_midplane.py [VTK filename] [CSV filename]
 """
 import os
 import sys
