@@ -7,7 +7,7 @@ Last Modifed: 2017/03/06
 #
 """
 from pint import UnitRegistry
-from ApertureMapModelTools import UnitConversion
+from apmapflow import unit_conversion
 
 
 class TestUnitConversion:
@@ -39,10 +39,10 @@ class TestUnitConversion:
         r"""
         Checks that voxel can be registered and converted with
         """
-        UnitConversion.register_voxel_unit(10.0, 'microns')
+        unit_conversion.register_voxel_unit(10.0, 'microns')
         self.ureg.define('voxel = 10.0 * microns = vox')
 
-        value = UnitConversion.convert_value(1000, 'vox', 'SI')
+        value = unit_conversion.convert_value(1000, 'vox', 'SI')
         test_value = 1000 * self.ureg('vox').to_base_units()
         #
         assert value == test_value.magnitude
@@ -52,7 +52,7 @@ class TestUnitConversion:
         Testing values returned by a general test of many conversions
         """
         for val_in, unit_in, unit_out, val_out in self.convert_value_test:
-            val = UnitConversion.convert_value(val_in, unit_in, unit_out)
+            val = unit_conversion.convert_value(val_in, unit_in, unit_out)
             #
             # applying a tolerance since were working with floating point values
             val = round(val * 1.0E9)
@@ -67,7 +67,7 @@ class TestUnitConversion:
         Testing the get_conversion_factor function
         """
         for unit_in, unit_out, test_fact in self._convertion_factor_test:
-            fact = UnitConversion.get_conversion_factor(unit_in, unit_out)
+            fact = unit_conversion.get_conversion_factor(unit_in, unit_out)
             fact = round(fact * 1.0E9)
             test_fact = round(test_fact * 1.0E9)
             msg = 'Get conversion factor for {} to {} failed.'

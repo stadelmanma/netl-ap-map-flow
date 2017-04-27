@@ -8,9 +8,9 @@ Last Modifed: 2016/06/11
 """
 import os
 import pytest
-import ApertureMapModelTools as amt
-from ApertureMapModelTools import RunModel
-from ApertureMapModelTools.RunModel.__run_model_core__ import ArgInput
+import apmapflow as apm
+from apmapflow import run_model
+from apmapflow.run_model.run_model import ArgInput
 
 
 class TestRunCore:
@@ -73,7 +73,7 @@ class TestRunCore:
 
     def test_input_file(self):
         #
-        inp_file = RunModel.InputFile(os.path.join(FIXTURE_DIR, 'test-model-inputs.txt'))
+        inp_file = run_model.InputFile(os.path.join(FIXTURE_DIR, 'test-model-inputs.txt'))
         assert inp_file.keys()
         #
         # testing clone method
@@ -81,7 +81,7 @@ class TestRunCore:
         assert [inp_file[k].value for k in inp_file.keys() if k] == [inp_file[k].value for k in inp_file2.keys() if k]
         #
         # creating instance of InputFil using an existing instance
-        inp_file2 = RunModel.InputFile(inp_file)
+        inp_file2 = run_model.InputFile(inp_file)
         #
         new_args = {
             'INLET-PRESS': '300',
@@ -95,7 +95,7 @@ class TestRunCore:
             inp_file.update('a', 'b', 'c')
         #
         # adding a new parameter to the file
-        model_path = os.path.join(amt.__path__[0], amt.DEFAULT_MODEL_NAME)
+        model_path = os.path.join(apm.__path__[0], apm.DEFAULT_MODEL_NAME)
         inp_file.add_parameter(';EXE-FILE: ' + model_path)
         assert inp_file['EXE-FILE'].value == model_path
         #
@@ -116,16 +116,16 @@ class TestRunCore:
         inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
         # re-reading the output file to test a valid EXE-FILE
-        inp_file = RunModel.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
+        inp_file = run_model.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
         assert inp_file.executable == model_path
         #
         # writing the output file to TEMP_DIR with a non-existant EXE-FILE
-        inp_file['EXE-FILE'] = amt.DEFAULT_MODEL_NAME + '-junk'
+        inp_file['EXE-FILE'] = apm.DEFAULT_MODEL_NAME + '-junk'
         inp_file.filename_formats['input_file'] = 'BAD-INPUT-FILE.INP'
         inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
         # re-reading the output file to test an invalid EXE-FILE
-        inp_file = RunModel.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
+        inp_file = run_model.InputFile(os.path.join(TEMP_DIR, inp_file.outfile_name))
         assert inp_file.executable == model_path
 
     def test_estimate_req_RAM(self):
@@ -133,16 +133,16 @@ class TestRunCore:
         Ensuring RAM req is being calculated
         """
         map_file = os.path.join(FIXTURE_DIR, 'maps', 'parallel-plate-01vox.txt')
-        RunModel.estimate_req_RAM([map_file], 10)
+        run_model.estimate_req_RAM([map_file], 10)
         with pytest.raises(EnvironmentError):
-            RunModel.estimate_req_RAM([map_file], 0)
+            run_model.estimate_req_RAM([map_file], 0)
 
     def test_run_model(self):
         r"""
         Testing the method used to run a single instance of the model. This also
         hits the InputFile class pretty heavy
         """
-        inp_file = RunModel.InputFile(os.path.join(FIXTURE_DIR, 'test-model-inputs.txt'))
+        inp_file = run_model.InputFile(os.path.join(FIXTURE_DIR, 'test-model-inputs.txt'))
         #
         # updating paths so they are absolute
         files = ['SUMMARY-FILE', 'STAT-FILE', 'APER-FILE', 'FLOW-FILE', 'PRESS-FILE', 'VTK-FILE']
@@ -154,9 +154,9 @@ class TestRunCore:
         inp_file['APER-MAP'] = new_path
         #
         # running the model both async and in sync
-        proc = RunModel.run_model(inp_file, synchronous=False)
+        proc = run_model.run_model(inp_file, synchronous=False)
         assert proc.poll() is None
         #
-        proc = RunModel.run_model(inp_file, synchronous=True, show_stdout=True)
+        proc = run_model.run_model(inp_file, synchronous=True, show_stdout=True)
         assert proc.poll() == 0
         assert os.path.isfile(os.path.join(TEMP_DIR, 'extra', 'SUMMARY-FILE.RCTEST'))

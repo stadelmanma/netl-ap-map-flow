@@ -1,5 +1,5 @@
 include setup.py README.rst LICENSE.md requirements.txt test_requirements.txt pytest.ini
-recursive-include ApertureMapModelTools *
+recursive-include apmapflow *
 recursive-include bin *
 recursive-include examples *
 recursive-include misc *

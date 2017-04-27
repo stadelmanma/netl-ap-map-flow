@@ -9,7 +9,7 @@ Last Modifed: 2016/10/25
 import argparse
 import os
 import scipy as sp
-from ApertureMapModelTools.DataProcessing.__Histogram__ import Histogram
+from apmapflow.data_processing.histogram import Histogram
 
 
 class TestHistogram:

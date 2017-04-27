@@ -7,7 +7,7 @@ Last Modifed: 2016/06/11
 #
 """
 #
-from ApertureMapModelTools.RunModel.__BulkRun__ import BulkRun
+from apmapflow.run_model.bulk_run import BulkRun
 
 
 class TestBulkRun:

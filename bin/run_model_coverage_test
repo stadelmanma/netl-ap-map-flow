@@ -4,7 +4,7 @@ from glob import glob
 import os
 import shutil
 from subprocess import Popen, check_call, check_output
-import ApertureMapModelTools as amt
+import apmapflow as apm
 
 
 # setting up arg parser
@@ -22,7 +22,7 @@ cmd = ['git', 'rev-parse', '--show-toplevel']
 repo_top = check_output(cmd, universal_newlines=True).strip()
 
 # create paths to model and test source code
-model_src = os.path.join(repo_top, 'ApertureMapModelTools', 'src')
+model_src = os.path.join(repo_top, 'apmapflow', 'src')
 test_src = os.path.join(repo_top, 'test', 'fortran', 'src')
 test_fortran_dir = os.path.join(repo_top, 'test', 'fortran')
 

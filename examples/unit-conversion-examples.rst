@@ -8,7 +8,7 @@ Unit Conversion
 Overview
 ========
 
-Unit conversions are facilitated with three functions, :code:`register_voxel_unit`, :code:`convert_value`, :code:`get_conversion_factor`. All of the functionality is build on top of `pint <https://github.com/hgrecco/pint>`_ with the functions acting as a basic layer of abstraction. Additionally the 'micron' unit which is equivalent to a micrometer is automatically defined. Access to the pint :code:`UnitRegistry` instance is available through the :code:`UnitConversion.unit_registry` attribute.
+Unit conversions are facilitated with three functions, :code:`register_voxel_unit`, :code:`convert_value`, :code:`get_conversion_factor`. All of the functionality is build on top of `pint <https://github.com/hgrecco/pint>`_ with the functions acting as a basic layer of abstraction. Additionally the 'micron' unit which is equivalent to a micrometer is automatically defined. Access to the pint :code:`UnitRegistry` instance is available through the :code:`unit_conversion.unit_registry` attribute.
 
 register_voxel_unit
 -------------------

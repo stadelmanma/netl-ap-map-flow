@@ -11,14 +11,15 @@ import os
 import pytest
 import sys
 import scipy as sp
-import ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ as pmg_submodule
-from ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ import DataFieldRegion
-from ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ import BlockMeshRegion
-from ApertureMapModelTools.OpenFoam.__ParallelMeshGen__ import MergeGroup
-from ApertureMapModelTools.OpenFoam import ParallelMeshGen
+import apmapflow.openfoam.parallel_mesh_gen as pmg_submodule
+from apmapflow.openfoam.parallel_mesh_gen import DataFieldRegion
+from apmapflow.openfoam.parallel_mesh_gen import BlockMeshRegion
+from apmapflow.openfoam.parallel_mesh_gen import MergeGroup
+from apmapflow.openfoam import ParallelMeshGen
 
 
 @pytest.mark.xfail(sys.platform == 'win32', reason="OpenFoam doesn't natively run on Windows")
+@pytest.mark.usefixtures('set_openfoam_path')
 class TestParallelMeshGen:
     r"""
     Executes a set of functions to handle testing of the ParalellMeshGen class

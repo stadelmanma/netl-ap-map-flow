@@ -7,7 +7,7 @@ Using the BulkRun Class
 Intro
 =====
 
-The BulkRun class housed in the RunModel submodule allows the user to setup a test matrix where all combinations of a parameter set can be tested taking advantage of multiple cores on the computer. It relies heavily on the core methods and classes in the RunModel submodule and it is recommended that you go through the example  `running-the-flow-model <running-the-flow-model.rst>`_ before trying to use the script to be familiar with how the code will work behind the scenes. In addition to the core methods a special class is used to facilitate running a test matrix, `BulkRun <../ApertureMapModelTools/RunModel/__BulkRun__.py>`_. It is also recommended you view the source of the class to understand the flow of the program. Lastly the script `apm-bulk-run.py <../scripts/apm-bulk-run.py>`_ can be used to process a bulk run for you by supplying one or more YAML formatted input files to it. An example YAML file is displayed below.
+The BulkRun class housed in the run_model submodule allows the user to setup a test matrix where all combinations of a parameter set can be tested taking advantage of multiple cores on the computer. It relies heavily on the core methods and classes in the run_model submodule and it is recommended that you go through the example  `running-the-flow-model <running-the-flow-model.rst>`_ before trying to use the script to be familiar with how the code will work behind the scenes. In addition to the core methods a special class is used to facilitate running a test matrix, `BulkRun <../apmapflow/run_model/bulk_run.py>`_. It is also recommended you view the source of the class to understand the flow of the program. Lastly the script `apm-bulk-run.py <../scripts/apm-bulk-run.py>`_ can be used to process a bulk run for you by supplying one or more YAML formatted input files to it. An example YAML file is displayed below.
 
 Using the apm-bulk-run.py Script
 ================================
@@ -91,7 +91,7 @@ Although all values are converted to strings before use in the InputFile instanc
 The BulkRun Class
 =================
 
-This class wraps up the core functionality contained in the RunModel submodule into a format allowing easy processing of a test matrix in parallel. The Local Cubic Law (LCL) model itself is not parallelized however this limitation is overcome by calling the :code:`run_model` function in asynchronous mode and capturing the screen output produced. The class accepts many arguments during instantiation but the only required argument is an initial InputFile instance to clone. The InputFile instance acts as a template for all subsequent runs. All arguments that are being varied need to be present even if they only contain a dummy value. The block below shows accepted arguments and defaults.
+This class wraps up the core functionality contained in the run_model submodule into a format allowing easy processing of a test matrix in parallel. The Local Cubic Law (LCL) model itself is not parallelized however this limitation is overcome by calling the :code:`run_model` function in asynchronous mode and capturing the screen output produced. The class accepts many arguments during instantiation but the only required argument is an initial InputFile instance to clone. The InputFile instance acts as a template for all subsequent runs. All arguments that are being varied need to be present even if they only contain a dummy value. The block below shows accepted arguments and defaults.
 
 .. code-block:: python
 

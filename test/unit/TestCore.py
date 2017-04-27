@@ -14,13 +14,13 @@ import re
 import sys
 import scipy as sp
 import PIL
-import ApertureMapModelTools as amt
-import ApertureMapModelTools.__core__ as amt_core
+import apmapflow as apm
+import apmapflow.ap_map_flow as apm_core
 
 
 class TestCore:
     r"""
-    Tests each of the functions an classes used in the __core__ module
+    Tests each of the functions an classes used in the ap_map_flow module
     """
 
     def test_data_field(self):
@@ -31,11 +31,11 @@ class TestCore:
         # covering basic methods
         map_file = 'parallel-plate-01vox.txt'
         fname = os.path.join(FIXTURE_DIR, 'maps', map_file)
-        field = amt.DataField(fname)
+        field = apm.DataField(fname)
         field.create_point_data()
         #
         # testing initization from data
-        obj = amt.DataField(field.data_map)
+        obj = apm.DataField(field.data_map)
         assert obj.nx == 100
         assert obj.nz == 100
         assert obj.data_map.size == 10000
@@ -85,7 +85,7 @@ class TestCore:
         #
         # testing initialization from data array
         img_data = sp.ones((10, 11, 12))
-        fracture_stack = amt.FractureImageStack(img_data, dtype=sp.uint8)
+        fracture_stack = apm.FractureImageStack(img_data, dtype=sp.uint8)
         assert issubclass(fracture_stack.__class__, sp.ndarray)
         assert fracture_stack.dtype == sp.uint8
         assert fracture_stack.shape == img_data.shape
@@ -93,7 +93,7 @@ class TestCore:
         #
         # testing initialization from image file
         fname = os.path.join(FIXTURE_DIR, 'binary-fracture.tif')
-        fracture_stack = amt.FractureImageStack(fname)
+        fracture_stack = apm.FractureImageStack(fname)
         assert issubclass(fracture_stack.__class__, sp.ndarray)
         assert fracture_stack.dtype == bool
         assert fracture_stack.shape == (507, 46, 300)
@@ -133,7 +133,7 @@ class TestCore:
         # testing image stack saving
         fname = os.path.join(TEMP_DIR, 'test.tif')
         fracture_stack.save(fname)
-        new_stack = amt.FractureImageStack(fname)
+        new_stack = apm.FractureImageStack(fname)
         assert sp.all(fracture_stack == new_stack)
         del new_stack
         # testing overwrite parameter
@@ -146,38 +146,38 @@ class TestCore:
         r"""
         Tests the configuation of the top level logger
         """
-        logger = amt_core._get_logger('ApertureMapModelTools')
-        assert logger.name == 'AMT'
+        logger = apm_core._get_logger('apmapflow')
+        assert logger.name == 'APM'
         assert len(logger.handlers) == 0
 
     def test_get_logger(self):
         r"""
         Tests creation of a logger
         """
-        logger = amt_core._get_logger('ApertureMapModelTools.Test.TestCore')
+        logger = apm_core._get_logger('apmapflow.Test.TestCore')
         #
-        assert logger.name == 'AMT.Test.TestCore'
+        assert logger.name == 'APM.Test.TestCore'
 
     def test_set_main_logger_level(self):
         r"""
         Tests adjudtment of primary logger level
         """
         #
-        logger = logging.getLogger('AMT')
+        logger = logging.getLogger('APM')
         #
-        amt_core.set_main_logger_level('debug')
+        apm_core.set_main_logger_level('debug')
         assert logger.getEffectiveLevel() == logging.DEBUG
         #
-        amt_core.set_main_logger_level(logging.INFO)
+        apm_core.set_main_logger_level(logging.INFO)
         assert logger.getEffectiveLevel() == logging.INFO
 
     def test_files_from_directory(self):
         r"""
         Runs the files_from_directory command with various args
         """
-        files = amt.files_from_directory('.', '*')
+        files = apm.files_from_directory('.', '*')
         assert len(files)
-        files = amt.files_from_directory('.', re.compile('.'))
+        files = apm.files_from_directory('.', re.compile('.'))
         assert len(files)
 
     def test_load_infile_list(self):
@@ -188,7 +188,7 @@ class TestCore:
         fname2 = os.path.join(FIXTURE_DIR, 'maps', 'parallel-plate-10vox.txt')
         infile_list = [fname1, fname2]
         #
-        fields = amt.load_infile_list(infile_list)
+        fields = apm.load_infile_list(infile_list)
         assert fields
 
     def test_calc_percentile(self):
@@ -196,7 +196,7 @@ class TestCore:
         Sends a test array to the calc percentile function
         """
         data_list = list(range(100))
-        val = amt.calc_percentile(99, data_list)
+        val = apm.calc_percentile(99, data_list)
         assert val == 99
 
     def test_calc_percentile_num(self):
@@ -204,9 +204,9 @@ class TestCore:
         Sends a test array to the calc percentile function
         """
         data_list = list(range(100))
-        val = amt.calc_percentile_num(50, data_list, last=False)
+        val = apm.calc_percentile_num(50, data_list, last=False)
         assert val*100 == 50
-        val = amt.calc_percentile_num(50, data_list, last=True)
+        val = apm.calc_percentile_num(50, data_list, last=True)
         assert val*100 == 51
 
     def test_get_data_vect(self):
@@ -216,14 +216,14 @@ class TestCore:
         data = sp.arange(100)
         data = data.reshape(10, 10)
         #
-        vect = amt.get_data_vect(data, 'x', 0)
+        vect = apm.get_data_vect(data, 'x', 0)
         assert sp.all(vect == data[0, :])
-        vect = amt.get_data_vect(data, 'x', 11)
+        vect = apm.get_data_vect(data, 'x', 11)
         assert sp.all(vect == data[9, :])
-        vect = amt.get_data_vect(data, 'z', 0)
+        vect = apm.get_data_vect(data, 'z', 0)
         assert sp.all(vect == data[:, 0])
-        vect = amt.get_data_vect(data, 'z', 11)
+        vect = apm.get_data_vect(data, 'z', 11)
         assert sp.all(vect == data[:, 9])
         #
         with pytest.raises(ValueError):
-            amt.get_data_vect(data, 'y')
+            apm.get_data_vect(data, 'y')

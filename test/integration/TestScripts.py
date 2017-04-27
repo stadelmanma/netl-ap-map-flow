@@ -13,7 +13,7 @@ import re
 from subprocess import Popen, PIPE, check_output
 import sys
 import yaml
-import ApertureMapModelTools as amt
+import apmapflow as apm
 
 
 def check_path(*args):
@@ -37,7 +37,7 @@ class TestScripts:
         #
         monkeypatch.setattr(sys, 'argv', [script] + args)
         #
-        pkg = 'ApertureMapModelTools.scripts'
+        pkg = 'apmapflow.scripts'
         script = getattr(__import__(pkg, fromlist=[script]), script)
         #
         script.main()
@@ -158,7 +158,7 @@ class TestScripts:
         #
         inp_file = os.path.join(FIXTURE_DIR, 'test-model-inputs.txt')
         infile = 'model-input-file.inp'
-        inp_file = amt.RunModel.InputFile(inp_file, {'input_file': infile})
+        inp_file = apm.run_model.InputFile(inp_file, {'input_file': infile})
         #
         # adding aperture map
         infile = 'Fracture1ApertureMap-10avg.txt'
@@ -175,8 +175,8 @@ class TestScripts:
         #
         inp_file.write_inp_file(alt_path=TEMP_DIR)
         #
-        exe_file = os.path.split(amt.__file__)[0]
-        exe_file = os.path.join(exe_file, amt.DEFAULT_MODEL_NAME)
+        exe_file = os.path.split(apm.__file__)[0]
+        exe_file = os.path.join(exe_file, apm.DEFAULT_MODEL_NAME)
         infile = os.path.join(TEMP_DIR, 'model-input-file.inp')
         args = ['-v', '-e', exe_file, infile]
         cls.run_script('apm_run_lcl_model', args, monkeypatch)

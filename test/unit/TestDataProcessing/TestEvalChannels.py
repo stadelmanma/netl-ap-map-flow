@@ -10,7 +10,7 @@ import argparse
 import os
 import pytest
 import scipy as sp
-from ApertureMapModelTools.DataProcessing.__EvalChannels__ import EvalChannels
+from apmapflow.data_processing.eval_channels import EvalChannels
 
 
 class TestEvalChannels:
