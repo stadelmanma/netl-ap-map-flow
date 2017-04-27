@@ -7,4 +7,5 @@ Last Modifed: 2016/02/26
 #
 """
 from .run_model import InputFile, estimate_req_RAM, run_model
+from .run_model import DEFAULT_MODEL_PATH, DEFAULT_MODEL_NAME
 from .bulk_run import BulkRun

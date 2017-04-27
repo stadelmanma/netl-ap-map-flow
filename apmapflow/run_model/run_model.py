@@ -14,11 +14,12 @@ from subprocess import PIPE, Popen
 from threading import Thread
 from time import time
 from scipy import inf as sp_inf
-from ..__init__ import DEFAULT_MODEL_PATH, DEFAULT_MODEL_NAME
 from .. import _get_logger, DataField
 
 # module globals
 logger = _get_logger(__name__)
+DEFAULT_MODEL_PATH = os.path.split(os.path.split(__file__)[0])[0]
+DEFAULT_MODEL_NAME = 'apm-lcl-model.exe'
 
 
 class ArgInput(object):

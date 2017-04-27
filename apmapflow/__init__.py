@@ -17,12 +17,11 @@ from .ap_map_flow import files_from_directory, load_infile_list
 from .ap_map_flow import calc_percentile, calc_percentile_num, get_data_vect
 from . import data_processing
 from . import run_model
+from .run_model import DEFAULT_MODEL_PATH, DEFAULT_MODEL_NAME
 from . import openfoam
 
 
 __version__ = '0.1.0'
-DEFAULT_MODEL_PATH = _os.path.realpath(_os.path.split(__file__)[0])
-DEFAULT_MODEL_NAME = 'apm-lcl-model.exe'
 
 
 # reading logging config
