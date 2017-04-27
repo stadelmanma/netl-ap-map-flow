@@ -18,24 +18,24 @@ AP MAP FLOW
 
 Description
 -----------
-AP_MAP_FLOW is a package written in Fortran and Python to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. Several tools written in `Python <https://www.python.org/>`_ provide added functionality are packaged in the apmapflow module. The project has been primarily developed on Ubuntu, however any OS will likely work as long as the requiste packages are installed. The Fortran code was compiled using a 64-bit GNU Fortran compiler. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. Unit conversions can be handled using three functions provided in unit_conversion.py. The module `pint <https://github.com/hgrecco/pint>`_ is required and needs to be installed via pip or through conda-forge. There are a few submodules available to divide up functionality, they are described below.
+netl-ap-map-flow is a modeling suite written in Fortran and Python to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. Several tools written in `Python <https://www.python.org/>`_ provide added functionality are packaged in the apmapflow module. The project has been primarily developed on Ubuntu, however any OS will likely work as long as the requiste packages are installed. The Fortran code was compiled using a 64-bit GNU Fortran compiler. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the \*.vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture, ImageJ places it instead as the top left corner by default when using the `text-image` upload method. Unit conversions can be handled using three functions provided in unit_conversion.py. The module `pint <https://github.com/hgrecco/pint>`_ is required and needs to be installed via pip or through conda-forge. There are a few submodules available to divide up functionality, they are described below.
 
 |
 
- * data_processing provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is :code:`apm-process-data-map.py` which accepts various command line arguments to automatically perform basic post-processing.
+ * **data_processing** provides an easy to use and customizable platform for post-processing a set of simulation data. It is well suited to be used interactively in the Python interpreter or to create data processing scripts. A pre-made script is :code:`apm-process-data-map.py` which accepts various command line arguments to automatically perform basic post-processing.
 
 |
 
- * openfoam houses classes and methods to export data into a format acceptable for OpenFoam to use. There is an example of how to utilize the BlockMeshDict class in `<examples/blockmeshdict-generation-example.rst>`_ and the OpenFoam module in `<examples/openfoam-example.rst>`_.
+ * **openfoam** houses classes and methods to export data into a format acceptable for OpenFoam to use. There is an example of how to utilize the BlockMeshDict class in `<examples/blockmeshdict-generation-example.rst>`_ and the OpenFoam module in `<examples/openfoam-example.rst>`_.
 
 |
 
- * run_model houses functions required to build Python scripts to run the model. The script :code:`apm-run-lcl-model.py` can run one or more simulation sequentially. In addition to the core methods used to run individual simulations a BulkRun class exists which allows the user to automate the running of mulitple simulations in parallel. The example file for running a 'bulk simulation' is under `<examples/bulk-run-example.rst>`_. Utilization of the run_model sub-module is in `<examples/running-the-flow-model.rst>`_, section `Running by Python Script <examples/running-the-flow-model.rst#running-by-python-script>`_
+ * **run_model** houses functions required to build Python scripts to run the model. The script :code:`apm-run-lcl-model.py` can run one or more simulation sequentially. In addition to the core methods used to run individual simulations a BulkRun class exists which allows the user to automate the running of mulitple simulations in parallel. The example file for running a 'bulk simulation' is under `<examples/bulk-run-example.rst>`_. Utilization of the run_model sub-module is in `<examples/running-the-flow-model.rst>`_, section `Running by Python Script <examples/running-the-flow-model.rst#running-by-python-script>`_
 
 
 Setting up the Modeling Package
 -------------------------------
-These steps were followed on Ubuntu 14.04 & 16.04, OSX 10.9 & MacOS 10.12 and Windows 7. They are not guaranteed to remain updated however the general process should be relatively stable as all dependencies are being handled by large, community driven projects i.e. Anaconda, MinGW, GCC, etc. Running the test suite in Windows is possible but not without some manual adjustments and extra effort. After installation there are several scripts avilable under the :code:`apm-` prefix upon opening up a new terminal.
+These steps were followed on Ubuntu 14.04 & 16.04, OSX 10.9 & MacOS 10.12 and Windows 7. They are not guaranteed to remain updated however the general process should be relatively stable as all dependencies are being handled by large, community driven projects i.e. Anaconda, MinGW, GCC, etc. Running the test suite in Windows is possible but not without some manual adjustments and extra effort. After installation there are several scripts avilable under the :code:`apm_` prefix upon opening up a new terminal.
 
 Installation Tips
 ~~~~~~~~~~~~~~~~~
@@ -46,8 +46,8 @@ Installation Tips
 * Add the `conda-forge <https://conda-forge.github.io/>`_ channel to your conda environment to allow conda to install pint. :code:`conda config --add channels conda-forge`
 * After downloading the model run :code:`conda update --all` and :code:`conda install --file requirements.txt` to ensure all packages are up to date, this will also install the pint module.
 * Run :code:`pip install -r test_requirements.txt` to enable running the test suite.
-* When running the test suite, recompile the model using :code:`./bin/build_model debug` which builds the model using additional flags, code coverage and profiling
-* If you want to modify the source code of the model or module you are better off to run :code:`python3 setup.py develop --user` rather than :code:`install`. The former method simply creats a link instead of actually copying the files allowing your changes to take effect upon a fresh start of the interpreter.
+* Running :code:`./bin/build_model debug` will recompile the model using additional flags, code coverage and profiling
+* If you want to modify the source code of the model or module you are better off to run :code:`python3 setup.py develop` rather than :code:`install`. The former method simply creats a link instead of actually copying the files allowing your changes to take effect upon a fresh start of the interpreter.
 
 Linux
 ~~~~~
@@ -58,9 +58,9 @@ Linux
 3. Install :code:`gfortran` using the terminal command :code:`sudo apt-get install gfortran`.
     A. Run :code:`gfortran --version` in a new terminal window to check if it was installed properly.
 4. Open a terminal or cd into the directory you want to install the AP_MAP_FLOW package in.
-    A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`.
-    B. Run the command :code:`cd netl-AP_MAP_FLOW`.
-    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the apmapflow module to the python3 installation.
+    A. Run the command :code:`git clone https://github.com/stadelmanma/netl-ap-map-flow.git`.
+    B. Run the command :code:`cd netl-ap-map-flow`.
+    C. Finally run :code:`python3 setup.py install` which will build the model and link the apmapflow module to the python3 installation.
 
 MacOS/ OSX
 ~~~~~~~~~~
@@ -76,9 +76,9 @@ MacOS/ OSX
         * If you edited the ~/.bashrc file in the terminal or have an open window run :code:`source ~/.bashrc` to apply changes, alternatively close and open a term terminal window.
     C. In a terminal window run :code:`python3 --version` to ensure Anaconda was installed properly and is accessible
 4. Open a terminal and cd into the directory you want to install the AP_MAP_FLOW package in
-    A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`
-    B. Run the command :code:`cd netl-AP_MAP_FLOW`
-    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the apmapflow module to the python3 installation.
+    A. Run the command :code:`git clone https://github.com/stadelmanma/netl-ap-map-flow.git`
+    B. Run the command :code:`cd netl-ap-map-flow`
+    C. Finally run :code:`python3 setup.py install` which will build the model and link the apmapflow module to the python3 installation.
 
 Windows
 ~~~~~~~
@@ -94,9 +94,9 @@ Windows
     E. Go to the folder :code:`C:\mingw-w64\mingw64\bin` and rename (or duplicate) the file :code:`mingw32-make.exe` as :code:`make.exe`
     F. Finally add the path :code:`C:\mingw-w64\mingw64\bin` to the `Windows environment Path <http://stackoverflow.com/a/28545224>`_.
 3. Shift + right click in the directory you want to install the AP_MAP_FLOW package and open a command window.
-    A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`
-    B. Run the command :code:`cd netl-AP_MAP_FLOW`
-    C. Finally run :code:`python3 setup.py install --user` which will build the model and link the apmapflow package to the installed version of python
+    A. Run the command :code:`git clone https://github.com/stadelmanma/netl-ap-map-flow.git`
+    B. Run the command :code:`cd netl-ap-map-flow`
+    C. Finally run :code:`python3 setup.py install` which will build the model and link the apmapflow package to the installed version of python
 
 Windows with Babun
 ~~~~~~~~~~~~~~~~~~
@@ -114,11 +114,11 @@ Windows with Babun
     * This allows the module to be linked properly in step 3.
     * As before you will need to tweak the path if you installed Anaconda somewhere else
 3. Open a Babun prompt in the same directory that you want to install the modeling package in by right clicking in the folder explorer window or on the Desktop if that is your chosen location.
-    A. Run the command :code:`git clone https://github.com/stadelmanma/netl-AP_MAP_FLOW.git`
-    B. Run the command :code:`cd netl-AP_MAP_FLOW`
+    A. Run the command :code:`git clone https://github.com/stadelmanma/netl-ap-map-flow.git`
+    B. Run the command :code:`cd netl-ap-map-flow`
     C. Run the command :code:`dos2unix ./bin/*`
         * This converts Windows line endings :code:`\r\n` into unix line endings :code:`\n`
-    C. Run :code:`python3 setup.py install --user` which will build the model and link the apmapflow package into Anaconda's Python3 installation
+    C. Run :code:`python3 setup.py install` which will build the model and link the apmapflow package into Anaconda's Python3 installation
 
 .. code-block:: shell
 
