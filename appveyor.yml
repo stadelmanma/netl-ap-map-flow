@@ -25,6 +25,7 @@ install:
     - cmd: conda config --add channels conda-forge
     - cmd: conda config --set show_channel_urls true
     - cmd: conda update conda
+    - cmd: conda update python
     - cmd: conda install --file requirements.txt
     - cmd: pip install -r test_requirements.txt
 
