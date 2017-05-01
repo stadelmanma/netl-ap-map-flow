@@ -36,7 +36,7 @@ netl-ap-map-flow is a modeling suite written in Fortran and Python3 to perform l
 Installation
 ################################################################################
 
-Quick install using Anaconda
+Quick Install Using Anaconda
 --------------------------------------------------------------------------------
 First install the Python3 version of `Anaconda <https://www.continuum.io/downloads>`_ or `Miniconda <https://conda.io/miniconda.html>`_ for your given platform and allow it to modify your ``PATH`` variable. Then run the following set of commands in a terminal. You can use the module directly in scripts by running ``import apmapflow`` or simply work with the scripts provided. A full list of scripts and basic usage is shown in the documentation section below.
 
