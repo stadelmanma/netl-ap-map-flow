@@ -1,6 +1,6 @@
-################################################################################
+================================================================================
 netl-ap-map-flow
-################################################################################
+================================================================================
 
 .. image:: https://travis-ci.org/stadelmanma/netl-ap-map-flow.svg?branch=master
    :target: https://travis-ci.org/stadelmanma/netl-ap-map-flow
@@ -80,7 +80,7 @@ Running the model in a terminal::
 
     apm_run_lcl_model  model_initialization_file
 
-Full usage instructions can be found in `<docs/dexamples/running-the-flow-model.rst>`_.
+Full usage instructions can be found in `<docs/examples/running-the-flow-model.rst>`_.
 
 
 Notes/ Tips/ Pitfalls:
@@ -89,6 +89,5 @@ Notes/ Tips/ Pitfalls:
 * This guide assumes you install Anaconda3 locally. If you choose to install it system wide you will need to run some commands with :code:`sudo` in unix systems or in an elevated command prompt in Windows.
 * Running :code:`./bin/build_model debug` will recompile the model using additional flags, code coverage and profiling
 * Using Anaconda inside a `Babun <http://babun.github.io/>`_ prompt is tricky and takes some effort to get fully functional.
-
     * Your ``$PATH`` variable will need to be manually adjusted so the conda version of Python will shadow the default version used in Babun.
     * Direct use of the conda Python interpreter doesn't work and it instead needs to be called with ``python -i``.
