@@ -1,11 +1,14 @@
 """
-This is a template that is used to add additional processors to
-the package.
-#
-Written By: Matthew Stadelman
-Date Written: 2016/02/26
-Last Modifed: 2016/10/25
-#
+================================================================================
+Base Processor
+================================================================================
+| This is a template that is used to add additional processors to
+| the package.
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/02/26
+| Last Modifed: 2016/10/25
+
 """
 import os
 from .. import _get_logger
