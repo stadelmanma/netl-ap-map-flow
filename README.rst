@@ -3,16 +3,19 @@ netl-ap-map-flow
 ================================================================================
 
 .. image:: https://travis-ci.org/stadelmanma/netl-ap-map-flow.svg?branch=master
-   :target: https://travis-ci.org/stadelmanma/netl-ap-map-flow
+    :target: https://travis-ci.org/stadelmanma/netl-ap-map-flow
 
 .. image:: https://ci.appveyor.com/api/projects/status/cyaxl3r2mbmymbp3?svg=true
-   :target: https://ci.appveyor.com/project/stadelmanma/netl-ap-map-flow
+    :target: https://ci.appveyor.com/project/stadelmanma/netl-ap-map-flow
 
 .. image:: https://codecov.io/gh/stadelmanma/netl-ap-map-flow/branch/master/graph/badge.svg
-   :target: https://codecov.io/gh/stadelmanma/netl-ap-map-flow
+    :target: https://codecov.io/gh/stadelmanma/netl-ap-map-flow
+
+.. image:: https://readthedocs.org/projects/netl-ap-map-flow/badge/?version=latest
+    :target: http://netl-ap-map-flow.readthedocs.io/en/latest/?badge=latest
 
 .. image:: https://zenodo.org/badge/50030017.svg
-   :target: https://zenodo.org/badge/latestdoi/50030017
+    :target: https://zenodo.org/badge/latestdoi/50030017
 
 |
 
