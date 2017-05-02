@@ -34,6 +34,7 @@ sys.path.insert(0, os.path.abspath(os.pardir))
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.doctest',
+    'sphinx.ext.napoleon',
     'sphinx.ext.viewcode'
 ]
 
