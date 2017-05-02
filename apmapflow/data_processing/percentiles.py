@@ -1,10 +1,13 @@
 """
-Calculates a set of percentiles for a dataset
-#
-Written By: Matthew Stadelman
-Date Written: 2016/02/26
-Last Modifed: 2016/10/25
-#
+================================================================================
+Percentile
+================================================================================
+| Calculates a set of percentiles for a dataset
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/02/26
+| Last Modifed: 2016/10/25
+
 """
 from collections import OrderedDict
 from .. import calc_percentile

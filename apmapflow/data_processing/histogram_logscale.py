@@ -1,11 +1,13 @@
 """
-Calculates a logarithmically spaced histogram for a data map.
-Inherits most of it's structure from Histogram
-#
-Written By: Matthew Stadelman
-Date Written: 2016/03/07
-Last Modifed: 2016/10/20
-#
+================================================================================
+Logscaled Histogram
+================================================================================
+| Calculates a logarithmically spaced histogram for a data map.
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/03/07
+| Last Modifed: 2016/10/20
+
 """
 import scipy as sp
 from .histogram import Histogram

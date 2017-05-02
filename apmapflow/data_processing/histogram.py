@@ -1,11 +1,14 @@
 """
-Calculates a simple histogram for a data map. This also serves as the
-super class for variants of a simple histogram.
-#
-Written By: Matthew Stadelman
-Date Written: 2016/02/29
-Last Modifed: 2016/10/25
-#
+================================================================================
+Histogram
+================================================================================
+| Calculates a simple histogram for a data map. This also serves as the
+| super class for variants of a simple histogram.
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/02/29
+| Last Modifed: 2016/10/25
+
 """
 import scipy as sp
 from .. import _get_logger, calc_percentile

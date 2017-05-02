@@ -1,12 +1,14 @@
 """
-Evaluates channelization in flow data based on the number and widths of channels
-#
-Written By: Matthew Stadelman
-Date Written: 2016/02/26
-Last Modifed: 2016/10/25
-#
+================================================================================
+Evaluate Channelization
+================================================================================
+| Evaluates channelization in flow data based on the number and widths of channels
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/02/26
+| Last Modifed: 2016/10/25
+
 """
-#
 from .. import _get_logger
 from .base_processor import BaseProcessor
 logger = _get_logger(__name__)

@@ -1,10 +1,13 @@
 """
-A class build to handle generation of a blockMeshDict from an aperturemap.
-#
-Written By: Matthew Stadelman
-Date Written: 2016/08/08
-Last Modifed: 2016/08/08
-#
+================================================================================
+Block Mesh Dict
+================================================================================
+| A class build to handle generation of a blockMeshDict from an aperture map.
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/08/08
+| Last Modifed: 2016/08/08
+
 """
 #
 import os
@@ -13,9 +16,6 @@ import scipy as sp
 from scipy.sparse import csgraph
 from .. import DataField
 from .openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
-#
-########################################################################
-#
 
 
 class BlockMeshDict(OpenFoamFile):

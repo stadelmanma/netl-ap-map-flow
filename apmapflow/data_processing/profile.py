@@ -1,10 +1,13 @@
 """
-Outputs a set of data profiles along either the X or Z axis
-#
-Written By: Matthew Stadelman
-Date Written: 2016/03/07
-Last Modifed: 2016/10/25
-#
+================================================================================
+Profile
+================================================================================
+| Outputs a set of data profiles along either the X or Z axis
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/03/07
+| Last Modifed: 2016/10/25
+
 """
 from collections import OrderedDict
 from .. import _get_logger, get_data_vect

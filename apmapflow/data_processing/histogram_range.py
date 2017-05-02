@@ -1,11 +1,13 @@
 """
-Calculates a histogram over a defined percentile range for a data map.
-Inherits most of it's structure from Histogram
-#
-Written By: Matthew Stadelman
-Date Written: 2016/03/07
-Last Modifed: 2016/10/25
-#
+================================================================================
+Range Histogram
+================================================================================
+| Calculates a histogram over a defined percentile range for a data map.
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/03/07
+| Last Modifed: 2016/10/25
+
 """
 import scipy as sp
 from .. import calc_percentile

@@ -1,18 +1,17 @@
 """
-A class build to handle mass exportation of OpenFoam files.
-#
-Written By: Matthew Stadelman
-Date Written: 2016/08/08
-Last Modifed: 2016/08/08
-#
+================================================================================
+OpenFoam Export
+================================================================================
+| A class build to handle mass exportation of OpenFoam files.
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/08/08
+| Last Modifed: 2016/08/08
+
 """
 from collections import OrderedDict
 from .openfoam import OpenFoamFile
 from .block_mesh_dict import BlockMeshDict
-#
-#
-########################################################################
-#
 
 
 class OpenFoamExport(dict):

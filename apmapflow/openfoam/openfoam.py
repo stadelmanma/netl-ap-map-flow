@@ -1,19 +1,18 @@
 """
-This stores the basic classes and functions needed to interact with OpenFoam
-files.
-#
-Written By: Matthew Stadelman
-Date Written: 2016/03/22
-Last Modifed: 2016/08/08
-#
+================================================================================
+OpenFoam Core
+================================================================================
+| This stores the basic classes and functions needed to interact with OpenFoam
+| files.
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/03/22
+| Last Modifed: 2016/08/08
+
 """
-#
 from collections import OrderedDict
 import os
 import re
-#
-########################################################################
-#
 
 
 class OpenFoamObject(object):
