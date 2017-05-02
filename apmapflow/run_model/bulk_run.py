@@ -1,10 +1,13 @@
 """
-This stores BulkRun class used for running multiple concurrent simulations
-#
-Written By: Matthew Stadelman
-Date Written: 2016/06/16
-Last Modifed: 2016/06/16
-#
+================================================================================
+Bulk Run
+================================================================================
+| This stores BulkRun class used for running multiple concurrent simulations
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/06/16
+| Last Modifed: 2016/06/16
+
 """
 from collections import defaultdict
 from itertools import product
