@@ -30,10 +30,6 @@ def register_voxel_unit(voxel_size, unit):
     unit : string
         units the voxel size is defined in.
 
-    Returns
-    -------
-    None
-
     Examples
     --------
     >>> import apmapflow.unit_conversion as uc
@@ -58,7 +54,7 @@ def convert_value(value, unit_in, unit_out='SI'):
 
     Returns
     -------
-    A floating point value converted to the desired units
+    A floating point value converted to the desired units.
 
     Examples
     --------
