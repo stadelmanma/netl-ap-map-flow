@@ -27,6 +27,8 @@ Overview
 
 netl-ap-map-flow is a modeling suite written in Fortran and Python3 to perform local cubic law (LCL) simulations of single phase flow through a discrete fracture and analyze the data. Several tools written in `Python <https://www.python.org/>`_ provide added functionality are packaged in the **apmapflow** module. Dependencies are managed using `Anaconda <https://www.continuum.io/downloads>`_ through `conda-forge <http://conda-forge.github.io/>`_. `Paraview <http://www.paraview.org/>`_ is the recommended program to visualize the output using the legacy vtk files. The CSV output files can be visualized in ImageJ, Excel, etc. However, depending on how your chosen program reads in the image matrix, the image may appear inverted. The first value in the CSV files corresponds to bottom left corner of the fracture. After installation several scripts are avilable under with the prefix ``apm_``.
 
+Full documentation is hosted on `read the docs <http://netl-ap-map-flow.readthedocs.io/en/latest/>`_.
+
  .. list-table:: **Summary of apmapflow submodules**
 
      * - **data_processing**
