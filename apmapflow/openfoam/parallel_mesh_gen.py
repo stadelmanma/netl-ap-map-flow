@@ -1,11 +1,14 @@
 """
-A class build to handle generation of a blockMeshDict in parallel using the
-mergeMeshes and stitchMesh OpenFoam utilities.
-#
-Written By: Matthew Stadelman
-Date Written: 2016/08/09
-Last Modifed: 2016/08/15
-#
+================================================================================
+Parallel Mesh Generation
+================================================================================
+| A class build to handle generation of a blockMeshDict in parallel using the
+| mergeMeshes and stitchMesh OpenFoam utilities.
+
+| Written By: Matthew Stadelman
+| Date Written: 2016/08/09
+| Last Modifed: 2016/08/15
+
 """
 import os
 import re
@@ -18,9 +21,8 @@ from scipy.sparse import csgraph
 from .. import DataField, _get_logger
 from .openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
 from .block_mesh_dict import BlockMeshDict
-#
-########################################################################
-#
+
+
 # module globals
 _blockMesh_error = Event()
 _mergeMesh_error = Event()
