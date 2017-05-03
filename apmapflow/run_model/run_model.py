@@ -32,7 +32,12 @@ class ArgInput(object):
 
     def __init__(self, line):
         r"""
-        Parses the line for the input key string and value
+        Parses the line for the input key string and value.
+
+        Parameters
+        ----------
+        line : string
+            input line to parse.
         """
         # inital values
         self._line_arr = []
@@ -43,12 +48,30 @@ class ArgInput(object):
         self._parse_line(line)
 
     def __str__(self):
-        r""" Allows direct printing of an ArgInput object """
+        r"""
+        Allows direct printing of an ArgInput object in output format.
+
+        Examples
+        --------
+        >>> from apmapflow.run_model.run_model import ArgInput
+        >>> param = ArgInput('test-param: 123 ft')
+        >>> print(param)
+        test-param: 123 ft
+
+        See Also
+        --------
+        line
+        """
         return self.line
 
     def _parse_line(self, line):
         r"""
-        Handles parsing a line to build the ArgInput class
+        Parses a line to set attributes of the class instance.
+
+        Parameters
+        ----------
+        line : string
+            input line to parse.
         """
         #
         # removing semi-colon if whole line was commented out
@@ -96,12 +119,42 @@ class ArgInput(object):
 
     @property
     def keyword(self):
-        r""" Return first index of line arr """
+        r"""
+        Returns the keyword used to register this instance to an
+        InputFile instance.
+        """
         return re.sub(r':$', '', self._line_arr[0])
 
     @property
     def value(self):
-        r""" Returns the value_index from the line arr """
+        r"""
+        Returns the value of the parameter stored by the class instance or sets
+        the value of the instance. When setting the value if a tuple is passed
+        instead of a scalar the first entry is used to set the value and
+        the second's truth value sets the .commented out attribute of the instance.
+
+        Parameters
+        ----------
+        value : scalar or tuple, optional
+            When value is supplied the property is set
+
+        Examples
+        --------
+        >>> from apmapflow.run_model.run_model import ArgInput
+        >>> param = ArgInput('test-param: value-123')
+        >>> param.value
+        'value-123'
+        >>> param.commented_out
+        False
+        >>> param.value = 'new-value'
+        >>> param.value
+        'new-value'
+        >>> param.value = ('commented-out', True)
+        >>> param.value
+        'commented-out'
+        >>> param.commented_out
+        True
+        """
         if self._value_index > -1:
             return self._line_arr[self._value_index]
         else:
@@ -126,7 +179,25 @@ class ArgInput(object):
 
     @property
     def unit(self):
-        r""" Returns the value_index from the line arr """
+        r"""
+        Returns the given units a value is in or None, and can also be used
+        to set the units of a value.
+
+        Parameters
+        ----------
+        value : string, optional
+            If supplied with a value then the units of a instance are set to it.
+
+        Examples
+        --------
+        >>> from apmapflow.run_model.run_model import ArgInput
+        >>> param = ArgInput('test-param: 123 ft')
+        >>> param.unit
+        'ft'
+        >>> param.unit = 'mm'
+        >>> param.unit
+        'mm'
+        """
         if self._value_index > -1:
             return self._line_arr[self._value_index + 1]
         else:
@@ -138,7 +209,25 @@ class ArgInput(object):
 
     @property
     def line(self):
-        r""" Return a formatted line """
+        r"""
+        Return a formatted line meant for use when writing an InputFile isntance
+        to disk. The line is prefixed by ``;`` if the parameter is supposed to
+        be commented out.
+
+        Examples
+        --------
+        >>> from apmapflow.run_model.run_model import ArgInput
+        >>> param = ArgInput('test-param: 123 ft')
+        >>> param.line
+        'test-param: 123 ft'
+        >>> param.commented_out = True
+        >>> param.line
+        ';test-param: 123 ft'
+
+        See Also
+        --------
+        __str__
+        """
         cmt = ';' if self.commented_out else ''
         return cmt + ' '.join(self._line_arr) + self.comment_msg
 
