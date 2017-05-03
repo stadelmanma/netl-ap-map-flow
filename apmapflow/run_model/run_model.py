@@ -27,7 +27,7 @@ DEFAULT_MODEL_NAME = 'apm-lcl-model.exe'
 
 class ArgInput(object):
     r"""
-    Stores the value of a single input line of a lcl model input file. Instances
+    Stores the value of a single input line of a LCL model input file. Instances
     of this class are stored in an InputFile instance's dict to manage each
     parameter.
 
@@ -709,18 +709,41 @@ def estimate_req_RAM(input_maps, avail_RAM=sp_inf, suppress=False, **kwargs):
 
 def run_model(input_file_obj, synchronous=False, show_stdout=False):
     r"""
-    Runs the default version of the model compiled with the module or a version
-    specified by the 'EXE-FILE' argument in the input file. If synhronous is True
-    then the program will pause until the model finishes running.
-    --
-    input_file_obj - InputFile class object to be written and run by the model
-    synchronous - Bool, default=False if True the script pauses until the model
-        finishes executing
-    show_stdout - Bool, default=False if True stdout and stderr are printed to
-        the screen instead of being stored on the Popen object as stdout_content
-        and stderr_content.
+    Runs an instance of the LCL model defined by the InputFile instance passed in.
 
-    Returns a Popen object
+    Parameters
+    ----------
+    input_file_obj : apmapflow.run_model.InputFile
+        An InputFile instance with the desired simulation parameters to run.
+    synchronous : boolean, optional
+        If True then run_model will block the main Python execution thread until
+        the simulation is complete.
+    show_stdout : boolean, optional
+        If True then the stdout and stderr produced during the simulation run are
+        printed to the screen instead of being stored on the Popen instance
+
+    Returns
+    -------
+    model_popen_obj : Popen
+        The Popen instance that contains the LCL model process, which may or man
+        not be finished executing at upon return.
+
+    Examples
+    --------
+    >>> from apmapflow.run_model import InputFile, run_model
+    >>> inp_file = InputFile('input-file-path.inp')
+    >>> proc = run_model(inp_file) # asynchronous run process isn't completed yet
+    >>> proc.returncode
+    None
+    >>> # process is finished upon return when using synchronous=True
+    >>> proc2 = run_model(inp_file, synchronous=True)
+    >>> proc2.returncode
+    0
+
+    Notes
+    -----
+    This writes out the inputfile at the perscribed path, a pre-existing file
+    will be overwritten.
     """
     input_file_obj.write_inp_file()
     exe_file = os.path.abspath(input_file_obj.executable)
