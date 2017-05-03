@@ -501,6 +501,11 @@ class InputFile(OrderedDict):
             A dictionary of filename formats which use Python format strings to
             dynamically generate names for the LCL model input and output files.
 
+        Returns
+        -------
+        input_file : apmapflow.run_model.InputFile
+            The cloned input file instance
+
         Examples
         --------
         >>> from apmapflow.run_model import InputFile
@@ -512,11 +517,6 @@ class InputFile(OrderedDict):
         >>> inp_file_copy = inp_file.clone(file_formats={})
         >>> inp_file_copy.filename_formats
         {}
-
-        Returns
-        -------
-        input_file : apmapflow.run_model.InputFile
-            The cloned input file instance
 
         Notes
         -----
@@ -657,7 +657,36 @@ class InputFile(OrderedDict):
 def estimate_req_RAM(input_maps, avail_RAM=sp_inf, suppress=False, **kwargs):
     r"""
     Reads in the input maps to estimate the RAM requirement of each map
-    and to make sure the user has alloted enough space.
+    and to make sure the user has alloted enough space. The RAM estimation is a
+    rough estimate based on a linear regression of several simulations of varying
+    aperture map size.
+
+    Parameters
+    ----------
+    input_maps : list
+        A list of filepaths to read in
+    avail_RAM : float, optional
+        The maximum amount of RAM avilable on the system to be used. When exceeded
+        an EnvironmentError is raised and an error message is generated.
+    suppress : boolan, optional
+        If it evaluates out to True and a map exceeds the ``avail_RAM`` the
+        EnvironmentError is suppressed.
+    **kwargs : optional
+        Additional keyword args to pass on to the DataField initialization.
+
+    Returns
+    -------
+    ram_values : list
+        A list of floats with the corresponding RAM estimate for each of the maps
+        passed in.
+
+    Examples
+    --------
+    >>> from apmapflow.run_model import estimate_req_RAM
+    >>> maps = ['fracture-1.txt', 'fracture-2.txt', 'fracture-3.txt']
+    >>> estimate_req_RAM(maps, avail_RAM=8.0, suppress=True)
+    [6.7342, 8.1023, 5.7833]
+
     """
     RAM_per_map = []
     error = False
