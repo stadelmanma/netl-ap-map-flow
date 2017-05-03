@@ -273,8 +273,34 @@ class AsyncCommunicate(Thread):
 
 class InputFile(OrderedDict):
     r"""
-    Stores the data for an input file and methods to generate and write
-    an input file.
+    Used to read and write and manipulate LCL model input files. Each key-value
+    pair stored on an instance of this class is actually an instance of the
+    ArgInput class.
+
+    Parameters
+    ----------
+    infile : string or InputFile instance
+        Either is a filepath to read an input file from or an existing instance
+        to copy.
+    filename_formats : dictionary, optional
+        A dictionary of filename formats which use Python format strings to
+        dynamically generate names for the LCL model input and output files.
+
+    Examples
+    --------
+    >>> from apmapflow.run_model import InputFile
+    >>> inp_file = InputFile('input-file-path.inp')
+    >>> fmts = {'VTK-FILE': '{apmap}-data.vtk'}
+    >>> inp_file2 = InputFile(inp_file, filename_formats=fmts)
+
+    Notes
+    -----
+    Any ``filename_formats`` defined will overwrite a parameter that was
+    manually defined by directly setting the value.
+    The ``__setitem__`` method of
+    has been subclassed to transparently update the value attribute of the
+    ArgInput instance for the corresponding key instead of the value itself.
+
     """
     def __init__(self, infile, filename_formats=None):
         #
@@ -299,13 +325,13 @@ class InputFile(OrderedDict):
 
     def __str__(self):
         r"""
-        Writes an input file to the screen
+        Writes out the input file as if it was being written to disk.
         """
         #
         # updating filenames to match current args
         self._construct_file_names()
         #
-        # builidng content from ArgInput class line attribute
+        # building content from ArgInput class line attribute
         content = ''
         for arg_input in self.values():
             content += arg_input.line + '\n'
@@ -314,7 +340,42 @@ class InputFile(OrderedDict):
 
     def __setitem__(self, key, value, new_param=False):
         r"""
-        Subclassed to pass the value directly to the arg input
+        Subclassed to pass the value directly to the value attribute of the
+        ArgInput instance stored on the provided key unless the ``new_param``
+        argument evaluates to ``True``.
+
+        Parameters
+        ----------
+        key : string
+            The key on the dictionary to update
+        value : string or ArgInput instance
+            The value to set the given key to
+        new_param : boolean, optional
+            If ``True`` then the value is not passed on to the ArgInput instance
+            and the actual value on the InputFile instance is changed.
+
+        Examples
+        --------
+        >>> from apmapflow.run_model import InputFile
+        >>> inp_file = InputFile('input-file-path.inp')
+        >>> inp_file['parameter'] = '123'
+        >>> inp_file['parameter']
+        <apmapflow.run_model.run_model.ArgInput object at #########>
+        >>> inp_file['parameter'].value
+        '123'
+        >>> inp_file.__setitem__('parameter', 'param-value', new_param=True)
+        >>> inp_file['parameter']
+        'param-value'
+
+        Notes
+        -----
+        If ``new_param`` is falsy and the key does not already exist a KeyError
+        exeception is raised. The ``add_parameter`` method is the standard way to
+        add new ArgInput instances to the InputFile instance
+
+        See Also
+        --------
+        add_parameter
         """
         if new_param:
             super().__setitem__(key, value)
@@ -332,6 +393,17 @@ class InputFile(OrderedDict):
         r"""
         Populates the InputFile instance with data from a file or copies
         an existing instance passed in.
+
+        Parameters
+        ----------
+        infile : string or InputFile instance
+            Either is a filepath to read an input file from or an existing InputFile
+            instance to copy.
+
+        See Also
+        --------
+        InputFile
+        clone
         """
         #
         if isinstance(infile, self.__class__):
@@ -352,8 +424,27 @@ class InputFile(OrderedDict):
 
     def add_parameter(self, line):
         r"""
-        Adds a parameter to the input file by parsing the line that would have
-        been added to the input file if directly editing it.
+        Adds a parameter to the input file by parsing a line into an ArgInput
+        class instance. The line supplied needs to be the same as if it were being
+        manually typed into the actual input file.
+
+        Parameters
+        ----------
+        line: string
+            The provided line to parse and append to the InputFile instance.
+
+        Examples
+        --------
+        >>> from apmapflow.run_model import InputFile
+        >>> inp_file = InputFile('input-file-path.inp')
+        >>> inp_file.add_parameter('NEW-PARAM: 1337 ;elite param')
+        >>> inp_file['NEW-PARAM'].value
+        '1337'
+
+        Notes
+        -----
+        The InputFile inheirits from an OrderedDict so new parameters get added
+        to the bottom of the file.
         """
         line = re.sub(r'^(;+)\s+', r'\1', line)
         arg = ArgInput(line)
@@ -361,8 +452,26 @@ class InputFile(OrderedDict):
 
     def set_executable(self):
         r"""
-        Sets the path to the model executable, defaulting to the version compiled
-        with the module.
+        Sets the path to an LCL model executable based on the ``EXE-FILE``
+        parameter for the current InputFile instance. The path is checked relative
+        to the InputFile instance's ``infile`` attribute. If no file is found
+        a warning is issued and the executable path defaults to the version
+        packaged with the module.
+
+        Examples
+        --------
+        >>> from apmapflow.run_model import InputFile
+        >>> inp_file = InputFile('./input-file-path.inp')
+        >>> inp_file['EXE-FILE'] = 'my-locally-compiled-model.exe'
+        >>> inp_file.set_executable()
+        >>> inp_file.executable
+        './my-locally-compiled-model.exe'
+
+
+        Notes
+        -----
+        This method needs to be called if the ``EXE-FILE`` parameter is added,
+        changed or removed.
         """
         self.executable = None
         #
@@ -383,8 +492,36 @@ class InputFile(OrderedDict):
 
     def clone(self, file_formats=None):
         r"""
-        Creates a new InputFile obj and then populates it with the current
-        object's data. New ArgInput instances are created to prevent mutation.
+        Creates a new InputFile instance populated with the current instance
+        data. New ArgInput instances are created to prevent mutation.
+
+        Parameters
+        ----------
+        filename_formats : dictionary, optional
+            A dictionary of filename formats which use Python format strings to
+            dynamically generate names for the LCL model input and output files.
+
+        Examples
+        --------
+        >>> from apmapflow.run_model import InputFile
+        >>> fmts = {'VTK-FILE': '{apmap}-data.vtk'}
+        >>> inp_file = InputFile('input-file-path.inp', filename_formats=fmts)
+        >>> inp_file_copy = inp_file.clone()
+        >>> inp_file_copy.filename_formats
+        {'VTK-FILE': '{apmap}-data.vtk'}
+        >>> inp_file_copy = inp_file.clone(file_formats={})
+        >>> inp_file_copy.filename_formats
+        {}
+
+        Returns
+        -------
+        input_file : apmapflow.run_model.InputFile
+            The cloned input file instance
+
+        Notes
+        -----
+        If the ``filename_formats`` parameter is omitted then the formats from
+        the current instance are copied over.
         """
         if file_formats is None:
             file_formats = self.filename_formats
@@ -398,6 +535,25 @@ class InputFile(OrderedDict):
         Updates the InputFile instance, passing any unknown keys to the
         filename_format_args dictionary instead of raising a KeyError like
         in __setitem__
+
+        Parameters
+        ----------
+        \*args, \*\*kwargs : any valid dictionary initializer value set
+            The resulting dictionary formed internally is used to update the
+            instance
+
+        Examples
+        --------
+        >>> from apmapflow.run_model import InputFile
+        >>> fmts = {'VTK-FILE': '{apmap}-data.vtk'}
+        >>> inp_file = InputFile('input-file-path.inp', filename_formats=fmts)
+        >>> new_vals = {'OUTLET-SIDE': 'LEFT', 'apmap': 'fracture-1'}
+        >>> inp_file.update(new_vals)
+        >>> inp_file['OUTLET-SIDE'].value
+        'LEFT'
+        >>> inp_file.filename_format_args
+        {'apmap': 'fracture-1'}
+
         """
         if len(args) > 1:
             msg = 'update expected at most 1 arguments, got {:d}'
@@ -414,8 +570,13 @@ class InputFile(OrderedDict):
 
     def get_uncommented_values(self):
         r"""
-        Returns an OrderedDict of all args that are uncommented in
-        the input file. An ArgInput object is stored under each keyword.
+        Generate and return all uncommented parameters as an OrderedDict.
+
+        Returns
+        -------
+        uncommented_values : OrderedDict
+            An OrderedDict containing all ArgInput instances that were not
+            commented out
         """
         #
         args = [(key, arg) for key, arg in self.items() if not arg.commented_out]
@@ -424,8 +585,13 @@ class InputFile(OrderedDict):
 
     def _construct_file_names(self, make_dirs=False):
         r"""
-        This updates the INP file's base outfile names to match current
-        arguments and creates file paths if directories do not exist yet
+        This updates the instance's outfile names to match current arguments.
+
+        Parameters
+        ----------
+        make_dirs : boolean, optional
+            If ``make_dirs`` evaluates to True then all parent directories for each
+            output file are created as well.
         """
         #
         outfiles = {key: value for key, value in self.filename_formats.items()}
@@ -461,7 +627,17 @@ class InputFile(OrderedDict):
 
     def write_inp_file(self, alt_path=None):
         r"""
-        Writes an input file to the outfile_name based on the current args
+        Writes an input file to the ``outfile_name`` attribute applying any
+        formats defined based the current parameter values.
+
+        Parameters
+        ----------
+        alt_path : string,
+            An alternate path to preappend to the generated filename
+
+        >>> from apmapflow.run_model import InputFile
+        >>> inp_file = InputFile('input-file-path.inp')
+        >>> inp_file.write_inp_file(alt_path='.')
         """
         #
         # creating file directories and generating input file
