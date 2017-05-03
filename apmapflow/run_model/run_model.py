@@ -27,17 +27,19 @@ DEFAULT_MODEL_NAME = 'apm-lcl-model.exe'
 
 class ArgInput(object):
     r"""
-    Stores the value of a single input line of an INP file
+    Stores the value of a single input line of a lcl model input file. Instances
+    of this class are stored in an InputFile instance's dict to manage each
+    parameter.
+
+    Parameters
+    ----------
+    line : string
+        input line to parse.
     """
 
     def __init__(self, line):
         r"""
         Parses the line for the input key string and value.
-
-        Parameters
-        ----------
-        line : string
-            input line to parse.
         """
         # inital values
         self._line_arr = []
@@ -234,13 +236,24 @@ class ArgInput(object):
 
 class AsyncCommunicate(Thread):
     r"""
-    Handles asyncronous usage of Popen.communicate()
+    Allows an executable to be run in a separate thread so it does not block the
+    main Python process.
+
+    Parameters
+    ----------
+    popen_obj : Popen instance
+        An instance containing a process that is currently executing.
     """
     def __init__(self, popen_obj):
         self.popen_obj = popen_obj
         super().__init__()
 
     def run(self):
+        r"""
+        Calls the communicate method on the Popen object registered to the class
+        which blocks the thread until the process terminates. The total execution
+        time, stdout and stderr of the process are passed back to the Popen object.
+        """
         out, err = self.popen_obj.communicate()
         self.popen_obj.stdout_content, self.popen_obj.stderr_content = out, err
         self.popen_obj.end_time = time()
