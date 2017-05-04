@@ -22,15 +22,41 @@ logger = _get_logger(__name__)
 
 class BulkRun(dict):
     r"""
-    Stores properties and methods to handle mass runs of the model
+    Handles generating a collection of input files from the provided parameters
+    and then running multiple instances of the LCL model concurrently to
+    produce simulation data for each simulation parameter combination. A
+    comprehensive example of this class and the associated script is avilable
+    under the Usage Examples page.
+
+    Parameters
+    ----------
+    init_input_file : apmapflow.run_model.InputFile
+        An inital InputFile instance to define the static parameters of the bulk run.
+    num_CPUs : int, optional
+        The maximum number of CPUs to utilize
+    sys_RAM : float, optional
+        The maximum amount of RAM avilable for use.
+    **kwargs : multiple
+        * delim : string
+            The expected delimiter in the aperture map files
+        * spawn_delay : float
+            The minimum time between spawning of new LCL instances in seconds
+        * retest_delay : float
+            The time to wait between checking for completed processes.
+    Examples
+    --------
+    >>> from apmapflow import BulkRun, InputFile
+    >>> inp_file = InputFile('./input-file-path.inp')
+    >>> blk_run = BulkRun(inp_file, num_CPUs=16, sys_RAM=32.0, spawn_delay=10.0)
+
+    Notes
+    -----
+    ``spawn_delay`` is useful to help ensure shared resources are not accessed
+    at the same time.
     """
-    def __init__(self, init_input_file, num_CPUs=2.0, sys_RAM=4.0, **kwargs):
+    def __init__(self, init_input_file, num_CPUs=2, sys_RAM=4.0, **kwargs):
         r"""
-        Setting basic properties of the class.
-        Useful kwargs include:
-          delim: the expected delimiter in the aperture map files
-          spawn_delay: minimum time between spawning of new processes
-          retest_delay: time to wait between checking for completed processes
+        Setting properties of the class.
         """
         super().__init__()
         self.init_input_file = init_input_file.clone()
@@ -47,8 +73,20 @@ class BulkRun(dict):
 
     def dry_run(self):
         r"""
-        This steps through the entire simulation creating directories and
-        input files without actually starting any of the simulations.
+        Steps through the entire simulation creating directories and
+        input files without actually starting any of the simulations. This Allows
+        the LCL input files to be inspected before actually starting the run.
+
+        Examples
+        --------
+        >>> from apmapflow import BulkRun, InputFile
+        >>> inp_file = InputFile('./input-file-path.inp')
+        >>> blk_run = BulkRun(inp_file, num_CPUs=16, sys_RAM=32.0, spawn_delay=10.0)
+        >>> blk_run.dry_run()
+
+        See Also
+        --------
+        start
         """
         #
         orig_level = logger.getEffectiveLevel()
@@ -68,7 +106,14 @@ class BulkRun(dict):
 
     def start(self):
         r"""
-        Acts as the driver function for the entire bulk run of simulations.
+        Starts the bulk run, first creating the input files and then managing
+        the multiple processes until all input files have been processed. The
+        input file list must have already been generated prior to calling this
+        method.
+
+        See Also
+        --------
+        generate_input_files
         """
         #
         logger.info('Beginning bulk run of simulations')
@@ -91,9 +136,32 @@ class BulkRun(dict):
         r"""
         Generates the input file list based on the default parameters
         and case specific parameters. An InputFile instance is generated for
-        each unique combination of model parameters.
-        - If append is True, then the files are appended to the input_file_list
-        instead of resetting it.
+        each unique combination of model parameters which is then written to disk
+        to be run by the LCL model.
+
+        Parameters
+        ----------
+        default_params : dictionary
+            A dictionary containing lists of parameter values to use in the
+            simulations.
+        default_name_formats : dictionary
+            A dictionary containing the infile and outfile name formats to use.
+        case_identifer : string, optional
+            A format string used to identify cases that need special parameters
+        case_params : dictionary, optional
+            A dictionary setup where each key is an evaluation of the case_identifer
+            format string and the value is a dictionary containing lists of
+            parameter values used to update the default params for that case.
+        append : boolean, optional
+            When ``True`` the BulkRun.input_file_list attribute is appended to
+            instead of reset by this method.
+
+        Notes
+        -----
+        The ``default_name_formats`` parameter is passed directly to the InputFile
+        instance initialization and is no modified in any way. When using a
+        ``case_identifier`` only the evaluations that matter need to be added to
+        the ``case_params`` dictionary, missing keys are simply ignored.
         """
         #
         #  processing unique identifier and setting up cases
