@@ -1,8 +1,14 @@
 #!/usr/bin/env python3
 r"""
-Script designed to recurse through a directory and pull out all of the
-associated YAML stat files into a CSV document. It assumes all stat files
-have the exact same set of keys.
+Description: Recurses through a directory to find all YAML stat files
+based on the supplied pattern and combine them into a single CSV file.
+This script assumes all stat files have the same set of values.
+
+For usage information run: ``apm_combine_yaml_stat_files -h``
+
+Written By: Matthew stadelman
+Date Written: 2017/02/12
+Last Modfied: 2017/04/23
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
@@ -11,22 +17,13 @@ import os
 import yaml
 from apmapflow import _get_logger, set_main_logger_level
 from apmapflow import files_from_directory
-#
-desc_str = r"""
-Description: Recurses through a directory to find all YAML stat files
-based on the supplied pattern and combine them into a single CSV file.
-
-Written By: Matthew stadelman
-Date Written: 2017/02/12
-Last Modfied: 2017/04/23
-"""
 
 # setting up logger
 set_main_logger_level('info')
 logger = _get_logger('apmapflow.Scripts')
 
 # creating arg parser
-parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawDesc)
 
 # adding arguments
 parser.add_argument('-f', '--force', action='store_true',
