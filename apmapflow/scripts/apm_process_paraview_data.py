@@ -1,7 +1,19 @@
-#!/usr/bin/env python3
 r"""
-Script designed to read in a paraview data csv file from an OpenFoam simulation
-and generate a 2-D data maps from it.
+Description: Generates 2-D data maps from OpenFoam data saved by paraview
+as a CSV file. The data has to be saved as point data and the following fields
+are expected p, points:0->2, u:0->2. An aperture map is the second main input
+and is used to generate the interpolation coordinates as well as convert
+the flow velocities into volumetic flow rates. This script assumes the OpenFoam
+simulation was performed on a geometry symmetric about the X-Z plane.
+
+For usage information run: ``apm_process_paraview_data -h``
+
+| Written By: Matthew stadelman
+| Date Written: 2016/09/29
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
@@ -10,22 +22,10 @@ import scipy as sp
 from scipy.interpolate import griddata
 from apmapflow import _get_logger, set_main_logger_level, DataField
 
-#
-desc_str = r"""
-Description: Generates 2-D data maps from OpenFoam data saved by paraview
-as a CSV file. The data has to be saved as point data and the following fields
-are expected p, points:0->2, u:0->2. An aperture map is the second main input
-and is used to generate the interpolation coordinates as well as convert
-the flow velocities into volumetic flow rates.
-
-Written By: Matthew stadelman
-Date Written: 2016/09/29
-Last Modfied: 2017/04/23
-"""
 
 # setting up logger
 set_main_logger_level('info')
-logger = _get_logger('apmapflow.Scripts')
+logger = _get_logger('apmapflow.scripts')
 
 # setting a few convenience globals
 avg_fact = None
@@ -33,7 +33,7 @@ voxel_size = None
 base_name = None
 
 # creating arg parser
-parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawDesc)
 
 # adding arguments
 parser.add_argument('-v', '--verbose', action='store_true',

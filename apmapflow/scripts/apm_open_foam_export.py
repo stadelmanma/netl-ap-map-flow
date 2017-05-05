@@ -1,4 +1,16 @@
-#!/usr/bin/env python3
+r"""
+Description: Generates a complete OpenFoam simulation from an APM-MODEL
+input file and existing OpenFoam files which are used as templates.
+
+For usage information run: ``apm_open_foam_export -h``
+
+| Written By: Matthew stadelman
+| Date Written: 2015/07/25
+| Last Modfied: 2017/04/23
+
+|
+
+"""
 import argparse
 from argparse import RawDescriptionHelpFormatter
 from logging import DEBUG
@@ -16,14 +28,6 @@ from apmapflow.unit_conversion import get_conversion_factor
 #
 ########################################################################
 #
-desc_str = r"""
-Description: Generates a complete OpenFoam simulation from an APM-MODEL
-input file and existing OpenFoam files which are used as templates.
-
-Written By: Matthew stadelman
-Date Written: 2015/07/25
-Last Modfied: 2017/04/23
-"""
 
 interactive_message = r"""
 -------------------------------------------------------------------------------
@@ -48,7 +52,7 @@ you wish to write out setting the paths as you need.
 """
 #
 # creating arg parser
-parser = argparse.ArgumentParser(description=desc_str,
+parser = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=RawDescriptionHelpFormatter)
 
 parser.add_argument('-f', '--force', action='store_true',
@@ -82,7 +86,7 @@ parser.add_argument('input_file', nargs='?', type=os.path.realpath,
                     help='APM-MODEL input file to read in')
 #
 # globals defined for easier interactive use
-logger = _get_logger('apmapflow.Scripts')
+logger = _get_logger('apmapflow.scripts')
 export = None
 raw_files = None
 block_mesh = None

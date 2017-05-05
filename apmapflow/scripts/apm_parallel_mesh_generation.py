@@ -1,6 +1,18 @@
-#!/usr/bin/env python3
 r"""
-Little script designed to semi-automatically generate a mesh
+Description: Generates a blockMesh in parallel using the OpenFOAM utilties
+blockMesh, mergeMeshes and stitchMesh. Uses the ParallelMeshGen class in
+the OpenFoam submodule. When reading in a parameter file with the -r option
+the file should be formatted with a single "key: value" pair on each line.
+Valid mesh_types are: simple, symmetry, threshold and symmetry-threshold
+
+For usage information run: ``apm_parallel_mesh_generation -h``
+
+| Written By: Matthew stadelman
+| Date Written: 2016/08/16
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
@@ -8,24 +20,13 @@ import os
 from apmapflow import DataField, _get_logger, set_main_logger_level
 from apmapflow.openfoam import ParallelMeshGen
 
-#
-desc_str = r"""
-Description: Generates a blockMesh in parallel using the OpenFOAM utilties
-blockMesh, mergeMeshes and stitchMesh. Uses the ParallelMeshGen class in
-the OpenFoam submodule. When reading in a parameter file with the -r option
-the file should be formatted with a single "key: value" pair on each line.
-Valid mesh_types are: simple, symmetry, threshold and symmetry-threshold
 
-Written By: Matthew stadelman
-Date Written: 2016/08/16
-Last Modfied: 2017/04/23
-"""
 # setting up logging
 set_main_logger_level('info')
-logger = _get_logger('apmapflow.Scripts')
+logger = _get_logger('apmapflow.scripts')
 
 # creating arg parser
-parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawDesc)
 
 # adding arguments
 parser.add_argument('-f', '--force', action='store_true',

@@ -90,6 +90,7 @@ Documentation
 
        examples/index.rst
        reference/index.rst
+       scripts/index.rst
 
 
 Notes/ Tips/ Pitfalls:

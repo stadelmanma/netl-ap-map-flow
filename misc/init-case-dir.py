@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
-r""" Commandline tool to generate openFoam cases for the HPCEE """
+r"""
+Description: Automatically sets up an OpenFoam case based on the chosen
+template case and command line args. This script was designed to generate
+a full case and run_script for use on the NETL Joule Supercomputer. The
+run_script is assumed to be inside the directory being used as a template case
+
+| Written By: Matthew stadelman
+| Date Written: 2016/10/11
+| Last Modfied: 2016/10/20
+"""
 #
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
@@ -8,18 +17,8 @@ import os
 from apmapflow import _get_logger, set_main_logger_level, DataField
 from apmapflow.openfoam import OpenFoamFile
 from apmapflow.unit_conversion import convert_value
-#
-#
-desc_str = r"""
-Description: Automatically sets up an OpenFoam case based on the chosen
-template case and command line args. This script was designed to generate
-a full case and run_script for use on the NETL Joule Supercomputer. The
-run_script is assumed to be inside the directory being used as a template case
 
-Written By: Matthew stadelman
-Date Written: 2016/10/11
-Last Modfied: 2016/10/20
-"""
+
 usage_str = '%(prog)s [-hvf] job_dir aper_map [job_name] [options]'
 
 #
@@ -27,7 +26,7 @@ usage_str = '%(prog)s [-hvf] job_dir aper_map [job_name] [options]'
 logger = _get_logger('apmapflow.Scripts')
 #
 # setting up the argument parser
-parser = argparse.ArgumentParser(description=desc_str,
+parser = argparse.ArgumentParser(description=__doc__,
                                  usage=usage_str,
                                  formatter_class=RawDesc)
 #

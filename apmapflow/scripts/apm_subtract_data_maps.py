@@ -1,6 +1,17 @@
-#!/usr/bin/env python3
 r"""
-Script designed to read in multiple data maps ans subtract them for comparison.
+Description: Reads in an aperture map and then two data maps to subtract
+them. Any region of zero aperture is set to zero for the comparisons. The
+data maps can be normalized both before and after if desired and the final
+calculated data map is output.
+
+For usage information run: ``apm_subtract_data_maps -h``
+
+| Written By: Matthew stadelman
+| Date Written: 2016/10/27
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
@@ -9,24 +20,13 @@ import scipy as sp
 from apmapflow import _get_logger, set_main_logger_level, DataField
 from apmapflow.data_processing import Percentiles
 
-#
-desc_str = r"""
-Description: Reads in an aperture map and then two data maps to subtract
-them. Any region of zero aperture is set to zero for the comparisons. The
-data maps can be normalized both before and after if desired and the final
-calculated data map is output.
-
-Written By: Matthew stadelman
-Date Written: 2016/10/27
-Last Modfied: 2017/04/23
-"""
 
 # setting up logger
 set_main_logger_level('info')
-logger = _get_logger('apmapflow.Scripts')
+logger = _get_logger('apmapflow.scripts')
 
 # creating arg parser
-parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawDesc)
 
 # adding arguments
 parser.add_argument('-v', '--verbose', action='store_true',

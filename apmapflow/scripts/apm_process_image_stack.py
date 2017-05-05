@@ -1,7 +1,21 @@
-#!/usr/bin/env python3
 r"""
-Script designed to take a TIFF stack and process it to form a cleaned
-tiff image, aperture map and or vertical offset map.
+Description: Processes a binary tif stack, with the option to remove
+disconnected voxels based on an undirected graph. The number of clusters
+to retain can be specified and connectivity is defined on a 26 point basis,
+i.e faces, edges and corners. Standard outputs include the processed
+tif image stack, an aperture map and offset map based on the processed image.
+Offset maps are filtered based on gradient steepness to provide a smoother
+surface. Data gaps left by zero apeture zones or filtering are filled by
+linear and nearest interpolation methods to prevent artificial features.
+
+For usage information run: ``apm_process_image_stack -h``
+
+| Written By: Matthew stadelman
+| Date Written: 2016/08/30
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
@@ -14,28 +28,13 @@ from scipy.interpolate import griddata
 from apmapflow import _get_logger, set_main_logger_level
 from apmapflow import DataField, calc_percentile, FractureImageStack
 
-#
-desc_str = r"""
-Description: Processes a binary tif stack, with the option to remove
-disconnected voxels based on an undirected graph. The number of clusters
-to retain can be specified and connectivity is defined on a 26 point basis,
-i.e faces, edges and corners. Standard outputs include the processed
-tif image stack, an aperture map and offset map based on the processed image.
-Offset maps are filtered based on gradient steepness to provide a smoother
-surface. Data gaps left by zero apeture zones or filtering are filled by
-linear and nearest interpolation methods to prevent artificial features.
 
-
-Written By: Matthew stadelman
-Date Written: 2016/08/30
-Last Modfied: 2017/04/23
-"""
 # setting up logger
 set_main_logger_level('info')
-logger = _get_logger('apmapflow.Scripts')
+logger = _get_logger('apmapflow.scripts')
 
 # creating arg parser
-parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawDesc)
 
 # adding arguments
 parser.add_argument('-f', '--force', action='store_true',
