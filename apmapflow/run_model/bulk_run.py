@@ -22,15 +22,41 @@ logger = _get_logger(__name__)
 
 class BulkRun(dict):
     r"""
-    Stores properties and methods to handle mass runs of the model
+    Handles generating a collection of input files from the provided parameters
+    and then running multiple instances of the LCL model concurrently to
+    produce simulation data for each simulation parameter combination. A
+    comprehensive example of this class and the associated script is avilable
+    under the Usage Examples page.
+
+    Parameters
+    ----------
+    init_input_file : apmapflow.run_model.InputFile
+        An inital InputFile instance to define the static parameters of the bulk run.
+    num_CPUs : int, optional
+        The maximum number of CPUs to utilize
+    sys_RAM : float, optional
+        The maximum amount of RAM avilable for use.
+    **kwargs : multiple
+        * delim : string
+            The expected delimiter in the aperture map files
+        * spawn_delay : float
+            The minimum time between spawning of new LCL instances in seconds
+        * retest_delay : float
+            The time to wait between checking for completed processes.
+    Examples
+    --------
+    >>> from apmapflow import BulkRun, InputFile
+    >>> inp_file = InputFile('./input-file-path.inp')
+    >>> blk_run = BulkRun(inp_file, num_CPUs=16, sys_RAM=32.0, spawn_delay=10.0)
+
+    Notes
+    -----
+    ``spawn_delay`` is useful to help ensure shared resources are not accessed
+    at the same time.
     """
-    def __init__(self, init_input_file, num_CPUs=2.0, sys_RAM=4.0, **kwargs):
+    def __init__(self, init_input_file, num_CPUs=2, sys_RAM=4.0, **kwargs):
         r"""
-        Setting basic properties of the class.
-        Useful kwargs include:
-          delim: the expected delimiter in the aperture map files
-          spawn_delay: minimum time between spawning of new processes
-          retest_delay: time to wait between checking for completed processes
+        Setting properties of the class.
         """
         super().__init__()
         self.init_input_file = init_input_file.clone()
@@ -47,8 +73,20 @@ class BulkRun(dict):
 
     def dry_run(self):
         r"""
-        This steps through the entire simulation creating directories and
-        input files without actually starting any of the simulations.
+        Steps through the entire simulation creating directories and
+        input files without actually starting any of the simulations. This Allows
+        the LCL input files to be inspected before actually starting the run.
+
+        Examples
+        --------
+        >>> from apmapflow import BulkRun, InputFile
+        >>> inp_file = InputFile('./input-file-path.inp')
+        >>> blk_run = BulkRun(inp_file, num_CPUs=16, sys_RAM=32.0, spawn_delay=10.0)
+        >>> blk_run.dry_run()
+
+        See Also
+        --------
+        start
         """
         #
         orig_level = logger.getEffectiveLevel()
@@ -68,7 +106,14 @@ class BulkRun(dict):
 
     def start(self):
         r"""
-        Acts as the driver function for the entire bulk run of simulations.
+        Starts the bulk run, first creating the input files and then managing
+        the multiple processes until all input files have been processed. The
+        input file list must have already been generated prior to calling this
+        method.
+
+        See Also
+        --------
+        generate_input_files
         """
         #
         logger.info('Beginning bulk run of simulations')
@@ -91,16 +136,39 @@ class BulkRun(dict):
         r"""
         Generates the input file list based on the default parameters
         and case specific parameters. An InputFile instance is generated for
-        each unique combination of model parameters.
-        - If append is True, then the files are appended to the input_file_list
-        instead of resetting it.
+        each unique combination of model parameters which is then written to disk
+        to be run by the LCL model.
+
+        Parameters
+        ----------
+        default_params : dictionary
+            A dictionary containing lists of parameter values to use in the
+            simulations.
+        default_name_formats : dictionary
+            A dictionary containing the infile and outfile name formats to use.
+        case_identifer : string, optional
+            A format string used to identify cases that need special parameters
+        case_params : dictionary, optional
+            A dictionary setup where each key is an evaluation of the case_identifer
+            format string and the value is a dictionary containing lists of
+            parameter values used to update the default params for that case.
+        append : boolean, optional
+            When ``True`` the BulkRun.input_file_list attribute is appended to
+            instead of reset by this method.
+
+        Notes
+        -----
+        The ``default_name_formats`` parameter is passed directly to the InputFile
+        instance initialization and is no modified in any way. When using a
+        ``case_identifier`` only the evaluations that matter need to be added to
+        the ``case_params`` dictionary. Missing permuatations of the identifer are
         """
         #
         #  processing unique identifier and setting up cases
         if case_identifer:
             case_params = case_params or {}
             #
-            # pulling format keys out an combining them specifically
+            # pulling format keys used in the identifer and combining them
             keys = string.Formatter().parse(case_identifer)
             keys = [key[1] for key in keys if key[1]]
             params = {key: default_params[key] for key in keys}
@@ -141,6 +209,16 @@ class BulkRun(dict):
         r"""
         Generates all possible unique combinations from a set of
         parameter arrays.
+
+        Parameters
+        ----------
+        run_params : dictionary
+            A dictionary of parameter lists to combine together
+
+        Returns
+        -------
+        parameter combinations : dictionary
+            A list of dictionaries where each parameter only has a single value
         """
         #
         # processing run_params for falsy values, i.e. empty arrays or None
@@ -157,7 +235,9 @@ class BulkRun(dict):
 
     def _initialize_run(self):
         r"""
-        Handles initialization steps after generation of input files
+        Assesses RAM requirements of each aperture map in use and registers the
+        value with the InputFile instance. This RAM measurement is later used
+        when determining if there is enough space available to begin a simulation.
         """
         logger.info('Assesing RAM requirements of each aperture map')
         #
@@ -181,8 +261,18 @@ class BulkRun(dict):
     @staticmethod
     def _check_processes(processes, RAM_in_use, retest_delay=5, **kwargs):
         r"""
-        This tests the processes list for any of them that have completed.
-        A small delay is used to prevent an obscene amount of queries.
+        Checks the list of currently running processes for any that have completed
+        removing and them from a list. If no processes have completed then the
+        routine sleep for a specified amount of time before checking again.
+
+        Parameters
+        ----------
+        processes : list of Popen instances
+            The list of processes to curate.
+        RAM_in_use : list of floats
+            The list of maximum RAM each process is estimated to use.
+        retest_delay : floats
+            The time delay between testing for completed processes.
         """
         while True:
             for i, proc in enumerate(processes):
@@ -195,7 +285,17 @@ class BulkRun(dict):
 
     def _start_simulations(self, processes, RAM_in_use, spawn_delay=5, **kwargs):
         r"""
-        This starts additional simulations if there is enough free RAM.
+        This starts additional simulations if there is enough free RAM and
+        avilable CPUs.
+
+        Parameters
+        ----------
+        processes : list of Popen instances
+            The list of processes to add any new simulations to.
+        RAM_in_use : list of floats
+            The list of maximum RAM to a new simulations requirement to.
+        spawn_delay : floats
+            The time delay between spawning of processes.
         """
         #
         free_RAM = self.avail_RAM - sum(RAM_in_use)
