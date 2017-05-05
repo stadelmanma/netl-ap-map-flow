@@ -21,7 +21,7 @@ from apmapflow.openfoam import ParallelMeshGen
 
 # setting up logging
 set_main_logger_level('info')
-logger = _get_logger('apmapflow.Scripts')
+logger = _get_logger('apmapflow.scripts')
 
 # creating arg parser
 parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawDesc)

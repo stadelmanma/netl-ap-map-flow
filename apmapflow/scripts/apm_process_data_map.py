@@ -18,7 +18,7 @@ from apmapflow import data_processing
 
 #
 # fetching logger
-logger = _get_logger('apmapflow.Scripts')
+logger = _get_logger('apmapflow.scripts')
 #
 # setting up the argument parser
 parser = argparse.ArgumentParser(description=__doc__,
