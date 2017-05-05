@@ -1,7 +1,14 @@
 #!/usr/bin/env python3
 r"""
-Script designed to take a TIF stack and produce a flattened aperture map
-from it.
+Description: Generates a 2-D aperture map based on a binary image stack. You
+can add the format descriptor {image_file} in the aperture_map_name and it will
+be automatically replaced by the basename of the image file used.
+
+For usage information run: ``apm_generate_aperture_map -h``
+
+Written By: Matthew stadelman
+Date Written: 2016/09/13
+Last Modfied: 2017/04/23
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
@@ -10,22 +17,12 @@ import scipy as sp
 from apmapflow import _get_logger, set_main_logger_level
 from apmapflow import FractureImageStack
 
-#
-desc_str = r"""
-Description: Generates a 2-D aperture map based on a binary CT image stack. You
-can add the format descriptor {image_file} in the aperture_map_name and it will
-be automatically replaced by the basename of the image file used.
-
-Written By: Matthew stadelman
-Date Written: 2016/09/13
-Last Modfied: 2017/04/23
-"""
 # setting up logger
 set_main_logger_level('info')
 logger = _get_logger('apmapflow.Scripts')
 
 # creating arg parser
-parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawDesc)
 
 # adding arguments
 parser.add_argument('-f', '--force', action='store_true',
