@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 r"""
-Script designed to take a CSV stat file and convert it to a yaml file
+Description: Generates a YAML formatted file from a CSV stat file.
+
+For usage information run: ``apm_convert_csv_stats_file -h``
+
+Written By: Matthew stadelman
+Date Written: 2017/03/03
+Last Modfied: 2017/04/23
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
@@ -9,20 +15,12 @@ import re
 import yaml
 from apmapflow import _get_logger, set_main_logger_level
 
-#
-desc_str = r"""
-Description: Generates a YAML formatted file from a CSV stat file.
-
-Written By: Matthew stadelman
-Date Written: 2017/03/03
-Last Modfied: 2017/04/23
-"""
 # setting up logger
 set_main_logger_level('info')
 logger = _get_logger('apmapflow.Scripts')
 
 # creating arg parser
-parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawDesc)
 
 # adding arguments
 parser.add_argument('-f', '--force', action='store_true',

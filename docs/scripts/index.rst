@@ -8,7 +8,7 @@ Scripts
 
     apm_bulk_run.rst
     apm_combine_yaml_stat_files.rst
-    apm_convert_csv_stats_files.rst
+    apm_convert_csv_stats_file.rst
     apm_fracture_df.rst
     apm_generate_aperture_map.rst
     apm_process_data_map.rst
