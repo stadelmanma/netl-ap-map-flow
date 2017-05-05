@@ -1,28 +1,27 @@
 #!/usr/bin/env python3
-r""" Loads and processes data maps using the requested processor class """
+r"""
+Description: Processes data maps using the desired data_processing class
+and either writes data to file or prints to screen.
+
+For usage information run: ``apm_process_data_map -h``
+
+Written By: Matthew stadelman
+Date Written: 2015/10/01
+Last Modfied: 2017/04/23
+"""
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
 import re
 from apmapflow import _get_logger, set_main_logger_level, DataField
 from apmapflow import data_processing
-#
-########################################################################
-#
-desc_str = r"""
-Description: Processes data maps using the desired data_processing class
-and either writes data to file or prints to screen.
 
-Written By: Matthew stadelman
-Date Written: 2015/10/01
-Last Modfied: 2017/04/23
-"""
 #
 # fetching logger
 logger = _get_logger('apmapflow.Scripts')
 #
 # setting up the argument parser
-parser = argparse.ArgumentParser(description=desc_str,
+parser = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=RawDesc)
 #
 # defining main arguments
