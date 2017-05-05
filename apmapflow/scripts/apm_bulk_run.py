@@ -1,7 +1,16 @@
 #!/usr/bin/env python3
 r"""
-Parses YAML formatted file(s) to automatically setup a bulk run of the
-LCL model.
+Description: Parses a set of YAML formatted input files and creates a
+set of InputFiles to run through the LCL model in parallel. The --start flag
+must be supplied to run the simulations, otherwise a dry run is performed.
+Only the keyword args of the first YAML file are used to instantiate the
+bulk_run_class.
+
+For usage information run: ``apm_bulk_run -h``
+
+Written By: Matthew stadelman
+Date Written: 2016/08/04
+Last Modfied: 2017/04/23
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
@@ -10,25 +19,13 @@ import yaml
 from apmapflow import _get_logger, set_main_logger_level
 from apmapflow.run_model import BulkRun, InputFile
 
-#
-desc_str = r"""
-Description: Parses a set of YAML formatted input files and creates a
-set of InputFiles to run through the LCL model in parallel. The --start flag
-must be supplied to run the simulations, otherwise a dry run is performed.
-Only the keyword args of the first YAML file are used to instantiate the
-bulk_run_class.
-
-Written By: Matthew stadelman
-Date Written: 2016/08/04
-Last Modfied: 2017/04/23
-"""
 
 # setting log level
 set_main_logger_level('info')
 logger = _get_logger('apmapflow.Scripts')
 
 # creating arg parser
-parser = argparse.ArgumentParser(description=desc_str, formatter_class=RawDesc)
+parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawDesc)
 
 # adding arguments
 parser.add_argument('-v', '--verbose', action='store_true',
