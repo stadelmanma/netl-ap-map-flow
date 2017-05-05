@@ -161,14 +161,14 @@ class BulkRun(dict):
         The ``default_name_formats`` parameter is passed directly to the InputFile
         instance initialization and is no modified in any way. When using a
         ``case_identifier`` only the evaluations that matter need to be added to
-        the ``case_params`` dictionary, missing keys are simply ignored.
+        the ``case_params`` dictionary. Missing permuatations of the identifer are
         """
         #
         #  processing unique identifier and setting up cases
         if case_identifer:
             case_params = case_params or {}
             #
-            # pulling format keys out an combining them specifically
+            # pulling format keys used in the identifer and combining them
             keys = string.Formatter().parse(case_identifer)
             keys = [key[1] for key in keys if key[1]]
             params = {key: default_params[key] for key in keys}
@@ -209,6 +209,16 @@ class BulkRun(dict):
         r"""
         Generates all possible unique combinations from a set of
         parameter arrays.
+
+        Parameters
+        ----------
+        run_params : dictionary
+            A dictionary of parameter lists to combine together
+
+        Returns
+        -------
+        parameter combinations : dictionary
+            A list of dictionaries where each parameter only has a single value
         """
         #
         # processing run_params for falsy values, i.e. empty arrays or None
@@ -225,7 +235,9 @@ class BulkRun(dict):
 
     def _initialize_run(self):
         r"""
-        Handles initialization steps after generation of input files
+        Assesses RAM requirements of each aperture map in use and registers the
+        value with the InputFile instance. This RAM measurement is later used
+        when determining if there is enough space available to begin a simulation.
         """
         logger.info('Assesing RAM requirements of each aperture map')
         #
@@ -249,8 +261,18 @@ class BulkRun(dict):
     @staticmethod
     def _check_processes(processes, RAM_in_use, retest_delay=5, **kwargs):
         r"""
-        This tests the processes list for any of them that have completed.
-        A small delay is used to prevent an obscene amount of queries.
+        Checks the list of currently running processes for any that have completed
+        removing and them from a list. If no processes have completed then the
+        routine sleep for a specified amount of time before checking again.
+
+        Parameters
+        ----------
+        processes : list of Popen instances
+            The list of processes to curate.
+        RAM_in_use : list of floats
+            The list of maximum RAM each process is estimated to use.
+        retest_delay : floats
+            The time delay between testing for completed processes.
         """
         while True:
             for i, proc in enumerate(processes):
@@ -263,7 +285,17 @@ class BulkRun(dict):
 
     def _start_simulations(self, processes, RAM_in_use, spawn_delay=5, **kwargs):
         r"""
-        This starts additional simulations if there is enough free RAM.
+        This starts additional simulations if there is enough free RAM and
+        avilable CPUs.
+
+        Parameters
+        ----------
+        processes : list of Popen instances
+            The list of processes to add any new simulations to.
+        RAM_in_use : list of floats
+            The list of maximum RAM to a new simulations requirement to.
+        spawn_delay : floats
+            The time delay between spawning of processes.
         """
         #
         free_RAM = self.avail_RAM - sum(RAM_in_use)
