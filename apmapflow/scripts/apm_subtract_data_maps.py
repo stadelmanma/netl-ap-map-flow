@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 r"""
 Description: Reads in an aperture map and then two data maps to subtract
 them. Any region of zero aperture is set to zero for the comparisons. The
@@ -7,9 +6,13 @@ calculated data map is output.
 
 For usage information run: ``apm_subtract_data_maps -h``
 
-Written By: Matthew stadelman
-Date Written: 2016/10/27
-Last Modfied: 2017/04/23"""
+| Written By: Matthew stadelman
+| Date Written: 2016/10/27
+| Last Modfied: 2017/04/23
+
+|
+
+"""
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os

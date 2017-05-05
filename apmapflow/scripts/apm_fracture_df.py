@@ -1,13 +1,15 @@
-#!/usr/bin/env python3
 r"""
 Description: Reads in a binary fracture image stack and calculates the
 fractal dimension (Df) along either the X and/or Z axis.
 
 For usage information run: ``apm_fracture_df -h``
 
-Written By: Matthew stadelman
-Date Written: 2016/11/17
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2016/11/17
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc

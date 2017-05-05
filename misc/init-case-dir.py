@@ -5,9 +5,9 @@ template case and command line args. This script was designed to generate
 a full case and run_script for use on the NETL Joule Supercomputer. The
 run_script is assumed to be inside the directory being used as a template case
 
-Written By: Matthew stadelman
-Date Written: 2016/10/11
-Last Modfied: 2016/10/20
+| Written By: Matthew stadelman
+| Date Written: 2016/10/11
+| Last Modfied: 2016/10/20
 """
 #
 import argparse

@@ -1,12 +1,14 @@
-#!/usr/bin/env python3
 r"""
 Description: Generates a YAML formatted file from a CSV stat file.
 
 For usage information run: ``apm_convert_csv_stats_file -h``
 
-Written By: Matthew stadelman
-Date Written: 2017/03/03
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2017/03/03
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc

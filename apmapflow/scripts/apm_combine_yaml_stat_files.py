@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 r"""
 Description: Recurses through a directory to find all YAML stat files
 based on the supplied pattern and combine them into a single CSV file.
@@ -6,9 +5,12 @@ This script assumes all stat files have the same set of values.
 
 For usage information run: ``apm_combine_yaml_stat_files -h``
 
-Written By: Matthew stadelman
-Date Written: 2017/02/12
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2017/02/12
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc

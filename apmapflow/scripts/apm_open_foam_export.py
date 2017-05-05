@@ -1,13 +1,15 @@
-#!/usr/bin/env python3
 r"""
 Description: Generates a complete OpenFoam simulation from an APM-MODEL
 input file and existing OpenFoam files which are used as templates.
 
 For usage information run: ``apm_open_foam_export -h``
 
-Written By: Matthew stadelman
-Date Written: 2015/07/25
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2015/07/25
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter

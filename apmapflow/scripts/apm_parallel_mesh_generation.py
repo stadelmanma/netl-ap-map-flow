@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 r"""
 Description: Generates a blockMesh in parallel using the OpenFOAM utilties
 blockMesh, mergeMeshes and stitchMesh. Uses the ParallelMeshGen class in
@@ -8,9 +7,12 @@ Valid mesh_types are: simple, symmetry, threshold and symmetry-threshold
 
 For usage information run: ``apm_parallel_mesh_generation -h``
 
-Written By: Matthew stadelman
-Date Written: 2016/08/16
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2016/08/16
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc

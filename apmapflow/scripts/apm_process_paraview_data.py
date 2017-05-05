@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 r"""
 Description: Generates 2-D data maps from OpenFoam data saved by paraview
 as a CSV file. The data has to be saved as point data and the following fields
@@ -9,9 +8,12 @@ simulation was performed on a geometry symmetric about the X-Z plane.
 
 For usage information run: ``apm_process_paraview_data -h``
 
-Written By: Matthew stadelman
-Date Written: 2016/09/29
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2016/09/29
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc

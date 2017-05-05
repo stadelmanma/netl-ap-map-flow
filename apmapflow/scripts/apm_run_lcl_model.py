@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 r"""
 Description: Runs each of the provided input files through the modified local
 cubic law model. Add the line ;EXE-FILE: (exec file) to the input file to use a
@@ -6,9 +5,12 @@ different version of the local cubic law model.
 
 For usage information run: ``apm_run_lcl_model -h``
 
-Written By: Matthew stadelman
-Date Written: 2017/04/04
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2017/04/04
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc

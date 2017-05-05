@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 r"""
 Description: Processes a binary tif stack, with the option to remove
 disconnected voxels based on an undirected graph. The number of clusters
@@ -11,9 +10,12 @@ linear and nearest interpolation methods to prevent artificial features.
 
 For usage information run: ``apm_process_image_stack -h``
 
-Written By: Matthew stadelman
-Date Written: 2016/08/30
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2016/08/30
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc

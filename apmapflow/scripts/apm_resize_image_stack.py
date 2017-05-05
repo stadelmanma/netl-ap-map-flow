@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 r"""
 Description: Reduces the y-axis size of an image stack by cropping out the
 region above and below the fracture geometry. This can offer a significant
@@ -6,9 +5,12 @@ filesize reduction if the y-axis significantly extends outside of the geometry.
 
 For usage information run: ``apm_resize_image_stack -h``
 
-Written By: Matthew stadelman
-Date Written: 2016/09/13
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2016/09/13
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc

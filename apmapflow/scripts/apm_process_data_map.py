@@ -1,13 +1,15 @@
-#!/usr/bin/env python3
 r"""
 Description: Processes data maps using the desired data_processing class
 and either writes data to file or prints to screen.
 
 For usage information run: ``apm_process_data_map -h``
 
-Written By: Matthew stadelman
-Date Written: 2015/10/01
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2015/10/01
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc

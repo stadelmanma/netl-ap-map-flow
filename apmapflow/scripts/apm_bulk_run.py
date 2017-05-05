@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 r"""
 Description: Parses a set of YAML formatted input files and creates a
 set of InputFiles to run through the LCL model in parallel. The --start flag
@@ -8,9 +7,12 @@ bulk_run_class.
 
 For usage information run: ``apm_bulk_run -h``
 
-Written By: Matthew stadelman
-Date Written: 2016/08/04
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2016/08/04
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc

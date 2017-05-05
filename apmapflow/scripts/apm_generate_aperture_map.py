@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 r"""
 Description: Generates a 2-D aperture map based on a binary image stack. You
 can add the format descriptor {image_file} in the aperture_map_name and it will
@@ -6,9 +5,12 @@ be automatically replaced by the basename of the image file used.
 
 For usage information run: ``apm_generate_aperture_map -h``
 
-Written By: Matthew stadelman
-Date Written: 2016/09/13
-Last Modfied: 2017/04/23
+| Written By: Matthew stadelman
+| Date Written: 2016/09/13
+| Last Modfied: 2017/04/23
+
+|
+
 """
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
