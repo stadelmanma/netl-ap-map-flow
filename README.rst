@@ -91,6 +91,8 @@ Full usage instructions can be found in `<docs/examples/running-the-flow-model.r
 Notes/ Tips/ Pitfalls:
 --------------------------------------------------------------------------------
 * If the model is compiled using 32-bit compiler, running too large of a map can cause a memory overflow error.
+* When using windows my chosen compiler is `MinGW64 <https://sourceforge.net/projects/mingw-w64/>`_.
+    * Be sure to compile it with the `x86_64` architecture to get 64 bit compilers otherwise the default build will fail.
 * This guide assumes you install Anaconda3 locally. If you choose to install it system wide you will need to run some commands with :code:`sudo` in unix systems or in an elevated command prompt in Windows.
 * Running :code:`./bin/build_model debug` will recompile the model using additional flags, code coverage and profiling
 * Using Anaconda inside a `Babun <http://babun.github.io/>`_ prompt is tricky and takes some effort to get fully functional.
