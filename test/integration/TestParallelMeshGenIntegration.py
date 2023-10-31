@@ -10,6 +10,7 @@ import os
 import pytest
 import sys
 import scipy as sp
+import numpy as np
 from apmapflow import DataField
 from apmapflow.openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
 import apmapflow.openfoam.parallel_mesh_gen as pmg_submodule
@@ -22,7 +23,7 @@ def test_parallel_mesh_gen():
     #
     infile = os.path.join(FIXTURE_DIR, 'maps', 'Fracture1ApertureMap-10avg.txt')
     field = DataField(infile)
-    offset_field = DataField(sp.ones(field.data_map.shape))
+    offset_field = DataField(np.ones(field.data_map.shape))
     #
     # adding a fake boundary file to the mesh-region0 directory
     # this will be overwritten if testing with real OpenFoam programs
@@ -65,8 +66,8 @@ def test_parallel_mesh_gen():
     pmg_submodule._blockMesh_error.clear()
     parallel_mesh_gen._create_subregion_meshes(4, mesh_type='simple',
                                                path=out_path, overwrite=True)
-    grid = sp.arange(0, 16, dtype=int)
-    grid = sp.reshape(grid, (4, 4))
+    grid = np.arange(0, 16, dtype=int)
+    grid = np.reshape(grid, (4, 4))
     #
     # renaming a merge directory to throw an error
     parallel_mesh_gen.merge_groups[3].region_dir += '-mergemesh-exit1'
