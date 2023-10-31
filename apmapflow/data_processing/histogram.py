@@ -10,7 +10,7 @@ Histogram
 | Last Modifed: 2016/10/25
 
 """
-import scipy as sp
+import numpy as np
 from .. import _get_logger, calc_percentile
 from .base_processor import BaseProcessor
 logger = _get_logger(__name__)
@@ -57,8 +57,8 @@ class Histogram(BaseProcessor):
         max_val = calc_percentile(99.0, self.data_vector, False)
         #
         # creating initial bins
-        low = list(sp.linspace(min_val, max_val, num_bins))
-        high = list(sp.linspace(min_val, max_val, num_bins))[1:]
+        low = list(np.linspace(min_val, max_val, num_bins))
+        high = list(np.linspace(min_val, max_val, num_bins))[1:]
         high.append(self.data_vector[-1]*1.0001)
         #
         # adding lower bin if needed
@@ -78,9 +78,9 @@ class Histogram(BaseProcessor):
             self.define_bins()
         #
         # populating bins
-        edges = sp.array(self.bins[0][0])
-        edges = sp.append(edges, sp.array(self.bins)[:, 1])
-        data, edges = sp.histogram(self.data_vector, bins=edges)
+        edges = np.array(self.bins[0][0])
+        edges = np.append(edges, np.array(self.bins)[:, 1])
+        data, edges = np.histogram(self.data_vector, bins=edges)
         #
         # storing data
         self.processed_data = []

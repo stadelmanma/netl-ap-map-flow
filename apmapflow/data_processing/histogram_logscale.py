@@ -9,7 +9,7 @@ Logscaled Histogram
 | Last Modifed: 2016/10/20
 
 """
-import scipy as sp
+import numpy as np
 from .histogram import Histogram
 
 
@@ -50,11 +50,11 @@ class HistogramLogscale(Histogram):
         """
         self.data_vector.sort()
         sf = self.args['scale_fact']
-        num_bins = int(sp.logn(sf, self.data_vector[-1]) + 1)
+        num_bins = int(np.lib.scimath.logn(sf, self.data_vector[-1]) + 1)
         #
         # generating initial bins from 1 - sf**num_bins
-        low = list(sp.logspace(0, num_bins, num_bins + 1, base=sf))[:-1]
-        high = list(sp.logspace(0, num_bins, num_bins + 1, base=sf))[1:]
+        low = list(np.logspace(0, num_bins, num_bins + 1, base=sf))[:-1]
+        high = list(np.logspace(0, num_bins, num_bins + 1, base=sf))[1:]
         #
         # Adding "catch all" bins for anything between 0 - 1 and less than 0
         if self.data_vector[0] < 1.0:

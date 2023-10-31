@@ -16,7 +16,7 @@ For usage information run: ``apm_subtract_data_maps -h``
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
-import scipy as sp
+import numpy as np
 from apmapflow import _get_logger, set_main_logger_level, DataField
 from apmapflow.data_processing import Percentiles
 
@@ -85,7 +85,7 @@ def main():
     #
     # writing out resultant data map
     filename = os.path.join(args.output_dir, args.out_name)
-    sp.savetxt(filename, result.data_map, delimiter='\t')
+    np.savetxt(filename, result.data_map, delimiter='\t')
 
 
 def prepare_maps(args):
@@ -110,17 +110,17 @@ def prepare_maps(args):
     # masking zero aperture zones
     data_map1 = data_map1.data_vector
     data_map2 = data_map2.data_vector
-    data_map1[sp.where(aper_map.data_vector == 0)] = 0
-    data_map2[sp.where(aper_map.data_vector == 0)] = 0
+    data_map1[np.where(aper_map.data_vector == 0)] = 0
+    data_map2[np.where(aper_map.data_vector == 0)] = 0
     #
     # normalizing data maps if desired
     if args.pre_normalize:
-        data_map1 = data_map1 / sp.amax(sp.absolute(data_map1))
-        data_map2 = data_map1 / sp.amax(sp.absolute(data_map2))
+        data_map1 = data_map1 / np.amax(np.absolute(data_map1))
+        data_map2 = data_map1 / np.amax(np.absolute(data_map2))
     #
     # reshaping data maps back into 2-D arrays
-    data_map1 = sp.reshape(data_map1, aper_map.data_map.shape)
-    data_map2 = sp.reshape(data_map2, aper_map.data_map.shape)
+    data_map1 = np.reshape(data_map1, aper_map.data_map.shape)
+    data_map2 = np.reshape(data_map2, aper_map.data_map.shape)
     #
     #
     return aper_map, data_map1, data_map2
@@ -143,10 +143,10 @@ def process_maps(aper_map, data_map1, data_map2, args):
     #
     # checking if data is to be normalized and/or absolute
     if args.post_abs:
-        result._data_map = sp.absolute(result.data_map)
+        result._data_map = np.absolute(result.data_map)
     #
     if args.post_normalize:
-        result._data_map = result.data_map/sp.amax(sp.absolute(result.data_map))
+        result._data_map = result.data_map/np.amax(np.absolute(result.data_map))
     #
     return result
 
@@ -166,20 +166,20 @@ def output_percentile_set(data_field, args):
     #
     # normalizing data
     field = DataField(data_field.data_map)
-    field._data_map = field.data_map/sp.amax(sp.absolute(field.data_map))
+    field._data_map = field.data_map/np.amax(np.absolute(field.data_map))
     pctle = Percentiles(field, percentiles=args.perc)
     pctle.process()
     data['norm'] = pctle.processed_data
     #
     # taking absolute value of data
     field = DataField(data_field.data_map)
-    field._data_map = sp.absolute(field.data_map)
+    field._data_map = np.absolute(field.data_map)
     pctle = Percentiles(field, percentiles=args.perc)
     pctle.process()
     data['abs'] = pctle.processed_data
     #
     # absolute value + normed
-    field._data_map = field.data_map/sp.amax(field.data_map)
+    field._data_map = field.data_map/np.amax(field.data_map)
     pctle = Percentiles(field, percentiles=args.perc)
     pctle.process()
     data['abs+norm'] = pctle.processed_data

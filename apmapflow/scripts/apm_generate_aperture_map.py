@@ -16,6 +16,7 @@ import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
 import scipy as sp
+import numpy as np
 from apmapflow import _get_logger, set_main_logger_level
 from apmapflow import FractureImageStack
 
@@ -87,7 +88,7 @@ def main():
 
     # saving map
     logger.info('saving aperture map as {}'.format(map_path))
-    sp.savetxt(map_path, aperture_map, fmt='%d', delimiter='\t')
+    np.savetxt(map_path, aperture_map, fmt='%d', delimiter='\t')
 
     # generating colored stack if desired
     if args.gen_colored_stack:
@@ -111,7 +112,7 @@ def gen_colored_image_stack(img_data, aperture_map):
     # color each X-Z column of the image stack according to it's aperture
     logger.debug('creating colored image stack')
     x_coords, y_coords, z_coords = img_data.get_fracture_voxels(coordinates=True)
-    img_data = sp.zeros(img_data.shape, dtype=sp.uint8)
+    img_data = np.zeros(img_data.shape, dtype=sp.uint8)
     img_data[x_coords, y_coords, z_coords] = aperture_map[x_coords, z_coords]
     #
     return img_data.view(FractureImageStack)

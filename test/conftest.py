@@ -2,7 +2,7 @@ from collections import OrderedDict
 from os import path, mkdir, environ
 import pytest
 from shutil import rmtree
-import scipy as sp
+import numpy as np
 import apmapflow as apm
 
 
@@ -83,7 +83,7 @@ def data_field_class():
             #
             self.infile = path.join(test_root, 'pytest-DataFeld-fixture')
             self.outfile = ''
-            self._data_map = sp.arange(100).reshape(10, 10)
+            self._data_map = np.arange(100).reshape(10, 10)
             self.point_data = None
             self._cell_interfaces = None
             self.output_data = dict()
@@ -94,11 +94,11 @@ def data_field_class():
             pass
 
         def create_point_data(self):
-            self.point_data = sp.zeros((self.nz, self.nx, 4))
-            self.point_data[:, :, 1] = sp.arange(100).reshape(10, 10)*1.0
-            self.point_data[:, :, 1] = sp.arange(100).reshape(10, 10)*2.0
-            self.point_data[:, :, 1] = sp.arange(100).reshape(10, 10)*3.0
-            self.point_data[:, :, 1] = sp.arange(100).reshape(10, 10)*4.0
+            self.point_data = np.zeros((self.nz, self.nx, 4))
+            self.point_data[:, :, 1] = np.arange(100).reshape(10, 10)*1.0
+            self.point_data[:, :, 1] = np.arange(100).reshape(10, 10)*2.0
+            self.point_data[:, :, 1] = np.arange(100).reshape(10, 10)*3.0
+            self.point_data[:, :, 1] = np.arange(100).reshape(10, 10)*4.0
 
     return PseudoDataField
 

@@ -10,7 +10,7 @@ Last Modifed: 2016/08/15
 import os
 import pytest
 import sys
-import scipy as sp
+import numpy as np
 from apmapflow.openfoam.openfoam import OpenFoamObject
 from apmapflow import openfoam
 
@@ -125,8 +125,8 @@ class TestOpenFoam:
         #
         # testing generation of a thresholded mesh
         mesh.generate_threshold_mesh(min_value=9, max_value=90)
-        assert sp.all(mesh.data_map[0, :] == 0)
-        assert sp.all(mesh.data_map[9, :] == 0)
+        assert np.all(mesh.data_map[0, :] == 0)
+        assert np.all(mesh.data_map[9, :] == 0)
         assert len(mesh._blocks) == 80
 
     def test_open_foam_export(self, data_field_class, openfoam_file_class):

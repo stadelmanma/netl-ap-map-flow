@@ -13,6 +13,7 @@ import pytest
 import re
 import sys
 import scipy as sp
+import numpy as np
 import PIL
 import apmapflow as apm
 import apmapflow.ap_map_flow as apm_core
@@ -53,13 +54,13 @@ class TestCore:
         assert matrix is not None
         #
         # testing thresholding
-        field._data_map = sp.arange(field.nz*field.nx, dtype=float).reshape(field.nz, field.nx)
-        low_inds = sp.where(field.data_vector <= 100)
-        high_inds = sp.where(field.data_vector >= 900)
+        field._data_map = np.arange(field.nz*field.nx, dtype=float).reshape(field.nz, field.nx)
+        low_inds = np.where(field.data_vector <= 100)
+        high_inds = np.where(field.data_vector >= 900)
         field.threshold_data(min_value=100, repl=-1)
         field.threshold_data(max_value=900)
-        assert sp.all(field.data_vector[low_inds] == -1)
-        assert sp.all(sp.isnan(field.data_vector[high_inds]))
+        assert np.all(field.data_vector[low_inds] == -1)
+        assert np.all(np.isnan(field.data_vector[high_inds]))
         #
         # testing VTK file generation
         field.infile = os.path.join(TEMP_DIR, 'test-export.csv')
@@ -84,7 +85,7 @@ class TestCore:
         """
         #
         # testing initialization from data array
-        img_data = sp.ones((10, 11, 12))
+        img_data = np.ones((10, 11, 12))
         fracture_stack = apm.FractureImageStack(img_data, dtype=sp.uint8)
         assert issubclass(fracture_stack.__class__, sp.ndarray)
         assert fracture_stack.dtype == sp.uint8
@@ -109,24 +110,24 @@ class TestCore:
         # checking all coordinates are between 0 and maximum axis size
         x_c, y_c, z_c = fracture_stack.get_fracture_voxels(coordinates=True)
         assert x_c.size == y_c.size == z_c.size == 733409
-        assert sp.all(x_c < fracture_stack.nx)
-        assert sp.all(~x_c < 0)
-        assert sp.all(y_c < fracture_stack.ny)
-        assert sp.all(~y_c < 0)
-        assert sp.all(z_c < fracture_stack.nz)
-        assert sp.all(~z_c < 0)
+        assert np.all(x_c < fracture_stack.nx)
+        assert np.all(~x_c < 0)
+        assert np.all(y_c < fracture_stack.ny)
+        assert np.all(~y_c < 0)
+        assert np.all(z_c < fracture_stack.nz)
+        assert np.all(~z_c < 0)
         #
         # testing aperture map output
         fname = os.path.join(FIXTURE_DIR, 'maps', 'binary-fracture-aperture-map.txt')
         test_map = fracture_stack.create_aperture_map()
-        data_map = sp.loadtxt(fname, delimiter='\t')
-        assert sp.all(test_map == data_map)
+        data_map = np.loadtxt(fname, delimiter='\t')
+        assert np.all(test_map == data_map)
         #
         # testing offset map output
         fname = os.path.join(FIXTURE_DIR, 'maps', 'binary-fracture-offset-map.txt')
         test_map = fracture_stack.create_offset_map()
-        data_map = sp.loadtxt(fname, delimiter='\t')
-        assert sp.all(test_map == data_map)
+        data_map = np.loadtxt(fname, delimiter='\t')
+        assert np.all(test_map == data_map)
         del test_map
         del data_map
         #
@@ -134,7 +135,7 @@ class TestCore:
         fname = os.path.join(TEMP_DIR, 'test.tif')
         fracture_stack.save(fname)
         new_stack = apm.FractureImageStack(fname)
-        assert sp.all(fracture_stack == new_stack)
+        assert np.all(fracture_stack == new_stack)
         del new_stack
         # testing overwrite parameter
         with pytest.raises(FileExistsError):
@@ -213,17 +214,17 @@ class TestCore:
         r"""
         Tests extraction of a vector from a data array
         """
-        data = sp.arange(100)
+        data = np.arange(100)
         data = data.reshape(10, 10)
         #
         vect = apm.get_data_vect(data, 'x', 0)
-        assert sp.all(vect == data[0, :])
+        assert np.all(vect == data[0, :])
         vect = apm.get_data_vect(data, 'x', 11)
-        assert sp.all(vect == data[9, :])
+        assert np.all(vect == data[9, :])
         vect = apm.get_data_vect(data, 'z', 0)
-        assert sp.all(vect == data[:, 0])
+        assert np.all(vect == data[:, 0])
         vect = apm.get_data_vect(data, 'z', 11)
-        assert sp.all(vect == data[:, 9])
+        assert np.all(vect == data[:, 9])
         #
         with pytest.raises(ValueError):
             apm.get_data_vect(data, 'y')

@@ -15,6 +15,7 @@ import os
 import re
 import subprocess
 import scipy as sp
+import numpy as np
 from PIL import Image
 from PIL.TiffImagePlugin import AppendingTiffWriter
 from scipy import sparse as sprs
@@ -48,7 +49,7 @@ class DataField(object):
     @property
     def data_vector(self):
         r"""returns unraveled version of the data map"""
-        return sp.ravel(self._data_map)
+        return np.ravel(self._data_map)
 
     @property
     def data_map(self):
@@ -80,7 +81,7 @@ class DataField(object):
                 delim = match.group(1).strip()
                 delim = None if not delim else delim
         #
-        data_map = sp.loadtxt(infile, delimiter=delim)
+        data_map = np.loadtxt(infile, delimiter=delim)
         #
         self.infile = infile
         self._init_from_data(data_map)
@@ -89,7 +90,7 @@ class DataField(object):
         r"""
         Populates the DataField attributes based on the supplied data_map
         """
-        self._data_map = sp.copy(data_map)
+        self._data_map = np.copy(data_map)
         #
         # defining cell interfaces used in adjacency matrix
         self._define_cell_interfaces()
@@ -103,9 +104,9 @@ class DataField(object):
         """
         obj.nx = self.nx
         obj.nz = self.nz
-        obj.data_map = sp.copy(self.data_map)
-        obj.data_vector = sp.copy(self.data_vector)
-        obj.point_data = sp.copy(self.point_data)
+        obj.data_map = np.copy(self.data_map)
+        obj.data_vector = np.copy(self.data_vector)
+        obj.point_data = np.copy(self.point_data)
 
     def _define_cell_interfaces(self):
         r"""
@@ -127,7 +128,7 @@ class DataField(object):
         for ix in range((self.nz-1)*self.nx, self.nz*self.nx-1):
             self._cell_interfaces.append([ix, ix+1])
         #
-        self._cell_interfaces = sp.array(self._cell_interfaces,
+        self._cell_interfaces = np.array(self._cell_interfaces,
                                          ndmin=2,
                                          dtype=int)
 
@@ -153,9 +154,9 @@ class DataField(object):
         col = interfaces[:, 1]
         #
         # append row & col to each other, and weights to itself
-        row = sp.append(row, interfaces[:, 1])
-        col = sp.append(col, interfaces[:, 0])
-        weights = sp.append(weights, weights)
+        row = np.append(row, interfaces[:, 1])
+        col = np.append(col, interfaces[:, 0])
+        weights = np.append(weights, weights)
         #
         # Generate sparse adjacency matrix in 'coo' format and convert to csr
         num_blks = self.nx*self.nz
@@ -180,7 +181,7 @@ class DataField(object):
         Index Locations: 0 = BLC, 1 = BRC, 2 = TRC, 3 = TLC
         """
         #
-        point_data = sp.zeros((nz+1, nx+1, 4))
+        point_data = np.zeros((nz+1, nx+1, 4))
         #
         # setting corners of map first
         point_data[0, 0, 0] = data_map[0, 0]
@@ -191,7 +192,7 @@ class DataField(object):
         # calculating point values for the map interior
         for iz in range(nz):
             for ix in range(nx):
-                val = sp.average(data_map[iz:iz+2, ix:ix+2])
+                val = np.average(data_map[iz:iz+2, ix:ix+2])
                 point_data[iz, ix, 2] = val
                 point_data[iz+1, ix+1, 0] = val
                 point_data[iz+1, ix, 1] = val
@@ -199,21 +200,21 @@ class DataField(object):
         #
         # handling left and right edges
         for iz in range(nz):
-            val = sp.average(data_map[iz:iz+2, 0])
+            val = np.average(data_map[iz:iz+2, 0])
             point_data[iz, 0, 3] = val
             point_data[iz+1, 0, 0] = val
             #
-            val = sp.average(data_map[iz:iz+2, -1])
+            val = np.average(data_map[iz:iz+2, -1])
             point_data[iz, -1, 2] = val
             point_data[iz+1, -1, 1] = val
         #
         # handling top and bottom edges
         for ix in range(nx):
-            val = sp.average(data_map[0, ix:ix+2])
+            val = np.average(data_map[0, ix:ix+2])
             point_data[0, ix, 1] = val
             point_data[0, ix+1, 0] = val
             #
-            val = sp.average(data_map[-1, ix:ix+2])
+            val = np.average(data_map[-1, ix:ix+2])
             point_data[-1, ix, 2] = val
             point_data[-1, ix+1, 3] = val
         #
@@ -368,17 +369,17 @@ class FractureImageStack(sp.ndarray):
             image_data = []
             for frame in range(image.n_frames):
                 image.seek(frame)
-                frame = sp.array(image, dtype=dtype).transpose()
+                frame = np.array(image, dtype=dtype).transpose()
                 image_data.append(frame)
             #
             # stacking frames into a single 3 dimensional array
-            image_data = sp.stack(image_data, axis=2)
+            image_data = np.stack(image_data, axis=2)
         except AttributeError:
             logger.debug('initialized image from data array')
-            image_data = sp.array(image, ndmin=3, dtype=dtype)
+            image_data = np.array(image, ndmin=3, dtype=dtype)
         #
         # returning a conversion of regular ndarray into my sybclass
-        return sp.asarray(image_data).view(cls)
+        return np.asarray(image_data).view(cls)
 
     def __array_finalize__(self, obj):
         #
@@ -393,7 +394,7 @@ class FractureImageStack(sp.ndarray):
     def create_aperture_map(self, axis=1, dtype=int):
         r""" Flattens the 3-D image data along the specified axis using
         scipy.sum and returns a 2-D ndarray of the summed data"""
-        return sp.sum(self, axis=axis, dtype=dtype).view(sp.ndarray).T
+        return np.sum(self, axis=axis, dtype=dtype).view(sp.ndarray).T
 
     def create_offset_map(self, no_data_fill=0):
         r"""
@@ -407,14 +408,14 @@ class FractureImageStack(sp.ndarray):
         x_c, y_c, z_c = self.get_fracture_voxels(coordinates=True)
         #
         # recreating 3-D array with y coordinate as data values
-        data = sp.ones(self.shape, dtype=sp.uint16)*sp.iinfo(sp.int16).max
+        data = np.ones(self.shape, dtype=sp.uint16)*sp.iinfo(sp.int16).max
         data[x_c, y_c, z_c] = y_c
         del x_c, y_c, z_c
         #
         # generating offset map from data
-        offset_map = sp.zeros((self.nx, self.nz), dtype=float)
+        offset_map = np.zeros((self.nx, self.nz), dtype=float)
         for z_ind in range(self.nz):
-            offset_map[:, z_ind] = sp.amin(data[:, :, z_ind], axis=1)
+            offset_map[:, z_ind] = np.amin(data[:, :, z_ind], axis=1)
             offset_map[:, z_ind][offset_map[:, z_ind] > self.ny] = no_data_fill
         #
         return offset_map.T
@@ -428,10 +429,10 @@ class FractureImageStack(sp.ndarray):
             with flattened indicies. If True then three vectors are returned
             which are the X, Y and Z coordinates of each voxel.
         """
-        nonzero_locs = sp.where(sp.ravel(self))[0].astype(self.index_int_type)
+        nonzero_locs = np.where(np.ravel(self))[0].astype(self.index_int_type)
         logger.debug('{} non-zero voxels in image'.format(nonzero_locs.size))
         if coordinates:
-            return sp.unravel_index(nonzero_locs, self.shape)
+            return np.unravel_index(nonzero_locs, self.shape)
         else:
             return nonzero_locs
 
@@ -459,10 +460,10 @@ class FractureImageStack(sp.ndarray):
         as 8 bit grey scale, PIL version must be >= 3.4.0"""
         #
         #  passing instance data to static method after type conversion
-        img_data = sp.array(self)
+        img_data = np.array(self)
         if self.dtype == bool:
             logger.debug('converting datatype of output array to sp.uint8')
-            img_data = sp.array(self, dtype=sp.uint8) * 255
+            img_data = np.array(self, dtype=sp.uint8) * 255
         #
         self.save_image_stack(fname, img_data, overwrite=overwrite)
 
@@ -513,7 +514,7 @@ def files_from_directory(directory='.', pattern='.', deep=True):
             pattern = re.sub(r'\.', r'\\.', pattern)
             pattern = '.'+pattern+'$'
             msg = 'Modifying glob pattern to proper regular expression: %s'
-            logger.warn(msg, pattern)
+            logger.warning(msg, pattern)
         pattern = re.compile(pattern, flags=re.I)
     except (ValueError, TypeError):
         logger.info('Using user compiled pattern: %s', pattern)

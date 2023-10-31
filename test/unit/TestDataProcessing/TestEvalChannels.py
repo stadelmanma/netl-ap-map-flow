@@ -9,7 +9,7 @@ Last Modifed: 2016/10/25
 import argparse
 import os
 import pytest
-import scipy as sp
+import numpy as np
 from apmapflow.data_processing.eval_channels import EvalChannels
 
 
@@ -53,10 +53,10 @@ class TestEvalChannels:
         #
         # creating horizontal channels
         eval_chans = EvalChannels(data_field_class())
-        eval_chans.data_map = sp.zeros((eval_chans.nz, eval_chans.nx), dtype=int)
+        eval_chans.data_map = np.zeros((eval_chans.nz, eval_chans.nx), dtype=int)
         eval_chans.data_map[2:4, :] = 255
         eval_chans.data_map[6:9, :] = 255
-        eval_chans.data_vector = sp.ravel(eval_chans.data_map)
+        eval_chans.data_vector = np.ravel(eval_chans.data_map)
         eval_chans.args = {
             'axis': 'x',
             'thresh': 100
@@ -65,10 +65,10 @@ class TestEvalChannels:
         #
         # creating vertical channels
         eval_chans = EvalChannels(data_field_class())
-        eval_chans.data_map = sp.zeros((eval_chans.nz, eval_chans.nx), dtype=int)
+        eval_chans.data_map = np.zeros((eval_chans.nz, eval_chans.nx), dtype=int)
         eval_chans.data_map[:, 2:4] = 255
         eval_chans.data_map[:, 6:9] = 255
-        eval_chans.data_vector = sp.ravel(eval_chans.data_map)
+        eval_chans.data_vector = np.ravel(eval_chans.data_map)
         eval_chans.args = {
             'axis': 'z',
             'thresh': 100
