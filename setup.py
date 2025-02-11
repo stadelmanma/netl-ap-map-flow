@@ -9,7 +9,7 @@ except ImportError:
     sys.exit(1)
 
 # Check Python version
-if sys.version_info < (3, 4):
+if sys.version_info < (3, 10):
     print('apmapflow requires Python 3.4 or greater to run')
     sys.exit(1)
 
@@ -44,7 +44,7 @@ setup(
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
         'Programming Language :: Python',
         'Programming Language :: Fortran',
-        'Intended Audience :: Science/Research'
+        'Intended Audience :: Science/Research',
         'Topic :: Scientific/Engineering :: Physics',
     ],
     packages=[
