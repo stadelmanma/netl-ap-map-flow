@@ -15,6 +15,7 @@ import os
 import re
 import subprocess
 import scipy as sp
+import numpy as np
 from PIL import Image
 from PIL.TiffImagePlugin import AppendingTiffWriter
 from scipy import sparse as sprs
@@ -80,7 +81,7 @@ class DataField(object):
                 delim = match.group(1).strip()
                 delim = None if not delim else delim
         #
-        data_map = sp.loadtxt(infile, delimiter=delim)
+        data_map = np.loadtxt(infile, delimiter=delim)
         #
         self.infile = infile
         self._init_from_data(data_map)
@@ -89,7 +90,7 @@ class DataField(object):
         r"""
         Populates the DataField attributes based on the supplied data_map
         """
-        self._data_map = sp.copy(data_map)
+        self._data_map = np.copy(data_map)
         #
         # defining cell interfaces used in adjacency matrix
         self._define_cell_interfaces()
@@ -103,9 +104,9 @@ class DataField(object):
         """
         obj.nx = self.nx
         obj.nz = self.nz
-        obj.data_map = sp.copy(self.data_map)
-        obj.data_vector = sp.copy(self.data_vector)
-        obj.point_data = sp.copy(self.point_data)
+        obj.data_map = np.copy(self.data_map)
+        obj.data_vector = np.copy(self.data_vector)
+        obj.point_data = np.copy(self.point_data)
 
     def _define_cell_interfaces(self):
         r"""
@@ -127,7 +128,7 @@ class DataField(object):
         for ix in range((self.nz-1)*self.nx, self.nz*self.nx-1):
             self._cell_interfaces.append([ix, ix+1])
         #
-        self._cell_interfaces = sp.array(self._cell_interfaces,
+        self._cell_interfaces = np.array(self._cell_interfaces,
                                          ndmin=2,
                                          dtype=int)
 
@@ -219,7 +220,7 @@ class DataField(object):
         #
         return point_data[0:nz, 0:nx, :]
 
-    def threshold_data(self, min_value=None, max_value=None, repl=sp.nan):
+    def threshold_data(self, min_value=None, max_value=None, repl=np.nan):
         r"""
         Thresholds the data map based on the supplied minimum and
         maximum values. Values outside of the range are replaced by
@@ -350,7 +351,7 @@ class DataField(object):
         return content
 
 
-class FractureImageStack(sp.ndarray):
+class FractureImageStack(np.ndarray):
     r"""
     Reads a 3-D image stack of the binary fracture data and stores it as
     a scipy ndarray.
@@ -368,14 +369,14 @@ class FractureImageStack(sp.ndarray):
             image_data = []
             for frame in range(image.n_frames):
                 image.seek(frame)
-                frame = sp.array(image, dtype=dtype).transpose()
+                frame = np.array(image, dtype=dtype).transpose()
                 image_data.append(frame)
             #
             # stacking frames into a single 3 dimensional array
             image_data = sp.stack(image_data, axis=2)
         except AttributeError:
             logger.debug('initialized image from data array')
-            image_data = sp.array(image, ndmin=3, dtype=dtype)
+            image_data = np.array(image, ndmin=3, dtype=dtype)
         #
         # returning a conversion of regular ndarray into my sybclass
         return sp.asarray(image_data).view(cls)
@@ -402,6 +403,8 @@ class FractureImageStack(sp.ndarray):
         Parameters:
             no_data_fill (numeric) - a value to use as the offset when a
             column has no fracture voxels, sp.nan or sp.inf can be used.
+        
+        **updated versions of scipy no longer have these functions, use numpy
         """
         # getting coordinates of all fracture voxels
         x_c, y_c, z_c = self.get_fracture_voxels(coordinates=True)
@@ -459,10 +462,10 @@ class FractureImageStack(sp.ndarray):
         as 8 bit grey scale, PIL version must be >= 3.4.0"""
         #
         #  passing instance data to static method after type conversion
-        img_data = sp.array(self)
+        img_data = np.array(self)
         if self.dtype == bool:
             logger.debug('converting datatype of output array to sp.uint8')
-            img_data = sp.array(self, dtype=sp.uint8) * 255
+            img_data = np.array(self, dtype=sp.uint8) * 255
         #
         self.save_image_stack(fname, img_data, overwrite=overwrite)
 

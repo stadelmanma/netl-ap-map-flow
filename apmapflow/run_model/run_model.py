@@ -16,7 +16,7 @@ from shlex import split as shlex_split
 from subprocess import PIPE, Popen
 from threading import Thread
 from time import time
-from scipy import inf as sp_inf
+from numpy import inf as sp_inf
 from .. import _get_logger, DataField
 
 # module globals
@@ -745,9 +745,13 @@ def run_model(input_file_obj, synchronous=False, show_stdout=False):
     This writes out the inputfile at the perscribed path, a pre-existing file
     will be overwritten.
     """
+    
     input_file_obj.write_inp_file()
     exe_file = os.path.abspath(input_file_obj.executable)
     logger.debug('Using executable located at: ' + exe_file)
+    print("Raw executable file path", input_file_obj.executable)
+    print('resolved absolut path:', os.path.abspath(input_file_obj.executable))
+    print("executable exists:", os.path.exists(os.path.abspath(input_file_obj.executable)))
     cmd = (exe_file, input_file_obj.outfile_name)
     #
     out = PIPE
