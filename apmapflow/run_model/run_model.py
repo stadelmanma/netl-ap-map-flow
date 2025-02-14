@@ -749,9 +749,6 @@ def run_model(input_file_obj, synchronous=False, show_stdout=False):
     input_file_obj.write_inp_file()
     exe_file = os.path.abspath(input_file_obj.executable)
     logger.debug('Using executable located at: ' + exe_file)
-    print("Raw executable file path", input_file_obj.executable)
-    print('resolved absolut path:', os.path.abspath(input_file_obj.executable))
-    print("executable exists:", os.path.exists(os.path.abspath(input_file_obj.executable)))
     cmd = (exe_file, input_file_obj.outfile_name)
     #
     out = PIPE

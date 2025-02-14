@@ -10,7 +10,7 @@ except ImportError:
 
 # Check Python version
 if sys.version_info < (3, 10):
-    print('apmapflow requires Python 3.4 or greater to run')
+    print('apmapflow requires Python 3.10 or greater to run')
     sys.exit(1)
 
 # pull long description from README
