@@ -8,7 +8,7 @@ Last Modifed: 2016/10/25
 """
 import argparse
 import os
-import scipy as sp
+import numpy as np
 from apmapflow.data_processing.histogram import Histogram
 
 
@@ -51,11 +51,11 @@ class TestHistogram:
         hist.args = {'num_bins': 10}
         hist.nz = 100
         hist.nx = 100
-        hist.data_map = sp.ones((hist.nz, hist.nx), dtype=int)
+        hist.data_map = np.ones((hist.nz, hist.nx), dtype=int)
         for i in range(hist.nz):
             hist.data_map[i, :] = 1 * (i+1)
         hist.data_map[0] = -1
-        hist.data_vector = sp.ravel(hist.data_map)
+        hist.data_vector = np.ravel(hist.data_map)
         #
         hist.define_bins()
         assert len(hist.bins) == hist.args['num_bins'] + 1
@@ -66,10 +66,10 @@ class TestHistogram:
         """
         hist = Histogram(data_field_class())
         hist.args = {'num_bins': 10}
-        hist.data_map = sp.ones((hist.nz, hist.nx), dtype=int)
+        hist.data_map = np.ones((hist.nz, hist.nx), dtype=int)
         for i in range(hist.nz):
             hist.data_map[i, :] = 1 * (i+1)
-        hist.data_vector = sp.ravel(hist.data_map)
+        hist.data_vector = np.ravel(hist.data_map)
         hist.bins = [(0, 2), (2, 4), (4, 6), (6, 8), (8, 10.01)]
         #
         hist._process_data()
@@ -80,7 +80,7 @@ class TestHistogram:
             assert data_bin[2] == 10
         #
         # testing perserve bins
-        hist.data_vector = sp.array([-1, 1, 2, 3])
+        hist.data_vector = np.array([-1, 1, 2, 3])
         hist.bins = [(0, 5), (5, 10)]
         hist._process_data(preserve_bins=True)
         assert len(hist.bins) == 2

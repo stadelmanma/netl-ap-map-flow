@@ -10,7 +10,7 @@ Last Modifed: 2016/08/18
 import os
 import pytest
 import sys
-import scipy as sp
+import numpy as np
 import apmapflow.openfoam.parallel_mesh_gen as pmg_submodule
 from apmapflow.openfoam.parallel_mesh_gen import DataFieldRegion
 from apmapflow.openfoam.parallel_mesh_gen import BlockMeshRegion
@@ -51,8 +51,8 @@ class TestParallelMeshGen:
         assert mesh_region.avg_fact == 10
         assert mesh_region.x_shift == 7
         assert mesh_region.z_shift == 5
-        assert sp.all(mesh_region._vertices[:, 0] - 10*7 >= 0)
-        assert sp.all(mesh_region._vertices[:, 2] - 10*5 >= 0)
+        assert np.all(mesh_region._vertices[:, 0] - 10*7 >= 0)
+        assert np.all(mesh_region._vertices[:, 2] - 10*5 >= 0)
         #
         # testing mesh code runs, can't test if files actually exist
         sys_dir = os.path.join(FIXTURE_DIR, 'system')
@@ -76,7 +76,7 @@ class TestParallelMeshGen:
         merge_group0 = MergeGroup(0, ext_pat, TEMP_DIR)
         assert merge_group0.region_id == 0
         assert merge_group0.region_dir == os.path.join(TEMP_DIR, 'mesh-region0')
-        assert merge_group0.regions == sp.array([0], ndmin=2, dtype=int)
+        assert merge_group0.regions == np.array([0], ndmin=2, dtype=int)
         assert merge_group0.external_patches == {key: [val] for key, val in ext_pat.items()}
         #
         # setting up additional merge groups to test directions
@@ -96,7 +96,7 @@ class TestParallelMeshGen:
         # testing merge directions
         merge_group0.merge_regions(merge_group1, 'right', 'test-thread0')
         merge_group2.merge_regions(merge_group3, 'right', 'test-thread2')
-        assert sp.all(merge_group0.regions == sp.array([0, 1], ndmin=2, dtype=int))
+        assert np.all(merge_group0.regions == np.array([0, 1], ndmin=2, dtype=int))
         assert merge_group0.external_patches == {'left': ['left'], 'right': ['right1'],
                                                  'top': ['top0', 'top1'], 'bottom': ['bottom', 'bottom']}
         merge_group0.merge_regions(merge_group2, 'top', 'test-thread0')
@@ -134,7 +134,7 @@ class TestParallelMeshGen:
         assert pmg.avg_fact == 1.0
         assert pmg.nx == field.nx
         assert pmg.nz == field.nz
-        assert sp.all(pmg._mask)
+        assert np.all(pmg._mask)
         #
         # checking pmg only has references to data initially, new references are
         # created if the 'threshold' method was used because it resets the arrays
@@ -154,39 +154,39 @@ class TestParallelMeshGen:
         # Testing ParaMeshGen _create_merge_queue method
         #
         # testing merge queue for (2**, 2**n) grid shapes
-        grid = sp.reshape(sp.arange(4, dtype=int), (2, 2))
+        grid = np.reshape(np.arange(4, dtype=int), (2, 2))
         queue, new_grid = pmg._create_merge_queue(grid, 'right')
         assert queue.qsize() == 2
         pairs = []
         while queue.qsize():
             pairs.append(queue.get())
         assert pairs == [(0, 1), (2, 3)]
-        assert sp.all(new_grid == sp.array([[0], [2]], ndmin=2, dtype=int))
+        assert np.all(new_grid == np.array([[0], [2]], ndmin=2, dtype=int))
         #
-        grid = sp.reshape(sp.arange(4, dtype=int), (2, 2))
+        grid = np.reshape(np.arange(4, dtype=int), (2, 2))
         queue, new_grid = pmg._create_merge_queue(grid, 'top')
         assert queue.qsize() == 2
         pairs = []
         while queue.qsize():
             pairs.append(queue.get())
         assert pairs == [(0, 2), (1, 3)]
-        assert sp.all(new_grid == sp.array([[0, 1]], ndmin=2, dtype=int))
+        assert np.all(new_grid == np.array([[0, 1]], ndmin=2, dtype=int))
         #
         # testing merge queue for (n x n) grid shapes
-        grid = sp.reshape(sp.arange(6, dtype=int), (2, 3))
+        grid = np.reshape(np.arange(6, dtype=int), (2, 3))
         queue, new_grid = pmg._create_merge_queue(grid, 'right')
         assert queue.qsize() == 2
         pairs = []
         while queue.qsize():
             pairs.append(queue.get())
         assert pairs == [(0, 1), (3, 4)]
-        assert sp.all(new_grid == sp.array([[0, 2], [3, 5]], ndmin=2, dtype=int))
+        assert np.all(new_grid == np.array([[0, 2], [3, 5]], ndmin=2, dtype=int))
         #
-        grid = sp.reshape(sp.arange(6, dtype=int), (3, 2))
+        grid = np.reshape(np.arange(6, dtype=int), (3, 2))
         queue, new_grid = pmg._create_merge_queue(grid, 'top')
         assert queue.qsize() == 2
         pairs = []
         while queue.qsize():
             pairs.append(queue.get())
         assert pairs == [(0, 2), (1, 3)]
-        assert sp.all(new_grid == sp.array([[0, 1], [4, 5]], ndmin=2, dtype=int))
+        assert np.all(new_grid == np.array([[0, 1], [4, 5]], ndmin=2, dtype=int))

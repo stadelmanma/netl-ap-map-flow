@@ -9,7 +9,7 @@ Last Modifed: 2016/10/25
 import argparse
 import os
 import pytest
-import scipy as sp
+import numpy as np
 from apmapflow.data_processing.profile import Profile
 
 
@@ -57,15 +57,15 @@ class TestProfile:
         prof = Profile(data_field_class())
         prof.args = {'axis': 'x', 'locations': [0, 50, 100]}
         prof._process_data()
-        assert sp.all(prof.processed_data[fmt.format(0)] == prof.data_map[0, :])
-        assert sp.all(prof.processed_data[fmt.format(50)] == prof.data_map[5, :])
-        assert sp.all(prof.processed_data[fmt.format(100)] == prof.data_map[9, :])
+        assert np.all(prof.processed_data[fmt.format(0)] == prof.data_map[0, :])
+        assert np.all(prof.processed_data[fmt.format(50)] == prof.data_map[5, :])
+        assert np.all(prof.processed_data[fmt.format(100)] == prof.data_map[9, :])
         #
         prof.args = {'axis': 'z', 'locations': [0, 50, 100]}
         prof._process_data()
-        assert sp.all(prof.processed_data[fmt.format(0)] == prof.data_map[:, 0])
-        assert sp.all(prof.processed_data[fmt.format(50)] == prof.data_map[:, 5])
-        assert sp.all(prof.processed_data[fmt.format(100)] == prof.data_map[:, 9])
+        assert np.all(prof.processed_data[fmt.format(0)] == prof.data_map[:, 0])
+        assert np.all(prof.processed_data[fmt.format(50)] == prof.data_map[:, 5])
+        assert np.all(prof.processed_data[fmt.format(100)] == prof.data_map[:, 9])
         #
         prof.args = {'axis': 'y', 'locations': [0, 50, 100]}
         prof._process_data()

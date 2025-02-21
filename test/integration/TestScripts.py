@@ -46,7 +46,7 @@ class TestScripts:
         # load bulk run file for pre-processing
         bulkrun_inp_file = os.path.join(FIXTURE_DIR, 'test-bulk-run.yaml')
         with open(bulkrun_inp_file, 'r') as f:
-            bulk_run_inps = yaml.load(f)
+            bulk_run_inps = yaml.load(f, yaml.SafeLoader)
         #
         # update paths to be platform independent
         file_path = bulk_run_inps['initial_input_file']

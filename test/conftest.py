@@ -2,7 +2,7 @@ from collections import OrderedDict
 from os import path, mkdir, environ
 import pytest
 from shutil import rmtree
-import scipy as sp
+import numpy as np
 import apmapflow as apm
 
 
@@ -56,13 +56,19 @@ def temp_directory(request, setup_temp_directory):
     request.function.__globals__['TEMP_DIR'] = setup_temp_directory
 
 
+@pytest.fixture(scope="session")
+def use_openfoam(pytestconfig):
+    r"""Check if the --use-openfoam option was set."""
+    return pytestconfig.getoption("use_openfoam")
+
+
 @pytest.fixture(scope='class')
-def set_openfoam_path():
+def set_openfoam_path(use_openfoam):
     r"""
     Appends the path to use local dummy fixtures instead of actual openFoam
     executables unless the option --use-openfoam was added
     """
-    if not pytest.config.option.use_openfoam:
+    if not use_openfoam:
         fixture_bin = path.join(path.dirname(__file__), 'fixtures', 'bin')
         environ['PATH'] = fixture_bin + path.pathsep + environ['PATH']
 
@@ -83,7 +89,7 @@ def data_field_class():
             #
             self.infile = path.join(test_root, 'pytest-DataFeld-fixture')
             self.outfile = ''
-            self._data_map = sp.arange(100).reshape(10, 10)
+            self._data_map = np.arange(100).reshape(10, 10)
             self.point_data = None
             self._cell_interfaces = None
             self.output_data = dict()
@@ -94,11 +100,11 @@ def data_field_class():
             pass
 
         def create_point_data(self):
-            self.point_data = sp.zeros((self.nz, self.nx, 4))
-            self.point_data[:, :, 1] = sp.arange(100).reshape(10, 10)*1.0
-            self.point_data[:, :, 1] = sp.arange(100).reshape(10, 10)*2.0
-            self.point_data[:, :, 1] = sp.arange(100).reshape(10, 10)*3.0
-            self.point_data[:, :, 1] = sp.arange(100).reshape(10, 10)*4.0
+            self.point_data = np.zeros((self.nz, self.nx, 4))
+            self.point_data[:, :, 1] = np.arange(100).reshape(10, 10)*1.0
+            self.point_data[:, :, 1] = np.arange(100).reshape(10, 10)*2.0
+            self.point_data[:, :, 1] = np.arange(100).reshape(10, 10)*3.0
+            self.point_data[:, :, 1] = np.arange(100).reshape(10, 10)*4.0
 
     return PseudoDataField
 

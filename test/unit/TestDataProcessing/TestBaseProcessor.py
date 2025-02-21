@@ -8,7 +8,7 @@ Last Modifed: 2016/10/25
 """
 import os
 import pytest
-import scipy as sp
+import numpy as np
 from apmapflow.data_processing.base_processor import BaseProcessor
 
 
