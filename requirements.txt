@@ -1,5 +1,0 @@
-numpy
-scipy
-pillow>=9.0
-pyyaml
-pint
