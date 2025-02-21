@@ -59,7 +59,7 @@ def main():
         #
         # loading yaml file and parsing input file
         input_file = open(input_file, 'r')
-        inputs = yaml.load(input_file)
+        inputs = yaml.load(input_file, yaml.SafeLoader)
         inp_file = InputFile(inputs['initial_input_file'])
 
         # Creating class with provided kwargs

@@ -3,14 +3,12 @@ Automatically imports several modules.
 #
 Written By: Matthew Stadelman
 Date Written: 2016/02/26
-Last Modifed: 2017/04/15
+Last Modifed: 2025/20/20
 #
 """
 #
 import logging.config as _logging_config
 import os as _os
-import sys as _sys
-import PIL as _pil
 from .ap_map_flow import DataField, FractureImageStack
 from .ap_map_flow import _get_logger, set_main_logger_level
 from .ap_map_flow import files_from_directory, load_infile_list

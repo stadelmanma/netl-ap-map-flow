@@ -91,7 +91,7 @@ def main():
     data_list = []
     for stat_file in files:
         with open(stat_file, 'r') as f:
-            data_list.append(yaml.load(f))
+            data_list.append(yaml.load(f, yaml.SafeLoader))
             data_list[-1]['_stat_file'] = stat_file
     #
     # outputing data
@@ -105,7 +105,7 @@ def determine_key_order(stat_file):
     #
     # reading data into a dictionary
     with open(stat_file, 'r') as f:
-        data = yaml.load(f)
+        data = yaml.load(f, yaml.SafeLoader)
     #
     # re-opening file and reading into an array to match key order
     with open(stat_file, 'r') as f:
