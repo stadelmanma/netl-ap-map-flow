@@ -18,7 +18,7 @@ import os
 import re
 from subprocess import call as subp_call
 from sys import argv
-import scipy as sp
+import numpy as np
 from apmapflow import DataField, files_from_directory, _get_logger
 from apmapflow.openfoam import OpenFoamExport, OpenFoamFile
 from apmapflow.openfoam import BlockMeshDict, OpenFoamDict
@@ -122,7 +122,7 @@ def main():
         generate_p_file()
         if map_data_field is None:
             msg = 'Cannot calculate flow velocities without an aperture map'
-            logger.warn(msg)
+            logger.warning(msg)
         else:
             generate_U_file()
     #
@@ -200,7 +200,7 @@ def load_inp_file():
     try:
         map_data_field = DataField(map_path)
     except FileNotFoundError:
-        logger.warn('Aperture map file was not found at path: '+map_path)
+        logger.warning('Aperture map file was not found at path: '+map_path)
     #
     # setting transport and bc params from file
     input_params = [
@@ -237,7 +237,7 @@ def load_inp_file():
             msg = msg.format(apm_input_file[keyword].line,
                              err.__class__.__name__,
                              str(err))
-            logger.warn(msg)
+            logger.warning(msg)
     #
     # getting inlet/outlet sides
     sides = {'left': 'right', 'right': 'left', 'top': 'bottom', 'bottom': 'top'}
@@ -364,21 +364,21 @@ def generate_U_file():
         avg_fact = namespace.sim_params['avg_fact']
         #
         if side == 'top':
-            avg_b = sp.average(map_data_field.data_map[-1, :])
+            avg_b = np.average(map_data_field.data_map[-1, :])
             axis_len = avg_fact * len(map_data_field.data_map[-1, :])
             z_vel = vol_flow/(avg_b * axis_len)
         elif side == 'bottom':
             vol_flow = -vol_flow
-            avg_b = sp.average(map_data_field.data_map[0, :])
+            avg_b = np.average(map_data_field.data_map[0, :])
             axis_len = avg_fact * len(map_data_field.data_map[0, :])
             z_vel = vol_flow/(avg_b * axis_len)
         elif side == 'left':
             vol_flow = -vol_flow
-            avg_b = sp.average(map_data_field.data_map[:, 0])
+            avg_b = np.average(map_data_field.data_map[:, 0])
             axis_len = avg_fact * len(map_data_field.data_map[:, 0])
             x_vel = vol_flow/(avg_b * axis_len)
         elif side == 'right':
-            avg_b = sp.average(map_data_field.data_map[:, -1])
+            avg_b = np.average(map_data_field.data_map[:, -1])
             axis_len = avg_fact * len(map_data_field.data_map[:, -1])
             x_vel = vol_flow/(avg_b * axis_len)
         else:

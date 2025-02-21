@@ -81,7 +81,7 @@ def check_parallel_plate_error(expected_error, num_digits):
     #
     # load YAML stat data to get parameters
     with open('coverage_test_stats.yaml', 'r') as f:
-        data = yaml.load(f)
+        data = yaml.load(f, yaml.SafeLoader)
     #
     # calculate exact cublic law flow rate and normalized error
     q_pp = (data['DIAMETER'][0] * data['MEAN APER'][0]**3)/(12 * data['AVG VISC'][0])
@@ -103,7 +103,7 @@ def test_outfile_loading(pat_str):
     #
     # load YAML stat data to get parameters
     with open('coverage_test_stats.yaml', 'r') as f:
-        data = yaml.load(f)
+        data = yaml.load(f, yaml.SafeLoader)
     #
     # load series of data maps
     files = files_from_directory(pattern=re.compile(pat_str), deep=False)

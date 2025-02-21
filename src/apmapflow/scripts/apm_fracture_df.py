@@ -15,7 +15,7 @@ import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 from collections import namedtuple
 import os
-import scipy as sp
+import numpy as np
 from scipy import stats as sp_stats
 from apmapflow import _get_logger, set_main_logger_level
 from apmapflow import FractureImageStack
@@ -74,7 +74,7 @@ class FractureSlice(object):
         r"""initialize the class"""
         super().__init__()
         #
-        self._slice_data = sp.copy(slice_data)
+        self._slice_data = np.copy(slice_data)
         self.top = None
         self.bot = None
         self.mid = None
@@ -212,20 +212,20 @@ def find_profiles(fracture_slice):
     #
     data = fracture_slice.slice_data
     #
-    aperture = sp.sum(data, axis=1, dtype=int)
-    non_zero = sp.where(data.ravel() > 0)[0]
-    a1_coords, a2_coords = sp.unravel_index(non_zero, data.shape)
+    aperture = np.sum(data, axis=1, dtype=int)
+    non_zero = np.where(data.ravel() > 0)[0]
+    a1_coords, a2_coords = np.unravel_index(non_zero, data.shape)
     #
     # getting the three profiles
-    profile = sp.ones(data.shape, dtype=float) * sp.inf
+    profile = np.ones(data.shape, dtype=float) * np.inf
     profile[a1_coords, a2_coords] = a2_coords
-    bottom = sp.amin(profile, axis=1)
-    bottom[~sp.isfinite(bottom)] = sp.nan
+    bottom = np.amin(profile, axis=1)
+    bottom[~np.isfinite(bottom)] = np.nan
     #
-    profile = sp.ones(data.shape, dtype=float) * -sp.inf
+    profile = np.ones(data.shape, dtype=float) * -np.inf
     profile[a1_coords, a2_coords] = a2_coords
-    top = sp.amax(profile, axis=1)
-    top[~sp.isfinite(top)] = sp.nan
+    top = np.amax(profile, axis=1)
+    top[~np.isfinite(top)] = np.nan
     #
     mid = (bottom + top)/2.0
     #
@@ -239,8 +239,8 @@ def find_profiles(fracture_slice):
     fracture_slice.bot = bottom
     fracture_slice.mid = mid
     fracture_slice.aperture = aperture
-    fracture_slice.zero_ap_count = sp.where(aperture == 0)[0].size
-    fracture_slice.bifurcation_count = sp.where(bif_frac != aperture)[0].size
+    fracture_slice.zero_ap_count = np.where(aperture == 0)[0].size
+    fracture_slice.bifurcation_count = np.where(bif_frac != aperture)[0].size
 
 
 def calculate_df(line_trace):
@@ -281,8 +281,8 @@ def calculate_df(line_trace):
     #
     # setting through a range of bandwidths
     std_devs = []
-    line_trace = sp.copy(line_trace)
-    for bandwidth in sp.arange(4, line_trace.size/3, dtype=int):
+    line_trace = np.copy(line_trace)
+    for bandwidth in np.arange(4, line_trace.size/3, dtype=int):
         # initialing varaibles
         npts = line_trace.size - bandwidth - 1
         #
@@ -290,14 +290,14 @@ def calculate_df(line_trace):
         end = line_trace[bandwidth:-1]
         #
         sqr_diff = (end - start)**2
-        sqr_diff[~sp.isfinite(sqr_diff)] = 0
+        sqr_diff[~np.isfinite(sqr_diff)] = 0
         #
-        std_dev = (sp.sum(sqr_diff) / npts)**0.5
+        std_dev = (np.sum(sqr_diff) / npts)**0.5
         std_dev = std_dev if std_dev != 0 else 1.5
         #
         std_devs.append([bandwidth, std_dev])
     #
-    return sp.array(std_devs, ndmin=2)
+    return np.array(std_devs, ndmin=2)
 
 
 def df_best_fit(df_data):
@@ -312,13 +312,13 @@ def df_best_fit(df_data):
     """
     #
     # setting up vectors
-    log_band = sp.log(df_data[:, 0])
-    log_std_dev = sp.log(df_data[:, 1])
+    log_band = np.log(df_data[:, 0])
+    log_std_dev = np.log(df_data[:, 1])
     #
     # calculating linear regressions
     min_r2 = 1.0
     min_data = None
-    for fit_size in sp.arange(log_band.size/4, log_band.size, dtype=int):
+    for fit_size in np.arange(log_band.size/4, log_band.size, dtype=int):
         #
         x_vals = log_band[0:fit_size]
         y_vals = log_std_dev[0:fit_size]

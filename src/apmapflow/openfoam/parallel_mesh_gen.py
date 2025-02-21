@@ -16,7 +16,7 @@ from queue import Queue, Empty
 from shutil import rmtree
 from subprocess import Popen, PIPE
 from threading import Event, Thread
-import scipy as sp
+import numpy as np
 from scipy.sparse import csgraph
 from .. import DataField, _get_logger
 from .openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
@@ -43,7 +43,7 @@ class DataFieldRegion(DataField):
             raise ValueError(msg.format(data.shape, point_data.shape[:2]))
         #
         super().__init__(data)
-        self.point_data = sp.copy(point_data)
+        self.point_data = np.copy(point_data)
 
     def create_point_data(self):
         msg = 'DataFieldRegions cannot have point_data recalculated'
@@ -126,7 +126,7 @@ class MergeGroup(object):
         #
         super().__init__()
         self.region_id = region_id
-        self.regions = sp.array([region_id], ndmin=2, dtype=int)
+        self.regions = np.array([region_id], ndmin=2, dtype=int)
         self.region_dir = os.path.join(path, 'mesh-region{}'.format(region_id))
         #
         self.external_patches = {}
@@ -151,7 +151,7 @@ class MergeGroup(object):
             swap = ['top', 'bottom']
         #
         # updating regions array
-        self.regions = sp.append(self.regions, region_in.regions, axis=axis)
+        self.regions = np.append(self.regions, region_in.regions, axis=axis)
         #
         # appending to external_patches
         for key in external_keys:
@@ -232,15 +232,15 @@ class ParallelMeshGen(object):
         self.data_map = field.data_map
         self.point_data = field.point_data
         self._field = DataField(field.data_map)
-        self._field.point_data = sp.copy(field.point_data)
-        self._mask = sp.ones(self.data_map.shape, dtype=bool)
+        self._field.point_data = np.copy(field.point_data)
+        self._mask = np.ones(self.data_map.shape, dtype=bool)
         #
-        self.offset_map = sp.zeros(self.data_map.shape)
-        self.offset_points = sp.zeros(self.point_data.shape)
+        self.offset_map = np.zeros(self.data_map.shape)
+        self.offset_points = np.zeros(self.point_data.shape)
         if kwargs.get('offset_field', None):
             kwargs['offset_field'].create_point_data()
-            self.offset_map = sp.copy(kwargs['offset_field'].data_map)
-            self.offset_points = sp.copy(kwargs['offset_field'].point_data)
+            self.offset_map = np.copy(kwargs['offset_field'].data_map)
+            self.offset_points = np.copy(kwargs['offset_field'].point_data)
         #
         self.system_dir = system_dir
         self.nprocs = nprocs
@@ -261,8 +261,8 @@ class ParallelMeshGen(object):
         _mergeMesh_error.clear()
         _stitchMesh_error.clear()
         #
-        grid = sp.arange(0, ndivs*ndivs, dtype=int)
-        grid = sp.reshape(grid, (ndivs, ndivs))
+        grid = np.arange(0, ndivs*ndivs, dtype=int)
+        grid = np.reshape(grid, (ndivs, ndivs))
         self.merge_groups = []
         #
         # updating mask if threshold
@@ -277,11 +277,11 @@ class ParallelMeshGen(object):
                                                           directed=False)
             # only saving the largest cluster
             if num_cs > 1:
-                cs_count = sp.zeros(num_cs, dtype=int)
+                cs_count = np.zeros(num_cs, dtype=int)
                 for cs_num in cs_ids:
                     cs_count[cs_num] += 1
-                self.data_vector[sp.where(cs_ids != sp.argmax(cs_count))[0]] = 0.0
-                self.data_map = sp.reshape(self.data_vector, self.data_map.shape)
+                self.data_vector[np.where(cs_ids != np.argmax(cs_count))[0]] = 0.0
+                self.data_map = np.reshape(self.data_vector, self.data_map.shape)
             #
             self._mask = self.data_map > 0.0
         #
@@ -407,11 +407,11 @@ class ParallelMeshGen(object):
         #
         # need to test for holes on merge boundaries and change patch to internal
         # creating map indexed 1:_blocks.size but with shape of (nz, nx)
-        mesh_map = sp.ones(region_mesh.data_vector.size, dtype=int)
-        mesh_map *= -sp.iinfo(int).max
-        inds = sp.where(region_mesh.data_vector > 0)[0]
-        mesh_map[inds] = sp.arange(inds.size)
-        mesh_map = sp.reshape(mesh_map, region_mesh.data_map.shape)
+        mesh_map = np.ones(region_mesh.data_vector.size, dtype=int)
+        mesh_map *= -np.iinfo(int).max
+        inds = np.where(region_mesh.data_vector > 0)[0]
+        mesh_map[inds] = np.arange(inds.size)
+        mesh_map = np.reshape(mesh_map, region_mesh.data_map.shape)
         boundary_dict = {
             'internal':
                 {'bottom': [], 'top': [], 'left': [], 'right': []}
@@ -494,7 +494,7 @@ class ParallelMeshGen(object):
                 raise err
         #
         direction = 'right'
-        while sp.size(grid) > 1:
+        while np.size(grid) > 1:
             #
             # getting merge queue and updating grid
             merge_queue, grid = self._create_merge_queue(grid, direction)
@@ -520,11 +520,11 @@ class ParallelMeshGen(object):
         """
         #
         merge_queue = Queue()
-        new_grid = sp.copy(grid)
+        new_grid = np.copy(grid)
         if direction == 'right':
             # Horizontally pairing up regions
             new_nx = int(grid.shape[1]/2) + grid.shape[1] % 2
-            new_grid = -sp.ones(grid.shape[0]*new_nx, dtype=int)
+            new_grid = -np.ones(grid.shape[0]*new_nx, dtype=int)
             #
             for iz in range(grid.shape[0]):
                 i = iz*new_nx
@@ -536,12 +536,12 @@ class ParallelMeshGen(object):
                 if ix != grid.shape[1]-2:
                     new_grid[i] = grid[iz, -1]
             #
-            new_grid = sp.reshape(new_grid, (grid.shape[0], new_nx))
+            new_grid = np.reshape(new_grid, (grid.shape[0], new_nx))
         #
         elif direction == 'top':
             # Vertically pairing up regions
             new_nz = int(grid.shape[0]/2) + grid.shape[0] % 2
-            new_grid = -sp.ones(new_nz*grid.shape[1], dtype=int)
+            new_grid = -np.ones(new_nz*grid.shape[1], dtype=int)
             #
             for ix in range(grid.shape[1]):
                 i = ix
@@ -553,7 +553,7 @@ class ParallelMeshGen(object):
                 if iz != grid.shape[0]-2:
                     new_grid[i] = grid[-1, ix]
             #
-            new_grid = sp.reshape(new_grid, (new_nz, grid.shape[1]))
+            new_grid = np.reshape(new_grid, (new_nz, grid.shape[1]))
         #
         return merge_queue, new_grid
 

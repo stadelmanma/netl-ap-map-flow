@@ -10,7 +10,7 @@ args = ['-v']
 # setting pytest pep8 arg
 if 'pep8' in sys_args:
     del sys_args[sys_args.index('pep8')]
-    args.append('--pep8')
+    args.append('--pycodestyle')
 
 # setting pytest coverage args
 if 'cov' in sys_args:

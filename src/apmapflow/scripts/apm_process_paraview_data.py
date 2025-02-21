@@ -18,7 +18,7 @@ For usage information run: ``apm_process_paraview_data -h``
 import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 import os
-import scipy as sp
+import numpy as np
 from scipy.interpolate import griddata
 from apmapflow import _get_logger, set_main_logger_level, DataField
 
@@ -108,7 +108,7 @@ def read_data_files(para_file, map_file):
 
     #
     # reading entire dataset and splitting into column vectors
-    data = sp.loadtxt(para_file, delimiter=',', dtype=float, skiprows=1)
+    data = np.loadtxt(para_file, delimiter=',', dtype=float, skiprows=1)
     data_dict = {}
     for i, col in enumerate(cols):
         data_dict[col] = data[:, i]
@@ -124,9 +124,9 @@ def generate_coordinate_arrays(aper_map, para_data_dict):
     #
     # generating XYZ coordinates from map to interpolate to
     logger.info('calculating aperture map cell center coordinates...')
-    temp = sp.arange(aper_map.data_map.size, dtype=int)
-    temp = sp.unravel_index(temp, aper_map.data_map.shape[::-1])
-    map_coords = sp.zeros((aper_map.data_map.size, 3), dtype=float)
+    temp = np.arange(aper_map.data_map.size, dtype=int)
+    temp = np.unravel_index(temp, aper_map.data_map.shape[::-1])
+    map_coords = np.zeros((aper_map.data_map.size, 3), dtype=float)
     #
     # half voxel added to make map points be cell centers
     map_coords[:, 0] = temp[0] * avg_fact * voxel_size + voxel_size/2.0
@@ -134,7 +134,7 @@ def generate_coordinate_arrays(aper_map, para_data_dict):
     #
     # pulling XYZ coordinates from the data file
     logger.info('processing data file data for coordinates...')
-    data_coords = sp.zeros((para_data_dict['points:0'].shape[0], 3))
+    data_coords = np.zeros((para_data_dict['points:0'].shape[0], 3))
     data_coords[:, 0] = para_data_dict['points:0']
     data_coords[:, 1] = para_data_dict['points:1']
     data_coords[:, 2] = para_data_dict['points:2']
@@ -152,29 +152,29 @@ def save_data_maps(map_coords, data_coords, aper_map, data_dict, density):
     logger.info('generating and saving pressure field...')
     field = data_dict['p'] * density  # openFoam outputs kinematic pressure
     field = griddata(data_coords, field, map_coords, method='nearest')
-    field = sp.reshape(field, aper_map.data_map.shape[::-1])
-    sp.savetxt(base_name+'-p-map.txt', field.T, delimiter='\t')
+    field = np.reshape(field, aper_map.data_map.shape[::-1])
+    np.savetxt(base_name+'-p-map.txt', field.T, delimiter='\t')
     #
     # generating Ux -> Qx field
     logger.info('generating and saving Qx field...')
     field = data_dict['u:0']
     field = griddata(data_coords, field, map_coords, method='nearest')
-    field = sp.reshape(field, aper_map.data_map.shape[::-1])
+    field = np.reshape(field, aper_map.data_map.shape[::-1])
     field = field * aper_map.data_map.T * voxel_size**2
-    sp.savetxt(base_name+'-qx-map.txt', field.T, delimiter='\t')
+    np.savetxt(base_name+'-qx-map.txt', field.T, delimiter='\t')
     #
     # generating Uz -> Qz field
     logger.info('generating and saving Qz field...')
     field = data_dict['u:2']
     field = griddata(data_coords, field, map_coords, method='nearest')
-    field = sp.reshape(field, aper_map.data_map.shape[::-1])
+    field = np.reshape(field, aper_map.data_map.shape[::-1])
     field = field * aper_map.data_map.T * voxel_size**2
-    sp.savetxt(base_name+'-qz-map.txt', field.T, delimiter='\t')
+    np.savetxt(base_name+'-qz-map.txt', field.T, delimiter='\t')
     #
     # generating Um -> Qm field
     logger.info('generating and saving Q magnitude field...')
-    field = sp.sqrt(data_dict['u:0'] ** 2 + data_dict['u:2'] ** 2)
+    field = np.sqrt(data_dict['u:0'] ** 2 + data_dict['u:2'] ** 2)
     field = griddata(data_coords, field, map_coords, method='nearest')
-    field = sp.reshape(field, aper_map.data_map.shape[::-1])
+    field = np.reshape(field, aper_map.data_map.shape[::-1])
     field = field * aper_map.data_map.T * voxel_size**2
-    sp.savetxt(base_name+'-qm-map.txt', field.T, delimiter='\t')
+    np.savetxt(base_name+'-qm-map.txt', field.T, delimiter='\t')

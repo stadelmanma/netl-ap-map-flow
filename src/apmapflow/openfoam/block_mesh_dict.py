@@ -12,7 +12,7 @@ Block Mesh Dict
 #
 import os
 import re
-import scipy as sp
+import numpy as np
 from scipy.sparse import csgraph
 from .. import DataField
 from .openfoam import OpenFoamFile, OpenFoamDict, OpenFoamList
@@ -56,9 +56,9 @@ class BlockMeshDict(OpenFoamFile):
         # field attributes that are copied over
         self.nx = None
         self.nz = None
-        self.data_map = sp.array([])
-        self.data_vector = sp.array([])
-        self.point_data = sp.array([])
+        self.data_map = np.array([])
+        self.data_vector = np.array([])
+        self.point_data = np.array([])
         if field.point_data is None:
             field.create_point_data()
         field.copy_data(self)
@@ -68,7 +68,7 @@ class BlockMeshDict(OpenFoamFile):
         if offset_field is not None:
             if offset_field.point_data is None:
                 offset_field.create_point_data()
-            self.offset_points = sp.copy(offset_field.point_data)
+            self.offset_points = np.copy(offset_field.point_data)
             # XXX: need to check shape of offset map to match point data
         #
         # native attributes
@@ -77,7 +77,7 @@ class BlockMeshDict(OpenFoamFile):
         self.face_labels = {}
         #
         self._field = DataField(field.data_map)
-        self._field.point_data = sp.copy(field.point_data)
+        self._field.point_data = np.copy(field.point_data)
         self._vertices = None
         self._blocks = None
         self._edges = None
@@ -107,7 +107,7 @@ class BlockMeshDict(OpenFoamFile):
         vert_map[i,j,3] is the top left corner (0,1)
         """
         #
-        map_mask = sp.ones((self.nz+1, self.nx+1), dtype=bool)
+        map_mask = np.ones((self.nz+1, self.nx+1), dtype=bool)
         map_mask[0:self.nz, 0:self.nx] = cell_mask
         map_mask[0:self.nz, self.nx] = cell_mask[0:self.nz, self.nx-1]
         map_mask[self.nz, 0:self.nx] = cell_mask[self.nz-1, 0:self.nx]
@@ -116,8 +116,7 @@ class BlockMeshDict(OpenFoamFile):
         indices = [0, 1, 1, 0, 3, 2, 2, 3]
         ind_offsets = [0, 0, 1, 1, 0, 0, 1, 1]
         vertices = []
-        vert_map = sp.zeros((self.nz+1, self.nx+1, 4), dtype=int)
-        vert_map[:] = sp.nan
+        vert_map = np.zeros((self.nz+1, self.nx+1, 4), dtype=int)
         #
         # building vertices and setting vert_map
         vert_index = 0
@@ -159,7 +158,7 @@ class BlockMeshDict(OpenFoamFile):
         for index in range(self.nx*self.nz):
             iz = int(index/self.nx)
             ix = index % self.nx
-            if sp.any(map_mask[iz:iz+2, ix:ix+2]):
+            if np.any(map_mask[iz:iz+2, ix:ix+2]):
                 xdist = (ix + 1.0) * self.avg_fact
                 ydist = self.point_data[iz, ix, 2]
                 zdist = (iz + 1.0) * self.avg_fact
@@ -176,15 +175,15 @@ class BlockMeshDict(OpenFoamFile):
         #
         # building block array
         self._blocks = []
-        cell_mask = sp.ravel(cell_mask)
-        for index in sp.where(cell_mask)[0]:
+        cell_mask = np.ravel(cell_mask)
+        for index in np.where(cell_mask)[0]:
             iz = int(index/self.nx)
             ix = index % self.nx
             self._blocks.append(vert_map[iz, ix, indices] + ind_offsets)
         #
         # converting lists to scipy arrays
-        self._vertices = sp.array(vertices, ndmin=2, dtype=float)
-        self._blocks = sp.array(self._blocks, ndmin=2, dtype=int)
+        self._vertices = np.array(vertices, ndmin=2, dtype=float)
+        self._blocks = np.array(self._blocks, ndmin=2, dtype=int)
 
     def set_boundary_patches(self, boundary_blocks, reset=False):
         r"""
@@ -220,19 +219,19 @@ class BlockMeshDict(OpenFoamFile):
         # re-initializing all face labels
         num_faces = 6 * len(self._blocks)
         if reset:
-            self._faces = sp.ones((num_faces, 4), dtype=int)*-sp.iinfo(int).max
+            self._faces = np.ones((num_faces, 4), dtype=int)*-np.iinfo(int).max
             self.face_labels = {}
         #
         # adding any new face labels to the dictionary
         for patch_name in boundary_blocks.keys():
             key = 'boundary.'+patch_name
             if key not in self.face_labels.keys():
-                self.face_labels[key] = sp.zeros(num_faces, dtype=bool)
+                self.face_labels[key] = np.zeros(num_faces, dtype=bool)
         #
         # setting new face labels
         for patch_name, side_dict in boundary_blocks.items():
             for side, blocks in side_dict.items():
-                indices = sp.array(blocks, dtype=int) * 6 + offsets[side][0]
+                indices = np.array(blocks, dtype=int) * 6 + offsets[side][0]
                 face_verts = self._blocks[blocks][:, offsets[side][1]]
                 self._faces[indices] = face_verts
                 self.face_labels['boundary.'+patch_name][indices] = True
@@ -251,18 +250,18 @@ class BlockMeshDict(OpenFoamFile):
         """
         #
         if cell_mask is None:
-            cell_mask = sp.ones(self.data_map.shape, dtype=bool)
+            cell_mask = np.ones(self.data_map.shape, dtype=bool)
         #
         # initializing arrays
-        self._edges = sp.ones(0, dtype=str)
-        self._merge_patch_pairs = sp.ones(0, dtype=str)
+        self._edges = np.ones(0, dtype=str)
+        self._merge_patch_pairs = np.ones(0, dtype=str)
         self._create_blocks(cell_mask)
         #
         # building face arrays
-        mapper = sp.ravel(sp.array(cell_mask, dtype=int))
-        mapper[mapper == 1] = sp.arange(sp.count_nonzero(mapper))
-        mapper = sp.reshape(mapper, (self.nz, self.nx))
-        mapper[~cell_mask] = -sp.iinfo(int).max
+        mapper = np.ravel(np.array(cell_mask, dtype=int))
+        mapper[mapper == 1] = np.arange(np.count_nonzero(mapper))
+        mapper = np.reshape(mapper, (self.nz, self.nx))
+        mapper[~cell_mask] = -np.iinfo(int).max
         #
         boundary_dict = {
             'bottom':
@@ -282,26 +281,26 @@ class BlockMeshDict(OpenFoamFile):
         }
         #
         # determining cells linked to a masked cell
-        cell_mask = sp.where(~sp.ravel(cell_mask))[0]
-        inds = sp.in1d(self._field._cell_interfaces, cell_mask)
-        inds = sp.reshape(inds, (len(self._field._cell_interfaces), 2))
+        cell_mask = np.where(~np.ravel(cell_mask))[0]
+        inds = np.isin(self._field._cell_interfaces, cell_mask)
+        inds = np.reshape(inds, (len(self._field._cell_interfaces), 2))
         inds = inds[:, 0].astype(int) + inds[:, 1].astype(int)
         inds = (inds == 1)
         links = self._field._cell_interfaces[inds]
         #
         # adjusting order so masked cells are all on links[:, 1]
-        swap = sp.in1d(links[:, 0], cell_mask)
+        swap = np.isin(links[:, 0], cell_mask)
         links[swap] = links[swap, ::-1]
         #
         # setting side based on index difference
-        sides = sp.ndarray(len(links), dtype='<U6')
-        sides[sp.where(links[:, 1] == links[:, 0]-self.nx)[0]] = 'bottom'
-        sides[sp.where(links[:, 1] == links[:, 0]+self.nx)[0]] = 'top'
-        sides[sp.where(links[:, 1] == links[:, 0]-1)[0]] = 'left'
-        sides[sp.where(links[:, 1] == links[:, 0]+1)[0]] = 'right'
+        sides = np.ndarray(len(links), dtype='<U6')
+        sides[np.where(links[:, 1] == links[:, 0]-self.nx)[0]] = 'bottom'
+        sides[np.where(links[:, 1] == links[:, 0]+self.nx)[0]] = 'top'
+        sides[np.where(links[:, 1] == links[:, 0]-1)[0]] = 'left'
+        sides[np.where(links[:, 1] == links[:, 0]+1)[0]] = 'right'
         #
         # adding each block to the internal face dictionary
-        inds = sp.ravel(mapper)[links[:, 0]]
+        inds = np.ravel(mapper)[links[:, 0]]
         for side, block_id in zip(sides, inds):
             boundary_dict['internal'][side].append(block_id)
         self.set_boundary_patches(boundary_dict, reset=True)
@@ -326,10 +325,10 @@ class BlockMeshDict(OpenFoamFile):
         cs_num, cs_ids = csgraph.connected_components(csgraph=adj_matrix,
                                                       directed=False)
         # only saving the largest cluster
-        cs_num, counts = sp.unique(cs_ids, return_counts=True)
-        cs_num = cs_num[sp.argsort(counts)][-1]
-        self.data_vector[sp.where(cs_ids != cs_num)[0]] = 0.0
-        self.data_map = sp.reshape(self.data_vector, (self.nz, self.nx))
+        cs_num, counts = np.unique(cs_ids, return_counts=True)
+        cs_num = cs_num[np.argsort(counts)][-1]
+        self.data_vector[np.where(cs_ids != cs_num)[0]] = 0.0
+        self.data_map = np.reshape(self.data_vector, (self.nz, self.nx))
         #
         self._field._data_map = self.data_map
         #
@@ -441,8 +440,8 @@ class BlockMeshDict(OpenFoamFile):
         # TODO: consider replacing the bottom face type with symmetryPlane
         #
         # storing orginial vertices
-        old_verts = sp.copy(self._vertices)
-        self._vertices[sp.where(self._vertices[:, 1] <= 0.0), 1] = 0.0
+        old_verts = np.copy(self._vertices)
+        self._vertices[np.where(self._vertices[:, 1] <= 0.0), 1] = 0.0
         #
         # outputing mesh
         self.write_foam_file(path=path,
@@ -450,4 +449,4 @@ class BlockMeshDict(OpenFoamFile):
                              overwrite=overwrite)
         #
         # restoring original verts
-        self._vertices = sp.copy(old_verts)
+        self._vertices = np.copy(old_verts)

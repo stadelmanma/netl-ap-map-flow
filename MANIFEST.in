@@ -1,5 +1,5 @@
-include setup.py README.rst LICENSE.md requirements.txt test_requirements.txt pytest.ini
-recursive-include apmapflow *
+include pyproject.toml README.rst LICENSE.md pytest.ini
+recursive-include src/apmapflow *
 recursive-include bin *
 recursive-include examples *
 recursive-include misc *

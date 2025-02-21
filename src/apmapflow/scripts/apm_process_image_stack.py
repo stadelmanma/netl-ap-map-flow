@@ -21,7 +21,7 @@ import argparse
 from argparse import RawDescriptionHelpFormatter as RawDesc
 from itertools import product
 import os
-import scipy as sp
+import numpy as np
 from scipy import sparse as sprs
 from scipy.sparse import csgraph
 from scipy.interpolate import griddata
@@ -146,7 +146,7 @@ def main():
     if not args.no_aper_map:
         aper_map = img_data.create_aperture_map()
         logger.info('saving aperture map file')
-        sp.savetxt(aper_map_file, aper_map, fmt='%d', delimiter='\t')
+        np.savetxt(aper_map_file, aper_map, fmt='%d', delimiter='\t')
         del aper_map
     #
     # outputing offset map
@@ -155,7 +155,7 @@ def main():
         #
         # saving map
         logger.info('saving offset map file')
-        sp.savetxt(offset_map_file, offset_map, fmt='%f', delimiter='\t')
+        np.savetxt(offset_map_file, offset_map, fmt='%f', delimiter='\t')
         del offset_map
     #
     # saving image data
@@ -184,8 +184,8 @@ def process_image(img_data, num_clusters, **kwargs):
     # reconstructing 3-D array
     logger.info('reconstructing processed data back into 3-D array')
     #
-    img_data = sp.zeros(img_dims, dtype=bool)
-    x_coords, y_coords, z_coords = sp.unravel_index(nonzero_locs, img_dims)
+    img_data = np.zeros(img_dims, dtype=bool)
+    x_coords, y_coords, z_coords = np.unravel_index(nonzero_locs, img_dims)
     #
     del nonzero_locs
     img_data[x_coords, y_coords, z_coords] = True
@@ -200,7 +200,7 @@ def calculate_offset_map(img_data):
     """
     #
     logger.info('creating initial offset map')
-    offset_map = img_data.create_offset_map(no_data_fill=sp.nan)
+    offset_map = img_data.create_offset_map(no_data_fill=np.nan)
     #
     logger.info('interpolating missing data due to zero aperture zones')
     offset_map = patch_holes(offset_map)
@@ -215,10 +215,10 @@ def generate_index_map(nonzero_locs, shape):
     """
     #
     logger.info('creating index map of non-zero values...')
-    x_c = sp.unravel_index(nonzero_locs, shape)[0].astype(sp.int16)
-    y_c = sp.unravel_index(nonzero_locs, shape)[1].astype(sp.int16)
-    z_c = sp.unravel_index(nonzero_locs, shape)[2].astype(sp.int16)
-    index_map = sp.stack((x_c, y_c, z_c), axis=1)
+    x_c = np.unravel_index(nonzero_locs, shape)[0].astype(np.int16)
+    y_c = np.unravel_index(nonzero_locs, shape)[1].astype(np.int16)
+    z_c = np.unravel_index(nonzero_locs, shape)[2].astype(np.int16)
+    index_map = np.stack((x_c, y_c, z_c), axis=1)
     #
     return index_map
 
@@ -235,7 +235,7 @@ def generate_node_connectivity_array(index_map, data_array):
     x_dim, y_dim, z_dim = data_array.shape
     conn_map = list(product([0, -1, 1], [0, -1, 1], [0, -1, 1]))
     #
-    conn_map = sp.array(conn_map, dtype=int)
+    conn_map = np.array(conn_map, dtype=int)
     conn_map = conn_map[1:]
     #
     # creating slice list to process data chunks
@@ -244,39 +244,39 @@ def generate_node_connectivity_array(index_map, data_array):
         slice_list.append(slice(i, i+slice_list[0].stop))
     slice_list[-1] = slice(slice_list[-1].start, index_map.shape[0])
     #
-    conns = sp.ones((0, 2), dtype=data_array.index_int_type)
+    conns = np.ones((0, 2), dtype=data_array.index_int_type)
     logger.debug('\tnumber of slices to process: {}'.format(len(slice_list)))
     percent = 10
     for n, sect in enumerate(slice_list):
         # getting coordinates of nodes and their neighbors
         nodes = index_map[sect]
-        inds = sp.repeat(nodes, conn_map.shape[0], axis=0)
-        inds += sp.tile(conn_map, (nodes.shape[0], 1))
+        inds = np.repeat(nodes, conn_map.shape[0], axis=0)
+        inds += np.tile(conn_map, (nodes.shape[0], 1))
         #
         # calculating the flattened index of the central nodes and storing
-        nodes = sp.ravel_multi_index(sp.hsplit(nodes, 3), data_array.shape)
-        inds = sp.hstack([inds, sp.repeat(nodes, conn_map.shape[0], axis=0)])
+        nodes = np.ravel_multi_index(np.hsplit(nodes, 3), data_array.shape)
+        inds = np.hstack([inds, np.repeat(nodes, conn_map.shape[0], axis=0)])
         #
         # removing neigbors with negative indicies
         mask = ~inds[:, 0:3] < 0
-        inds = inds[sp.sum(mask, axis=1) == 3]
+        inds = inds[np.sum(mask, axis=1) == 3]
         # removing neighbors with indicies outside of bounds
         mask = (inds[:, 0] < x_dim, inds[:, 1] < y_dim, inds[:, 2] < z_dim)
-        mask = sp.stack(mask, axis=1)
-        inds = inds[sp.sum(mask, axis=1) == 3]
+        mask = np.stack(mask, axis=1)
+        inds = inds[np.sum(mask, axis=1) == 3]
         # removing indices with zero-weight connection
         mask = data_array[inds[:, 0], inds[:, 1], inds[:, 2]]
         inds = inds[mask]
         if inds.size:
             # calculating flattened index of remaining nieghbor nodes
-            nodes = sp.ravel_multi_index(sp.hsplit(inds[:, 0:3], 3),
+            nodes = np.ravel_multi_index(np.hsplit(inds[:, 0:3], 3),
                                          data_array.shape)
-            inds = sp.hstack([sp.reshape(inds[:, -1], (-1, 1)), nodes])
+            inds = np.hstack([np.reshape(inds[:, -1], (-1, 1)), nodes])
             # ensuring conns[0] is always < conns[1] for duplicate removal
             mask = inds[:, 0] > inds[:, 1]
             inds[mask] = inds[mask][:, ::-1]
             # appending section connectivity data to conns array
-            conns = sp.append(conns, inds.astype(sp.uint32), axis=0)
+            conns = np.append(conns, inds.astype(np.uint32), axis=0)
         if int(n/len(slice_list)*100) == percent:
             logger.debug('\tprocessed slice {:5d}, {}% complete'.format(n, percent))
             percent += 10
@@ -284,10 +284,10 @@ def generate_node_connectivity_array(index_map, data_array):
     # using scipy magic from stackoverflow to remove dupilcate connections
     logger.info('removing duplicate connections...')
     dim0 = conns.shape[0]
-    conns = sp.ascontiguousarray(conns)
-    dtype = sp.dtype((sp.void, conns.dtype.itemsize*conns.shape[1]))
+    conns = np.ascontiguousarray(conns)
+    dtype = np.dtype((np.void, conns.dtype.itemsize*conns.shape[1]))
     dim1 = conns.shape[1]
-    conns = sp.unique(conns.view(dtype)).view(conns.dtype).reshape(-1, dim1)
+    conns = np.unique(conns.view(dtype)).view(conns.dtype).reshape(-1, dim1)
     logger.debug('\tremoved {} duplicates'.format(dim0 - conns.shape[0]))
     #
     return conns
@@ -299,17 +299,17 @@ def generate_adjacency_matrix(conns, nonzero_locs):
     """
     msg = 're-indexing connections array from absolute to relative indicies'
     logger.info(msg)
-    mapper = sp.ones(nonzero_locs[-1]+1, dtype=sp.uint32) * sp.iinfo(sp.uint32).max
-    mapper[nonzero_locs] = sp.arange(nonzero_locs.size, dtype=sp.uint32)
+    mapper = np.ones(nonzero_locs[-1]+1, dtype=np.uint32) * np.iinfo(np.uint32).max
+    mapper[nonzero_locs] = np.arange(nonzero_locs.size, dtype=np.uint32)
     conns[:, 0] = mapper[conns[:, 0]]
     conns[:, 1] = mapper[conns[:, 1]]
     del mapper
     #
     logger.info('creating adjacency matrix...')
     num_blks = nonzero_locs.size
-    row = sp.append(conns[:, 0], conns[:, 1])
-    col = sp.append(conns[:, 1], conns[:, 0])
-    weights = sp.ones(conns.size)  # using size automatically multiplies by 2
+    row = np.append(conns[:, 0], conns[:, 1])
+    col = np.append(conns[:, 1], conns[:, 0])
+    weights = np.ones(conns.size)  # using size automatically multiplies by 2
     #
     # Generate sparse adjacency matrix in 'coo' format and convert to csr
     adj_mat = sprs.coo_matrix((weights, (row, col)), (num_blks, num_blks))
@@ -329,8 +329,8 @@ def remove_isolated_clusters(conns, nonzero_locs, num_to_keep, **kwargs):
     #
     logger.info('determining connected components...')
     cs_ids = csgraph.connected_components(csgraph=adj_mat, directed=False)[1]
-    groups, counts = sp.unique(cs_ids, return_counts=True)
-    order = sp.argsort(counts)[::-1]
+    groups, counts = np.unique(cs_ids, return_counts=True)
+    order = np.argsort(counts)[::-1]
     groups = groups[order]
     counts = counts[order]
     del adj_mat, order
@@ -343,7 +343,7 @@ def remove_isolated_clusters(conns, nonzero_locs, num_to_keep, **kwargs):
     msg = '\t{} % of nodes contained in largest group'
     logger.debug(msg.format(counts[0]/cs_ids.size*100))
     msg = '\t{} % of nodes contained in {} retained groups'
-    num = sp.sum(counts[0:num_to_keep])/cs_ids.size*100
+    num = np.sum(counts[0:num_to_keep])/cs_ids.size*100
     logger.debug(msg.format(num, num_to_keep))
     #
     # creating image colored by clusters if desired
@@ -355,7 +355,7 @@ def remove_isolated_clusters(conns, nonzero_locs, num_to_keep, **kwargs):
                            kwargs.get('img_shape'),
                            kwargs.get('img_name'))
     #
-    inds = sp.where(sp.in1d(cs_ids, groups[0:num_to_keep]))[0]
+    inds = np.where(np.isin(cs_ids, groups[0:num_to_keep]))[0]
     del cs_ids, groups, counts
     #
     num = nonzero_locs.size
@@ -374,17 +374,17 @@ def save_cluster_image(cs_ids, groups, counts, locs, img_shape, img_name):
     #
     msg = '\t{} % of nodes covered in {} colored groups'
     num_cs = min(16, groups.size)
-    num = sp.sum(counts[0:num_cs])/cs_ids.size*100
+    num = np.sum(counts[0:num_cs])/cs_ids.size*100
     logger.debug(msg.format(num, num_cs))
     #
     # setting the top 16 groups separated by increments of 8 and the rest are 255
-    data = sp.ones(cs_ids.size, dtype=sp.uint8) * 255
+    data = np.ones(cs_ids.size, dtype=np.uint8) * 255
     for n, cs_id in enumerate(groups[0:num_cs-1]):
-        inds = sp.where(cs_ids == cs_id)[0]
+        inds = np.where(cs_ids == cs_id)[0]
         data[inds] = 67 + n * 8
     #
-    x_coords, y_coords, z_coords = sp.unravel_index(locs, img_shape)
-    img_data = sp.zeros(img_shape, dtype=sp.uint8)
+    x_coords, y_coords, z_coords = np.unravel_index(locs, img_shape)
+    img_data = np.zeros(img_shape, dtype=np.uint8)
     img_data[x_coords, y_coords, z_coords] = data
     # save image data
     img_data = img_data.view(FractureImageStack)
@@ -399,25 +399,25 @@ def patch_holes(data_map):
     """
     #
     # getting coordinates of all valid data points
-    data_vector = sp.ravel(data_map)
-    inds = sp.where(sp.isfinite(data_vector))[0]
-    points = sp.unravel_index(inds, data_map.shape)
+    data_vector = np.ravel(data_map)
+    inds = np.where(np.isfinite(data_vector))[0]
+    points = np.unravel_index(inds, data_map.shape)
     values = data_vector[inds]
     #
     # linearly interpolating data to fill gaps
-    xi = sp.where(~sp.isfinite(data_vector))[0]
+    xi = np.where(~np.isfinite(data_vector))[0]
     msg = '\tattempting to fill %d values with a linear interpolation'
     logger.debug(msg, xi.size)
-    xi = sp.unravel_index(xi, data_map.shape)
-    intrp = griddata(points, values, xi, fill_value=sp.nan, method='linear')
+    xi = np.unravel_index(xi, data_map.shape)
+    intrp = griddata(points, values, xi, fill_value=np.nan, method='linear')
     data_map[xi[0], xi[1]] = intrp
     #
     # performing a nearest interpolation any remaining regions
-    data_vector = sp.ravel(data_map)
-    xi = sp.where(~sp.isfinite(data_vector))[0]
+    data_vector = np.ravel(data_map)
+    xi = np.where(~np.isfinite(data_vector))[0]
     msg = '\tfilling %d remaining values with a nearest interpolation'
     logger.debug(msg, xi.size)
-    xi = sp.unravel_index(xi, data_map.shape)
+    xi = np.unravel_index(xi, data_map.shape)
     intrp = griddata(points, values, xi, fill_value=0, method='nearest')
     data_map[xi[0], xi[1]] = intrp
     #
@@ -433,13 +433,13 @@ def filter_high_gradients(data_map):
     #
     logger.info('filtering offset map to remove steeply sloped cells')
     #
-    zdir_grad, xdir_grad = sp.gradient(data_map)
-    mag = sp.sqrt(zdir_grad**2 + xdir_grad**2)
+    zdir_grad, xdir_grad = np.gradient(data_map)
+    mag = np.sqrt(zdir_grad**2 + xdir_grad**2)
     data_map += 1
-    data_vector = sp.ravel(data_map)
+    data_vector = np.ravel(data_map)
     #
     # setting regions outside of 99th percentile to 0 for cluster removal
-    val = calc_percentile(99, sp.ravel(mag))
+    val = calc_percentile(99, np.ravel(mag))
     data_map[zdir_grad < -val] = 0
     data_map[zdir_grad > val] = 0
     data_map[xdir_grad < -val] = 0
@@ -450,11 +450,11 @@ def filter_high_gradients(data_map):
     adj_mat = offsets.create_adjacency_matrix()
     cs_num, cs_ids = csgraph.connected_components(csgraph=adj_mat,
                                                   directed=False)
-    cs_num, counts = sp.unique(cs_ids, return_counts=True)
-    cs_num = cs_num[sp.argsort(counts)][-1]
+    cs_num, counts = np.unique(cs_ids, return_counts=True)
+    cs_num = cs_num[np.argsort(counts)][-1]
     #
-    data_vector[sp.where(cs_ids != cs_num)[0]] = sp.nan
-    data_map = sp.reshape(data_vector, data_map.shape)
+    data_vector[np.where(cs_ids != cs_num)[0]] = np.nan
+    data_map = np.reshape(data_vector, data_map.shape)
     #
     # re-interpolating for the nan regions
     logger.debug('\tpatching holes left by cluster removal')

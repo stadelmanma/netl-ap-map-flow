@@ -1,0 +1,87 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "apmapflow"
+version = "0.1.0"
+dependencies = [
+    "numpy",
+    "scipy",
+    "pillow>=9.0",
+    "pint",
+    "pyyaml"
+]
+description = "A fracture flow modeling package utilizing a modified local cubic law approach with OpenFoam and ParaView compatibility."
+readme = "README.rst"
+requires-python = ">= 3.10"
+license = {file = "LICENCSE.md"}
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python",
+    "Programming Language :: Fortran",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+keywords = ["Local Cubic Law", "Paraview", "OpenFoam"]
+authors = [
+    {name = "Matthew A. Stadelman", email = "stadelmanma@gmail.com"}
+]
+
+
+[project.optional-dependencies]
+dev = [
+    "coverage",
+    "pycodestyle",
+    "pytest",
+    "pytest-cache",
+    "pytest-cov",
+    "pytest-pycodestyle",
+]
+
+[project.scripts]
+apm_bulk_run = "apmapflow.scripts.apm_bulk_run:main"
+apm_combine_yaml_stat_files = "apmapflow.scripts.apm_combine_yaml_stat_files:main"
+apm_convert_csv_stats_file = "apmapflow.scripts.apm_convert_csv_stats_file:main"
+apm_fracture_df = "apmapflow.scripts.apm_fracture_df:main"
+apm_generate_aperture_map = "apmapflow.scripts.apm_generate_aperture_map:main"
+apm_open_foam_export = "apmapflow.scripts.apm_open_foam_export:main"
+apm_parallel_mesh_generation = "apmapflow.scripts.apm_parallel_mesh_generation:main"
+apm_process_data_map = "apmapflow.scripts.apm_process_data_map:main"
+apm_process_image_stack = "apmapflow.scripts.apm_process_image_stack:main"
+apm_process_paraview_data = "apmapflow.scripts.apm_process_paraview_data:main"
+apm_resize_image_stack = "apmapflow.scripts.apm_resize_image_stack:main"
+apm_run_lcl_model = "apmapflow.scripts.apm_run_lcl_model:main"
+apm_subtract_data_maps = "apmapflow.scripts.apm_subtract_data_maps:main"
+
+
+[project.urls]
+Homepage = "https://github.com/stadelmanma/netl-ap-map-flow"
+Documentation = "https://netl-ap-map-flow.readthedocs.io/en/latest/?badge=latest"
+Repository = "https://github.com/stadelmanma/netl-ap-map-flow"
+Issues = "https://github.com/stadelmanma/netl-ap-map-flow/issues"
+
+
+[tool.setuptools.package-data]
+apmapflow = ["logging.conf", "src/*.F", "src/makefile"]
+
+[tool.pytest.ini_options]
+python_files = "*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = [
+    "--ignore=setup.py",
+    "--assert=plain"
+]
+norecursedirs = [
+    ".git",
+    "examples",
+    "fixtures",
+    "build",
+    "dist",
+    "model-testing",
+]
+
